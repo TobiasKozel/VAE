@@ -1,0 +1,9 @@
+{
+	"property_a": "value_a",
+	"array_b": [
+		1, 2, 3
+	],
+	"object_c": {
+		"property_d": "value_b"
+	}
+}
