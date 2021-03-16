@@ -1,7 +1,6 @@
 #ifndef TKLB_HEAPBUFFER
 #define TKLB_HEAPBUFFER
 
-#include "../util/TNoCopy.h"
 #include "../util/TAssert.h"
 
 #include <cmath>
@@ -11,25 +10,24 @@
 namespace tklb {
 
 /**
- * Basically a bad std::vector which can also work with
- * foreign memory
+ * Basically a bad std::vector which can also work with foreign memory
  */
 template <typename T, class Allocator = std::allocator<T>>
 class HeapBuffer {
 #if TKLB_HEAP_DEBUG_SIZE > 0
 	T DEBUF_BUF[TKLB_HEAP_DEBUG_SIZE];
 #endif
+	Allocator allocator;
 	T* mBuf = nullptr;
 	size_t mSize = 0; // size of elements requested
 	size_t mRealSize = 0; // the actually allocated size
 	size_t mGranularity; // the space actually allocated will be a multiple of this
 	bool mInjected = false; // True if the memory doesn't belong to this instance
+
+	// True when the foreign memory is const, only cheked in debug mode
 	TKLB_ASSERT_STATE(bool IS_CONST)
-	Allocator allocator;
 
 public:
-	// TODO handle copying
-	TKLB_NO_COPY(HeapBuffer)
 
 	/**
 	 * @param size Size in elements of the buffer
@@ -40,9 +38,16 @@ public:
 		if (size != 0) { resize(0); }
 	}
 
-	~HeapBuffer() {
-		resize(0);
+	HeapBuffer(const HeapBuffer<T, Allocator>& source) {
+
 	}
+
+	HeapBuffer(const HeapBuffer*) = delete;
+	HeapBuffer(HeapBuffer&&) = delete;
+	HeapBuffer& operator= (const HeapBuffer&) = delete;
+	HeapBuffer& operator= (HeapBuffer&&) = delete;
+
+	~HeapBuffer() { resize(0); }
 
 	/**
 	 * @brief Provide foreign memory to borrow
@@ -61,7 +66,7 @@ public:
 
 	/**
 	 * @brief Provide const foreign memory to use
-	 * Using non const accessors will cause assertions
+	 * Using non const accessors will cause assertions in debug mode
 	 * @param mem Non modifyable memory to use
 	 * @param size Size of the memory in elements
 	 * @param realSize The actual size if it's chunk allocated
@@ -84,9 +89,7 @@ public:
 		return mBuf;
 	}
 
-	const T* data() const {
-		return mBuf;
-	}
+	const T* data() const { return mBuf; }
 
 	const T& operator[](const size_t index) const {
 		return mBuf[index];
@@ -109,7 +112,7 @@ public:
 	}
 
 	/**
-	 * Resize the buffer
+	 * @brief Resize the buffer
 	 * If the memory is borrowed it will become unique and owned by this instance
 	 * as soon as an allocation happens
 	 * @param size The new size
@@ -118,8 +121,16 @@ public:
 	T* resize(const size_t size, const bool downsize = true) {
 		const size_t chunked = mGranularity * std::ceil(size / double(mGranularity));
 
+		if (size < mSize) {
+			for (size_t int i = size; i < mSize; i++) {
+				allocator.destroy(mBuf[i]);
+			}
+		}
+
 		if (size == 0) {
-			if (!mInjected && mRealSize > 0) { allocator.deallocate(mBuf, mRealSize); }
+			if (!mInjected && mRealSize > 0) {
+				allocator.deallocate(mBuf, mRealSize);
+			}
 			mBuf = nullptr;
 			mRealSize = 0;
 		} else if (chunked != mRealSize) {
@@ -127,20 +138,23 @@ public:
 			if (chunked > mRealSize) { // Size up
 				temp = allocator.allocate(chunked);
 				if (mBuf != nullptr) {
-					memcpy(temp, mBuf, mSize * sizeof(T));
-					memset(temp + mSize, 0, (chunked - mSize) * sizeof(T));
+					memcpy(temp, mBuf, mSize * sizeof(T)); // copy existing
+					for (size_t i = mSize; i < size; i++) {
+						allocator.construct(temp[i]); // construct the new
+					}
 				}
 			} else if(downsize) { // size down
 				temp = allocator.allocate(chunked);
 				if (mBuf != nullptr) {
-					memcpy(temp, mBuf, chunked * sizeof(T));
+					memcpy(temp, mBuf, size * sizeof(T)); // copy existing
 				}
 			}
-			if (temp != nullptr) { // an allocation occured
+
+			if (temp != nullptr) { // an allocation occured, so clean up
 				if (!mInjected && mRealSize > 0) {
 					allocator.deallocate(mBuf, mRealSize);
 				}
-				mInjected = false; // we own the memory now
+				mInjected = false; // we definetly own the memory now
 				TKLB_ASSERT_STATE(IS_CONST = false)
 				mBuf = temp;
 			}
@@ -160,9 +174,17 @@ public:
 		}
 	}
 
+	void pop() {
+		// TODO
+	}
+
+	/**
+	 * @brief Removes the object at a given index and fills the gap with another
+	 */
 	bool remove(const size_t index) {
 		if (mSize <= index) { return false; }
 		if (index != mSize - 1) {
+			allocator.destroy(mBuf[index]);
 			mBuf[index] = mBuf[mSize - 1]; // fill the gap with the last element
 		}
 		mSize--;
@@ -174,12 +196,6 @@ public:
 			if (mBuf[i] == object) {
 				remove(i);
 			}
-		}
-	}
-
-	void construct() {
-		for (size_t i = 0; i < mRealSize; i++) {
-			allocator.construct(mBuf + i);
 		}
 	}
 
