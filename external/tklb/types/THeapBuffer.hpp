@@ -27,6 +27,34 @@ class HeapBuffer {
 	// True when the foreign memory is const, only cheked in debug mode
 	TKLB_ASSERT_STATE(bool IS_CONST)
 
+	/**
+	 * @brief Allocated the exact size requsted and copies existing objects.
+	 * Will not call their destructors or constructors!
+	 */
+	void allocate(size_t chunk) {
+		T* newBuf = allocator.allocate(chunk);
+		T* oldBuf = mBuf;
+
+		if (oldBuf != nullptr && newBuf != nullptr) { // copy existing content
+			memcpy(newBuf, oldBuf, mSize * sizeof(T));
+		}
+
+		mBuf = newBuf;
+
+		if (oldBuf != nullptr && !mInjected && mRealSize > 0) {
+			// Get rif of oldbuffer, object destructors were alredy called
+			allocator.deallocate(oldBuf, mRealSize);
+		}
+
+		mInjected = false; // we definetly own the memory now
+		TKLB_ASSERT_STATE(IS_CONST = false)
+		mRealSize = chunk;
+	}
+
+	size_t closesChunkSize(size_t chunk) const {
+		return mGranularity * std::ceil(chunk / double(mGranularity));
+	}
+
 public:
 
 	/**
@@ -54,6 +82,9 @@ public:
 	 */
 	void set(const HeapBuffer<T, Allocator>& source) {
 		setGranularity(source.mGranularity);
+		if (mBuf != nullptr) {
+			resize(0); // Clear first so no old data gets copied
+		}
 		resize(source.size());
 		memcpy(mBuf, source.data(), size * sizeof(T));
 	}
@@ -86,7 +117,7 @@ public:
 	}
 
 	void setGranularity(const size_t granularity) {
-		mGranularity = std::min((size_t) 1, granularity);
+		mGranularity = std::max((size_t) 1, granularity);
 	}
 
 	T* data() {
@@ -113,11 +144,12 @@ public:
 		return mBuf[index];
 	}
 
+	/**
+	 * @brief Will make sure the desired space is allocated
+	 */
 	void reserve(const size_t size) {
 		if (size < mRealSize) { return; }
-		const size_t temp = mSize;
-		resize(size);
-		mSize = temp;
+		allocate(closesChunkSize(size));
 	}
 
 	/**
@@ -128,49 +160,25 @@ public:
 	 * @param downsize Whether to downsize and reallocate
 	 */
 	T* resize(const size_t size, const bool downsize = true) {
-		const size_t chunked = mGranularity * std::ceil(size / double(mGranularity));
+A		const size_t chunked = closesChunkSize(size);
 
-		if (size < mSize) {
-			for (size_t int i = size; i < mSize; i++) {
-				allocator.destroy(mBuf[i]);
+		if (size < mSize && mBuf != nullptr) { // downsize means destroy objects
+			for (size_t i = size; i < mSize; i++) {
+				std::allocator_traits<Allocator>::destroy(allocator, mBuf + i);
 			}
 		}
 
-		if (size == 0) {
-			if (!mInjected && mRealSize > 0) {
-				allocator.deallocate(mBuf, mRealSize);
-			}
-			mBuf = nullptr;
-			mRealSize = 0;
-			mInjected = false;
-			TKLB_ASSERT_STATE(IS_CONST = false)
-		} else if (chunked != mRealSize) {
-			T* temp = nullptr;
-			if (chunked > mRealSize) { // Size up
-				temp = allocator.allocate(chunked);
-				if (mBuf != nullptr) {
-					memcpy(temp, mBuf, mSize * sizeof(T)); // copy existing
-					for (size_t i = mSize; i < size; i++) {
-						allocator.construct(temp[i]); // construct the new
-					}
-				}
-			} else if(downsize) { // size down
-				temp = allocator.allocate(chunked);
-				if (mBuf != nullptr) {
-					memcpy(temp, mBuf, size * sizeof(T)); // copy existing
-				}
-			}
+		if (mRealSize < chunked || (downsize && (mRealSize > chunked)) ) {
+			// Upsize or downsize + downsize requested
+			allocate(chunked);
+		}
 
-			if (temp != nullptr) { // an allocation occured, so clean up
-				if (!mInjected && mRealSize > 0) {
-					allocator.deallocate(mBuf, mRealSize);
-				}
-				mInjected = false; // we definetly own the memory now
-				TKLB_ASSERT_STATE(IS_CONST = false)
-				mBuf = temp;
+		if (mSize < size) { // upsize means construct objects
+			for (size_t i = mSize; i < size; i++) {
+				std::allocator_traits<Allocator>::construct(allocator, mBuf + i);
 			}
 		}
-		mRealSize = chunked;
+
 		mSize = size;
 		return mBuf;
 	}
