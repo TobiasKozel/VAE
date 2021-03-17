@@ -33,13 +33,13 @@ public:
 	 * @param size Size in elements of the buffer
 	 * @param granularity How big the real allocated chunks are
 	 */
-	HeapBuffer(const size_t size = 0, const size_t granularity = 1024 / sizeof(T)) {
+	HeapBuffer(const size_t size = 0, const size_t granularity = 1024) {
 		setGranularity(granularity);
 		if (size != 0) { resize(0); }
 	}
 
 	HeapBuffer(const HeapBuffer<T, Allocator>& source) {
-
+		set(source);
 	}
 
 	HeapBuffer(const HeapBuffer*) = delete;
@@ -48,6 +48,15 @@ public:
 	HeapBuffer& operator= (HeapBuffer&&) = delete;
 
 	~HeapBuffer() { resize(0); }
+
+	/**
+	 * @brief Resizes and copies the contents of the source Buffer
+	 */
+	void set(const HeapBuffer<T, Allocator>& source) {
+		setGranularity(source.mGranularity);
+		resize(source.size());
+		memcpy(mBuf, source.data(), size * sizeof(T));
+	}
 
 	/**
 	 * @brief Provide foreign memory to borrow
@@ -77,14 +86,14 @@ public:
 	}
 
 	void setGranularity(const size_t granularity) {
-		mGranularity = std::min(1u, granularity);
+		mGranularity = std::min((size_t) 1, granularity);
 	}
 
 	T* data() {
-		// Don't use non const access when using injected const memory
 #if TKLB_HEAP_DEBUG_SIZE > 0
 		memcpy(DEBUF_BUF, mBuf, sizeof(T) * std::min((size_t) 100, mSize));
 #endif
+		// Don't use non const access when using injected const memory
 		TKLB_ASSERT(!IS_CONST)
 		return mBuf;
 	}
@@ -133,6 +142,8 @@ public:
 			}
 			mBuf = nullptr;
 			mRealSize = 0;
+			mInjected = false;
+			TKLB_ASSERT_STATE(IS_CONST = false)
 		} else if (chunked != mRealSize) {
 			T* temp = nullptr;
 			if (chunked > mRealSize) { // Size up

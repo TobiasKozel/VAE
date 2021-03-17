@@ -2,7 +2,6 @@
 #include "../external/tklb/util/TAssert.h"
 
 #include "./config.hpp"
-#include "./types.hpp"
 #include "./world.hpp"
 #include "./voice.hpp"
 #include "./listener.hpp"

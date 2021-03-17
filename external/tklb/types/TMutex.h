@@ -3,14 +3,18 @@
 
 #include <mutex>
 
-#include "../util/TNoCopy.h"
-
 namespace tklb {
 
 class Mutex {
 	std::mutex mMutex;
 public:
-	Mutex() {}
+	Mutex(const Mutex&) = delete;
+	Mutex(const Mutex*) = delete;
+	Mutex(Mutex&&) = delete;
+	Mutex& operator= (const Mutex&) = delete;
+	Mutex& operator= (Mutex&&) = delete;
+
+	Mutex() = default;
 
 	void lock() {
 		mMutex.lock();
@@ -19,13 +23,17 @@ public:
 	void unlock() {
 		mMutex.unlock();
 	}
-
-	TKLB_NO_COPY(Mutex)
 };
 
 class LockGuard {
 	Mutex* mMutex = nullptr;
 public:
+	LockGuard(const LockGuard&) = delete;
+	LockGuard(const LockGuard*) = delete;
+	LockGuard(LockGuard&&) = delete;
+	LockGuard& operator= (const LockGuard&) = delete;
+	LockGuard& operator= (LockGuard&&) = delete;
+
 	LockGuard(Mutex& mutex) {
 		mMutex = &mutex;
 		mutex.lock();
@@ -34,8 +42,6 @@ public:
 	~LockGuard() {
 		mMutex->unlock();
 	}
-
-	TKLB_NO_COPY(LockGuard)
 };
 
 } // namespace
