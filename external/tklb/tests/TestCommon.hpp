@@ -1,5 +1,5 @@
 #include <cmath>
-#include "../util/TTimer.h"
+#include "../util/TTimer.hpp"
 #include "../util/TLeakChecker.h"
 
 using namespace tklb;

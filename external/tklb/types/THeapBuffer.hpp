@@ -31,10 +31,14 @@ class HeapBuffer {
 	 * @brief Allocated the exact size requsted and copies existing objects.
 	 * Will not call their destructors or constructors!
 	 */
-	void allocate(size_t chunk) {
+	bool allocate(size_t chunk) {
 		T* oldBuf = mBuf;
 		if (0 < chunk) {
 			T* newBuf = allocator.allocate(chunk);
+			if (newBuf == nullptr) {
+				TKLB_ASSERT(false)
+				return false; // ! Allocation failed
+			}
 			if (0 < mSize && oldBuf != nullptr && newBuf != nullptr) {
 				// copy existing content
 				memcpy(newBuf, oldBuf, mSize * sizeof(T));
@@ -52,6 +56,7 @@ class HeapBuffer {
 		mInjected = false; // we definetly own the memory now
 		TKLB_ASSERT_STATE(IS_CONST = false)
 		mRealSize = chunk;
+		return true;
 	}
 
 	size_t closestChunkSize(size_t chunk) const {
@@ -61,6 +66,7 @@ class HeapBuffer {
 public:
 
 	/**
+	 * @brief Setup the buffer with a size. User has to check if allocation was successful.
 	 * @param size Size in elements of the buffer
 	 * @param granularity How big the real allocated chunks are
 	 */
@@ -69,7 +75,12 @@ public:
 		if (size != 0) { resize(0); }
 	}
 
-	HeapBuffer(const HeapBuffer<T, Allocator>& source) {
+	/**
+	 * @brief Copy the contents of another buffer in
+	 * See set()
+	 * Failed allocations have to be checked
+	 */
+	HeapBuffer(const HeapBuffer<T>& source) {
 		set(source);
 	}
 
@@ -82,14 +93,19 @@ public:
 
 	/**
 	 * @brief Resizes and copies the contents of the source Buffer
+	 * This will do a memcpy,so none of the object
+	 * contructors will called
 	 */
-	void set(const HeapBuffer<T, Allocator>& source) {
+	bool set(const HeapBuffer<T>& source) {
 		setGranularity(source.mGranularity);
 		if (mBuf != nullptr) {
-			resize(0); // Clear first so no old data gets copied
+			resize(0); // Clear first so no old data gets copied on resize
 		}
-		resize(source.size());
+		if (!resize(source.size())) {
+			return false; // ! Allocation failed
+		}
 		memcpy(mBuf, source.data(), mSize * sizeof(T));
+		return true;
 	}
 
 	/**
@@ -149,10 +165,11 @@ public:
 
 	/**
 	 * @brief Will make sure the desired space is allocated
+	 * @return Whether the allocation was succesful
 	 */
-	void reserve(const size_t size) {
-		if (size  < mRealSize) { return; }
-		allocate(closestChunkSize(size));
+	bool reserve(const size_t size) {
+		if (size  < mRealSize) { return true; }
+		return allocate(closestChunkSize(size));
 	}
 
 	/**
@@ -161,8 +178,9 @@ public:
 	 * as soon as an allocation happens
 	 * @param size The new size
 	 * @param downsize Whether to downsize and reallocate
+	 * @return Whether the allocation was successful
 	 */
-	T* resize(const size_t size, const bool downsize = true) {
+	bool resize(const size_t size, const bool downsize = true) {
 		const size_t chunked = closestChunkSize(size);
 
 		if (size < mSize && mBuf != nullptr) { // downsize means destroy objects
@@ -173,7 +191,9 @@ public:
 
 		if (mRealSize < chunked || (downsize && (mRealSize > chunked)) ) {
 			// Upsize or downsize + downsize requested
-			allocate(chunked);
+			if (!allocate(chunked)) {
+				return false; // ! Allocation failed
+			}
 		}
 
 		if (mSize < size) { // upsize means construct objects
@@ -183,26 +203,40 @@ public:
 		}
 
 		mSize = size;
-		return mBuf;
+		return true;
 	}
 
-	void push(const T& object) {
+	bool push(const T& object) {
 		size_t newSize = mSize + 1;
 		if (mRealSize < newSize) {
-			allocate(closestChunkSize(newSize));
-			memcpy(mBuf + mSize, &object, sizeof(T));
+			if (allocate(closestChunkSize(newSize))) {
+				memcpy(mBuf + mSize, &object, sizeof(T));
+			} else {
+				return false; // ! Allocation failed
+			}
 		} else {
 			memcpy(mBuf + mSize, &object, sizeof(T));
 		}
 		mSize = newSize;
+		return true;
 	}
 
-	void pop() {
-		// TODO
+	/**
+	 * @brief Get the last element in the buffer.
+	 * Will never shrink the buffer/allocate
+	 */
+	bool pop(T* object) {
+		if (0 == mSize) {
+			return false;
+		}
+		memcpy(object, mBuf + mSize - 1, sizeof(T));
+		mSize--;
+		return true;
 	}
 
 	/**
 	 * @brief Removes the object at a given index and fills the gap with another
+	 * Will never shrink the buffer/allocate
 	 */
 	bool remove(const size_t index) {
 		if (mSize <= index) { return false; }
@@ -223,7 +257,15 @@ public:
 		return false;
 	}
 
+	/**
+	 * @brief Returns the amount of elements in the container
+	 */
 	size_t size() const { return mSize; }
+
+	/**
+	 * @brief Returns the real allocated size in elements
+	 */
+	size_t reserved() const { return mRealSize; }
 
 };
 

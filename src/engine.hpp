@@ -1,4 +1,4 @@
-#include "../external/tklb/types/THeapBuffer.h"
+#include "../external/tklb/types/THeapBuffer.hpp"
 #include "../external/tklb/util/TAssert.h"
 
 #include "./config.hpp"

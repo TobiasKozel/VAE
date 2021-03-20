@@ -26,4 +26,3 @@ test "clang++ -march=native -DTKLB_NO_SIMD"
 test "clang++ -march=native -Ofast"
 test "clang++ -march=native -Ofast -DTKLB_NO_SIMD"
 echo ""
-
