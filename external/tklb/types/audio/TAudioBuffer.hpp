@@ -4,7 +4,7 @@
 #include <cstring>
 #include <algorithm>
 
-#ifndef TKLB_NO_SIMD
+#if !defined(TKLB_NO_SIMD) || defined(TKLB_ALIGNED_MEM)
 	#include "../../external/xsimd/include/xsimd/xsimd.hpp"
 #endif
 
@@ -49,7 +49,7 @@ public:
 	 * @brief Aligned vector type
 	 */
 	using Buffer = HeapBuffer<T2
-	#ifndef TKLB_NO_SIMD
+	#if !defined(TKLB_NO_SIMD) || defined(TKLB_ALIGNED_MEM)
 		, xsimd::aligned_allocator<T2, XSIMD_DEFAULT_ALIGNMENT>
 	#endif
 	>;
@@ -166,7 +166,7 @@ public:
 		TKLB_ASSERT(size() >= offset)
 		length = std::min(size() - offset, length ? length : size());
 		for (uchar c = 0; c < channels(); c++) {
-			fill_n(get(c) + offset, length, value);
+			std::fill_n(get(c) + offset, length, value);
 		}
 	}
 

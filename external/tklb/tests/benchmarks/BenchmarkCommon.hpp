@@ -1,4 +1,5 @@
 #include "../../util/TTimer.hpp"
+#include <algorithm>
 
 #ifndef ITERATIONS
 	#define ITERATIONS 1000

@@ -5,3 +5,4 @@ do
 	./run.sh $f
 done
 
+./BenchCompileTime.sh
