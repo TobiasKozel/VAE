@@ -164,7 +164,7 @@ public:
 
 		if (size < mSize && mBuf != nullptr) { // downsize means destroy objects
 			for (size_t i = size; i < mSize; i++) {
-				std::allocator_traits<Allocator>::destroy(allocator, mBuf + i);
+				mBuf[i].~T(); // Call destructor
 			}
 		}
 
@@ -175,7 +175,7 @@ public:
 
 		if (mSize < size) { // upsize means construct objects
 			for (size_t i = mSize; i < size; i++) {
-				std::allocator_traits<Allocator>::construct(allocator, mBuf + i);
+				T* test = new (mBuf + i) T();
 			}
 		}
 
@@ -203,7 +203,7 @@ public:
 	 */
 	bool remove(const size_t index) {
 		if (mSize <= index) { return false; }
-		std::allocator_traits<Allocator>::destroy(allocator, mBuf + index);
+		mBuf[index].~T(); // Call destructor
 		if (index != mSize - 1) { // fill the gap with the last element
 			memcpy(mBuf + index, mBuf + (mSize - 1), sizeof(T));
 		}

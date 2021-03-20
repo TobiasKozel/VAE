@@ -1,3 +1,7 @@
+/**
+ * Wrap assertions, just in case
+ */
+
 #ifndef TKLB_ASSERT
 #ifdef TKLB_NO_ASSERT
 	#define TKLB_ASSERT(condition);
