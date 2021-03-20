@@ -51,7 +51,7 @@ class HeapBuffer {
 		mRealSize = chunk;
 	}
 
-	size_t closesChunkSize(size_t chunk) const {
+	size_t closestChunkSize(size_t chunk) const {
 		return mGranularity * std::ceil(chunk / double(mGranularity));
 	}
 
@@ -149,7 +149,7 @@ public:
 	 */
 	void reserve(const size_t size) {
 		if (size < mRealSize) { return; }
-		allocate(closesChunkSize(size));
+		allocate(closestChunkSize(size));
 	}
 
 	/**
@@ -160,7 +160,7 @@ public:
 	 * @param downsize Whether to downsize and reallocate
 	 */
 	T* resize(const size_t size, const bool downsize = true) {
-A		const size_t chunked = closesChunkSize(size);
+		const size_t chunked = closestChunkSize(size);
 
 		if (size < mSize && mBuf != nullptr) { // downsize means destroy objects
 			for (size_t i = size; i < mSize; i++) {
@@ -184,13 +184,14 @@ A		const size_t chunked = closesChunkSize(size);
 	}
 
 	void push(const T& object) {
-		if (mRealSize < mSize + 1) {
-			resize(mSize + 1);
-			mBuf[mSize] = object;
+		size_t newSize = mSize + 1;
+		if (mRealSize < newSize) {
+			allocate(closestChunkSize(newSize));
+			memcpy(mBuf + mSize, &object, sizeof(T));
 		} else {
-			mBuf[mSize] = object;
-			mSize++;
+			memcpy(mBuf + mSize, &object, sizeof(T));
 		}
+		mSize = newSize;
 	}
 
 	void pop() {
@@ -202,20 +203,21 @@ A		const size_t chunked = closesChunkSize(size);
 	 */
 	bool remove(const size_t index) {
 		if (mSize <= index) { return false; }
-		if (index != mSize - 1) {
-			allocator.destroy(mBuf[index]);
-			mBuf[index] = mBuf[mSize - 1]; // fill the gap with the last element
+		std::allocator_traits<Allocator>::destroy(allocator, mBuf + index);
+		if (index != mSize - 1) { // fill the gap with the last element
+			memcpy(mBuf + index, mBuf + (mSize - 1), sizeof(T));
 		}
 		mSize--;
 		return true;
 	}
 
-	void remove(const T& object) {
+	bool remove(const T& object) {
 		for (size_t i = 0; i < mSize; i++) {
 			if (mBuf[i] == object) {
-				remove(i);
+				return remove(i);
 			}
 		}
+		return false;
 	}
 
 	size_t size() const { return mSize; }

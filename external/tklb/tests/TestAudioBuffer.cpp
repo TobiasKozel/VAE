@@ -1,5 +1,5 @@
-#include "./TestCommon.h"
-#include "../types/audio/TAudioBuffer.h"
+#include "./TestCommon.hpp"
+#include "../types/audio/TAudioBuffer.hpp"
 
 
 const int length = 1024;

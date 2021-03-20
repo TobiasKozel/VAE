@@ -8,7 +8,7 @@
 	#include "../../external/xsimd/include/xsimd/xsimd.hpp"
 #endif
 
-#include "../THeapBuffer.h"
+#include "../THeapBuffer.hpp"
 #include "../../util/TAssert.h"
 
 #ifdef TKLB_MAXCHANNELS
