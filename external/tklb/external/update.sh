@@ -27,3 +27,12 @@ mv ./speexdsp-master/libspeexdsp/resample* ./speex_resampler/
 mkdir ./speex_resampler/speex/
 mv ./speexdsp-master/include/speex/speex_resampler.h ./speex_resampler/speex/speex_resampler.h
 rm -rf ./speexdsp-master/
+
+echo "Updating dirent"
+rm ./dirent.h
+wget https://raw.githubusercontent.com/tronkko/dirent/master/include/dirent.h
+
+echo "Updating dr_wav"
+rm ./dr_wav.h
+wget https://raw.githubusercontent.com/mackron/dr_libs/master/dr_wav.h
+

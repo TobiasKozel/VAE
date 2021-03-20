@@ -511,6 +511,8 @@ unsigned int RtApi :: getStreamSampleRate( void )
 
 #if defined(__MACOSX_CORE__)
 
+#include <unistd.h>
+
 // The OS X CoreAudio API is designed to use a separate callback
 // procedure for each of its audio devices.  A single RtAudio duplex
 // stream using two different devices is supported here, though it
@@ -9057,7 +9059,7 @@ bool RtApiPulse::probeDeviceOpen( unsigned int device, StreamMode mode,
   if ( options && options->flags & RTAUDIO_NONINTERLEAVED ) stream_.userInterleaved = false;
   else stream_.userInterleaved = true;
   stream_.deviceInterleaved[mode] = true;
-  stream_.nBuffers = 1;
+  stream_.nBuffers = options ? options->numberOfBuffers : 1;
   stream_.doByteSwap[mode] = false;
   stream_.nUserChannels[mode] = channels;
   stream_.nDeviceChannels[mode] = channels + firstChannel;
@@ -9127,8 +9129,8 @@ bool RtApiPulse::probeDeviceOpen( unsigned int device, StreamMode mode,
   int error;
   if ( options && !options->streamName.empty() ) streamName = options->streamName;
   switch ( mode ) {
-  case INPUT:
     pa_buffer_attr buffer_attr;
+  case INPUT:
     buffer_attr.fragsize = bufferBytes;
     buffer_attr.maxlength = -1;
 
@@ -9139,14 +9141,29 @@ bool RtApiPulse::probeDeviceOpen( unsigned int device, StreamMode mode,
       goto error;
     }
     break;
-  case OUTPUT:
+  case OUTPUT: {
+    pa_buffer_attr * attr_ptr;
+
+    if ( options && options->numberOfBuffers > 0 ) {
+      // pa_buffer_attr::fragsize is recording-only.
+      // Hopefully PortAudio won't access uninitialized fields.
+      buffer_attr.maxlength = bufferBytes * options->numberOfBuffers;
+      buffer_attr.minreq = -1;
+      buffer_attr.prebuf = -1;
+      buffer_attr.tlength = -1;
+      attr_ptr = &buffer_attr;
+    } else {
+      attr_ptr = nullptr;
+    }
+
     pah->s_play = pa_simple_new( NULL, streamName.c_str(), PA_STREAM_PLAYBACK,
-                                 dev_output, "Playback", &ss, NULL, NULL, &error );
+                                 dev_output, "Playback", &ss, NULL, attr_ptr, &error );
     if ( !pah->s_play ) {
       errorText_ = "RtApiPulse::probeDeviceOpen: error connecting output to PulseAudio server.";
       goto error;
     }
     break;
+  }
   case DUPLEX:
     /* Note: We could add DUPLEX by synchronizing multiple streams,
        but it would mean moving from Simple API to Asynchronous API:
@@ -10586,7 +10603,8 @@ void RtApi :: convertBuffer( char *outBuffer, char *inBuffer, ConvertInfo &info 
       Float32 *in = (Float32 *)inBuffer;
       for (unsigned int i=0; i<stream_.bufferSize; i++) {
         for (j=0; j<info.channels; j++) {
-          out[info.outOffset[j]] = (Int32) std::min(std::lround(in[info.inOffset[j]] * 2147483648.f), 2147483647L);
+          // Use llround() which returns `long long` which is guaranteed to be at least 64 bits.
+          out[info.outOffset[j]] = (Int32) std::min(std::llround(in[info.inOffset[j]] * 2147483648.f), 2147483647LL);
         }
         in += info.inJump;
         out += info.outJump;
@@ -10596,7 +10614,7 @@ void RtApi :: convertBuffer( char *outBuffer, char *inBuffer, ConvertInfo &info 
       Float64 *in = (Float64 *)inBuffer;
       for (unsigned int i=0; i<stream_.bufferSize; i++) {
         for (j=0; j<info.channels; j++) {
-          out[info.outOffset[j]] = (Int32) std::min(std::lround(in[info.inOffset[j]] * 2147483648.0), 2147483647L);
+          out[info.outOffset[j]] = (Int32) std::min(std::llround(in[info.inOffset[j]] * 2147483648.0), 2147483647LL);
         }
         in += info.inJump;
         out += info.outJump;
@@ -10653,7 +10671,7 @@ void RtApi :: convertBuffer( char *outBuffer, char *inBuffer, ConvertInfo &info 
       Float32 *in = (Float32 *)inBuffer;
       for (unsigned int i=0; i<stream_.bufferSize; i++) {
         for (j=0; j<info.channels; j++) {
-          out[info.outOffset[j]] = (Int32) std::min(std::lround(in[info.inOffset[j]] * 8388608.f), 8388607L);
+          out[info.outOffset[j]] = (Int32) std::min(std::llround(in[info.inOffset[j]] * 8388608.f), 8388607LL);
         }
         in += info.inJump;
         out += info.outJump;
@@ -10663,7 +10681,7 @@ void RtApi :: convertBuffer( char *outBuffer, char *inBuffer, ConvertInfo &info 
       Float64 *in = (Float64 *)inBuffer;
       for (unsigned int i=0; i<stream_.bufferSize; i++) {
         for (j=0; j<info.channels; j++) {
-          out[info.outOffset[j]] = (Int32) std::min(std::lround(in[info.inOffset[j]] * 8388608.0), 8388607L);
+          out[info.outOffset[j]] = (Int32) std::min(std::llround(in[info.inOffset[j]] * 8388608.0), 8388607LL);
         }
         in += info.inJump;
         out += info.outJump;
@@ -10718,7 +10736,7 @@ void RtApi :: convertBuffer( char *outBuffer, char *inBuffer, ConvertInfo &info 
       Float32 *in = (Float32 *)inBuffer;
       for (unsigned int i=0; i<stream_.bufferSize; i++) {
         for (j=0; j<info.channels; j++) {
-          out[info.outOffset[j]] = (Int16) std::min(std::lround(in[info.inOffset[j]] * 32768.f), 32767L);
+          out[info.outOffset[j]] = (Int16) std::min(std::llround(in[info.inOffset[j]] * 32768.f), 32767LL);
         }
         in += info.inJump;
         out += info.outJump;
@@ -10728,7 +10746,7 @@ void RtApi :: convertBuffer( char *outBuffer, char *inBuffer, ConvertInfo &info 
       Float64 *in = (Float64 *)inBuffer;
       for (unsigned int i=0; i<stream_.bufferSize; i++) {
         for (j=0; j<info.channels; j++) {
-          out[info.outOffset[j]] = (Int16) std::min(std::lround(in[info.inOffset[j]] * 32768.0), 32767L);
+          out[info.outOffset[j]] = (Int16) std::min(std::llround(in[info.inOffset[j]] * 32768.0), 32767LL);
         }
         in += info.inJump;
         out += info.outJump;
@@ -10782,7 +10800,7 @@ void RtApi :: convertBuffer( char *outBuffer, char *inBuffer, ConvertInfo &info 
       Float32 *in = (Float32 *)inBuffer;
       for (unsigned int i=0; i<stream_.bufferSize; i++) {
         for (j=0; j<info.channels; j++) {
-          out[info.outOffset[j]] = (signed char) std::min(std::lround(in[info.inOffset[j]] * 128.f), 127L);
+          out[info.outOffset[j]] = (signed char) std::min(std::llround(in[info.inOffset[j]] * 128.f), 127LL);
         }
         in += info.inJump;
         out += info.outJump;
@@ -10792,7 +10810,7 @@ void RtApi :: convertBuffer( char *outBuffer, char *inBuffer, ConvertInfo &info 
       Float64 *in = (Float64 *)inBuffer;
       for (unsigned int i=0; i<stream_.bufferSize; i++) {
         for (j=0; j<info.channels; j++) {
-          out[info.outOffset[j]] = (signed char) std::min(std::lround(in[info.inOffset[j]] * 128.0), 127L);
+          out[info.outOffset[j]] = (signed char) std::min(std::llround(in[info.inOffset[j]] * 128.0), 127LL);
         }
         in += info.inJump;
         out += info.outJump;
