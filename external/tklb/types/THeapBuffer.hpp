@@ -32,14 +32,17 @@ class HeapBuffer {
 	 * Will not call their destructors or constructors!
 	 */
 	void allocate(size_t chunk) {
-		T* newBuf = allocator.allocate(chunk);
 		T* oldBuf = mBuf;
-
-		if (oldBuf != nullptr && newBuf != nullptr) { // copy existing content
-			memcpy(newBuf, oldBuf, mSize * sizeof(T));
+		if (0 < chunk) {
+			T* newBuf = allocator.allocate(chunk);
+			if (0 < mSize && oldBuf != nullptr && newBuf != nullptr) {
+				// copy existing content
+				memcpy(newBuf, oldBuf, mSize * sizeof(T));
+			}
+			mBuf = newBuf;
+		} else {
+			mBuf = nullptr;
 		}
-
-		mBuf = newBuf;
 
 		if (oldBuf != nullptr && !mInjected && mRealSize > 0) {
 			// Get rif of oldbuffer, object destructors were alredy called
@@ -86,7 +89,7 @@ public:
 			resize(0); // Clear first so no old data gets copied
 		}
 		resize(source.size());
-		memcpy(mBuf, source.data(), size * sizeof(T));
+		memcpy(mBuf, source.data(), mSize * sizeof(T));
 	}
 
 	/**
@@ -148,7 +151,7 @@ public:
 	 * @brief Will make sure the desired space is allocated
 	 */
 	void reserve(const size_t size) {
-		if (size < mRealSize) { return; }
+		if (size  < mRealSize) { return; }
 		allocate(closestChunkSize(size));
 	}
 

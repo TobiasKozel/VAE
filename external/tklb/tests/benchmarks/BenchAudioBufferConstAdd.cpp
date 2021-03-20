@@ -1,8 +1,8 @@
 #define TKLB_MAXCHANNELS 16
-#include "../../types/audio/TAudioBuffer.h"
+#include "../../types/audio/TAudioBuffer.hpp"
 
 #define ITERATIONS 10000
-#include "BenchmarkCommon.h"
+#include "BenchmarkCommon.hpp"
 
 int main() {
 	// some overhang so simd can't do all of it

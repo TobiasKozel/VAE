@@ -1,4 +1,4 @@
-#include "../../util/TTimer.h"
+#include "../../util/TTimer.hpp"
 
 #ifndef ITERATIONS
 	#define ITERATIONS 1000

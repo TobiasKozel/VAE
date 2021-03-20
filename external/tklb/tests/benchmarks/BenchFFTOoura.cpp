@@ -2,7 +2,7 @@
 #define TKLB_USE_OOURA
 #include "../../types/audio/fft/TFFT.h"
 
-#include "BenchmarkCommon.h"
+#include "BenchmarkCommon.hpp"
 
 int main() {
 	{
