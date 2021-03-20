@@ -2,8 +2,8 @@
   Copyright (c) 2019  Hayati Ayguen ( h_ayguen@web.de )
  */
 
-#include "./pffastconv.h"
-#include "./pffft.h"
+#include "pffastconv.h"
+#include "pffft.h"
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -145,7 +145,7 @@ int pffastconv_apply(PFFASTCONV_Setup * s, const float *input_, int cplxInputLen
    *     inputLen - inpOff -filterLen + 1 > 0
    * <=> inputLen -filterLen + 1 > inpOff
    * <=> inpOff < inputLen -filterLen + 1
-   *
+   * 
    * applyFlush == 0:
    *     inputLen - inpOff >= Nfft
    * <=> inputLen - Nfft >= inpOff
@@ -181,7 +181,7 @@ int pffastconv_apply(PFFASTCONV_Setup * s, const float *input_, int cplxInputLen
         memcpy( s->Xt, X + inpOff, (unsigned)procLen * sizeof(float) );
         if ( procLen < Nfft )
           memset( s->Xt + procLen, 0, (unsigned)(Nfft - procLen) * sizeof(float) );
-
+    
         pffft_transform(s->st, s->Xt, s->Xf, /* tmp = */ s->Mf, PFFFT_FORWARD);
       }
 
@@ -231,7 +231,7 @@ int pffastconv_apply(PFFASTCONV_Setup * s, const float *input_, int cplxInputLen
           memcpy( s->Xt, X + inpOff, (unsigned)procLen * sizeof(float) );
           if ( procLen < Nfft )
             memset( s->Xt + procLen, 0, (unsigned)(Nfft - procLen) * sizeof(float) );
-
+    
           pffft_transform(s->st, s->Xt, s->Xf, /* tmp = */ s->Mf, PFFFT_FORWARD);
         }
 
@@ -240,7 +240,7 @@ int pffastconv_apply(PFFASTCONV_Setup * s, const float *input_, int cplxInputLen
         if ( flags & PFFASTCONV_CPLX_INP_OUT )
         {
           pffft_transform(s->st, s->Mf, s->Xf, /* tmp = */ s->Xt, PFFFT_BACKWARD);
-
+    
           cplxOff = 2 * inpOff + part;
           for ( j = 0; j < numOut; ++j )
             Y[ cplxOff + 2 * j ] = s->Xf[j];

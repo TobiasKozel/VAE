@@ -7,6 +7,7 @@ option(USE_TYPE_DOUBLE "activate 'double' precision float?" ON)
 
 # architecture/optimization options
 option(USE_SIMD        "use SIMD (SSE/AVX/NEON/ALTIVEC) CPU features? - " ON)
+option(DISABLE_SIMD_AVX "disable AVX CPU features? - " OFF)
 option(USE_SIMD_NEON   "force using NEON on ARM? (requires USE_SIMD)" OFF)
 option(USE_SCALAR_VECT "use 4-element vector scalar operations (if no other SIMD)" ON)
 
@@ -18,6 +19,7 @@ option(USE_BENCH_POCKET "use PocketFFT in fft benchmark? - if exists in subdir" 
 
 option(USE_DEBUG_ASAN  "use GCC's address sanitizer?" OFF)
 
+option(DISABLE_LINK_WITH_M "Disables linking with m library to build with clangCL from MSVC" OFF)
 
 # C90 requires the gcc extensions for function attributes like always_inline
 # C99 provides the function attributes: no gcc extensions required
@@ -82,13 +84,23 @@ if(NOT CMAKE_BUILD_TYPE)
    message(STATUS "Build type not specified: defaulting to release.")
 endif(NOT CMAKE_BUILD_TYPE)
 
-if ("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
+if ( CMAKE_C_COMPILER_ID MATCHES "MSVC" )
   # using Visual Studio C++
   message(STATUS "INFO: detected MSVC: will not link math lib m")
   set(MATHLIB "")
+
+  add_definitions("/D_CRT_SECURE_NO_WARNINGS")
+
+  set(MSVC_DISABLED_WARNINGS_LIST
+      "C4996"
+  )
+
 else()
-  message(STATUS "INFO: detected NO MSVC: ${CMAKE_C_COMPILER_ID}: will link math lib m")
-  set(MATHLIB "m")
+  if(DISABLE_LINK_WITH_M)
+  else()
+    message(STATUS "INFO: detected NO MSVC: ${CMAKE_C_COMPILER_ID}: will link math lib m")
+    set(MATHLIB "m")
+  endif()
 endif()
 
 set( SIMD_FLOAT_HDRS simd/pf_float.h simd/pf_sse1_float.h simd/pf_altivec_float.h simd/pf_neon_float.h simd/pf_scalar_float.h )
@@ -126,15 +138,41 @@ if (USE_SIMD AND USE_SIMD_NEON)
 endif()
 if (USE_SIMD AND USE_TYPE_DOUBLE)
   if(WIN32)
-    set_property(SOURCE pffft_double.c PROPERTY COMPILE_FLAGS "/arch:AVX")
+    if(DISABLE_SIMD_AVX)
+      set_property(SOURCE pffft_double.c PROPERTY COMPILE_FLAGS "/arch:SSE2")
+    else()
+      set_property(SOURCE pffft_double.c PROPERTY COMPILE_FLAGS "/arch:AVX")
+    endif()
   else()
     set_property(SOURCE pffft_double.c PROPERTY COMPILE_FLAGS "-march=native")
+  endif()
+  if(DISABLE_SIMD_AVX)
+    target_compile_definitions(PFFFT PRIVATE PFFFT_AVX_DISABLE=1)
   endif()
 endif()
 target_link_libraries( PFFFT ${MATHLIB} )
 set_property(TARGET PFFFT APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
+
+######################################################
+
+if (USE_TYPE_FLOAT)
+
+  add_library(PFDSP STATIC pf_mixer.cpp pf_mixer.h pf_carrier.cpp pf_carrier.h pf_cic.cpp pf_cic.h fmv.h )
+  target_compile_definitions(PFDSP PRIVATE _USE_MATH_DEFINES)
+  if (USE_DEBUG_ASAN)
+    target_compile_options(PFDSP PRIVATE "-fsanitize=address")
+  endif()
+  if (USE_SIMD AND USE_SIMD_NEON)
+    target_compile_definitions(PFDSP PRIVATE PFFFT_ENABLE_NEON=1)
+    target_compile_options(PFDSP PRIVATE "-march=armv7-a" "-mfpu=neon")
+  endif()
+  target_link_libraries( PFDSP ${MATHLIB} )
+  set_property(TARGET PFDSP APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  )
+endif()
 
 ######################################################
 
@@ -271,6 +309,17 @@ if (USE_TYPE_DOUBLE)
     target_compile_definitions(bench_pffft_double PRIVATE HAVE_POCKET_FFT=1)
     target_link_libraries(bench_pffft_double  PocketFFT)
   endif()
+endif()
+
+######################################################
+
+if (USE_TYPE_FLOAT)
+  add_executable(bench_pf_mixer_float   bench_mixers.c)
+  target_compile_definitions(bench_pf_mixer_float PRIVATE _USE_MATH_DEFINES)
+  target_compile_definitions(bench_pf_mixer_float PRIVATE PFFFT_ENABLE_FLOAT)
+
+  target_link_libraries( bench_pf_mixer_float  PFDSP ${ASANLIB} )
+
 endif()
 
 ######################################################

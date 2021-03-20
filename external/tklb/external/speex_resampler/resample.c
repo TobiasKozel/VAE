@@ -73,9 +73,9 @@ static void speex_free(void *ptr) {free(ptr);}
 #include "arch.h"
 #else /* OUTSIDE_SPEEX */
 
-#include "./speex_resampler.h"
-#include "./arch.h"
-#include "./os_support.h"
+#include "speex/speex_resampler.h"
+#include "arch.h"
+#include "os_support.h"
 #endif /* OUTSIDE_SPEEX */
 
 #include <math.h>
@@ -97,11 +97,11 @@ static void speex_free(void *ptr) {free(ptr);}
 #endif
 
 #ifdef USE_SSE
-#include "./resample_sse.h"
+#include "resample_sse.h"
 #endif
 
 #ifdef USE_NEON
-#include "./resample_neon.h"
+#include "resample_neon.h"
 #endif
 
 /* Numer of elements to allocate on the stack */
@@ -473,7 +473,7 @@ static int resampler_basic_interpolate_single(SpeexResamplerState *st, spx_uint3
       }
 
       cubic_coef(frac, interp);
-      sum = MULT16_32_Q15(interp[0],SHR32(accum[0], 1)) + MULT16_32_Q15(interp[1],SHR32(accum[1], 1)) + MULT16_32_Q15(interp[2],SHR32(accum[2], 1)) + MULT16_32_Q15(interp[3],SHR32(accum[3], 1));
+      sum = MULT16_32_Q15(interp[0],accum[0]) + MULT16_32_Q15(interp[1],accum[1]) + MULT16_32_Q15(interp[2],accum[2]) + MULT16_32_Q15(interp[3],accum[3]);
       sum = SATURATE32PSHR(sum, 15, 32767);
 #else
       cubic_coef(frac, interp);

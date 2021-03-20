@@ -4,7 +4,7 @@
 
   Small test & bench for PFFFT, comparing its performance with the scalar FFTPACK, FFTW, and Apple vDSP
 
-  How to build:
+  How to build: 
 
   on linux, with fftw3:
   gcc -o test_pffft -DHAVE_FFTW -msse -mfpmath=sse -O3 -Wall -W pffft.c test_pffft.c fftpack.c -L/usr/local/lib -I/usr/local/include/ -lfftw3f -lm
@@ -19,7 +19,7 @@
 
   on windows, with visual c++:
   cl /Ox -D_USE_MATH_DEFINES /arch:SSE test_pffft.c pffft.c fftpack.c
-
+  
   build without SIMD instructions:
   gcc -o test_pffft -DPFFFT_SIMD_DISABLE -O3 -Wall -W pffft.c test_pffft.c fftpack.c -lm
 
@@ -29,7 +29,7 @@
 #define CONCAT_THREE_TOKENS(A, B, C)  A ## B ## C
 
 #ifdef PFFFT_ENABLE_FLOAT
-#include "./pffft.h"
+#include "pffft.h"
 
 typedef float pffft_scalar;
 typedef PFFFT_Setup PFFFT_SETUP;
@@ -39,7 +39,7 @@ typedef PFFFT_Setup PFFFT_SETUP;
 /*
 Note: adapted for double precision dynamic range version.
 */
-#include "./pffft_double.h"
+#include "pffft_double.h"
 
 typedef double pffft_scalar;
 typedef PFFFTD_Setup PFFFT_SETUP;
@@ -48,10 +48,10 @@ typedef PFFFTD_Setup PFFFT_SETUP;
 
 #ifdef PFFFT_ENABLE_FLOAT
 
-#include "./fftpack.h"
+#include "fftpack.h"
 
 #ifdef HAVE_GREEN_FFTS
-#include "./fftext.h"
+#include "fftext.h"
 #endif
 
 #ifdef HAVE_KISS_FFT
@@ -298,8 +298,8 @@ void pffft_validate_N(int N, int cplx) {
     if (pass == 0) {
       float *wrk = malloc(2*Nbytes+15*sizeof(pffft_scalar));
       for (k=0; k < Nfloat; ++k) {
-        ref[k] = in[k] = frand()*2-1;
-        out[k] = 1e30;
+        ref[k] = in[k] = (float)( frand()*2-1 );
+        out[k] = 1e30F;
       }
       if (!cplx) {
         rffti(N, wrk);
@@ -307,7 +307,7 @@ void pffft_validate_N(int N, int cplx) {
         /* use our ordering for real ffts instead of the one of fftpack */
         {
           float refN=ref[N-1];
-          for (k=N-2; k >= 1; --k) ref[k+1] = ref[k];
+          for (k=N-2; k >= 1; --k) ref[k+1] = ref[k]; 
           ref[1] = refN;
         }
       } else {
@@ -317,9 +317,9 @@ void pffft_validate_N(int N, int cplx) {
       free(wrk);
     }
 
-    for (k = 0; k < Nfloat; ++k) ref_max = MAX(ref_max, fabs(ref[k]));
+    for (k = 0; k < Nfloat; ++k) ref_max = MAX(ref_max, (float)( fabs(ref[k]) ));
 
-
+      
     /* pass 0 : non canonical ordering of transform coefficients */
     if (pass == 0) {
       /* test forward transform, with different input / output */
@@ -384,7 +384,7 @@ void pffft_validate_N(int N, int cplx) {
       memset(out, 0, Nbytes);
       PFFFT_FUNC(zconvolve_accumulate)(s, ref, ref, out, 1.0);
       PFFFT_FUNC(zreorder)(s, out, tmp2, PFFFT_FORWARD);
-
+      
       for (k=0; k < Nfloat; k += 2) {
         float ar = tmp[k], ai=tmp[k+1];
         if (cplx || k > 0) {
@@ -395,7 +395,7 @@ void pffft_validate_N(int N, int cplx) {
           tmp[1] = ai*ai;
         }
       }
-
+      
       for (k=0; k < Nfloat; ++k) {
         float d = fabs(tmp[k] - tmp2[k]), e = fabs(tmp[k]);
         if (d > conv_err) conv_err = d;
@@ -551,7 +551,7 @@ void benchmark_ffts(int N, int cplx, int withFFTWfullMeas, double iterCal, doubl
 #ifdef PFFFT_ENABLE_FLOAT
   {
     float *wrk = malloc(2*Nbytes + 15*sizeof(pffft_scalar));
-    te = uclock_sec();
+    te = uclock_sec();  
     if (cplx) cffti(N, wrk);
     else      rffti(N, wrk);
     t0 = uclock_sec();
@@ -613,7 +613,7 @@ void benchmark_ffts(int N, int cplx, int withFFTWfullMeas, double iterCal, doubl
           assert( X[Nmax] == checkVal );
         } else {
           assert( X[Nmax] == checkVal );
-          vDSP_fft_zrip(setup, &zsamples, 1, log2NextN, kFFTDirection_Forward);
+          vDSP_fft_zrip(setup, &zsamples, 1, log2NextN, kFFTDirection_Forward); 
           assert( X[Nmax] == checkVal );
           vDSP_fft_zrip(setup, &zsamples, 1, log2NextN, kFFTDirection_Inverse);
           assert( X[Nmax] == checkVal );
@@ -1048,7 +1048,7 @@ int  validate_pffftd_simd_ex(FILE * DbgOut);
 
 
 int main(int argc, char **argv) {
-  /* unfortunately, the fft size must be a multiple of 16 for complex FFTs
+  /* unfortunately, the fft size must be a multiple of 16 for complex FFTs 
      and 32 for real FFTs -- a lot of stuff would need to be rewritten to
      handle other cases (or maybe just switch to a scalar fft, I don't know..) */
 

@@ -6,7 +6,7 @@
 
    - Neither the names of PFFFT, PFFASTCONV, nor the names of its
    sponsors or contributors may be used to endorse or promote products
-   derived from this Software without specific prior written permission.
+   derived from this Software without specific prior written permission.  
 
    - Redistributions of source code must retain the above copyright
    notices, this list of conditions, and the disclaimer below.
@@ -33,14 +33,14 @@
    This is basically the implementation of fast convolution,
    utilizing the FFT (pffft).
 
-   Restrictions:
+   Restrictions: 
 
    - 1D transforms only, with 32-bit single precision.
 
    - all (float*) pointers in the functions below are expected to
    have an "simd-compatible" alignment, that is 16 bytes on x86 and
    powerpc CPUs.
-
+  
    You can allocate such buffers with the functions
    pffft_aligned_malloc / pffft_aligned_free (or with stuff like
    posix_memalign..)
@@ -51,7 +51,7 @@
 #define PFFASTCONV_H
 
 #include <stddef.h> /* for size_t */
-#include "./pffft.h"
+#include "pffft.h"
 
 
 #ifdef __cplusplus
@@ -88,7 +88,7 @@ extern "C" {
      * 3- X must have minimum length of output BlockLen
      * 4- the additional samples from inputLen .. BlockLen-1
      *   must contain valid small and non-NAN samples (ideally zero)
-     *
+     * 
      * this option is ignored when PFFASTCONV_CPLX_INP_OUT is set
      */
 
@@ -97,7 +97,7 @@ extern "C" {
      * 1- output vector Y must be aligned
      * 2- (all) inputLen <= ouput blockLen
      * 3- Y must have minimum length of output blockLen
-     *
+     * 
      * this option is ignored when PFFASTCONV_CPLX_INP_OUT is set
      */
 
@@ -120,7 +120,7 @@ extern "C" {
   /*
     prepare for performing fast convolution(s) of 'filterLen' with input 'blockLen'.
     The output 'blockLen' might be bigger to allow the fast convolution.
-
+    
     'flags' are bitmask over the 'pffastconv_flags_t' enum.
 
     PFFASTCONV_Setup structure can't be shared accross multiple filters
@@ -130,7 +130,7 @@ extern "C" {
 
   void pffastconv_destroy_setup(PFFASTCONV_Setup *);
 
-  /*
+  /* 
      Perform the fast convolution.
 
      'input' and 'output' don't need to be aligned - unless any of

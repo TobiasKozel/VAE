@@ -3,3 +3,6 @@ external/hiir/hiir/test
 *.out
 *.exe
 *.obj
+
+external/xsimd/test
+*.yml

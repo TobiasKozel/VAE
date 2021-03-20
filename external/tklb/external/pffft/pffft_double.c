@@ -27,7 +27,7 @@
    Laboratory, the University Corporation for Atmospheric Research,
    nor the names of its sponsors or contributors may be used to
    endorse or promote products derived from this Software without
-   specific prior written permission.
+   specific prior written permission.  
 
    - Redistributions of source code must retain the above copyright
    notices, this list of conditions, and the disclaimer below.
@@ -61,7 +61,7 @@
    Author: Dario Mambro @ https://github.com/unevens/pffft
 */
 
-#include "./pffft_double.h"
+#include "pffft_double.h"
 
 /* detect compiler flavour */
 #if defined(_MSC_VER)
@@ -100,12 +100,12 @@
 #pragma warning( disable : 4244 4305 4204 4456 )
 #endif
 
-/*
+/* 
    vector support macros: the rest of the code is independant of
    AVX -- adding support for other platforms with 4-element
-   vectors should be limited to these macros
+   vectors should be limited to these macros 
 */
-#include "./simd/pf_double.h"
+#include "simd/pf_double.h"
 
 /* have code comparable with this definition */
 #define float double
@@ -137,6 +137,6 @@
 #define FUNC_SIN  sin
 
 
-#include "./pffft_priv_impl.h"
+#include "pffft_priv_impl.h"
 
 
