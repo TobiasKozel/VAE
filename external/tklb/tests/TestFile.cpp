@@ -1,6 +1,6 @@
 #define TKLB_LEAKCHECKER_DISARM
-#include "./TestCommon.h"
-#include "../types/TFile.h"
+#include "./TestCommon.hpp"
+#include "../types/TFile.hpp"
 
 int main() {
 	{

@@ -1,13 +1,13 @@
-#ifndef TKLB_FFT
-#define TKLB_FFT
+#ifndef TKLBZ_FFT
+#define TKLBZ_FFT
 
 #ifdef TKLB_USE_OOURA
-	#include "./TOouraFFT.h"
+	#include "./TOouraFFT.hpp"
 namespace tklb {
 	using FFT = FFTOoura;
 }
 #else
-	#include "./Tpffft.h"
+	#include "./Tpffft.hpp"
 namespace tklb {
 	using FFT = FFTpffft;
 }

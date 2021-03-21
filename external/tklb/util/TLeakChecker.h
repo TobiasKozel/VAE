@@ -1,5 +1,5 @@
-#ifndef TKLB_LEAKCHECKER
-#define TKLB_LEAKCHECKER
+#ifndef TKLBZ_LEAKCHECKER
+#define TKLBZ_LEAKCHECKER
 
 #include <stddef.h>
 #include <stdlib.h>

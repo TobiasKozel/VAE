@@ -3,8 +3,8 @@
 // TODO there's some fuckery going on here
 // probably the memchecker missing some allocations
 #define TKLB_LEAKCHECKER_DISARM
-#include "TestCommon.h"
-#include "../types/audio/TResampler.h"
+#include "TestCommon.hpp"
+#include "../types/audio/TResampler.hpp"
 
 
 int main() {

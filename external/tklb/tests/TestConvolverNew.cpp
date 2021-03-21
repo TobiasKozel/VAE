@@ -1,8 +1,8 @@
 #define TKLB_LEAKCHECKER_DISARM
 #define TKLB_USE_OOURA
-#include "TestCommon.h"
+#include "TestCommon.hpp"
 // #define TKLB_NO_SIMD
-#include "../types/audio/convolver/TConvolverNew.h"
+#include "../types/audio/convolver/TConvolverNew.hpp"
 
 
 int main() {

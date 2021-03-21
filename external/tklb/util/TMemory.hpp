@@ -1,5 +1,5 @@
-#ifndef TKLB_MEMORY
-#define TKLB_MEMORY
+#ifndef TKLBZ_MEMORY
+#define TKLBZ_MEMORY
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -81,7 +81,7 @@ namespace tklb {
 		}
 
 		/**
-		 * @breif Destroy the object and dispose the memory
+		 * @brief Destroy the object and dispose the memory
 		 */
 		template <class T>
 		void dispose(T* ptr) {
@@ -92,5 +92,15 @@ namespace tklb {
 		}
 	}
 }
+
+// Wrapped in macros so information about where the allocations happened
+// can be gathered later on
+
+#define TKLB_MALLOC(size)  ::tklb::memory::allocate(size)
+#define TKLB_FREE(ptr) ::tklb::memory::deallocate(ptr)
+#define TKLB_MALLOC_ALIGNED(size)  ::tklb::memory::allocateAligned(size)
+#define TKLB_FREE_ALIGNED(ptr) ::tklb::memory::deallocateAligned(ptr)
+#define TKLB_NEW(T, ...) ::tklb::memory::create<T>(__VA_ARGS__)
+#define TKLB_DELETE(T, ptr) ::tklb::memory::dispose<T>(ptr)
 
 #endif // TKLB_MEMORY

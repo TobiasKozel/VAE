@@ -1,5 +1,5 @@
-#ifndef TKLB_RESAMPLER
-#define TKLB_RESAMPLER
+#ifndef TKLBZ_RESAMPLER
+#define TKLBZ_RESAMPLER
 
 #define OUTSIDE_SPEEX
 #define FLOATING_POINT
@@ -15,10 +15,10 @@
 
 #define RANDOM_PREFIX tklb
 
-#include "../../external/speex_resampler/speex_resampler.h"
+#include "../../external/speex_resampler/speex/speex_resampler.h"
 #include "../../external/speex_resampler/resample.c"
 
-#include "./TAudioBuffer.h"
+#include "./TAudioBuffer.hpp"
 
 namespace tklb {
 

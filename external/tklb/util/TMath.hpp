@@ -1,5 +1,5 @@
-#ifndef TKLB_MATH
-#define TKLB_MATH
+#ifndef TKLBZ_MATH
+#define TKLBZ_MATH
 
 #include <algorithm>
 

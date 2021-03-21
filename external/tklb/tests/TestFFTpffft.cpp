@@ -1,6 +1,6 @@
 #define TKLB_HEAP_DEBUG_SIZE 200
-#include "TestCommon.h"
-#include "../types/audio/fft/TFFT.h"
+#include "TestCommon.hpp"
+#include "../types/audio/fft/TFFT.hpp"
 
 int main() {
 	{

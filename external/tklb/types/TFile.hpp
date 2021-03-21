@@ -1,5 +1,5 @@
-#ifndef TKLB_STACK
-#define TKLB_STACK
+#ifndef TKLBZ_STACK
+#define TKLBZ_STACK
 
 #ifdef _WIN32
 	#include "../external/dirent.h"

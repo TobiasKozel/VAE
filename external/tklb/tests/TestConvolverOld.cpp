@@ -1,7 +1,7 @@
 #define TKLB_LEAKCHECKER_DISARM
-#include "TestCommon.h"
-#include "../types/audio/TAudioBuffer.h"
-#include "../types/audio/convolver/TConvolverOld.h"
+#include "TestCommon.hpp"
+#include "../types/audio/TAudioBuffer.hpp"
+#include "../types/audio/convolver/TConvolverOld.hpp"
 
 
 int main() {

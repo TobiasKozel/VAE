@@ -1,5 +1,5 @@
-#ifndef TKLB_MUTEX
-#define TKLB_MUTEX
+#ifndef TKLBZ_MUTEX
+#define TKLBZ_MUTEX
 
 #include <mutex>
 

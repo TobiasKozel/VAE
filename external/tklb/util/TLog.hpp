@@ -1,12 +1,17 @@
-#ifndef MA_LOG
-#define MA_LOG
+#ifndef TKLBZ_LOG
+#define TKLBZ_LOG
 
 #include <fstream>
+
+// TODO use wrapped mutex
 #include <mutex>
 #include <iostream>
+
+// TODO throw out strings
 #include <string>
 
 #include "./TPrint.h"
+
 
 namespace tklb {
 	class Logger {

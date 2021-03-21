@@ -1,7 +1,7 @@
-#ifndef TKLB_AUDIOFILE
-#define TKLB_AUDIOFILE
+#ifndef TKLBZ_AUDIOFILE
+#define TKLBZ_AUDIOFILE
 
-#include "./TAudioBuffer.h"
+#include "./TAudioBuffer.hpp"
 
 #define DR_WAV_IMPLEMENTATION
 #include "../../external/dr_wav.h"

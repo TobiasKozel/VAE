@@ -1,6 +1,6 @@
 #define TKLB_NO_SIMD
-#include "TestCommon.h"
-#include "../types/audio/convolver/TConvolverBrute.h"
+#include "TestCommon.hpp"
+#include "../types/audio/convolver/TConvolverBrute.hpp"
 
 
 int main() {
