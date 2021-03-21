@@ -2,27 +2,28 @@
 #define TKLB_HEAPBUFFER
 
 #include "../util/TAssert.h"
+#include "../util/TMemory.hpp"
 
 #include <cmath>
 #include <cstring>
-#include <memory>
 
 namespace tklb {
 
 /**
- * Basically a bad std::vector which can also work with foreign memory
+ * Basically a bad std::vector which can also work with foreign memory.
+ * Classes stored inside need to have a default contructor
  */
-template <typename T, class Allocator = std::allocator<T>>
+template <typename T, bool Aligned = false>
 class HeapBuffer {
 #if TKLB_HEAP_DEBUG_SIZE > 0
 	T DEBUF_BUF[TKLB_HEAP_DEBUG_SIZE];
 #endif
-	Allocator allocator;
-	T* mBuf = nullptr;
+	T* mBuf = nullptr; // Underlying buffer
 	size_t mSize = 0; // size of elements requested
 	size_t mRealSize = 0; // the actually allocated size
 	size_t mGranularity; // the space actually allocated will be a multiple of this
 	bool mInjected = false; // True if the memory doesn't belong to this instance
+	bool mError = false;
 
 	// True when the foreign memory is const, only cheked in debug mode
 	TKLB_ASSERT_STATE(bool IS_CONST)
@@ -31,12 +32,22 @@ class HeapBuffer {
 	 * @brief Allocated the exact size requsted and copies existing objects.
 	 * Will not call their destructors or constructors!
 	 */
-	bool allocate(size_t chunk) {
+	bool allocate(size_t chunk) noexcept {
 		T* oldBuf = mBuf;
 		if (0 < chunk) {
-			T* newBuf = allocator.allocate(chunk);
+			T* newBuf = nullptr;
+			if (Aligned) {
+				newBuf = reinterpret_cast<T*>(
+					memory::allocateAligned(chunk * sizeof(T))
+				);
+			} else {
+				newBuf = reinterpret_cast<T*>(
+					memory::allocate(chunk * sizeof(T))
+				);
+			}
 			if (newBuf == nullptr) {
 				TKLB_ASSERT(false)
+				mError = true;
 				return false; // ! Allocation failed
 			}
 			if (0 < mSize && oldBuf != nullptr && newBuf != nullptr) {
@@ -50,12 +61,17 @@ class HeapBuffer {
 
 		if (oldBuf != nullptr && !mInjected && mRealSize > 0) {
 			// Get rif of oldbuffer, object destructors were alredy called
-			allocator.deallocate(oldBuf, mRealSize);
+			if (Aligned) {
+				memory::deallocateAligned(oldBuf);
+			} else {
+				memory::deallocate(oldBuf);
+			}
 		}
 
 		mInjected = false; // we definetly own the memory now
 		TKLB_ASSERT_STATE(IS_CONST = false)
 		mRealSize = chunk;
+		mError = false;
 		return true;
 	}
 
@@ -266,6 +282,11 @@ public:
 	 * @brief Returns the real allocated size in elements
 	 */
 	size_t reserved() const { return mRealSize; }
+
+	/**
+	 * @brief Returns true if the most recent allocation failed
+	 */
+	bool error() const { return mError; }
 
 };
 

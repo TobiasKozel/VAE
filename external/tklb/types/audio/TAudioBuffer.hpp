@@ -4,7 +4,7 @@
 #include <cstring>
 #include <algorithm>
 
-#if !defined(TKLB_NO_SIMD) || defined(TKLB_ALIGNED_MEM)
+#ifndef TKLB_NO_SIMD
 	#include "../../external/xsimd/include/xsimd/xsimd.hpp"
 #endif
 
@@ -48,11 +48,7 @@ public:
 	/**
 	 * @brief Aligned vector type
 	 */
-	using Buffer = HeapBuffer<T2
-	#if !defined(TKLB_NO_SIMD) || defined(TKLB_ALIGNED_MEM)
-		, xsimd::aligned_allocator<T2, XSIMD_DEFAULT_ALIGNMENT>
-	#endif
-	>;
+	using Buffer = HeapBuffer<T2, true>;
 
 #ifndef TKLB_NO_SIMD
 	static constexpr uint stride = xsimd::simd_type<T>::size;
