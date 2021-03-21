@@ -17,8 +17,6 @@ public:
 	}
 };
 
-
-
 int main() {
 	{
 		HeapBuffer<LifeCycleTest> heap;

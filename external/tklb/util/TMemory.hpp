@@ -2,8 +2,11 @@
 #define TKLBZ_MEMORY
 
 #include <stddef.h>
-#include <stdlib.h>
 #include <utility>
+
+#if !defined(TKLB_CUSTOM_MALLOC) && !defined(TKLB_CUSTOM_FREE)
+	#include <stdlib.h>
+#endif
 
 #if !defined(TKLB_NO_SIMD) || defined(TKLB_ALIGNED_MEM)
 	#include "../external/xsimd/include/xsimd/config/xsimd_config.hpp"
@@ -15,19 +18,26 @@ namespace tklb {
 	 * is an option
 	 */
 	namespace memory {
-
 		/**
 		 * @brief Standart allocate function
 		 */
-		void* allocate(size_t bytes) noexcept {
-			return malloc(bytes);
+		void* allocate(size_t size) noexcept {
+			#ifdef TKLB_CUSTOM_MALLOC
+				return TKLB_CUSTOM_MALLOC(size);
+			#else
+				return malloc(size);
+			#endif
 		}
 
 		/**
 		 * @brief Free memory
 		 */
 		void deallocate(void* ptr) noexcept {
-			free(ptr);
+			#ifdef TKLB_CUSTOM_FREE
+				TKLB_CUSTOM_FREE(ptr);
+			#else
+				free(ptr);
+			#endif
 		}
 
 		void deallocateAligned(void* ptr) noexcept {

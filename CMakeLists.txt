@@ -45,12 +45,12 @@ else()
 endif()
 
 # Don't build glfw tests, docs and examples
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
-add_subdirectory(external/glfw/)
-target_link_libraries(dof_example glfw)
+# set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+# set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+# set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+# set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+# add_subdirectory(external/glfw/)
+# target_link_libraries(dof_example glfw)
 
 include_directories("external/glm/include")
 include_directories("external/headeronly")
