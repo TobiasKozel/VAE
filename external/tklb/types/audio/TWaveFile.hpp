@@ -1,6 +1,7 @@
 #ifndef TKLBZ_AUDIOFILE
 #define TKLBZ_AUDIOFILE
 
+#include "../../util/TMemory.hpp"
 #include "./TAudioBuffer.hpp"
 
 #define DR_WAV_IMPLEMENTATION
@@ -27,7 +28,10 @@ namespace tklb {
 					return false;
 				}
 			}
-			float* sampleData = new float[size_t(wav.totalPCMFrameCount) * size_t(wav.channels)];
+
+			float* sampleData = TKLB_MALLOC(
+				size_t(wav.totalPCMFrameCount) * size_t(wav.channels) * sizeof(float)
+			);
 
 			if (sampleData == nullptr) { return false; }
 
@@ -36,14 +40,14 @@ namespace tklb {
 			);
 
 			if (length == 0) {
-				free(sampleData);
+				TKLB_FREE(sampleData);
 				return false;
 			}
 			out.sampleRate = wav.sampleRate;
 			out.resize(length, wav.channels);
 			out.setFromInterleaved(sampleData, length, wav.channels);
 			out.setValidSize(length);
-			free(sampleData);
+			TKLB_FREE(sampleData);
 			drwav_uninit(&wav);
 		}
 
