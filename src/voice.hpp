@@ -8,7 +8,7 @@ namespace VAE {
 		const AudioBuffer* mSample = nullptr;
 		size_t mTime = 0;
 		float mVolume = 1.0;
-		float mPan = 1.0;
+		float mPan = 0.0;
 		bool mPlaying = false;
 		bool mVirtual = false;
 

@@ -1,46 +1,58 @@
 #ifndef TKLBZ_MEMORY_MANAGER
 #define TKLBZ_MEMORY_MANAGER
 
+#include "./TAssert.h"
 
 /**
  * Fixed memory
  */
 namespace tklb {
 	namespace memoryManager {
-		const unsigned int CustomSize = 1024 * 1024 * 300;
+		using Size = unsigned int;
+		const Size CustomSize = 1024 * 1024 * 300;
 		unsigned char* CustomMemory = new unsigned char[CustomSize];
-		unsigned int Allocated = 0;
+		Size Allocated = 0; // Keep track of total allocations
 
-		void* customMalloc(unsigned int size) {
-			if (size < sizeof(unsigned int)) {
-				size = sizeof(unsigned int); // min block size
+		void* customMalloc(Size size) {
+			TKLB_ASSERT(size != 0)
+			if (size < sizeof(Size)) {
+				// min block size since the space will be used when it's free
+				size = sizeof(Size);
 			}
-			size += sizeof(unsigned int); // add space allocated size
-			unsigned int* mem = reinterpret_cast<unsigned int*>(CustomMemory);
-			for (unsigned int i = 0; i < CustomSize / sizeof(unsigned int) -1;) {
+			size += sizeof(Size); // add space allocated size
+			Size* mem = reinterpret_cast<Size*>(CustomMemory);
+			for (Size i = 0; i < CustomSize / sizeof(Size) -1;) {
 				if (mem[i] == 0) {
 					if (size <= mem[i + 1] || mem[i + 1] == 0) {
 						mem[i] = size;
 						Allocated += size;
 						return &(mem[i + 1]);
+					} else {
+						// Step over the free area which is too small
+						i += mem[i + 1];
 					}
+				} else {
+					i += mem[i]; // Step over the already allocated area
 				}
-				i += mem[i];
 			}
 			return nullptr;
 		}
 
 		void customFree(void* ptr) {
-			unsigned int* index = reinterpret_cast<unsigned int*>(ptr);
-			unsigned int size = *(index - 1);
-			*(index - 1) = 0;
-			*index = size; // TODO check if the next block is free too
+			Size* index = reinterpret_cast<Size*>(ptr);
+			Size size = *(index - 1);
+			*(index - 1) = 0; // Mark the block as unallocated
+
+			// Save how large is the gap in memory will be
+			// TODO check if the next block is free too
+			// These blocks should be merged or fragmentation gets worse
+			*index = size;
 			Allocated -= size;
 		}
 	}
 }
 
 #define TKLB_CUSTOM_MALLOC(size) ::tklb::memoryManager::customMalloc(size)
-#define TKLB_CUSTOM_FREE(ptr) ::tklb::memoryManager::customFree(ptr)
+#define TKLB_CUSTOM_FREE(ptr)    ::tklb::memoryManager::customFree(ptr)
 
 #endif
