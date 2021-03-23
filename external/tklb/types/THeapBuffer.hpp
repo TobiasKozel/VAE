@@ -87,7 +87,7 @@ namespace tklb {
 		 * @param size Size in elements of the buffer
 		 * @param granularity How big the real allocated chunks are
 		 */
-		HeapBuffer(const size_t size = 0, const size_t granularity = 1024) {
+		HeapBuffer(const size_t size = 0, const size_t granularity = 256) {
 			setGranularity(granularity);
 			if (size != 0) { resize(0); }
 		}

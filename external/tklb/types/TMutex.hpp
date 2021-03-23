@@ -25,7 +25,7 @@ namespace tklb {
 	};
 
 	class LockGuard {
-		Mutex* mMutex = nullptr;
+		Mutex& mMutex;
 	public:
 		LockGuard(const LockGuard&) = delete;
 		LockGuard(const LockGuard*) = delete;
@@ -33,13 +33,12 @@ namespace tklb {
 		LockGuard& operator= (const LockGuard&) = delete;
 		LockGuard& operator= (LockGuard&&) = delete;
 
-		LockGuard(Mutex& mutex) {
-			mMutex = &mutex;
+		LockGuard(Mutex& mutex) : mMutex(mutex) {
 			mutex.lock();
 		}
 
 		~LockGuard() {
-			mMutex->unlock();
+			mMutex.unlock();
 		}
 	};
 } // namespace

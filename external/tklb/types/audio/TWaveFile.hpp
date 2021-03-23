@@ -10,6 +10,23 @@
 namespace tklb {
 	namespace wave {
 
+		namespace _ {
+			void* drwaveMalloc(size_t size, void* userData) {
+				return TKLB_MALLOC(size);
+			}
+
+			void drwaveFree(void* ptr, void* userData) {
+				TKLB_FREE(ptr);
+			}
+
+			drwav_allocation_callbacks drwaveCallbacks {
+				nullptr,		// No userdata
+				drwaveMalloc,
+				nullptr,		// No realloc
+				drwaveFree
+			};
+		}
+
 		/**
 		 * @brief Decode wav from memory or file path
 		 * @param path The path or the wav file buffer if length is 0
@@ -20,11 +37,11 @@ namespace tklb {
 		bool load(const char* path, AudioBufferTpl<T>& out, size_t length = 0) {
 			drwav wav;
 			if (length == 0) {
-				if (!drwav_init_file(&wav, path, nullptr)) {
+				if (!drwav_init_file(&wav, path, &_::drwaveCallbacks)) {
 					return false;
 				}
 			} else {
-				if (!drwav_init_memory(&wav, path, length, nullptr)) {
+				if (!drwav_init_memory(&wav, path, length, &_::drwaveCallbacks)) {
 					return false;
 				}
 			}

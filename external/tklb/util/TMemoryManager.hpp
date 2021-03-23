@@ -7,6 +7,10 @@
  * Fixed memory
  */
 namespace tklb {
+	/**
+	 * @brief Extremely basic Memorymanager which works with a preallocated
+	 * chunk of memory. Fragmentation is probably quite an issue.
+	 */
 	namespace memoryManager {
 		using Size = unsigned int;
 		const Size CustomSize = 1024 * 1024 * 300;
@@ -14,7 +18,7 @@ namespace tklb {
 		Size Allocated = 0; // Keep track of total allocations
 
 		void* customMalloc(Size size) {
-			TKLB_ASSERT(size != 0)
+			if (size == 0) { return nullptr; }
 			if (size < sizeof(Size)) {
 				// min block size since the space will be used when it's free
 				size = sizeof(Size);
@@ -26,7 +30,7 @@ namespace tklb {
 					if (size <= mem[i + 1] || mem[i + 1] == 0) {
 						mem[i] = size;
 						Allocated += size;
-						return &(mem[i + 1]);
+						return &(mem[i + 1]); // * Found free spot
 					} else {
 						// Step over the free area which is too small
 						i += mem[i + 1];
@@ -35,10 +39,11 @@ namespace tklb {
 					i += mem[i]; // Step over the already allocated area
 				}
 			}
-			return nullptr;
+			return nullptr; // ! No memory left
 		}
 
 		void customFree(void* ptr) {
+			if (ptr == nullptr) { return; }
 			Size* index = reinterpret_cast<Size*>(ptr);
 			Size size = *(index - 1);
 			*(index - 1) = 0; // Mark the block as unallocated
