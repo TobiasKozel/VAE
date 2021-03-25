@@ -87,7 +87,7 @@ namespace tklb {
 			if (ptr != nullptr) {
 				T* test = new (ptr) T(std::forward<Args>(args)...);
 			}
-			return ptr;
+			return reinterpret_cast<T*>(ptr);
 		}
 
 		/**
@@ -111,6 +111,6 @@ namespace tklb {
 #define TKLB_MALLOC_ALIGNED(size)  ::tklb::memory::allocateAligned(size)
 #define TKLB_FREE_ALIGNED(ptr) ::tklb::memory::deallocateAligned(ptr)
 #define TKLB_NEW(T, ...) ::tklb::memory::create<T>(__VA_ARGS__)
-#define TKLB_DELETE(T, ptr) ::tklb::memory::dispose<T>(ptr)
+#define TKLB_DELETE(ptr) ::tklb::memory::dispose(ptr)
 
 #endif // TKLB_MEMORY

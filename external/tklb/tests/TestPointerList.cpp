@@ -1,17 +1,17 @@
-#include "TestCommon.h"
-#include "../types/TPointerList.h"
+#include "./TestCommon.hpp"
+#include "../types/THeapBuffer.hpp"
 
 
 int main() {
 
 	{
-		PointerList<float> list;
+		HeapBuffer<float*> list;
 		const int size = 1024;
 		float arr[size];
 
 		for (int i = 0; i < size; i++) {
 			arr[i] = i;
-			list.add(arr + i);
+			list.push(arr + i);
 		}
 
 		if (list.size() != size) {

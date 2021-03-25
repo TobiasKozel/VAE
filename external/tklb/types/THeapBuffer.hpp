@@ -223,6 +223,9 @@ namespace tklb {
 			return true;
 		}
 
+		/**
+		 * @brief Push the object to the back of the buffer
+		 */
 		bool push(const T& object) {
 			size_t newSize = mSize + 1;
 			if (mRealSize < newSize) {
@@ -272,6 +275,13 @@ namespace tklb {
 				}
 			}
 			return false;
+		}
+
+		/**
+		 * @brief Clears the buffer but doesn't free the memory
+		 */
+		void clear() {
+			resize(0, false);
 		}
 
 		/**
