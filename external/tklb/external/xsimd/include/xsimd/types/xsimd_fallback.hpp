@@ -603,7 +603,8 @@ namespace xsimd
             {
                 T res(0);
                 using int_type = as_unsigned_integer_t<T>;
-                *reinterpret_cast<int_type*>(&res) = ~int_type(0);
+                int_type value(~int_type(0));
+                std::memcpy(&res, &value, sizeof(int_type));
                 return res;
             }
         };
@@ -913,6 +914,12 @@ namespace xsimd
             }
 
             static batch_type select(const batch_bool_type& cond, const batch_type& a, const batch_type& b)
+            {
+                XSIMD_FALLBACK_MAPPING_LOOP(batch, (cond[i] ? a[i] : b[i]))
+            }
+
+            template<bool... Values>
+            static batch_type select(const batch_bool_constant<value_type, Values...>& cond, const batch_type& a, const batch_type& b)
             {
                 XSIMD_FALLBACK_MAPPING_LOOP(batch, (cond[i] ? a[i] : b[i]))
             }
