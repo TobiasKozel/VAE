@@ -71,7 +71,7 @@ namespace tklb {
 
 				// mRc[0][sizeHalf] = 0;
 				// result.setFromInterleaved(mRc[0], sizeHalf, 2, processed / 2);
-				result.set(mRc[0], mSize, 0, processed);
+				result.set(mRc[0], mSize, processed);
 				// result.set(mRc[0],            sizeHalf, 0, processed / 2);
 				// result.set(mRc[0] + sizeHalf, sizeHalf, 1, processed / 2);
 
@@ -92,7 +92,7 @@ namespace tklb {
 				const uint sizeHalf = mSize / 2;
 				const uint processedHalf = processed / 2;
 				mRc.set(input[0] + processedHalf, sizeHalf);
-				mRc.set(input[1] + processedHalf, sizeHalf, 0, sizeHalf);
+				mRc.set(input[1] + processedHalf, sizeHalf, sizeHalf);
 				const T volume = 1.0 / double(mSize);
 				if (std::is_same<T, float>::value) {
 					float* out = reinterpret_cast<float*>(result[0]) + processed;

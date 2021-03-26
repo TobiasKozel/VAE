@@ -52,7 +52,7 @@ int conversion(AudioBuffer& buffer) {
 		fbuf[c] = fsamples + (length * c);
 	}
 
-	buffer.set(fbuf, length, channels, length / 2);
+	buffer.set(fbuf, length, channels, 0, length / 2);
 
 	AudioBuffer::sample* l = buffer[0];
 	AudioBuffer::sample* r = buffer[1];
@@ -85,7 +85,7 @@ int add() {
 	for (int c = 0; c < channels; c++) {
 		fbuf[c] = fsamples + (length * c);
 	}
-	buffer.set(fbuf, length, channels, length / 2);
+	buffer.set(fbuf, length, channels, 0, length / 2);
 
 	/**
 	 * Fill the first half with 1.0 of the second buffer
