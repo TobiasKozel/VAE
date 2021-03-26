@@ -1,8 +1,9 @@
 #ifndef TKLBZ_AUDIOBUFFER
 #define TKLBZ_AUDIOBUFFER
 
-#include <cstring>
 #include <algorithm>
+#include "../../util/TMemory.hpp"
+#include "../../util/TMath.hpp"
 
 #ifndef TKLB_NO_SIMD
 	#include "../../external/xsimd/include/xsimd/xsimd.hpp"
@@ -84,24 +85,24 @@ namespace tklb {
 		 * @param samples An Array containing the audio samples
 		 * @param length Amount of sample to copy
 		 * @param channel Channel index
-		 * @param offset The offset for the traget buffer
+		 * @param offsetDst The offset for the destination buffer (this)
 		 */
 		template <typename T2>
 		void set(
 			const T2* samples,
 			uint length,
 			const uchar channel = 0,
-			const uint offset = 0
+			const uint offsetDst = 0
 		) {
 			if (mChannels <= channel) { return; }
-			TKLB_ASSERT(size() >= offset)
-			length = std::min(length, size() - offset);
+			TKLB_ASSERT(size() >= offsetDst)
+			length = std::min(length, size() - offsetDst);
 			T* out = get(channel);
 			if (std::is_same<T2, T>::value) {
-				memcpy(out + offset, samples, sizeof(T) * length);
+				memory::copy(out + offsetDst, samples, sizeof(T) * length);
 			} else {
 				for (uint i = 0; i < length; i++) {
-					out[i + offset] = static_cast<T>(samples[i]);
+					out[i + offsetDst] = static_cast<T>(samples[i]);
 				}
 			}
 		}
@@ -111,19 +112,19 @@ namespace tklb {
 		 * @param samples A 2D Array containing the audio samples (float or double)
 		 * @param length Samples to copy in (single channel)
 		 * @param channels Channel count
-		 * @param offset Offset in the target buffer
-		 * @param offsetIn Offset in the source buffer
+		 * @param offsetSrc Offset in the source buffer
+		 * @param offsetDst Offset in the destination buffer
 		 */
 		template <typename T2>
 		void set(
 			T2** const samples,
 			const uint length,
 			const uchar channels,
-			const uint offset = 0,
-			const uint offsetIn = 0
+			const uint offsetSrc = 0,
+			const uint offsetDst = 0
 		) {
 			for (uchar c = 0; c < channels; c++) {
-				set(samples[c] + offsetIn, length, c, offset);
+				set(samples[c] + offsetSrc, length, c, offsetDst);
 			}
 		};
 
@@ -132,19 +133,19 @@ namespace tklb {
 		 * e.g. offset=10 and length=15 will copy 15 samples into the buffer starting at the 10th sample
 		 * @param buffer Source buffer object
 		 * @param length Samples to copy in
-		 * @param offset Start offset in the target buffer
-		 * @param offsetIn Start offset in the source buffer
+		 * @param offsetSrc Start offset in the source buffer
+		 * @param offsetDst Start offset in the target buffer
 		 */
 		template <typename T2>
 		void set(
 			const AudioBufferTpl<T2>& buffer,
 			uint length = 0,
-			const uint offset = 0,
-			const uint offsetIn = 0
+			const uint offsetSrc = 0,
+			const uint offsetDst = 0
 		) {
 			length = length == 0 ? buffer.size() : length;
 			for (uchar c = 0; c < buffer.channels(); c++) {
-				set(buffer[c] + offsetIn, length, c, offset);
+				set(buffer[c] + offsetSrc, length, c, offsetDst);
 			}
 		};
 
@@ -152,17 +153,17 @@ namespace tklb {
 		 * @brief Set the entire buffer to a constant value
 		 * @param value Value to fill the buffer with
 		 * @param length Samples to set. 0 Sets all
-		 * @param offset Start offset in the target buffer
+		 * @param offsetDst Start offset in the target buffer
 		 */
 		void set(
 			T value = 0,
 			uint length = 0,
-			const uint offset = 0
+			const uint offsetDst = 0
 		) {
 			TKLB_ASSERT(size() >= offset)
-			length = std::min(size() - offset, length ? length : size());
+			length = std::min(size() - offsetDst, length ? length : size());
 			for (uchar c = 0; c < channels(); c++) {
-				std::fill_n(get(c) + offset, length, value);
+				std::fill_n(get(c) + offsetDst, length, value);
 			}
 		}
 
@@ -171,24 +172,24 @@ namespace tklb {
 		 * @param samples A 1D Array containing the interleaved audio samples (float or double)
 		 * @param length The length of a single channel
 		 * @param channels Channel count
-		 * @param offset Start offset in the target buffer
-		 * @param offsetIn Start offset in the source buffer
+		 * @param offsetSrc Start offset in the source buffer
+		 * @param offsetDst Start offset in the target buffer
 		 */
 		template <typename T2>
 		void setFromInterleaved(
 			const T2* samples,
 			uint length,
 			const uchar channels,
-			const uint offset = 0,
-			uint offsetIn = 0
+			uint offsetSrc = 0,
+			const uint offsetDst = 0
 		) {
 			TKLB_ASSERT(size() >= offset)
-			length = std::min(size() - offset, length);
-			offsetIn *= channels;
+			length = std::min(size() - offsetDst, length);
+			offsetSrc *= channels;
 			for (uchar c = 0; c < std::min(channels, mChannels); c++) {
 				T* out = get(c);
-				for(uint i = 0, j = c + offsetIn; i < length; i++, j+= channels) {
-					out[i + offset] = static_cast<T>(samples[j]);
+				for(uint i = 0, j = c + offsetSrc; i < length; i++, j+= channels) {
+					out[i + offsetDst] = static_cast<T>(samples[j]);
 				}
 			}
 		}
@@ -236,28 +237,28 @@ namespace tklb {
 		 * @brief Add the provided buffer
 		 * @param buffer Source buffer object
 		 * @param length Samples to add from the source buffer
-		 * @param offset Start offset in the target buffer
-		 * @param offsetIn Start offset in the source buffer
+		 * @param offsetSrc Start offset in the source buffer
+		 * @param offsetDst Start offset in the target buffer
 		 */
 		template <typename T2>
 		void add(
 			const AudioBufferTpl<T2>& buffer,
 			uint length = 0,
-			uint offset = 0,
-			uint offsetIn = 0
+			uint offsetSrc = 0,
+			uint offsetDst = 0
 		) {
-			TKLB_ASSERT(size() >= offset)
-			TKLB_ASSERT(buffer.size() >= offsetIn)
-			length = length == 0 ? buffer.size() - offsetIn : length;
-			length = std::min(buffer.size() - offsetIn, size() - offset);
+			TKLB_ASSERT(size() >= offsetDst)
+			TKLB_ASSERT(buffer.size() >= offsetSrc)
+			length = length == 0 ? buffer.size() - offsetSrc : length;
+			length = std::min(buffer.size() - offsetSrc, size() - offsetDst);
 			const uchar channelCount = std::min(buffer.channels(), channels());
 
 			#ifndef TKLB_NO_SIMD
 				if (std::is_same<T2, T>::value) {
 					const uint vectorize = length - (length % stride);
 					for (uchar c = 0; c < channelCount; c++) {
-						T* out = get(c) + offset;
-						const T* in = reinterpret_cast<const T*>(buffer[c]) + offsetIn;
+						T* out = get(c) + offsetDst;
+						const T* in = reinterpret_cast<const T*>(buffer[c]) + offsetSrc;
 						for(uint i = 0; i < vectorize; i += stride) {
 							xsimd::simd_type<T> a = xsimd::load_aligned(in + i);
 							xsimd::simd_type<T> b = xsimd::load_aligned(out + i);
@@ -273,8 +274,8 @@ namespace tklb {
 
 			// If the type doen't match or simd is diabled
 			for (uchar c = 0; c < channelCount; c++) {
-				T* out = get(c) + offset;
-				const T2* in = buffer[c] + offsetIn;
+				T* out = get(c) + offsetDst;
+				const T2* in = buffer[c] + offsetSrc;
 				for(uint i = 0; i < length; i++) {
 					out[i] += in[i];
 				}
@@ -283,29 +284,30 @@ namespace tklb {
 
 		/**
 		 * @brief Multiply two buffers
+		 * @param buffer Source buffer object
 		 * @param length Samples to multiply from the source buffer
-		 * @param offset Start offset in the target buffer
 		 * @param offsetIn Start offset in the source buffer
+		 * @param offset Start offset in the target buffer
 		 */
 		template <typename T2>
 		void multiply(
 			const AudioBufferTpl<T2>& buffer,
 			uint length = 0,
-			uint offset = 0,
-			uint offsetIn = 0
+			uint offsetSrc = 0,
+			uint offsetDst = 0
 		) {
-			TKLB_ASSERT(size() >= offset)
-			TKLB_ASSERT(buffer.size() >= offsetIn)
-			length = length == 0 ? buffer.size() - offsetIn : length;
-			length = std::min(buffer.size() - offsetIn, size() - offset);
+			TKLB_ASSERT(size() >= offsetDst)
+			TKLB_ASSERT(buffer.size() >= offsetSrc)
+			length = length == 0 ? buffer.size() - offsetSrc : length;
+			length = std::min(buffer.size() - offsetSrc, size() - offsetDst);
 			const uchar channelsCount = std::min(buffer.channels(), channels());
 
 			#ifndef TKLB_NO_SIMD
 				if (std::is_same<T2, T>::value) {
 					const uint vectorize = length - (length % stride);
 					for (uchar c = 0; c < channelsCount; c++) {
-						T* out = get(c) + offset;
-						const T* in = reinterpret_cast<const T*>(buffer[c]) + offsetIn;
+						T* out = get(c) + offsetDst;
+						const T* in = reinterpret_cast<const T*>(buffer[c]) + offsetSrc;
 						for(uint i = 0; i < vectorize; i += stride) {
 							xsimd::simd_type<T> a = xsimd::load_aligned(in + i);
 							xsimd::simd_type<T> b = xsimd::load_aligned(out + i);
@@ -321,8 +323,8 @@ namespace tklb {
 
 			// If the type doen't match or simd is diabled
 			for (uchar c = 0; c < channelsCount; c++) {
-				T* out = get(c) + offset;
-				const T2* in = buffer[c] + offsetIn;
+				T* out = get(c) + offsetDst;
+				const T2* in = buffer[c] + offsetSrc;
 				for(uint i = 0; i < length; i++) {
 					out[i] *= in[i];
 				}
@@ -485,7 +487,7 @@ namespace tklb {
 			length = std::min(length, size() - offset);
 			const T2* source = get(channel) + offset;
 			if (std::is_same<T2, T>::value) {
-				memcpy(target, source, sizeof(T) * length);
+				memory::copy(target, source, sizeof(T) * length);
 			} else {
 				for (uint i = 0; i < length; i++) {
 					target[i] = T2(source[i]);
