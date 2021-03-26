@@ -12,7 +12,7 @@ int ret;
 // #define memcheck() 	if (allocationCount != 0) { return 100; } \
 // 					else if (curruptions != 0) { return 101; }
 
-#define memcheck() 	if (::tklb::memoryManager::Allocated != 0) { return 100; }
+#define memcheck() 	if (::tklb::memory::Allocated != 0) { return 100; }
 
 bool close(float a, float b, float epsylon = 0.01) {
 	return std::abs(a - b) < epsylon;

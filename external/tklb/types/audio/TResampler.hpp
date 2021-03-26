@@ -1,7 +1,10 @@
 #ifndef TKLBZ_RESAMPLER
 #define TKLBZ_RESAMPLER
 
-#define OUTSIDE_SPEEX
+#include "./TAudioBuffer.hpp"
+#include "../../util/TAssert.h"
+#include "../../util/TMemory.hpp"
+
 #define FLOATING_POINT
 
 #ifndef TKLB_NO_SIMD
@@ -13,12 +16,26 @@
 	#endif
 #endif
 
+#define OUTSIDE_SPEEX
 #define RANDOM_PREFIX tklb
 
-#include "../../external/speex_resampler/speex/speex_resampler.h"
+static inline void *speex_alloc (int size) {
+	void* ptr = TKLB_MALLOC(size);
+	memory::set(ptr, 0, size);
+	return ptr;
+}
+
+static inline void speex_free (void *ptr) {
+	TKLB_FREE(ptr);
+}
+
+static inline void *speex_realloc (void *ptr, int size) {
+	return TKLB_REALLOC(ptr, size);
+}
+
+#include "../../external/speex_resampler/speex_resampler.h"
 #include "../../external/speex_resampler/resample.c"
 
-#include "./TAudioBuffer.hpp"
 
 namespace tklb {
 
@@ -58,11 +75,14 @@ namespace tklb {
 		 */
 		bool init(uint rateIn, uint rateOut, uint maxBlock = 512, uchar quality = 5) {
 			int err;
+			if (mState != nullptr) {
+				speex_resampler_destroy(mState);
+			}
 			mState = speex_resampler_init(MAX_CHANNELS, rateIn, rateOut, quality, &err);
 
 			// Conversion buffers if not doing float resampling
 			if (!std::is_same<T, float>::value) {
-				mConvertIn.resize(calculateBufferSize(rateIn, rateIn, maxBlock), MAX_CHANNELS);
+				mConvertIn.resize(maxBlock, MAX_CHANNELS);
 				mConvertOut.resize(calculateBufferSize(rateIn, rateOut, maxBlock), MAX_CHANNELS);
 			}
 			mRateIn = rateIn;
@@ -91,21 +111,34 @@ namespace tklb {
 					samplesOut = countOut;
 				}
 			} else {
-				mConvertIn.set(in);
-				for (uchar c = 0; c < in.channels(); c++) {
-					uint countIn = in.validSize();
-					uint countOut = mConvertOut.size();
-					const float* inBuf = mConvertIn[c];
-					float* outBuf = mConvertOut[c];
-					speex_resampler_process_float(mState, c, inBuf, &countIn, outBuf, &countOut);
-					samplesOut = countOut;
-					TKLB_ASSERT(mConvertOut.size() >= countOut);
+				const uint countIn = in.validSize();
+				const uint blockSize = mConvertIn.size();
+				for (uint i = 0; i < countIn; i += blockSize) {
+					const uint blockLeft = min(blockSize, countIn - i);
+					uint samplesEmitted = 0;
+					mConvertIn.set(in, blockLeft, i);
+					for (uchar c = 0; c < in.channels(); c++) {
+						uint countIn = blockLeft;
+						uint countOut = mConvertOut.size();
+						const float* inBuf = mConvertIn[c];
+						float* outBuf = mConvertOut[c];
+						speex_resampler_process_float(mState, c, inBuf, &countIn, outBuf, &countOut);
+						samplesEmitted = countOut;
+						TKLB_ASSERT(mConvertOut.size() >= countOut);
+					}
+					out.set(mConvertOut, samplesEmitted, 0, samplesOut);
+					samplesOut += samplesEmitted;
 				}
-				out.set(mConvertOut, samplesOut);
 			}
+
+			// There might be some more sample beeing emitted, add some padding
 			TKLB_ASSERT(out.size() >= samplesOut);
 			out.setValidSize(samplesOut);
 			return samplesOut;
+		}
+
+		uint getLatency() const {
+			return speex_resampler_get_input_latency(mState);
 		}
 
 		/**
@@ -124,6 +157,7 @@ namespace tklb {
 		 * @param quality Quality from 1-10
 		 */
 		static void resample(AudioBufferTpl<T>& buffer, const uint rateOut, const uchar quality = 5) {
+			// TODO compensate delay
 			const uint rateIn = buffer.sampleRate;
 			const uint samples = buffer.size();
 			TKLB_ASSERT(rateIn > 0)

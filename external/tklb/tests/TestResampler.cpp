@@ -1,44 +1,48 @@
 #define TKLB_MAXCHANNELS 16
 
-// TODO there's some fuckery going on here
-// probably the memchecker missing some allocations
-#define TKLB_LEAKCHECKER_DISARM
 #include "TestCommon.hpp"
 #include "../types/audio/TResampler.hpp"
 
 
 int main() {
 	{
-		const int length = 512;
+		const int rateLow = 44100;
+		const int rateHigh = 48000;
+
+		const int length = 4096;
+		const int blockSize = 256;
 		const int channels = TKLB_MAXCHANNELS;
-		const int rate1 = 44100;
-		const int rate2 = 48000;
-		Resampler<> up(rate1, rate2, length);
-		Resampler<> down(rate2, rate1, length * 2); // Bigger max block obviously
 
-		AudioBuffer in, out;
-		in.sampleRate = rate1;
-		out.sampleRate = rate2;
+		Resampler<> resamplerUp(rateLow, rateHigh, blockSize);
+		Resampler<> resamplerDown(rateHigh, rateLow, blockSize);
 
-		in.resize(Resampler<>::calculateBufferSize(rate1, rate1, length), channels);
-		out.resize(Resampler<>::calculateBufferSize(rate1, rate2, length) , channels); // same here
+		int latency = resamplerDown.getLatency();
+		latency += resamplerUp.getLatency();
+
+		AudioBuffer bufLow, bufHigh, bufLowReference;
+		bufLow.sampleRate = rateLow;
+		bufHigh.sampleRate = rateHigh;
+
+		bufLow.resize(length + 10, channels); // add some padding
+		bufHigh.resize(Resampler<>::calculateBufferSize(rateLow, rateHigh, length) , channels);
 
 		// generate sine test signal
 		for (int c = 0; c < channels; c++) {
 			for (int i = 0; i < length; i++) {
-				in[c][i] = sin(i * c * 0.001); // Failry low frequency
+				bufLow[c][i] = sin(i * c * 0.001); // Fairly low frequency
 			}
 		}
-		in.setValidSize(length);
+		bufLow.setValidSize(length); // all samples in the buffer are to be processed
+		bufLowReference.clone(bufLow); // Copy to compare
 
-		up.process(in, out);
-		down.process(out, in);
+		resamplerUp.process(bufLow, bufHigh);
+		resamplerDown.process(bufHigh, bufLow);
 
 		// compare sine test signal
 		for (int c = 0; c < channels; c++) {
-			for (int i = 10; i < length - 10; i++) {
-				if (!close(in[c][i], -sin(i * c * 0.001), 0.6)) {
-					// return 1;
+			for (int i = 10; i < length - latency - 10; i++) { // crop the ends and latency
+				if (!close(bufLow[c][i + latency], bufLowReference[c][i], 0.1)) {
+					return 1;
 				}
 			}
 		}

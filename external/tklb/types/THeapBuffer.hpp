@@ -53,7 +53,7 @@ namespace tklb {
 				}
 				if (0 < mSize && oldBuf != nullptr && newBuf != nullptr) {
 					// copy existing content
-					memcpy(newBuf, oldBuf, mSize * sizeof(T));
+					memory::copy(newBuf, oldBuf, mSize * sizeof(T));
 				}
 				mBuf = newBuf;
 			} else {
@@ -110,7 +110,7 @@ namespace tklb {
 
 		/**
 		 * @brief Resizes and copies the contents of the source Buffer
-		 * This will do a memcpy,so none of the object
+		 * This will do a memory::copy,so none of the object
 		 * contructors will called
 		 */
 		bool set(const HeapBuffer<T>& source) {
@@ -121,7 +121,7 @@ namespace tklb {
 			if (!resize(source.size())) {
 				return false; // ! Allocation failed
 			}
-			memcpy(mBuf, source.data(), mSize * sizeof(T));
+			memory::copy(mBuf, source.data(), mSize * sizeof(T));
 			return true;
 		}
 
@@ -158,7 +158,7 @@ namespace tklb {
 
 		T* data() {
 			#if TKLB_HEAP_DEBUG_SIZE > 0
-				memcpy(DEBUF_BUF, mBuf, sizeof(T) * std::min((size_t) 100, mSize));
+				memory::copy(DEBUF_BUF, mBuf, sizeof(T) * std::min((size_t) 100, mSize));
 			#endif
 			// Don't use non const access when using injected const memory
 			TKLB_ASSERT(!IS_CONST)
@@ -174,7 +174,7 @@ namespace tklb {
 		T& operator[](const size_t index) {
 			// Don't use non const access when using injected const memory
 			#if TKLB_HEAP_DEBUG_SIZE > 0
-				memcpy(DEBUF_BUF, mBuf, sizeof(T) * std::min((size_t) 100, mSize));
+				memory::copy(DEBUF_BUF, mBuf, sizeof(T) * std::min((size_t) 100, mSize));
 			#endif
 			TKLB_ASSERT(!IS_CONST)
 			return mBuf[index];
@@ -230,12 +230,12 @@ namespace tklb {
 			size_t newSize = mSize + 1;
 			if (mRealSize < newSize) {
 				if (allocate(closestChunkSize(newSize))) {
-					memcpy(mBuf + mSize, &object, sizeof(T));
+					memory::copy(mBuf + mSize, &object, sizeof(T));
 				} else {
 					return false; // ! Allocation failed
 				}
 			} else {
-				memcpy(mBuf + mSize, &object, sizeof(T));
+				memory::copy(mBuf + mSize, &object, sizeof(T));
 			}
 			mSize = newSize;
 			return true;
@@ -249,7 +249,7 @@ namespace tklb {
 			if (0 == mSize) {
 				return false;
 			}
-			memcpy(object, mBuf + mSize - 1, sizeof(T));
+			memory::copy(object, mBuf + mSize - 1, sizeof(T));
 			mSize--;
 			return true;
 		}
@@ -262,7 +262,7 @@ namespace tklb {
 			if (mSize <= index) { return false; }
 			mBuf[index].~T(); // Call destructor
 			if (index != mSize - 1) { // fill the gap with the last element
-				memcpy(mBuf + index, mBuf + (mSize - 1), sizeof(T));
+				memory::copy(mBuf + index, mBuf + (mSize - 1), sizeof(T));
 			}
 			mSize--;
 			return true;

@@ -160,7 +160,7 @@ namespace tklb {
 			uint length = 0,
 			const uint offsetDst = 0
 		) {
-			TKLB_ASSERT(size() >= offset)
+			TKLB_ASSERT(size() >= offsetDst)
 			length = std::min(size() - offsetDst, length ? length : size());
 			for (uchar c = 0; c < channels(); c++) {
 				std::fill_n(get(c) + offsetDst, length, value);
@@ -183,7 +183,7 @@ namespace tklb {
 			uint offsetSrc = 0,
 			const uint offsetDst = 0
 		) {
-			TKLB_ASSERT(size() >= offset)
+			TKLB_ASSERT(size() >= offsetDst)
 			length = std::min(size() - offsetDst, length);
 			offsetSrc *= channels;
 			for (uchar c = 0; c < std::min(channels, mChannels); c++) {
@@ -192,6 +192,16 @@ namespace tklb {
 					out[i + offsetDst] = static_cast<T>(samples[j]);
 				}
 			}
+		}
+
+
+		/**
+		 * @brief Match the size of the provided buffer and copy the contents
+		 */
+		template <typename T2>
+		void clone(const AudioBufferTpl<T2>& buffer) {
+			resize(buffer.size(), buffer.channels());
+			set(buffer);
 		}
 
 		/**

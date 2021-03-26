@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <utility>
 
-#if !defined(TKLB_CUSTOM_MALLOC) && !defined(TKLB_CUSTOM_FREE)
+#ifndef TKLB_MEM_CUSTOM_MALLOC
 	#include <stdlib.h>
 #endif
 
@@ -18,27 +18,24 @@ namespace tklb {
 	 * is an option
 	 */
 	namespace memory {
-		/**
-		 * @brief Standart allocate function
-		 */
+
+	#ifndef TKLB_MEM_CUSTOM_MALLOC
 		void* allocate(size_t size) noexcept {
-			#ifdef TKLB_CUSTOM_MALLOC
-				return TKLB_CUSTOM_MALLOC(size);
-			#else
-				return malloc(size);
-			#endif
+			return malloc(size);
 		}
 
-		/**
-		 * @brief Free memory
-		 */
-		void deallocate(void* ptr) noexcept {
-			#ifdef TKLB_CUSTOM_FREE
-				TKLB_CUSTOM_FREE(ptr);
-			#else
-				free(ptr);
-			#endif
+		void* reallocate(void* ptr, size_t size) noexcept {
+			return realloc(ptr, size);
 		}
+
+		void deallocate(void* ptr) noexcept {
+			free(ptr);
+		}
+	#else
+		void* allocate(size_t size) noexcept;
+		void* reallocate(void* ptr, size_t size) noexcept;
+		void deallocate(void* ptr) noexcept;
+	#endif // TKLB_MEM_CUSTOM_MALLOC
 
 		void deallocateAligned(void* ptr) noexcept {
 			#if !defined(TKLB_NO_SIMD) || defined(TKLB_ALIGNED_MEM)
@@ -60,8 +57,7 @@ namespace tklb {
 				// but using the internal allocate function instead
 				void* res = 0;
 				void* ptr = allocate(bytes + XSIMD_DEFAULT_ALIGNMENT);
-				if (ptr != 0 && XSIMD_DEFAULT_ALIGNMENT != 0)
-				{
+				if (ptr != 0 && XSIMD_DEFAULT_ALIGNMENT != 0) {
 					// some evil bitwise magic to align to the next block
 					res = reinterpret_cast<void*>(
 						(reinterpret_cast<size_t>(ptr) &
@@ -75,6 +71,24 @@ namespace tklb {
 			#else
 				return allocate(bytes);
 			#endif
+		}
+
+		/**
+		 * @brief Besic memcpy
+		 */
+		inline void copy(void* dst, const void* src, const size_t size) {
+			auto source = reinterpret_cast<const unsigned char*>(src);
+			auto destination = reinterpret_cast<unsigned char*>(dst);
+			for (size_t i = 0; i < size; i++) {
+				destination[i] = source[i];
+			}
+		}
+
+		inline void set(void* ptr, const unsigned char c, size_t size) {
+			auto pointer = reinterpret_cast<unsigned char*>(ptr);
+			for (size_t i = 0; i < size; i++) {
+				pointer[i] = c;
+			}
 		}
 
 		/**
@@ -108,6 +122,7 @@ namespace tklb {
 
 #define TKLB_MALLOC(size)  ::tklb::memory::allocate(size)
 #define TKLB_FREE(ptr) ::tklb::memory::deallocate(ptr)
+#define TKLB_REALLOC(ptr, size) ::tklb::memory::reallocate(ptr, size)
 #define TKLB_MALLOC_ALIGNED(size)  ::tklb::memory::allocateAligned(size)
 #define TKLB_FREE_ALIGNED(ptr) ::tklb::memory::deallocateAligned(ptr)
 #define TKLB_NEW(T, ...) ::tklb::memory::create<T>(__VA_ARGS__)
