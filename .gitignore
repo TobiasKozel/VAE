@@ -10,6 +10,7 @@
 *.vcxproj.*
 
 # external libs
+external/*/.github
 external/*/.azure-pipelines
 external/*/docs
 external/*/doc

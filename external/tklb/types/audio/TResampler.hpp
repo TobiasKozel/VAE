@@ -131,7 +131,7 @@ namespace tklb {
 				}
 			}
 
-			// There might be some more sample beeing emitted, add some padding
+			// There might be some more samples beeing emitted, some padding is needed
 			TKLB_ASSERT(out.size() >= samplesOut);
 			out.setValidSize(samplesOut);
 			return samplesOut;

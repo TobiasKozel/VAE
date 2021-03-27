@@ -22,7 +22,7 @@ namespace tklb {
 			drwav_allocation_callbacks drwaveCallbacks {
 				nullptr,		// No userdata
 				drwaveMalloc,
-				nullptr,		// No realloc
+				nullptr,		// TODO test and add the realloc
 				drwaveFree
 			};
 		}
