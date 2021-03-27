@@ -1,8 +1,0 @@
-external/hiir/hiir/test
-.vscode
-*.out
-*.exe
-*.obj
-
-external/xsimd/test
-*.yml
