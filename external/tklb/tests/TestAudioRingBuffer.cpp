@@ -1,5 +1,7 @@
 #include "./TestCommon.hpp"
 
+#define TKLB_MAXCHANNELS 16
+
 #include "../types/audio/TAudioBuffer.hpp"
 #include "../types/audio/TAudioRingBuffer.hpp"
 int main() {
@@ -14,14 +16,14 @@ int main() {
 		// generate sine test signal
 		for (int c = 0; c < channels; c++) {
 			for (int i = 0; i < sourceSize; i++) {
-				source[c][i] = sin(i * (c + 2) * 0.001);
+				source[c][i] = sin(i * (c + 5) * 0.001);
 			}
 		}
 
 		{
 			AudioRingBuffer buffer(size, channels);
 			int inpos = 0;
-			int outpos = 0;
+			 int outpos = 0;
 			inpos += buffer.push(source, 100, inpos);
 			inpos += buffer.push(source, 200, inpos);
 
