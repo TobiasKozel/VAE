@@ -1,12 +1,24 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(dof_example)
+project(VAE VERSION 0.0.1 DESCRIPTION "An Audio Engine" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-file(GLOB SRC_SHADERS "src/shaders/*.h")
-file(GLOB SRC_MAIN "src/*.h" "src/*.cpp")
+# TODO very rtaudio inspired
+# Standard CMake options
+option(BUILD_SHARED_LIBS "Build as shared library" ON)
+
+if (NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release;RelWithDebInfo;MinSizeRel")
+endif()
+if(WIN32)
+	set(CMAKE_DEBUG_POSTFIX d CACHE STRING "Postfix for debug version of library")
+endif()
+
+
+file(GLOB PUBLIC_API "include/*.hpp" "src/*.cpp")
+file(GLOB SRC_MAIN "src/*.h" )
 file(GLOB SRC_WRAP "src/wrapper/*.h")
 file(GLOB SRC_UTIL "src/util/*.h")
 
@@ -38,10 +50,10 @@ if(MSVC)
 	set(CMAKE_SUPPRESS_REGENERATION true) # gets rid of some of the cmake junk
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT dof_example)
 	# set visual studio debugger working directory
-	set_target_properties(dof_example PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "build/")
+	# set_target_properties(dof_example PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "build/")
 
 else()
-	add_definitions(-DASSET_PATH="${CMAKE_CURRENT_SOURCE_DIR}/build/")
+	# add_definitions(-DASSET_PATH="${CMAKE_CURRENT_SOURCE_DIR}/build/")
 endif()
 
 # Don't build glfw tests, docs and examples
