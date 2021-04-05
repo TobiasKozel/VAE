@@ -10,6 +10,7 @@
 *.vcxproj.*
 
 # external libs
+external/flecs
 external/*/.github
 external/*/.azure-pipelines
 external/*/docs
@@ -21,6 +22,7 @@ external/*/contrib
 external/*/*.yml
 
 # cmake bullshit
+build
 CMakeFiles
 Makefile
 CMakeCache.txt

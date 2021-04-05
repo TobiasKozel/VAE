@@ -5,13 +5,12 @@ project(vae VERSION 0.0.1 DESCRIPTION "An Audio Engine" LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-find_package(RtAudio)
-if(!${RtAudio_FOUND})
-	add_subdirectory(external/rtaudio/)
-endif()
+# TODO At some point prefer already installed libs
+# and do the whole thing the cmake way
+add_subdirectory(external/rtaudio)
 
-file(GLOB PUBLIC_API "include/*.hpp" "src/*.cpp")
-file(GLOB SRC_CORE "src/*.hpp" )
+file(GLOB PUBLIC_API "include/*.hpp" "src/api/*.cpp")
+file(GLOB SRC_CORE "src/core/*.hpp" )
 
 # should be add_library later on
 add_executable(vae
@@ -50,6 +49,6 @@ source_group("core" FILES ${SRC_CORE})
 target_link_libraries(vae
 	# PUBLIC
 	# 	Boost::headers RapidJSON::RapidJSON
-	PRIVATE
-		RtAudio
+	# PRIVATE
+	# 	RtAudio
 )
