@@ -12,6 +12,8 @@ namespace VAE {
 		// Actual object managed by the engine
 		Impl::ListenerImpl* mHandle = nullptr;
 	public:
+		Listener() = delete;
+
 		Listener(Impl::ListenerImpl* handle);
 
 		~Listener();

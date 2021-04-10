@@ -4,6 +4,7 @@
 #define VAE_MEM_CUSTOM
 
 #include <cstddef>
+#include "./vae_listener.hpp"
 
 
 namespace VAE {
@@ -48,9 +49,7 @@ namespace VAE {
 		 */
 		void setLogCallback(void (*log)(const char* msg, int level));
 
-		template <class T>
-		T create();
-
+		Listener createListener();
 
 		~Engine();
 

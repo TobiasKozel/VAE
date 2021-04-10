@@ -1,6 +1,7 @@
 #include "../../include/VAE/vae_listener.hpp"
 
 #include "../core/vae_listener_impl.hpp"
+#include "../external/tklb/util/TMemory.hpp"
 
 namespace VAE {
 	Listener::Listener(Impl::ListenerImpl* handle) {
@@ -16,11 +17,11 @@ namespace VAE {
 	}
 
 	bool Listener::openDevice(const DeviceInfo& device) {
-		return false;
+		return mHandle->openDevice(device);
 	}
 
 	unsigned int Listener::getDeviceCount() {
-		return 1;
+		return mHandle->getDeviceCount();
 	}
 
 	DeviceInfo Listener::getDevice(int deviceIndex) {
@@ -28,6 +29,6 @@ namespace VAE {
 	}
 
 	void Listener::destroy() {
-
+		TKLB_DELETE(mHandle);
 	}
 }

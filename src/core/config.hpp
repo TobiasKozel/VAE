@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VAE_IMPL_CONFIG
+#define VAE_IMPL_CONFIG
 
 namespace VAE {
 	namespace Config {
@@ -9,3 +10,5 @@ namespace VAE {
 		constexpr unsigned int MaxBlock = 512;
 	}
 }
+
+#endif // VAE_IMPL_CONFIG

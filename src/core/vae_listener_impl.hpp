@@ -1,11 +1,12 @@
-#pragma once
+#ifndef VAE_IMPL_LISTENER
+#define VAE_IMPL_LISTENER
 
 #include "./config.hpp"
 #include "../../external/tklb/util/TMemory.hpp"
 #include "../../external/tklb/types/audio/TAudioBuffer.hpp"
 #include "../../external/tklb/types/audio/TResampler.hpp"
 #include "../../include/VAE/vae_device_info.hpp"
-#include "../../external/rtaudio/RtAudio.h"
+#include "portaudio.h"
 
 namespace VAE::Impl {
 
@@ -14,82 +15,121 @@ namespace VAE::Impl {
 		tklb::AudioBufferTpl<Config::Sample> buffer;
 	};
 
-	int AudioCallback(
-		void* out, void* input,
-		unsigned int frames, double time,
-		RtAudioStreamStatus status, void *data
+	static int AudioCallback(
+		const void *in, void *out,
+		unsigned long frames,
+		const PaStreamCallbackTimeInfo* timeInfo,
+		PaStreamCallbackFlags statusFlags,
+		void *data
 	) {
+		// Prevent unused variable warnings.
+		(void) timeInfo;
+		(void) statusFlags;
+		(void) in;
 		ListnerShared& shared = *reinterpret_cast<ListnerShared*>(data);
 		float* outBuffer = reinterpret_cast<float*>(out);
-		return 0;
+		return paContinue;
 	}
 
-	class ListenerImpl {
-		RtAudio* mAudio = nullptr;
+	static void StreamFinished(void* data) {
+		ListnerShared& shared = *reinterpret_cast<ListnerShared*>(data);
+	}
 
+	inline int PAInitialized = 0;
+
+	class ListenerImpl {
+		PaStream *mStream = nullptr;
 		ListnerShared mShared; // Data shared with the audio thread
+		bool mInitialized = false;
 
 		void cleanUp() {
-			if (mAudio == nullptr) { return; }
-			if (mAudio->isStreamRunning()) {
-				mAudio->stopStream();
+			if (!mInitialized || mStream == nullptr) {
+				return;
 			}
-			if (mAudio->isStreamOpen()) {
-				mAudio->stopStream();
+
+			PaError err = Pa_StopStream(mStream);
+			TKLB_ASSERT(err == paNoError)
+
+			err = Pa_CloseStream(mStream);
+			TKLB_ASSERT(err == paNoError)
+			if (PAInitialized == 0) {
+				TKLB_ASSERT(false)
+				return;
 			}
-			TKLB_DELETE(mAudio);
+
+			PAInitialized--;
+			if (PAInitialized == 0) {
+				Pa_Terminate();
+			}
+			mInitialized = false;
 		}
 
 		void setUp() {
-			if (mAudio == nullptr) {
-				mAudio = TKLB_NEW(RtAudio);
+			if (mInitialized) { return; }
+			mInitialized = true;
+			if (PAInitialized == 0) {
+				PaError err = Pa_Initialize();
+				if (err != Pa_Initialize()) {
+					TKLB_ASSERT(false)
+					return;
+				}
 			}
+			PAInitialized++;
 		}
 	public:
+		~ListenerImpl() {
+			cleanUp();
+		}
+
 		bool openDevice() {
 			setUp();
 			DeviceInfo device;
-			device.id = mAudio->getDefaultOutputDevice();
+			device.id = Pa_GetDefaultOutputDevice();
 			return openDevice(device);
 		}
 
 		bool openDevice(const DeviceInfo& device) {
 			setUp();
-			unsigned int bufferFrames = device.bufferSize;
-			RtAudio::StreamParameters parameters;
-			parameters.deviceId = device.id;
-			parameters.nChannels = 2; // We only do 2 channels
-			parameters.firstChannel = 0;
+			PaStreamParameters outputParameters;
+			outputParameters.channelCount = 2; // only stereo
+			outputParameters.sampleFormat = paFloat32;
+			outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
+			outputParameters.hostApiSpecificStreamInfo = NULL;
 
-			try {
-				mAudio->openStream(
-					&parameters,
-					nullptr, // no input
-					RTAUDIO_FLOAT32,
-					Config::SampleRate, // We might not get the desired rate
-					&bufferFrames, // We might not get this either
-					&AudioCallback,
-					&mShared // Pass shared data to audio thread
-				);
+			PaError err = Pa_OpenStream(
+				&mStream,
+				NULL, // no input
+				&outputParameters,
+				Config::SampleRate,
+				device.bufferSize,
+				paClipOff, // no clipping, device will do that
+				AudioCallback,
+				&mShared
+			);
 
-				unsigned int sampleRate = mAudio->getStreamSampleRate();
-				if (sampleRate != Config::SampleRate) {
-					mShared.resampler.init(Config::SampleRate, sampleRate, Config::MaxBlock);
-				}
-				mShared.buffer.resize(Config::MaxBlock, 2);
-				mAudio->startStream();
-			} catch ( RtAudioError& e ) {
-				cleanUp();
-				return false;
-			}
+			if (err != paNoError) { cleanUp(); return false; }
+
+			err = Pa_SetStreamFinishedCallback(
+				mStream, &StreamFinished
+			);
+
+			if (err != paNoError) { cleanUp(); return false; }
+
+			err = Pa_StartStream(mStream);
+
+			if (err != paNoError) { cleanUp(); return false; }
+
 			return true;
 		}
 
 		unsigned int getDeviceCount() {
 			setUp();
-			return mAudio->getDeviceCount();
+			return Pa_GetDeviceCount();
 		}
+
 
 
 	};
 }
+
+#endif // VAE_IMPL_LISTENER

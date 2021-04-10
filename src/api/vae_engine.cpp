@@ -6,6 +6,7 @@
 
 #include "../external/tklb/util/TMemory.hpp"
 #include "../core/vae_engine_impl.hpp"
+#include "../core/vae_listener_impl.hpp"
 
 namespace VAE {
 #if !defined(VAE_MEM_STANDART_ALLOC) && !defined(VAE_MEM_FIXED)
@@ -38,8 +39,7 @@ namespace VAE {
 
 	}
 
-	template <class T>
-	T Engine::create() {
-		return T();
+	Listener createListener() {
+		return Listener(TKLB_NEW(Impl::ListenerImpl));
 	}
 }
