@@ -48,6 +48,6 @@ source_group("core" FILES ${SRC_CORE})
 target_link_libraries(vae
 	# PUBLIC
 	PRIVATE
-		portaudio
 		tklb
+		portaudio_static
 )
