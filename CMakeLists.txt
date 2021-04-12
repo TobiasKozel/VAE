@@ -14,15 +14,13 @@ find_package(tklb REQUIRED)
 file(GLOB PUBLIC_API "src/api/*.cpp")
 file(GLOB SRC_CORE "src/core/*.hpp" )
 
-# should be add_library later on
-add_executable(vae
+add_library(vae
 	${SRC_CORE}
 	${PUBLIC_API}
-	src/test/main.cpp
 )
 
 #Add an alias so that library can be used inside the build tree, e.g. when testing
-# add_library(VAE::vae ALIAS vae)
+add_library(VAE::vae ALIAS vae)
 
 #Set target properties
 target_include_directories(vae
@@ -47,13 +45,8 @@ source_group("core" FILES ${SRC_CORE})
 # 	# set visual studio debugger working directory
 # 	# set_target_properties(dof_example PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "build/")
 
-# else()
-# 	# add_definitions(-DASSET_PATH="${CMAKE_CURRENT_SOURCE_DIR}/build/")
-# endif()
-
 target_link_libraries(vae
 	# PUBLIC
-	# 	Boost::headers RapidJSON::RapidJSON
 	PRIVATE
 		portaudio
 		tklb

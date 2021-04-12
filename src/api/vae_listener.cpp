@@ -1,15 +1,11 @@
 #include "../../include/VAE/vae_listener.hpp"
 
 #include "../core/vae_listener_impl.hpp"
-#include "../external/tklb/util/TMemory.hpp"
+#include "../external/tklb/src/util/TMemory.hpp"
 
 namespace VAE {
 	Listener::Listener(Impl::ListenerImpl* handle) {
 		mHandle = handle;
-	}
-
-	Listener::~Listener() {
-
 	}
 
 	bool Listener::openDevice() {

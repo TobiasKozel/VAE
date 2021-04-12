@@ -4,7 +4,7 @@
 	#include "../external/tklb/util/TMemoryManager.hpp"
 #endif
 
-#include "../external/tklb/util/TMemory.hpp"
+#include "../external/tklb/src/util/TMemory.hpp"
 #include "../core/vae_engine_impl.hpp"
 #include "../core/vae_listener_impl.hpp"
 
@@ -39,7 +39,7 @@ namespace VAE {
 
 	}
 
-	Listener createListener() {
+	Listener Engine::createListener() {
 		return Listener(TKLB_NEW(Impl::ListenerImpl));
 	}
 }

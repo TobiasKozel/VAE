@@ -2,9 +2,9 @@
 #define VAE_IMPL_LISTENER
 
 #include "./config.hpp"
-#include "../../external/tklb/util/TMemory.hpp"
-#include "../../external/tklb/types/audio/TAudioBuffer.hpp"
-#include "../../external/tklb/types/audio/TResampler.hpp"
+#include "../../external/tklb/src/util/TMemory.hpp"
+#include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
+#include "../../external/tklb/src/types/audio/resampler/TResampler.hpp"
 #include "../../include/VAE/vae_device_info.hpp"
 #include "portaudio.h"
 
@@ -69,7 +69,7 @@ namespace VAE::Impl {
 			mInitialized = true;
 			if (PAInitialized == 0) {
 				PaError err = Pa_Initialize();
-				if (err != Pa_Initialize()) {
+				if (err != paNoError) {
 					TKLB_ASSERT(false)
 					return;
 				}
@@ -90,10 +90,11 @@ namespace VAE::Impl {
 
 		bool openDevice(const DeviceInfo& device) {
 			setUp();
+			const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(device.id);
 			PaStreamParameters outputParameters;
 			outputParameters.channelCount = 2; // only stereo
 			outputParameters.sampleFormat = paFloat32;
-			outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
+			outputParameters.suggestedLatency = deviceInfo->defaultLowOutputLatency;
 			outputParameters.hostApiSpecificStreamInfo = NULL;
 
 			PaError err = Pa_OpenStream(

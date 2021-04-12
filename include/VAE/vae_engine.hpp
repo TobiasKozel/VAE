@@ -51,8 +51,6 @@ namespace VAE {
 
 		Listener createListener();
 
-		~Engine();
-
 		void destroy();
 	};
 }

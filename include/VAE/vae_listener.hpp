@@ -16,8 +16,6 @@ namespace VAE {
 
 		Listener(Impl::ListenerImpl* handle);
 
-		~Listener();
-
 		/**
 		 * @brief Will open the default audio device.
 		 * Don't call process() when using an audio device.
