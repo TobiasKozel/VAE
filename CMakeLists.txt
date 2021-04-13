@@ -42,13 +42,15 @@ source_group("api" FILES ${PUBLIC_API})
 source_group("core" FILES ${SRC_CORE})
 
 target_link_libraries(vae
-	# PUBLIC
+# Goal is to have no public dependencies
 	PRIVATE
 		tklb
 		portaudio_static
 )
 
-# create a single combined file
+# OPTIONAL
+# create a single lib file from all the objects
+
 # 	${CMAKE_AR} rc
 # ${lib_tool} /NOLOGO
 # lib.exe
@@ -60,7 +62,7 @@ if(MSVC)
 else()
 	# r Don't warn when creating libfile
 	# s Act like ranlib/create index
-	#'c replace
+	# c replace
 	set(VAE_ARCHIVE_COMMAND ${CMAKE_AR} rsc)
 endif()
 
