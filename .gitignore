@@ -1,6 +1,9 @@
 .vs/
 *.user
 *.exe
+*.a
+*.lib
+*.out
 *.ilk
 *.exp
 *.pdb

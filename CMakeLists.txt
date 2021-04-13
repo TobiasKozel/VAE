@@ -1,6 +1,11 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.8)
 
-project(vae VERSION 0.0.1 DESCRIPTION "An Audio Engine" LANGUAGES CXX)
+project(
+	vae
+	VERSION 0.0.1
+	DESCRIPTION "An Audio Engine"
+	LANGUAGES CXX
+)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -29,25 +34,43 @@ target_include_directories(vae
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 	PRIVATE
 		${CMAKE_CURRENT_SOURCE_DIR}/src
-		portaudio
+		portaudio_static
 		tklb
 )
 
 source_group("api" FILES ${PUBLIC_API})
 source_group("core" FILES ${SRC_CORE})
 
-# if(MSVC)
-# 	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY build/$<0:>)
-# 	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY build/$<0:>)
-# 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY build/$<0:>)
-# 	set(CMAKE_SUPPRESS_REGENERATION true) # gets rid of some of the cmake junk
-# 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT dof_example)
-# 	# set visual studio debugger working directory
-# 	# set_target_properties(dof_example PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "build/")
-
 target_link_libraries(vae
 	# PUBLIC
 	PRIVATE
 		tklb
 		portaudio_static
+)
+
+# create a single combined file
+# 	${CMAKE_AR} rc
+# ${lib_tool} /NOLOGO
+# lib.exe
+# libtool -static -o
+# ${CMAKE_CXX_ARCHIVE_CREATE}
+
+if(MSVC)
+	set(VAE_ARCHIVE_COMMAND ${lib_tool} /NOLOGO /OUT:)
+else()
+	# r Don't warn when creating libfile
+	# s Act like ranlib/create index
+	#'c replace
+	set(VAE_ARCHIVE_COMMAND ${CMAKE_AR} rsc)
+endif()
+
+add_custom_target(
+	vae_pack
+	DEPENDS vae
+	COMMAND ${VAE_ARCHIVE_COMMAND}
+	${CMAKE_STATIC_LIBRARY_PREFIX}vae_pack${CMAKE_STATIC_LIBRARY_SUFFIX}
+	$<TARGET_OBJECTS:vae>
+	$<TARGET_OBJECTS:tklb>
+	$<TARGET_OBJECTS:portaudio_static>
+	COMMAND_EXPAND_LISTS # this is important to expand cmake lists properly
 )
