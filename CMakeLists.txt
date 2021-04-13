@@ -50,29 +50,38 @@ target_link_libraries(vae
 
 # OPTIONAL
 # create a single lib file from all the objects
-
-# 	${CMAKE_AR} rc
-# ${lib_tool} /NOLOGO
-# lib.exe
+# ${lib_tool}
 # libtool -static -o
-# ${CMAKE_CXX_ARCHIVE_CREATE}
 
 if(MSVC)
-	set(VAE_ARCHIVE_COMMAND ${lib_tool} /NOLOGO /OUT:)
+	set(VAE_ARCHIVE_COMMAND )
+	add_custom_target(
+		vae_pack
+		DEPENDS vae
+		COMMAND
+			${CMAKE_AR}
+			/NOLOGO
+			/Name:vae
+			/LIBPATH:${CMAKE_CURRENT_BINARY_DIR}
+			/OUT:${CMAKE_STATIC_LIBRARY_PREFIX}vae_pack${CMAKE_STATIC_LIBRARY_SUFFIX}
+			$<TARGET_OBJECTS:vae>
+			$<TARGET_OBJECTS:tklb>
+			$<TARGET_OBJECTS:portaudio_static>
+		COMMAND_EXPAND_LISTS
+	)
 else()
-	# r Don't warn when creating libfile
-	# s Act like ranlib/create index
-	# c replace
-	set(VAE_ARCHIVE_COMMAND ${CMAKE_AR} rsc)
+	add_custom_target(
+		vae_pack
+		DEPENDS vae
+		COMMAND
+			# r Don't warn when creating libfile
+			# s Act like ranlib/create index
+			# c replace
+			${CMAKE_AR} rsc
+			${CMAKE_STATIC_LIBRARY_PREFIX}vae_pack${CMAKE_STATIC_LIBRARY_SUFFIX}
+			$<TARGET_OBJECTS:vae>
+			$<TARGET_OBJECTS:tklb>
+			$<TARGET_OBJECTS:portaudio_static>
+		COMMAND_EXPAND_LISTS # this is important to expand cmake lists properly
+	)
 endif()
-
-add_custom_target(
-	vae_pack
-	DEPENDS vae
-	COMMAND ${VAE_ARCHIVE_COMMAND}
-	${CMAKE_STATIC_LIBRARY_PREFIX}vae_pack${CMAKE_STATIC_LIBRARY_SUFFIX}
-	$<TARGET_OBJECTS:vae>
-	$<TARGET_OBJECTS:tklb>
-	$<TARGET_OBJECTS:portaudio_static>
-	COMMAND_EXPAND_LISTS # this is important to expand cmake lists properly
-)
