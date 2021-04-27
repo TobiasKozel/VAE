@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include "./vae_listener.hpp"
+#include "./vae_emitter.hpp"
 
 
 namespace VAE {
@@ -13,26 +14,20 @@ namespace VAE {
 	}
 
 	class Engine {
-		Impl::EngineImpl* mHandle = nullptr;
+		Impl::EngineImpl* mPimpl = nullptr;
 
 	public:
 
-	#if !defined(VAE_MEM_STANDART_ALLOC) && !defined(VAE_MEM_FIXED)
 		/**
 		 * @brief Using stdlib for allocations
 		 */
 		Engine();
-	#endif
 
-	#ifdef VAE_MEM_FIXED
 		/**
-		 * @breif Using a preallocated fixed block of memory.
+		 * @brief Using a preallocated fixed block of memory.
 		 * Once memory runs out sounds might not play.
 		 */
 		Engine(void* fixedMemory, size_t blockSize);
-	#endif
-
-	#ifdef VAE_MEM_CUSTOM
 		/**
 		 * @brief Memory allocation using provided routines.
 		 */
@@ -41,15 +36,17 @@ namespace VAE {
 			void* (*reallocate)(void*, size_t),
 			void (*deallocate)(void*)
 		);
-	#endif
 		/**
 		 * @brief Provide a log callback if it shouldn't write to stdout
 		 * @param msg The log message.
+		 * @param channel Log channel
 		 * @param level The log level. Critical = 0, Warning = 1, Info = 2, Debug = 3
 		 */
-		void setLogCallback(void (*log)(const char* msg, int level));
+		void setLogCallback(void (*log)(const char* msg, int channel, int level));
 
 		Listener createListener();
+
+		Emitter createEmitter();
 
 		void destroy();
 	};

@@ -14,43 +14,17 @@ namespace VAE {
 	public:
 		Listener() = delete;
 
-		Listener(Impl::ListenerImpl* handle);
+		Listener(Impl::ListenerImpl* pimpl);
 
-		/**
-		 * @brief Will open the default audio device.
-		 * Don't call process() when using an audio device.
-		 */
-		bool openDevice();
+		void openDevice();
 
-		/**
-		 * @brief Open a specific output device.
-		 * Can also be used to change the current device.
-		 */
-		bool openDevice(const DeviceInfo& device);
+		void openDevice(DeviceInfo& device);
 
-		/**
-		 * @brief Total device count used to iterate over them.
-		 */
-		unsigned int getDeviceCount();
+		void closeDevice();
 
-		/**
-		 * @brief Get a deivce by index.
-		 */
-		DeviceInfo getDevice(int deviceIndex);
+		int getDeviceCount();
 
-		/**
-		 * @brief Custom callback, in case there are audio device is already present
-		 * or offline rendering.
-		 * Don't call openDevice() when using this.
-		 * @param out Output buffer, can be null if
-		 */
-		void process(unsigned int frames, float** out = nullptr);
-
-		/**
-		 * @brief NOT IMPLEMENTED!
-		 * Maybe in a distant future.
-		 */
-		void setSubtitleCallback(void (*subtitle)(const char* msg)) { }
+		DeviceInfo getDevice(int id);
 
 		void destroy();
 

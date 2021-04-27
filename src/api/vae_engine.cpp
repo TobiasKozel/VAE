@@ -1,39 +1,30 @@
 #include "../../include/VAE/vae_engine.hpp"
 
-#ifdef VAE_MEM_FIXED
-	#include "../external/tklb/util/TMemoryManager.hpp"
-#endif
-
-#include "../external/tklb/src/util/TMemory.hpp"
+#include "../../external/tklb/src/memory/TMemory.hpp"
+#include "../core/vae_logger.hpp"
 #include "../core/vae_engine_impl.hpp"
 #include "../core/vae_listener_impl.hpp"
 
 namespace VAE {
-#if !defined(VAE_MEM_STANDART_ALLOC) && !defined(VAE_MEM_FIXED)
 	Engine::Engine() {
-	}
-#endif
 
-#ifdef VAE_MEM_FIXED
+	}
+
 	Engine::Engine(void* fixedMemory, size_t blockSize) {
-		tklb::memory::manager::CustomSize = blockSize;
-		tklb::memory::manager::CustomMemory =
-			reinterpret_cast<unsigned char*>(fixedMemory);
-		tklb::memory::manager::use();
+		TKLB_ASSERT(false) // TODO tklb not implemented
 	}
-#endif
 
-#ifdef VAE_MEM_CUSTOM
 	Engine::Engine(
 		void* (*allocate)  (size_t),
 		void* (*reallocate)(void*, size_t),
 		void  (*deallocate)(void*)
 	) {
-		tklb::memory::allocate = allocate;
-		tklb::memory::reallocate == reallocate;
-		tklb::memory::deallocate == deallocate;
+		TKLB_ASSERT(false) // TODO tklb not implemented
 	}
-#endif
+
+	void Engine::setLogCallback(void (*log)(const char* msg, int channel, int level)) {
+		Impl::Logger::setCallback(log);
+	}
 
 	void Engine::destroy() {
 
@@ -41,5 +32,9 @@ namespace VAE {
 
 	Listener Engine::createListener() {
 		return Listener(TKLB_NEW(Impl::ListenerImpl));
+	}
+
+	Emitter Engine::createEmitter() {
+		return Emitter(TKLB_NEW(Impl::EmitterImpl));
 	}
 }

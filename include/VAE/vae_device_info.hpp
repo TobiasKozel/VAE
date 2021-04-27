@@ -9,10 +9,10 @@ namespace VAE {
 		 */
 		int id;
 		char name[255];
-		unsigned int channels;
+		unsigned int channelsIn;
+		unsigned int channelsOut;
 		unsigned int sampleRate;
 		unsigned int bufferSize = 512;
-		bool input;
 	};
 }
 

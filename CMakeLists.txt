@@ -85,3 +85,5 @@ else()
 		COMMAND_EXPAND_LISTS # this is important to expand cmake lists properly
 	)
 endif()
+
+add_subdirectory(dev)
