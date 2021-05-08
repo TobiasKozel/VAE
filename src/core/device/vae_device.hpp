@@ -1,7 +1,7 @@
-#ifndef VAEZ_BACKEND
-#define VAEZ_BACKEND
+#ifndef VAEZ_DEVICE
+#define VAEZ_DEVICE
 
-#include "../config.hpp"
+#include "../vae_config.hpp"
 #include "../../../include/VAE/vae_device_info.hpp"
 #include "../../../external/tklb/src/memory/TMemory.hpp"
 #include "../../../external/tklb/src/types/audio/TAudioBuffer.hpp"
@@ -13,12 +13,32 @@
 #include <functional>
 
 
-namespace VAE { namespace core {
+namespace vae { namespace core {
+
 	/**
-	 * @brief Interface for audio backends.
-	 * Default implementation for resampling already provided.
+	 * @brief Backend interface used to query devices before
+	 * creating a actual device object
 	 */
 	class Backend {
+	public:
+		using uint = unsigned int;
+
+		/**
+		 * @brief Gets number of devices, needed to iterate them.
+		 */
+		virtual uint getDeviceCount() = 0;
+
+		/**
+		 * @brief Returns a spefic device info for index.
+		 */
+		virtual DeviceInfo getDevice(uint id) = 0;
+	};
+
+	/**
+	 * @brief Interface for audio devices.
+	 * Default implementation for resampling already provided.
+	 */
+	class Device {
 	public:
 		using uint = unsigned int;
 		using uchar = unsigned char;
@@ -30,6 +50,7 @@ namespace VAE { namespace core {
 		using SyncCallback = std::function<void(const AudioBuffer& fromDevice, AudioBuffer& toDevice)>;
 
 	protected:
+		Backend& mBackend;
 		RingBuffer mQueueToDevice;   // Queue needed for async mode
 		RingBuffer mQueueFromDevice; // Queue needed for async mode
 
@@ -41,6 +62,8 @@ namespace VAE { namespace core {
 
 		uint mChannelsOut = 0;
 		uint mChannelsIn = 0;
+
+		size_t mStreamTime = 0;
 
 		/**
 		 * @brief If set, the backend will operate in sync/pull mode and drive
@@ -56,54 +79,55 @@ namespace VAE { namespace core {
 
 		/**
 		 * @brief initializes buffers, queues and resamplers if needed
+		 * Has to be called in openDevice once the samplerate
+		 * and channel config is known
 		 */
 		void init(uint sampleRate, uint channelsIn, uint channelsOut) {
 			mChannelsIn = channelsIn;
 			mChannelsOut = channelsOut;
-			if (sampleRate != Config::SampleRate) {
-				mResamplerFromDevice.init(sampleRate, Config::SampleRate, Config::MaxBlock);
-				const uint fromSize = Resampler::calculateBufferSize(sampleRate, Config::SampleRate, Config::MaxBlock);
-				mBufferFromDevice.resize(fromSize, channelsIn);
 
-				mResamplerToDevice.init(Config::SampleRate, sampleRate, Config::MaxBlock);
-				const uint toSize = Resampler::calculateBufferSize(Config::SampleRate, sampleRate, Config::MaxBlock);
-				mBufferToDevice.resize(toSize, channelsOut);
+			if (sampleRate != Config::SampleRate) {
+				if (0 < mChannelsIn) {
+					mResamplerFromDevice.init(sampleRate, Config::SampleRate, Config::MaxBlock);
+					const uint fromSize = Resampler::calculateBufferSize(sampleRate, Config::SampleRate, Config::MaxBlock);
+					mBufferFromDevice.resize(fromSize, channelsIn);
+				}
+
+				if (0 < mChannelsOut) {
+					mResamplerToDevice.init(Config::SampleRate, sampleRate, Config::MaxBlock);
+					const uint toSize = Resampler::calculateBufferSize(Config::SampleRate, sampleRate, Config::MaxBlock);
+					mBufferToDevice.resize(toSize, channelsOut);
+				}
 			}
 
 			if (mSyncCallback != nullptr) {
-				mQueueFromDevice.resize(Config::MaxBlock * Config::DeviceMaxPeriods, channelsIn);
-				mQueueToDevice.resize(Config::MaxBlock * Config::DeviceMaxPeriods, channelsIn);
+				if (0 < mChannelsIn) {
+					mQueueFromDevice.resize(Config::MaxBlock * Config::DeviceMaxPeriods, channelsIn);
+				}
+				if (0 < mChannelsOut) {
+					mQueueToDevice.resize(Config::MaxBlock * Config::DeviceMaxPeriods, channelsIn);
+				}
 			}
 		}
 
 	public:
-		Backend() {
+		Device(Backend& backend) : mBackend(backend) {
 			mSyncCallback = nullptr;
 		}
 
-		Backend(SyncCallback& callback) {
+		Device(SyncCallback& callback, Backend& backend) : mBackend(backend) {
 			mSyncCallback = callback;
 		}
 
 		/**
-		 * @brief Opens the default audio device.
+		 * @brief Tries to open the default audio device whith desired in out channels
 		 */
-		virtual bool openDevice() = 0;
+		virtual bool openDevice(uint output = 2, uint input = 0) = 0;
 
 		/**
 		 * @brief Opens a specific audio device.
 		 */
 		virtual bool openDevice(const DeviceInfo& device) = 0;
-
-		/**
-		 * @brief Gets number of devices, needed to iterate them.
-		 */
-		virtual uint getDeviceCount() = 0;
-
-		/**
-		 * @brief Returns a spefic device info for index.
-		 */
-		virtual DeviceInfo getDevice(uint id) = 0;
 
 		/**
 		 * @brief Closes the currently open device.
@@ -115,7 +139,8 @@ namespace VAE { namespace core {
 		 * @brief Push samples to the audio device
 		 * @param buffer Always a stereo buffer, pushes the amount of valid samples
 		 */
-		void pushAsync(const AudioBuffer& buffer) {
+		void push(const AudioBuffer& buffer) {
+			TKLB_ASSERT(0 < mChannelsOut)
 			auto frames = buffer.validSize();
 			TKLB_ASSERT(frames != 0) // need to have valid frames
 			TKLB_ASSERT(mSyncCallback == nullptr) // can't be called in sync mode
@@ -127,6 +152,7 @@ namespace VAE { namespace core {
 		 * @brief Get samples form audio device
 		 */
 		void pop(AudioBuffer& buffer) {
+			TKLB_ASSERT(0 < mChannelsIn)
 			auto frames = buffer.validSize();
 			TKLB_ASSERT(frames != 0) // need to have valid frames
 			TKLB_ASSERT(mSyncCallback == nullptr) // can't be called in sync mode
@@ -137,7 +163,6 @@ namespace VAE { namespace core {
 		uint getChannelsOut() const { return mChannelsOut; }
 
 		uint getChannelsIn() const { return mChannelsIn; }
-
 
 		/**
 		 * @brief Called from the backend implementation.
@@ -151,8 +176,9 @@ namespace VAE { namespace core {
 		 * @param out output frames in device samplerate
 		 */
 		void callback(const AudioBuffer& fromDevice, AudioBuffer& toDevice) {
+			const uint frames = std::max(fromDevice.validSize(), toDevice.validSize());
 			// Need to have space in the out buffer
-			TKLB_ASSERT(fromDevice.validSize() <= toDevice.size())
+			TKLB_ASSERT(0 == mChannelsOut || frames <= toDevice.size())
 
 			if (mResamplerToDevice.isInitialized()) { // resampling needed
 				// Can't resample only one channel, rates need to match as well
@@ -175,20 +201,26 @@ namespace VAE { namespace core {
 				} else { // sync mode
 					mSyncCallback(mBufferFromDevice, mBufferToDevice);
 				}
+
 				mResamplerToDevice.process(mBufferToDevice, toDevice);
 			} else { // No samplerate conversion needed
 				if (mSyncCallback == nullptr) { // async mode
 					Lock lock(mMutex);
-					mQueueFromDevice.push(fromDevice);
-					// Push the same amout to the device
-					mQueueToDevice.pop(toDevice, fromDevice.validSize());
+					if (0 < mChannelsIn) {
+						mQueueFromDevice.push(fromDevice);
+					}
+					if (0 < mChannelsOut) {
+						// Push the same amout to the device
+						mQueueToDevice.pop(toDevice, frames);
+					}
 				} else { // sync mode
 					mSyncCallback(fromDevice, toDevice);
 				}
 			}
+			mStreamTime += fromDevice.validSize();
 		}
 	};
-} } // namespace VAE::core
+} } // namespace vae::core
 
-#endif // VAEZ_BACKEND
+#endif // VAEZ_DEVICE
 

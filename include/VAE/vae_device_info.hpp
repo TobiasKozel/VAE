@@ -1,7 +1,7 @@
 #ifndef VAE_API_DEVICE
 #define VAE_API_DEVICE
 
-namespace VAE {
+namespace vae {
 	struct DeviceInfo {
 		/**
 		 * 0 for default device.
@@ -9,6 +9,7 @@ namespace VAE {
 		 */
 		int id;
 		char name[255];
+		int api;
 		unsigned int channelsIn;
 		unsigned int channelsOut;
 		unsigned int sampleRate;

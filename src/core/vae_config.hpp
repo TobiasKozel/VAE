@@ -1,7 +1,7 @@
 #ifndef VAE_IMPL_CONFIG
 #define VAE_IMPL_CONFIG
 
-namespace VAE {
+namespace vae {
 	namespace Config {
 		typedef float Sample;
 		constexpr int SampleRate = 48000; // Internal Samplerate everything will run at

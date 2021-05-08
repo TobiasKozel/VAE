@@ -2,7 +2,7 @@
 
 #include "./audiobuffer.hpp"
 
-namespace VAE {
+namespace vae {
 	class Voice {
 	protected:
 		const AudioBuffer* mSample = nullptr;

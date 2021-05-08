@@ -30,12 +30,15 @@ add_library(VAE::vae ALIAS vae)
 #Set target properties
 target_include_directories(vae
 	PUBLIC
-		$<INSTALL_INTERFACE:include>
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-	PRIVATE
-		${CMAKE_CURRENT_SOURCE_DIR}/src
+		$<INSTALL_INTERFACE:include> # not relevant since I want to avoid the whole install thing?
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> # the pimpl API
+		${CMAKE_CURRENT_SOURCE_DIR}/src # temporarily
 		portaudio_static
 		tklb
+	PRIVATE
+		# ${CMAKE_CURRENT_SOURCE_DIR}/src
+		# portaudio_static
+		# tklb
 )
 
 source_group("api" FILES ${PUBLIC_API})

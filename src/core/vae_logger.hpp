@@ -1,7 +1,10 @@
 #ifndef VAE_IMPL_LOGGER
 #define VAE_IMPL_LOGGER
 
-namespace VAE { namespace Impl {
+#include <stdarg.h>
+#include <stdlib.h>
+
+namespace vae { namespace Impl {
 	class Logger {
 		using Callback = void (*)(const char* msg, int channel, int level);
 		Logger() { }
@@ -11,9 +14,19 @@ namespace VAE { namespace Impl {
 			return logger;
 		}
 	public:
+		enum Channels {
+			General = 0,
+			HRTF,
+			Device,
+			DSP,
+			Propagation,
+		};
 
 		static void setCallback(Callback callback) {
 			instance().mCustomCallback = callback;
+		}
+
+		static void debug() {
 		}
 
 	};
