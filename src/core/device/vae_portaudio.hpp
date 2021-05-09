@@ -104,11 +104,16 @@ namespace vae { namespace core {
 				TKLB_ASSERT(shared.bufferFrom.validSize() == frames)
 			}
 
+			if (out != nullptr) {
+				// make sure to inform the callback about the amount of samples needed
+				shared.bufferTo.setValidSize(frames);
+			}
+
 			shared.device.callback(shared.bufferFrom, shared.bufferTo);
 
 			if (out != nullptr) {
 				float* outBuffer = reinterpret_cast<float*>(out);
-				shared.bufferTo.putInterleaved(outBuffer, shared.bufferFrom.validSize());
+				shared.bufferTo.putInterleaved(outBuffer, shared.bufferTo.validSize());
 			}
 
 			return paContinue;

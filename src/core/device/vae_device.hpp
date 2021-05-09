@@ -66,6 +66,8 @@ namespace vae { namespace core {
 
 		size_t mStreamTime = 0;
 
+		uint mUnderruns = 0;
+
 		/**
 		 * @brief If set, the backend will operate in sync/pull mode and drive
 		 * the engine mainloop. Only one backend can be used in sync mode.
