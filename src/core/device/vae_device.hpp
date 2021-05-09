@@ -25,13 +25,14 @@ namespace vae { namespace core {
 
 		/**
 		 * @brief Gets number of devices, needed to iterate them.
+		 * Device index != does not have to be the device index!
 		 */
 		virtual uint getDeviceCount() = 0;
 
 		/**
 		 * @brief Returns a spefic device info for index.
 		 */
-		virtual DeviceInfo getDevice(uint id) = 0;
+		virtual DeviceInfo getDevice(uint index) = 0;
 	};
 
 	/**
@@ -100,7 +101,7 @@ namespace vae { namespace core {
 				}
 			}
 
-			if (mSyncCallback != nullptr) {
+			if (mSyncCallback == nullptr) { // need queues for async mode
 				if (0 < mChannelsIn) {
 					mQueueFromDevice.resize(Config::MaxBlock * Config::DeviceMaxPeriods, channelsIn);
 				}
@@ -157,7 +158,7 @@ namespace vae { namespace core {
 			TKLB_ASSERT(frames != 0) // need to have valid frames
 			TKLB_ASSERT(mSyncCallback == nullptr) // can't be called in sync mode
 			Lock lock(mMutex);
-			mQueueFromDevice.push(buffer);
+			mQueueFromDevice.pop(buffer, frames);
 		}
 
 		uint getChannelsOut() const { return mChannelsOut; }
@@ -176,9 +177,8 @@ namespace vae { namespace core {
 		 * @param out output frames in device samplerate
 		 */
 		void callback(const AudioBuffer& fromDevice, AudioBuffer& toDevice) {
+			// Non duplex devices
 			const uint frames = std::max(fromDevice.validSize(), toDevice.validSize());
-			// Need to have space in the out buffer
-			TKLB_ASSERT(0 == mChannelsOut || frames <= toDevice.size())
 
 			if (mResamplerToDevice.isInitialized()) { // resampling needed
 				// Can't resample only one channel, rates need to match as well

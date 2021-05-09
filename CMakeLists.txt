@@ -7,7 +7,7 @@ project(
 	LANGUAGES CXX
 )
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # find_package will look for custom scripts in the cmake folder
@@ -33,12 +33,11 @@ target_include_directories(vae
 		$<INSTALL_INTERFACE:include> # not relevant since I want to avoid the whole install thing?
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> # the pimpl API
 		${CMAKE_CURRENT_SOURCE_DIR}/src # temporarily
-		portaudio_static
 		tklb
 	PRIVATE
-		# ${CMAKE_CURRENT_SOURCE_DIR}/src
-		# portaudio_static
-		# tklb
+		${CMAKE_CURRENT_SOURCE_DIR}/src
+		portaudio_static
+		tklb
 )
 
 source_group("api" FILES ${PUBLIC_API})
@@ -57,7 +56,6 @@ target_link_libraries(vae
 # libtool -static -o
 
 if(MSVC)
-	set(VAE_ARCHIVE_COMMAND )
 	add_custom_target(
 		vae_pack
 		DEPENDS vae

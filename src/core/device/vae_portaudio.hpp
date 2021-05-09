@@ -31,17 +31,18 @@ namespace vae { namespace core {
 			return Pa_GetDeviceCount();
 		}
 
-		DeviceInfo getDevice(unsigned int id) override {
-			const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(id);
+		DeviceInfo getDevice(unsigned int index) override {
+			const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(index);
 			if (deviceInfo == nullptr) {
 				TKLB_ASSERT(false)
 				return DeviceInfo();
 			}
 			DeviceInfo info;
+			info.id = index;
 			info.channelsIn = deviceInfo->maxInputChannels;
 			info.channelsOut = deviceInfo->maxOutputChannels;
 			info.sampleRate = uint(deviceInfo->defaultSampleRate);
-			tklb::memory::copy(info.name, deviceInfo->name, sizeof(DeviceInfo::name));
+			tklb::memory::stringCopy(info.name, deviceInfo->name, sizeof(DeviceInfo::name));
 			return info;
 		};
 	};
@@ -140,7 +141,13 @@ namespace vae { namespace core {
 		bool openDevice(const DeviceInfo& device) override {
 			const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(device.id);
 
+			if (deviceInfo == nullptr) {
+				TKLB_ASSERT(false)
+				return false;
+			}
+
 			PaStreamParameters inputParameters;
+			inputParameters.device = device.id;
 			inputParameters.sampleFormat = paFloat32;
 			inputParameters.suggestedLatency = deviceInfo->defaultLowInputLatency;
 			inputParameters.hostApiSpecificStreamInfo = NULL;
@@ -148,11 +155,12 @@ namespace vae { namespace core {
 			inputParameters.channelCount = device.channelsIn;
 
 			PaStreamParameters outputParameters;
+			outputParameters.device = device.id;
 			outputParameters.sampleFormat = paFloat32;
 			outputParameters.suggestedLatency = deviceInfo->defaultLowOutputLatency;
 			outputParameters.hostApiSpecificStreamInfo = NULL;
 			TKLB_ASSERT(device.channelsOut <= uint(deviceInfo->maxOutputChannels))
-			outputParameters.channelCount = device.channelsIn;
+			outputParameters.channelCount = device.channelsOut;
 
 			PaError err = Pa_OpenStream(
 				&mStream,
@@ -175,8 +183,8 @@ namespace vae { namespace core {
 				mStream, StreamFinished
 			);
 
-			if (err != paNoError)
-				TKLB_ASSERT(false){
+			if (err != paNoError) {
+				TKLB_ASSERT(false)
 				cleanUp();
 				return false;
 			}
@@ -184,6 +192,15 @@ namespace vae { namespace core {
 			// Might have gotten different samplerate
 			const PaStreamInfo* streamInfo = Pa_GetStreamInfo(mStream);
 			init(uint(streamInfo->sampleRate), device.channelsIn, device.channelsOut);
+
+			// Setup deinterleave buffers
+			if (0 < inputParameters.channelCount) {
+				mShared.bufferFrom.resize(device.bufferSize, inputParameters.channelCount);
+			}
+
+			if (0 < outputParameters.channelCount) {
+				mShared.bufferTo.resize(device.bufferSize, outputParameters.channelCount);
+			}
 
 			err = Pa_StartStream(mStream);
 
