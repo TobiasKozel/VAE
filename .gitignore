@@ -38,3 +38,5 @@ build/*ninja*
 build/compile_commands.json
 lib
 *.blend1
+
+*.sofa

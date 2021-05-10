@@ -167,6 +167,8 @@ namespace vae { namespace core {
 
 		uint getChannelsIn() const { return mChannelsIn; }
 
+		size_t getStreamTime() const { return mStreamTime; }
+
 		/**
 		 * @brief Called from the backend implementation.
 		 * Don't call this otherwise.
