@@ -9,7 +9,7 @@
 
 namespace vae { namespace core {
 
-	class BackendPortAudio : public Backend {
+	class BackendPortAudio final : public Backend {
 		BackendPortAudio() {
 			PaError err = Pa_Initialize();
 			if (err != paNoError) {

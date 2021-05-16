@@ -19,6 +19,12 @@ echo "Updating httplib"
 rm ./httplib.h
 curl -LO https://raw.githubusercontent.com/yhirose/cpp-httplib/master/httplib.h
 
+echo "Updating assetsys"
+rm ./assetsys.h
+rm ./strpool.h
+curl -LO https://raw.githubusercontent.com/mattiasgustavsson/libs/main/strpool.h
+curl -LO https://raw.githubusercontent.com/mattiasgustavsson/libs/main/assetsys.h
+
 exit
 echo "Updating flecs"
 rm -rf ./flecs

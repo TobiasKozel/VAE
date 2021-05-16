@@ -1,89 +1,52 @@
-# -*- coding: utf-8 -*-
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#
-#   plotListenHRTF.py
-#
-#   Example for getting HRTF data from a sofa file
-#   Plots the HRTF and convolves to obtain binaural sound
-#
-#   (C) Andrés Pérez-López - Eurecat / UPF
-#   30/08/2018
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
 from pysofaconventions import *
 import matplotlib.pyplot as plt
 import scipy.signal
 import soundfile as sf
 import numpy as np
+import math
 
-# Let's use subject_003 from the classical CIPIC database
-# http://sofacoustics.org/data/database/cipic/subject_003.sofa
-path = 'scripts/MRT02.sofa'
-path = 'scripts/dtf_nh2.sofa'
-path = 'scripts/subject_003.sofa'
+path = "scripts/MRT02.sofa" # cartesian
+path = "scripts/dtf_nh2.sofa" # spherical
+path = "scripts/subject_003.sofa" # spherical
 sofa = SOFAFile(path,'r')
+outPath = "scripts/out/"
 
-print("\n")
-print("File is valid:", sofa.isValid())
+dimensions = sofa.getDimensionsAsDict()
+positions = dimensions["M"].size
+impulseLength = dimensions["N"].size
+emitters = dimensions["E"].size # should be 1
+receivers = dimensions["R"].size # should be 2, left/right
 
+sourcePositions = sofa.getSourcePositionValues()
+positionInfo = sofa.getSourcePositionInfo()
+units = positionInfo[0]
+coordinateType = positionInfo[1]
+irs = sofa.getDataIR()
 
+sampleRate = int(sofa.getSamplingRate().min())
+if sampleRate != int(sofa.getSamplingRate().max()):
+	print("mixed samplerates!")
+	exit(1)
 
-# Let's see the dimensions:
-#   - M: 1250 (different measurement positions)
-#   - R: 2 (the two ears)
-#   - E: 1 (one loudspeaker)
-#   - N: 200 (lenght of the HRTFs in samples)
-print("\n")
-print("Dimensions:")
-sofa.printSOFADimensions()
+sampleRateUnit = sofa.getSamplingRateUnits() # should be hertz
 
-
-# Let's check the position of the measurementa (Source position)
-sourcePositions = sofa.getVariableValue('SourcePosition')
-print("\n")
-print("Source Positions")
-print(sourcePositions)
-# and the info (units, coordinates)
-print(sofa.getPositionVariableInfo('SourcePosition'))
-
-# Let's inspect the first measurement
-m = 0
-print("\n")
-print("Source Position of measurement " + str(m))
-print(sourcePositions[m])
-# which is at 82 degrees azimuth, -7 degrees elevation
-
-# Read the data
-data = sofa.getDataIR()
-# and get the HRTF associated with m=0
-hrtf = data[m,:,:]
-
-# Let's check the dimensions of the hrtf
-print("\n")
-print("HRTF dimensions")
-print(hrtf.shape)
-
-# It looks fine, so let's plot it
-# plt.plot(hrtf[0], label="left", linewidth=0.5,  marker='o', markersize=1)
-# plt.plot(hrtf[1], label="right", linewidth=0.5,  marker='o', markersize=1)
-# plt.grid()
-# plt.legend()
-# plt.show()
-# It's pretty clear, based on the ITD and ILD, that the source is located at the left,
-# which on the other hand confirms the sourcePositions[0] information
+upVector = (sofa.getListenerUpValues()[0][0], sofa.getListenerUpValues()[0][1], sofa.getListenerUpValues()[0][2])
+frontVector = (sofa.getListenerViewValues()[0][0], sofa.getListenerViewValues()[0][1], sofa.getListenerViewValues()[0][2])
+listenerPos =  sofa.getListenerPositionValues() # should be 0, 0, 0
 
 
-# Let's render it with a file and listen to it
-# Open a mono wav file. I got this one from freesound
-# https://freesound.org/people/Ryntjie/sounds/365061/
-data, samplerate = sf.read('scripts/in.wav')
+for i in range(0, positions):
+	form = "{:.2f}"
+	x = sourcePositions[i][0] # azimuth
+	y = sourcePositions[i][1] # elevation
+	z = sourcePositions[i][2] # radius/distance
+	if coordinateType == "cartesian":
+		radius = math.sqrt(x * x + y * y + z * z)
+		# todo the rest
 
-# Convolve it with the hrtf
-binaural_left = scipy.signal.fftconvolve(data,hrtf[0])
-binaural_right = scipy.signal.fftconvolve(data,hrtf[1])
-binaural = np.asarray([binaural_left, binaural_right]).swapaxes(-1,0)
+	fileName = form.format(x) + "_" + form.format(y) + "_" + form.format(z) + ".wav"
+	ir = irs[i, :, :]
+	ir = ir.swapaxes(-1,0)
+	sf.write(outPath + fileName, ir, sampleRate)
 
-# Write to a file, and enjoy!
-sf.write('scripts/binaural.wav', binaural, samplerate)
+
