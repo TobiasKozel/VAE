@@ -137,9 +137,11 @@ namespace vae { namespace core {
 			cleanUp();
 		}
 
-		bool openDevice(uint output, uint input) override {
+		bool openDevice(uint output = 2, uint input = 0) override {
 			DeviceInfo device;
 			device.id = Pa_GetDefaultOutputDevice();
+			device.channelsIn = input;
+			device.channelsOut = output;
 			return openDevice(device);
 		}
 

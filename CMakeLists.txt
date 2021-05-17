@@ -7,7 +7,7 @@ project(
 	LANGUAGES CXX
 )
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # find_package will look for custom scripts in the cmake folder

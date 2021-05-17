@@ -33,7 +33,7 @@ namespace vae { namespace core {
 
 		DeviceDummy(SyncCallback& callback) : Device(callback, BackendDummy::instance()) { }
 
-		bool openDevice(uint output, uint input) override {
+		bool openDevice(uint output = 2, uint input = 0) override {
 			init(Config::SampleRate, input, output);
 			return true;
 		}
