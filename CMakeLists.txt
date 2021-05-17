@@ -17,10 +17,14 @@ find_package(portaudio REQUIRED)
 find_package(tklb REQUIRED)
 
 file(GLOB PUBLIC_API "src/api/*.cpp")
-file(GLOB SRC_CORE "src/core/*.hpp" )
+file(GLOB SRC_CORE "src/core/*.hpp")
+file(GLOB SRC_DEVICE "src/core/device/*.hpp")
+file(GLOB SRC_FILESYSTEM "src/core/filesystem/*.hpp" "src/core/filesystem/*.cpp")
 
 add_library(vae
 	${SRC_CORE}
+	${SRC_DEVICE}
+	${SRC_FILESYSTEM}
 	${PUBLIC_API}
 )
 

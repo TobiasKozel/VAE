@@ -1,7 +1,24 @@
 #ifndef VAEZ_FILESYSTEM_VIRTUAL
 #define VAEZ_FILESYSTEM_VIRTUAL
 
+#include "../../../external/tklb/src/memory/TMemory.hpp"
+#include "../../../external/tklb/src/util/TAssert.h"
 #include "./vae_filesystem.hpp"
+
+
+#define STRPOOL_MALLOC(ctx, size) (tklb::memory::DefaultPool.allocate(size))
+#define STRPOOL_FREE(ctx, ptr)    (tklb::memory::DefaultPool.deallocate(ptr))
+// #define STRPOOL_ASSERT(condition) (TKLB_ASSERT(condition))
+
+// #define STRPOOL_MEMSET( ptr, val, cnt ) ( my_memset_func( ptr, val, cnt ) )
+// #define STRPOOL_MEMCPY( dst, src, cnt ) ( my_memcpy_func( dst, src, cnt ) )
+// #define STRPOOL_MEMCMP( pr1, pr2, cnt ) ( my_memcmp_func( pr1, pr2, cnt ) )
+// #define STRPOOL_STRNICMP( s1, s2, len ) ( my_strnicmp_func( s1, s2, len ) )
+#include "../../../external/strpool.h"
+
+#define ASSETSYS_MALLOC(ctx, size) (tklb::memory::DefaultPool.allocate(size))
+#define ASSETSYS_FREE(ctx, ptr)    (tklb::memory::DefaultPool.deallocate(ptr))
+// #define ASSETSYS_ASSERT(condition) (TKLB_ASSERT(condition))
 #include "../../../external/assetsys.h"
 
 namespace vae { namespace core {

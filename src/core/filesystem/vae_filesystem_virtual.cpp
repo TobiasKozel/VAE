@@ -1,2 +1,6 @@
 #define ASSETSYS_IMPLEMENTATION
-#include "./vae_filesystem_virtual.hpp"
+#define STRPOOL_IMPLEMENTATION
+
+#ifndef VAEZ_FILESYSTEM_VIRTUAL
+	#include "./vae_filesystem_virtual.hpp"
+#endif
