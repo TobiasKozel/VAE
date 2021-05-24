@@ -24,7 +24,6 @@ int pool() {
 
 	strpool_term(&pool);
 	return 0;
-	return 0;
 }
 
 void list_assets(assetsys_t* assetsys, char const* path, int indent) {
@@ -59,16 +58,18 @@ int asset() {
 	assetsys_file_t file;
 	assetsys_file(assetsys, "/data/text.txt", &file);
 	int size = assetsys_file_size(assetsys, file);
-	char* content = (char*) malloc(size + 1); // extra space for '\0'
+	char* content = (char*) TKLB_MALLOC(size + 1); // extra space for '\0'
 	int test = 0;
 	assetsys_file_load(assetsys, file, nullptr, content, size + 1);
 	content[ size ] = '\0'; // zero terminate the text file
 	printf("%s\n", content);
-	free(content);
+	TKLB_FREE(content);
 
 	assetsys_destroy(assetsys);
 	return 0;
 }
+
+
 
 int sine() {
 	DeviceInfo devices[100];
@@ -93,6 +94,7 @@ int sine() {
 	DevicePortaudio outputDevice(callback); // sync output device
 	outputDevice.openDevice();
 	getchar();
+	return 0;
 }
 
 int main() {

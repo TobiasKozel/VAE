@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "VAE/vae_engine.hpp"
-#include "VAE/vae_listener.hpp"
+#include "vae/vae_engine.hpp"
+#include "vae/vae_listener.hpp"
 
 int main() {
 	auto engine = VAE::Engine();

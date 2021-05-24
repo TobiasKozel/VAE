@@ -2,7 +2,7 @@
 #define VAEZ_DEVICE
 
 #include "../vae_config.hpp"
-#include "../../../include/VAE/vae_device_info.hpp"
+#include "../../../include/vae/vae_device_info.hpp"
 #include "../../../external/tklb/src/memory/TMemory.hpp"
 #include "../../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../../external/tklb/src/types/audio/TAudioRingBuffer.hpp"
