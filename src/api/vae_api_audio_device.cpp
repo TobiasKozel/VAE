@@ -10,27 +10,32 @@ bool PublicDevice::valid() {
 bool PublicDevice::openDevice(int output, int input) {
 
 	auto& device = *reinterpret_cast<core::Device*>(this);
-	device.openDevice(output, input);
+	return device.openDevice(output, input);
 }
 
-bool PublicDevice::openDevice(const DeviceInfo& device) {
-
+bool PublicDevice::openDevice(const DeviceInfo& deviceInfo) {
+	auto& device = *reinterpret_cast<core::Device*>(this);
+	return device.openDevice(deviceInfo);
 }
 
 bool PublicDevice::closeDevice() {
-
+	auto& device = *reinterpret_cast<core::Device*>(this);
+	return device.closeDevice();
 }
 
 int PublicDevice::getChannelsOut() {
-
+	auto& device = *reinterpret_cast<core::Device*>(this);
+	return device.getChannelsOut();
 }
 
 int PublicDevice::getChannelsIn() {
-
+	auto& device = *reinterpret_cast<core::Device*>(this);
+	return device.getChannelsIn();
 }
 
 int PublicDevice::getStreamTime() {
-
+	auto& device = *reinterpret_cast<core::Device*>(this);
+	return device.getStreamTime();
 }
 
 
