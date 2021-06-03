@@ -22,6 +22,8 @@ namespace vae { namespace core {
 			// dummy.name = "Dummy Device";
 			return dummy;
 		}
+
+		const char* getName() override  { return "dummy"; };
 	};
 
 	/**

@@ -45,6 +45,8 @@ namespace vae { namespace core {
 			tklb::memory::stringCopy(info.name, deviceInfo->name, sizeof(DeviceInfo::name));
 			return info;
 		};
+
+		const char* getName() override  { return "dummy"; };
 	};
 
 	/**

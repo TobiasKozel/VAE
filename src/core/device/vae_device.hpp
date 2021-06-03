@@ -24,6 +24,11 @@ namespace vae { namespace core {
 		using uint = unsigned int;
 
 		/**
+		 * Returns name of the api
+		 */
+		virtual const char* getName() = 0;
+
+		/**
 		 * @brief Gets number of devices, needed to iterate them.
 		 * Device index != does not have to be the device index!
 		 */
