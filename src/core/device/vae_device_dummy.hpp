@@ -16,14 +16,19 @@ namespace vae { namespace core {
 
 		DeviceInfo getDevice(uint id) override {
 			TKLB_ASSERT(id == 0) // there's only one device
-			DeviceInfo dummy;
-			dummy.channelsIn = 2;
-			dummy.channelsOut = 2;
-			// dummy.name = "Dummy Device";
-			return dummy;
+			DeviceInfo info;
+			info.channelsIn = 2;
+			info.channelsOut = 2;
+			tklb::memory::stringCopy(info.name, "Dummy Device", sizeof(DeviceInfo::name));
+			tklb::memory::stringCopy(info.api, getName(), sizeof(DeviceInfo::api));
+			return info;
 		}
 
 		const char* getName() override  { return "dummy"; };
+
+		DeviceInfo getDefaultDevice() override {
+			return getDevice(0);
+		};
 	};
 
 	/**
@@ -40,7 +45,7 @@ namespace vae { namespace core {
 			return true;
 		}
 
-		bool openDevice(const DeviceInfo& device) override {
+		bool openDevice(DeviceInfo& device) override {
 			// there's only one device
 			TKLB_ASSERT(device.id == 0)
 			return openDevice(device.channelsOut, device.channelsIn);

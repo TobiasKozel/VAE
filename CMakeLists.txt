@@ -10,10 +10,17 @@ project(
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed for clang
+
 # find_package will look for custom scripts in the cmake folder
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
-find_package(portaudio REQUIRED)
+# find_package(portaudio REQUIRED)
+find_package(RtAudio REQUIRED)
 find_package(tklb REQUIRED)
 
 file(GLOB PUBLIC_API "src/api/*.cpp")
@@ -40,7 +47,8 @@ target_include_directories(vae
 		tklb
 	PRIVATE
 		${CMAKE_CURRENT_SOURCE_DIR}/src
-		portaudio_static
+		# portaudio_static
+		rtaudio
 		tklb
 )
 
@@ -51,7 +59,8 @@ target_link_libraries(vae
 # Goal is to have no public dependencies
 	PRIVATE
 		tklb
-		portaudio_static
+		rtaudio
+		# portaudio_static
 )
 
 # OPTIONAL
@@ -71,7 +80,7 @@ if(MSVC)
 			/OUT:${CMAKE_STATIC_LIBRARY_PREFIX}vae_pack${CMAKE_STATIC_LIBRARY_SUFFIX}
 			$<TARGET_OBJECTS:vae>
 			$<TARGET_OBJECTS:tklb>
-			$<TARGET_OBJECTS:portaudio_static>
+			# $<TARGET_OBJECTS:portaudio_static>
 		COMMAND_EXPAND_LISTS
 	)
 else()
@@ -86,7 +95,10 @@ else()
 			${CMAKE_STATIC_LIBRARY_PREFIX}vae_pack${CMAKE_STATIC_LIBRARY_SUFFIX}
 			$<TARGET_OBJECTS:vae>
 			$<TARGET_OBJECTS:tklb>
-			$<TARGET_OBJECTS:portaudio_static>
+			$<TARGET_OBJECTS:rtaudio>
+			# ${ALSA_LIBRARY}
+			# ${PULSE_LIB} ${PULSESIMPLE_LIB}
+			# $<TARGET_OBJECTS:portaudio_static>
 		COMMAND_EXPAND_LISTS # this is important to expand cmake lists properly
 	)
 endif()

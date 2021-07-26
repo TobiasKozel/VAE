@@ -43,10 +43,15 @@ namespace vae { namespace core {
 			info.channelsOut = deviceInfo->maxOutputChannels;
 			info.sampleRate = uint(deviceInfo->defaultSampleRate);
 			tklb::memory::stringCopy(info.name, deviceInfo->name, sizeof(DeviceInfo::name));
+			tklb::memory::stringCopy(info.api, getName(), sizeof(DeviceInfo::api), false);
 			return info;
 		};
 
-		const char* getName() override  { return "dummy"; };
+		const char* getName() override  { return "portaudio"; };
+
+		DeviceInfo getDefaultDevice() override {
+			return getDevice(Pa_GetDefaultOutputDevice());
+		};
 	};
 
 	/**
@@ -140,14 +145,14 @@ namespace vae { namespace core {
 		}
 
 		bool openDevice(uint output = 2, uint input = 0) override {
-			DeviceInfo device;
-			device.id = Pa_GetDefaultOutputDevice();
+			DeviceInfo device = mBackend.getDefaultDevice();
+			// TODO cap channelcount
 			device.channelsIn = input;
 			device.channelsOut = output;
 			return openDevice(device);
 		}
 
-		bool openDevice(const DeviceInfo& device) override {
+		bool openDevice(DeviceInfo& device) override {
 			const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(device.id);
 
 			if (deviceInfo == nullptr) {
@@ -205,10 +210,12 @@ namespace vae { namespace core {
 			// Setup deinterleave buffers
 			if (0 < inputParameters.channelCount) {
 				mShared.bufferFrom.resize(device.bufferSize, inputParameters.channelCount);
+				mShared.bufferFrom.sampleRate = device.sampleRate;
 			}
 
 			if (0 < outputParameters.channelCount) {
 				mShared.bufferTo.resize(device.bufferSize, outputParameters.channelCount);
+				mShared.bufferTo.sampleRate = device.sampleRate;
 			}
 
 			err = Pa_StartStream(mStream);

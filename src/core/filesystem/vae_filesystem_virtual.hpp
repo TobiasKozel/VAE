@@ -6,8 +6,8 @@
 #include "./vae_filesystem.hpp"
 
 
-#define STRPOOL_MALLOC(ctx, size) (tklb::memory::DefaultPool.allocate(size))
-#define STRPOOL_FREE(ctx, ptr)    (tklb::memory::DefaultPool.deallocate(ptr))
+#define STRPOOL_MALLOC(ctx, size) (TKLB_DEFAULT_POOL.allocate(size))
+#define STRPOOL_FREE(ctx, ptr)    (TKLB_DEFAULT_POOL.deallocate(ptr))
 // #define STRPOOL_ASSERT(condition) (TKLB_ASSERT(condition))
 
 // #define STRPOOL_MEMSET( ptr, val, cnt ) ( my_memset_func( ptr, val, cnt ) )
@@ -16,8 +16,8 @@
 // #define STRPOOL_STRNICMP( s1, s2, len ) ( my_strnicmp_func( s1, s2, len ) )
 #include "../../../external/strpool.h"
 
-#define ASSETSYS_MALLOC(ctx, size) (tklb::memory::DefaultPool.allocate(size))
-#define ASSETSYS_FREE(ctx, ptr)    (tklb::memory::DefaultPool.deallocate(ptr))
+#define ASSETSYS_MALLOC(ctx, size) (TKLB_DEFAULT_POOL.allocate(size))
+#define ASSETSYS_FREE(ctx, ptr)    (TKLB_DEFAULT_POOL.deallocate(ptr))
 // #define ASSETSYS_ASSERT(condition) (TKLB_ASSERT(condition))
 #include "../../../external/assetsys.h"
 

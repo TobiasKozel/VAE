@@ -9,11 +9,11 @@ Do this:
     #define ASSETSYS_IMPLEMENTATION
 before you include this file in *one* C/C++ file to create the implementation.
 
-If you are using miniz.c for other things, and have included it in your
-project, you need to define ASSETSYS_NO_MINIZ as well, to avoid duplicate
-definitions.
+If you are using miniz.c for other things, and have included it in your 
+project, you need to define ASSETSYS_NO_MINIZ as well, to avoid duplicate 
+definitions. 
 
-Dependencies:
+Dependencies: 
     strpool.h
 */
 
@@ -28,12 +28,12 @@ typedef enum assetsys_error_t
     {
     ASSETSYS_SUCCESS = 0,
     ASSETSYS_ERROR_INVALID_PATH = -1,
-    ASSETSYS_ERROR_INVALID_MOUNT = -2,
+    ASSETSYS_ERROR_INVALID_MOUNT = -2, 
     ASSETSYS_ERROR_FAILED_TO_READ_ZIP = -3,
     ASSETSYS_ERROR_FAILED_TO_CLOSE_ZIP = -4,
     ASSETSYS_ERROR_FAILED_TO_READ_FILE = -5,
     ASSETSYS_ERROR_FILE_NOT_FOUND = -6,
-    ASSETSYS_ERROR_DIR_NOT_FOUND = -7,
+    ASSETSYS_ERROR_DIR_NOT_FOUND = -7, 
     ASSETSYS_ERROR_INVALID_PARAMETER = -8,
     ASSETSYS_ERROR_BUFFER_TOO_SMALL = -9,
     } assetsys_error_t;
@@ -99,12 +99,12 @@ Example
 
     int main( int, char** ) {
         assetsys_t* assetsys = assetsys_create( 0 );
-
+    
         // Mount current working folder as a virtual "/data" path
         assetsys_mount( assetsys, ".", "/data" );
 
         // Print all files and subfolders
-        list_assets( assetsys, "/", 0 ); // Start at root
+        list_assets( assetsys, "/", 0 ); // Start at root 
 
         // Load a file
         assetsys_file_t file;
@@ -124,19 +124,19 @@ Example
 API Documentation
 -----------------
 
-assetsys.h is a system for loading binary assets into your game. It allows you to mount directories and archive files
-(bundles of files; assetsys.h supports using standard zip files for this) assign them a virtual path. You then load
-assets through assetsys using the virtual path (which can stay the same even if the mounts change). assetsys.h is
-case-insensitive regardless of platform, and only accepts forward slash "/" as path separator, to ensure consistent
-behavior. It allows you to mount several paths or archive files to the same virtual path, even if they contain files of
-the same name, and a later mount will take precedence over a previous one. This allows you to, for example, have a
+assetsys.h is a system for loading binary assets into your game. It allows you to mount directories and archive files 
+(bundles of files; assetsys.h supports using standard zip files for this) assign them a virtual path. You then load 
+assets through assetsys using the virtual path (which can stay the same even if the mounts change). assetsys.h is 
+case-insensitive regardless of platform, and only accepts forward slash "/" as path separator, to ensure consistent 
+behavior. It allows you to mount several paths or archive files to the same virtual path, even if they contain files of 
+the same name, and a later mount will take precedence over a previous one. This allows you to, for example, have a 
 `data` archive file and an `update` archive file, where `update` contains new versions of only some of the files.
 
-assetsys.h is a single-header library, and does not need any .lib files or other binaries, or any build scripts. To use
-it, you just include assetsys.h to get the API declarations. To get the definitions, you must include assetsys.h from
-*one* single C or C++ file, and #define the symbol `ASSETSYS_IMPLEMENTATION` before you do.
+assetsys.h is a single-header library, and does not need any .lib files or other binaries, or any build scripts. To use 
+it, you just include assetsys.h to get the API declarations. To get the definitions, you must include assetsys.h from 
+*one* single C or C++ file, and #define the symbol `ASSETSYS_IMPLEMENTATION` before you do. 
 
-assetsys.h has a dependency om another single-header library, strpool.h, which is used for efficient storage and
+assetsys.h has a dependency om another single-header library, strpool.h, which is used for efficient storage and 
 comparison of the filename and path strings. assetsys.h automatically includes strpool.h, so it must reside in the same
 path. It does not specify the STRPOOL_IMPLEMENTATION define, on the assumption that you might be including strpool.h in
 some other part of your program. If you are not, you can make assetsys.h include the strpool implemention by doing:
@@ -148,17 +148,17 @@ some other part of your program. If you are not, you can make assetsys.h include
 
 ### Customization
 
-There are a few different things in assetsys.h which are configurable by #defines. Most of the API use the `int` data
-type, for integer values where the exact size is not important. However, for some functions, it specifically makes use
-of an unsigned 64 bit data types. It default to using `unsigned long long`, but can be redefined by #defining
-ASSETSYS_U64, before including assetsys.h. This is useful if you, for example, use the types from `<stdint.h>` in the
-rest of your program, and you want assetsys.h to use compatible types. In this case, you would include assetsys.h using
+There are a few different things in assetsys.h which are configurable by #defines. Most of the API use the `int` data 
+type, for integer values where the exact size is not important. However, for some functions, it specifically makes use 
+of an unsigned 64 bit data types. It default to using `unsigned long long`, but can be redefined by #defining 
+ASSETSYS_U64, before including assetsys.h. This is useful if you, for example, use the types from `<stdint.h>` in the 
+rest of your program, and you want assetsys.h to use compatible types. In this case, you would include assetsys.h using 
 the following code:
 
     #define ASSETSYS_U64 uint64_t
     #include "assetsys.h"
 
-Note that when customizing the data type, you need to use the same definition in every place where you include
+Note that when customizing the data type, you need to use the same definition in every place where you include 
 assetsys.h, as they affect the declarations as well as the definitions.
 
 The rest of the customizations only affect the implementation, so will only need to be defined in the file where you
@@ -167,8 +167,8 @@ have the #define ASSETSYS_IMPLEMENTATION.
 
 #### Custom memory allocators
 
-To store the internal data structures, ini.h needs to do dynamic allocation by calling `malloc`. Programs might want to
-keep track of allocations done, or use custom defined pools to allocate memory from. assetsys.h allows for specifying
+To store the internal data structures, ini.h needs to do dynamic allocation by calling `malloc`. Programs might want to 
+keep track of allocations done, or use custom defined pools to allocate memory from. assetsys.h allows for specifying 
 custom memory allocation functions for `malloc` and `free`. This is done with the following code:
 
     #define ASSETSYS_IMPLEMENTATION
@@ -178,9 +178,9 @@ custom memory allocation functions for `malloc` and `free`. This is done with th
 
 where `my_custom_malloc` and `my_custom_free` are your own memory allocation/deallocation functions. The `ctx` parameter
 is an optional parameter of type `void*`. When `assetsys_init` is called, you can set the `memctx` field of the `config`
-parameter, to a pointer to anything you like, and which will be passed through as the `ctx` parameter to every
-`ASSETSYS_MALLOC`/`ASSETSYS_FREE` call. For example, if you are doing memory tracking, you can pass a pointer to your
-tracking data as `memctx`, and in your custom allocation/deallocation function, you can cast the `ctx` param back to the
+parameter, to a pointer to anything you like, and which will be passed through as the `ctx` parameter to every 
+`ASSETSYS_MALLOC`/`ASSETSYS_FREE` call. For example, if you are doing memory tracking, you can pass a pointer to your 
+tracking data as `memctx`, and in your custom allocation/deallocation function, you can cast the `ctx` param back to the 
 right type, and access the tracking data.
 
 If no custom allocator is defined, assetsys.h will default to `malloc` and `free` from the C runtime library.
@@ -188,8 +188,8 @@ If no custom allocator is defined, assetsys.h will default to `malloc` and `free
 
 #### Custom assert
 
-assetsys.h makes use of asserts to report usage errors and code errors. By default, it makes use of the C runtime
-library `assert` macro, which only executes in debug builds. However, it allows for substituting with your own assert
+assetsys.h makes use of asserts to report usage errors and code errors. By default, it makes use of the C runtime 
+library `assert` macro, which only executes in debug builds. However, it allows for substituting with your own assert 
 function or macro using the following code:
 
     #define ASSETSYS_IMPLEMENTATION
@@ -203,16 +203,16 @@ Note that if you only want the asserts to trigger in debug builds, you must add 
 
 assetsys.h makes use of the miniz library for parsing and decompressing zip files. It includes the entire miniz source
 code inside assetsys.h, so normally you don't have to worry about it. However, in the case where you might already be
-using miniz in some other part of the program, you can tell assetsys.h to not include the implementation for miniz. It
-will still include the miniz definitions, and if you don't include the miniz implementation elsewhere, you will get a
-linker error. To exclude the miniz implementation, simply define `ASSETSYS_NO_MINIZ` before including assetsys.h, like
+using miniz in some other part of the program, you can tell assetsys.h to not include the implementation for miniz. It 
+will still include the miniz definitions, and if you don't include the miniz implementation elsewhere, you will get a 
+linker error. To exclude the miniz implementation, simply define `ASSETSYS_NO_MINIZ` before including assetsys.h, like 
 this:
 
     #define ASSETSYS_IMPLEMENTATION
     #define ASSETSYS_NO_MINIZ
     #include "assetsys.h"
 
-
+    
 assetsys_create
 ---------------
 
@@ -229,7 +229,7 @@ assetsys_destroy
 
     void assetsys_destroy( assetsys_t* sys )
 
-Destroys an assetsys instance, releasing all the resources used by it.
+Destroys an assetsys instance, releasing all the resources used by it. 
 
 
 assetsys_mount
@@ -239,15 +239,15 @@ assetsys_mount
 
 Mounts the data source `path`, making all its files accessible through this assetsys instance. The data source can be
 either a folder or an archive file (a standard .zip file, with or without compression). `path` must be a relative path,
-and must use forward slash `/` as path separator, never backslash, regardless of platform. It must not end with a path
-separator. The string `mount_as` will be prepended to all mounted files, and can be passed as an empty string "" if
+and must use forward slash `/` as path separator, never backslash, regardless of platform. It must not end with a path 
+separator. The string `mount_as` will be prepended to all mounted files, and can be passed as an empty string "" if 
 desired. `mount_as` may not contain the characters backslash `\` or colon `:`. It must not end with a path separator.
 `assetsys_mount` will return `ASSETSYS_ERROR_INVALID_PARAMETER` if either `path` or `mount_as` is NULL. It will return
 `ASSETSYS_ERROR_INVALID_PATH` if the conditions detailed above are not met, or if the file or folder specified by `path`
 could not be found. If `path` indicates a file, and it is not a valid archive file, `assetsys_mount` returns
 `ASSETSYS_ERROR_FAILED_TO_READ_ZIP`.
 
-If multiple mounts contains the same file and it is accessible through the same full path (whether because of the
+If multiple mounts contains the same file and it is accessible through the same full path (whether because of the 
 `mount_as` prefix or not), the last mounted data source will be used when loading that file.
 
 
@@ -258,7 +258,7 @@ assetsys_dismount
 
 Removes a data source which was mounted by calling `assetsys_mount`. `path` and `mounted_as` must be the same as was
 used when mounting. If `path` is NULL, `assetsys_dismount` returns `ASSETSYS_ERROR_INVALID_PARAMETER`. If `mounted_as`
-is NULL, or no matching mount could be found, it returns `ASSETSYS_ERROR_INVALID_MOUNT`.
+is NULL, or no matching mount could be found, it returns `ASSETSYS_ERROR_INVALID_MOUNT`. 
 
 
 assetsys_file
@@ -266,11 +266,11 @@ assetsys_file
 
     assetsys_error_t assetsys_file( assetsys_t* sys, char const* path, assetsys_file_t* file )
 
-Retrieves a handle for the file specified by `path`. `path` needs to be an absolute path, including the `mount_as`
+Retrieves a handle for the file specified by `path`. `path` needs to be an absolute path, including the `mount_as` 
 prefix specified when the data source was mounted, and matching is case insensitive. The mounts are searched in reverse
 order they were added, and if a file with the specified path could not be found, `assetsys_file` returns
 `ASSETSYS_ERROR_FILE_NOT_FOUND`. The handle is written to `file`, which must be a pointer to a `assetsys_file_t`
-variable declared by the caller. The handle is used in calls to `assetsys_file_load` and `assetsys_file_size`. The
+variable declared by the caller. The handle is used in calls to `assetsys_file_load` and `assetsys_file_size`. The 
 handle is only valid until any mounts are modified by calling `assetsys_mount` or `assetsys_dismount`.
 
 
@@ -284,7 +284,7 @@ the memory indicated by `buffer`. This memory buffer must be large enough to fit
 parameter must indicate its size. To find out how large the buffer needs to be, call `assetsys_file_size`. The size of
 the file will also be reported in the `size` parameter, unless it is passed in as NULL. Note that the two sizes can be
 reported with different values if the file was updated on disk between the call to `assetsys_file_size` and the call to
-`assetsys_file_load`.
+`assetsys_file_load`. 
 If the file could not be loaded, `assetsys_file_load` returns `ASSETSYS_ERROR_FAILED_TO_READ_FILE`. If the `capacity`
 parameter is too small to hold the file data, `assetsys_file_load` returns `ASSETSYS_ERROR_BUFFER_TOO_SMALL`.
 
@@ -305,18 +305,18 @@ assetsys_file_count
 
     int assetsys_file_count( assetsys_t* sys, char const* path )
 
-Returns the number of files in the directory with the specified path, or 0 if the path is invalid. `path` needs to be an
-absolute path, including the `mount_as` prefix specified when the data source was mounted, and matching is case
+Returns the number of files in the directory with the specified path, or 0 if the path is invalid. `path` needs to be an 
+absolute path, including the `mount_as` prefix specified when the data source was mounted, and matching is case 
 insensitive. `assetsys_file_count` returns the total number of files from all mounts, which fall under the path.
 
 
 assetsys_file_name
 ------------------
-
+    
     char const* assetsys_file_name( assetsys_t* sys, char const* path, int index )
 
-Returns the filename and extension (but not the full path) of one of the files in the specified path. `path` needs to be
-an absolute path, including the `mount_as` prefix specified when the data source was mounted, and matching is case
+Returns the filename and extension (but not the full path) of one of the files in the specified path. `path` needs to be 
+an absolute path, including the `mount_as` prefix specified when the data source was mounted, and matching is case 
 insensitive. `index` needs to be between 0 and one less than the count returned by calling `assetsys_file_count` with
 the same path. If the path is invalid or index is out of range, `assetsys_file_name` returns NULL.
 
@@ -326,8 +326,8 @@ assetsys_file_path
 
     char const* assetsys_file_path( assetsys_t* sys, char const* path, int index )
 
-Returns the full path, including filename and extension, of one of the files in the specified path. `path` needs to be
-an absolute path, including the `mount_as` prefix specified when the data source was mounted, and matching is case
+Returns the full path, including filename and extension, of one of the files in the specified path. `path` needs to be 
+an absolute path, including the `mount_as` prefix specified when the data source was mounted, and matching is case 
 insensitive. `index` needs to be between 0 and one less than the count returned by calling `assetsys_file_count` with
 the same path. If the path is invalid or index is out of range, `assetsys_file_path` returns NULL.
 
@@ -337,8 +337,8 @@ assetsys_subdir_count
 
     int assetsys_subdir_count( assetsys_t* sys, char const* path )
 
-Returns the number of subdirectories in the directory with the specified path, or 0 if the path is invalid. `path` needs
-to be an absolute path, including the `mount_as` prefix specified when the data source was mounted, and matching is case
+Returns the number of subdirectories in the directory with the specified path, or 0 if the path is invalid. `path` needs 
+to be an absolute path, including the `mount_as` prefix specified when the data source was mounted, and matching is case 
 insensitive. `assetsys_subdir_count` returns the total number of directories from all mounts, which fall under the path.
 
 
@@ -347,8 +347,8 @@ assetsys_subdir_name
 
     char const* assetsys_subdir_name( assetsys_t* sys, char const* path, int index )
 
-Returns the name (but not the full path) of one of the subdirectories in the specified path. `path` needs to be an
-absolute path, including the `mount_as` prefix specified when the data source was mounted, and matching is case
+Returns the name (but not the full path) of one of the subdirectories in the specified path. `path` needs to be an 
+absolute path, including the `mount_as` prefix specified when the data source was mounted, and matching is case 
 insensitive. `index` needs to be between 0 and one less than the count returned by calling `assetsys_subdir_count` with
 the same path. If the path is invalid or index is out of range, `assetsys_subdir_name` returns NULL.
 
@@ -358,9 +358,9 @@ assetsys_subdir_path
 
     char const* assetsys_subdir_path( assetsys_t* sys, char const* path, int index )
 
-Returns the name, including the full path, of one of the files in the specified path. `path` needs to be an absolute
-path, including the `mount_as` prefix specified when the data source was mounted, and matching is case insensitive.
-`index` needs to be between 0 and one less than the count returned by calling `assetsys_subdir_count` with the same
+Returns the name, including the full path, of one of the files in the specified path. `path` needs to be an absolute 
+path, including the `mount_as` prefix specified when the data source was mounted, and matching is case insensitive. 
+`index` needs to be between 0 and one less than the count returned by calling `assetsys_subdir_count` with the same 
 path. If the path is invalid or index is out of range, `assetsys_subdir_path` returns NULL.
 
 
@@ -376,7 +376,7 @@ path. If the path is invalid or index is out of range, `assetsys_subdir_path` re
 #ifdef ASSETSYS_IMPLEMENTATION
 #undef ASSETSYS_IMPLEMENTATION
 
-#define _CRT_NONSTDC_NO_DEPRECATE
+#define _CRT_NONSTDC_NO_DEPRECATE 
 #define _CRT_SECURE_NO_WARNINGS
 
 #ifdef ASSETSYS_NO_MINIZ
@@ -1223,7 +1223,7 @@ size_t tdefl_compress_mem_to_mem(void *pOut_buf, size_t out_buf_len, const void 
 
 // Compresses an image to a compressed PNG file in memory.
 // On entry:
-//  pImage, w, h, and num_chans describe the image to compress. num_chans may be 1, 2, 3, or 4.
+//  pImage, w, h, and num_chans describe the image to compress. num_chans may be 1, 2, 3, or 4. 
 //  The image pitch in bytes per scanline will be w*num_chans. The leftmost pixel on the top scanline is stored first in memory.
 //  level may range from [0,10], use MZ_NO_COMPRESSION, MZ_BEST_SPEED, MZ_BEST_COMPRESSION, etc. or a decent default is MZ_DEFAULT_LEVEL
 //  If flip is true, the image will be flipped on the Y axis (useful for OpenGL apps).
@@ -3281,7 +3281,7 @@ void *tdefl_write_image_to_png_file_in_memory(const void *pImage, int w, int h, 
     #define MZ_FFLUSH fflush
     #define MZ_FREOPEN mz_freopen
     #define MZ_DELETE_FILE remove
-  #elif defined(_MSC_VER) && _MSC_VER < 1400
+  #elif defined(_MSC_VER) && _MSC_VER < 1400 
     #ifndef MINIZ_NO_TIME
       #include <sys/utime.h>
     #endif
@@ -3459,7 +3459,7 @@ static time_t mz_zip_dos_to_time_t(int dos_time, int dos_date)
 
 static void mz_zip_time_to_dos_time(time_t time, mz_uint16 *pDOS_time, mz_uint16 *pDOS_date)
 {
-#if defined(_MSC_VER) && _MSC_VER >= 1400
+#if defined(_MSC_VER) && _MSC_VER >= 1400 
   struct tm tm_struct;
   struct tm *tm = &tm_struct;
   errno_t err = localtime_s(tm, &time);
@@ -4861,7 +4861,7 @@ mz_bool mz_zip_writer_add_file(mz_zip_archive *pZip, const char *pArchive_name, 
 
   if (!mz_zip_get_file_modified_time(pSrc_filename, &dos_time, &dos_date))
     return MZ_FALSE;
-
+    
   pSrc_file = MZ_FOPEN(pSrc_filename, "rb");
   if (!pSrc_file)
     return MZ_FALSE;
@@ -5343,21 +5343,21 @@ void *mz_zip_extract_archive_file_to_heap(const char *pZip_filename, const char 
 
 #pragma warning( pop )
 
-#define _CRT_NONSTDC_NO_DEPRECATE
+#define _CRT_NONSTDC_NO_DEPRECATE 
 #define _CRT_SECURE_NO_WARNINGS
 #include <sys/stat.h>
 
-#include "./strpool.h"
+#include "strpool.h"
 
 #ifndef ASSETSYS_ASSERT
-    #define _CRT_NONSTDC_NO_DEPRECATE
+    #define _CRT_NONSTDC_NO_DEPRECATE 
     #define _CRT_SECURE_NO_WARNINGS
     #include <assert.h>
     #define ASSETSYS_ASSERT( x ) assert( x )
 #endif
 
 #ifndef ASSETSYS_MALLOC
-    #define _CRT_NONSTDC_NO_DEPRECATE
+    #define _CRT_NONSTDC_NO_DEPRECATE 
     #define _CRT_SECURE_NO_WARNINGS
     #include <stdlib.h>
     #define ASSETSYS_MALLOC( ctx, size ) ( malloc( size ) )
@@ -5367,12 +5367,12 @@ void *mz_zip_extract_archive_file_to_heap(const char *pZip_filename, const char 
 
 #if defined( _WIN32 )
 
-    #define _CRT_NONSTDC_NO_DEPRECATE
+    #define _CRT_NONSTDC_NO_DEPRECATE 
     #define _CRT_SECURE_NO_WARNINGS
     #undef _WIN32_WINNT
     #define _WIN32_WINNT 0x0501 // requires Windows XP minimum
-    // 0x0400=Windows NT 4.0, 0x0500=Windows 2000, 0x0501=Windows XP, 0x0502=Windows Server 2003, 0x0600=Windows Vista,
-    // 0x0601=Windows 7, 0x0602=Windows 8, 0x0603=Windows 8.1, 0x0A00=Windows 10,
+    // 0x0400=Windows NT 4.0, 0x0500=Windows 2000, 0x0501=Windows XP, 0x0502=Windows Server 2003, 0x0600=Windows Vista, 
+    // 0x0601=Windows 7, 0x0602=Windows 8, 0x0603=Windows 8.1, 0x0A00=Windows 10, 
     #define _WINSOCKAPI_
     #pragma warning( push )
     #pragma warning( disable: 4668 ) // 'symbol' is not defined as a preprocessor macro, replacing with '0' for 'directives'
@@ -5380,7 +5380,7 @@ void *mz_zip_extract_archive_file_to_heap(const char *pZip_filename, const char 
     #include <windows.h>
     #pragma warning( pop )
 
-    struct assetsys_internal_dir_entry_t
+    struct assetsys_internal_dir_entry_t 
         {
         char name[ MAX_PATH ];
         BOOL is_folder;
@@ -5413,7 +5413,7 @@ void *mz_zip_extract_archive_file_to_heap(const char *pZip_filename, const char 
         HANDLE handle = FindFirstFileA( search_pattern, &data );
         if( handle == INVALID_HANDLE_VALUE ) return NULL;
 
-        struct assetsys_internal_dir_t* dir = (struct assetsys_internal_dir_t*) ASSETSYS_MALLOC( memctx,
+        struct assetsys_internal_dir_t* dir = (struct assetsys_internal_dir_t*) ASSETSYS_MALLOC( memctx, 
             sizeof( struct assetsys_internal_dir_t ) );
         dir->memctx = memctx;
         dir->handle = handle;
@@ -5444,10 +5444,10 @@ void *mz_zip_extract_archive_file_to_heap(const char *pZip_filename, const char 
         if( !result )
             {
             FindClose( dir->handle );
-            dir->handle = INVALID_HANDLE_VALUE;
+            dir->handle = INVALID_HANDLE_VALUE;      
             }
 
-        return &dir->entry;
+        return &dir->entry;    
         }
 
 
@@ -5521,36 +5521,36 @@ void *mz_zip_extract_archive_file_to_heap(const char *pZip_filename, const char 
         return ( (struct dirent*)entry )->d_type == DT_DIR;
         }
 
-#endif
+#endif 
 
 
-static void* assetsys_internal_mz_alloc( void* memctx, size_t items, size_t size )
-    {
-    (void) memctx; (void) items; (void) size;
+static void* assetsys_internal_mz_alloc( void* memctx, size_t items, size_t size ) 
+    { 
+    (void) memctx; (void) items; (void) size; 
     ASSETSYS_U64* p = (ASSETSYS_U64*) ASSETSYS_MALLOC( memctx, ( items * size ) + sizeof( ASSETSYS_U64 ) );
     *p = ( items * size );
-    return p + 1;
+    return p + 1; 
     }
 
 
-static void assetsys_internal_mz_free( void* memctx, void* ptr )
-    {
-    (void) memctx; (void) ptr;
+static void assetsys_internal_mz_free( void* memctx, void* ptr ) 
+    { 
+    (void) memctx; (void) ptr; 
     ASSETSYS_U64* p = ( (ASSETSYS_U64*) ptr ) - 1;
-    ASSETSYS_FREE( memctx, p );
+    ASSETSYS_FREE( memctx, p ); 
     }
 
 
-static void* assetsys_internal_mz_realloc( void* memctx, void* ptr, size_t items, size_t size )
-    {
-    (void) memctx; (void) ptr; (void) items; (void) size;
+static void* assetsys_internal_mz_realloc( void* memctx, void* ptr, size_t items, size_t size ) 
+    { 
+    (void) memctx; (void) ptr; (void) items; (void) size; 
     if( !ptr ) return assetsys_internal_mz_alloc( memctx, items, size );
-
+   
     ASSETSYS_U64* p = ( (ASSETSYS_U64*) ptr ) - 1;
     ASSETSYS_U64 prev_size = *p;
     if( prev_size >= ( items * size ) ) return ptr;
-
-    ASSETSYS_U64* new_ptr = (ASSETSYS_U64*) ASSETSYS_MALLOC( memctx, ( items * size ) + sizeof( ASSETSYS_U64 ) );
+    
+    ASSETSYS_U64* new_ptr = (ASSETSYS_U64*) ASSETSYS_MALLOC( memctx, ( items * size ) + sizeof( ASSETSYS_U64 ) ); 
     *new_ptr = ( items * size );
     ++new_ptr;
     memcpy( new_ptr, ptr, (size_t) prev_size );
@@ -5647,12 +5647,12 @@ assetsys_t* assetsys_create( void* memctx )
 
     sys->mounts_count = 0;
     sys->mounts_capacity = 16;
-    sys->mounts = (struct assetsys_internal_mount_t*) ASSETSYS_MALLOC( memctx,
+    sys->mounts = (struct assetsys_internal_mount_t*) ASSETSYS_MALLOC( memctx, 
         sizeof( *sys->mounts ) * sys->mounts_capacity );
 
     sys->collated_count = 0;
     sys->collated_capacity = 16384;
-    sys->collated = (struct assetsys_internal_collated_t*) ASSETSYS_MALLOC( memctx,
+    sys->collated = (struct assetsys_internal_collated_t*) ASSETSYS_MALLOC( memctx, 
         sizeof( *sys->collated ) * sys->collated_capacity );
     return sys;
     }
@@ -5662,7 +5662,7 @@ void assetsys_destroy( assetsys_t* sys )
     {
     while( sys->mounts_count > 0 )
         {
-        assetsys_dismount( sys, assetsys_internal_get_string( sys, sys->mounts[ 0 ].path ),
+        assetsys_dismount( sys, assetsys_internal_get_string( sys, sys->mounts[ 0 ].path ), 
             assetsys_internal_get_string( sys, sys->mounts[ 0 ].mounted_as ) );
         }
     ASSETSYS_FREE( sys->memctx, sys->collated );
@@ -5691,10 +5691,10 @@ static int assetsys_internal_register_collated( assetsys_t* sys, char const* con
 
     if( first_free < 0)
         {
-        if( sys->collated_count >= sys->collated_capacity )
+        if( sys->collated_count >= sys->collated_capacity ) 
             {
             sys->collated_capacity *= 2;
-            struct assetsys_internal_collated_t* new_collated = (struct assetsys_internal_collated_t*) ASSETSYS_MALLOC(
+            struct assetsys_internal_collated_t* new_collated = (struct assetsys_internal_collated_t*) ASSETSYS_MALLOC( 
                 sys->memctx, sizeof( *sys->collated ) * sys->collated_capacity );
             memcpy( new_collated, sys->collated, sizeof( *sys->collated ) * sys->collated_count );
             ASSETSYS_FREE( sys->memctx, sys->collated );
@@ -5760,7 +5760,7 @@ static void assetsys_internal_collate_directories( assetsys_t* sys, struct asset
     }
 
 
-static void assetsys_internal_recurse_directories( assetsys_t* sys, int const collated_index,
+static void assetsys_internal_recurse_directories( assetsys_t* sys, int const collated_index, 
     struct assetsys_internal_mount_t* const mount )
     {
     char const* path = assetsys_internal_get_string( sys, sys->collated[ collated_index ].path );
@@ -5772,7 +5772,7 @@ static void assetsys_internal_recurse_directories( assetsys_t* sys, int const co
     strcat( sys->temp, path );
 
     struct assetsys_internal_dir_t* dir = assetsys_internal_dir_open( *sys->temp == '\0' ? "." : sys->temp, sys->memctx );
-
+        
     struct assetsys_internal_dir_entry_t* dirent;
     for( dirent = assetsys_internal_dir_read( dir ); dirent != NULL; dirent = assetsys_internal_dir_read( dir ) )
         {
@@ -5804,7 +5804,7 @@ static void assetsys_internal_recurse_directories( assetsys_t* sys, int const co
                 if( mount->files_count >= mount->files_capacity )
                     {
                     mount->files_capacity *= 2;
-                    struct assetsys_internal_file_t* new_files = (struct assetsys_internal_file_t*) ASSETSYS_MALLOC(
+                    struct assetsys_internal_file_t* new_files = (struct assetsys_internal_file_t*) ASSETSYS_MALLOC( 
                         sys->memctx, sizeof( *(mount->files) ) * mount->files_capacity );
                     memcpy( new_files, mount->files, sizeof( *(mount->files) ) * mount->files_count );
                     ASSETSYS_FREE( sys->memctx, mount->files );
@@ -5841,7 +5841,7 @@ static void assetsys_internal_recurse_directories( assetsys_t* sys, int const co
                 if( mount->dirs_count >= mount->dirs_capacity )
                     {
                     mount->dirs_capacity *= 2;
-                    struct assetsys_internal_folder_t* new_dirs = (struct assetsys_internal_folder_t*) ASSETSYS_MALLOC(
+                    struct assetsys_internal_folder_t* new_dirs = (struct assetsys_internal_folder_t*) ASSETSYS_MALLOC( 
                         sys->memctx, sizeof( *(mount->dirs) ) * mount->dirs_capacity );
                     memcpy( new_dirs, mount->dirs, sizeof( *(mount->dirs) ) * mount->dirs_count );
                     ASSETSYS_FREE( sys->memctx, mount->dirs );
@@ -5851,7 +5851,7 @@ static void assetsys_internal_recurse_directories( assetsys_t* sys, int const co
                 as_dir->collated_index = assetsys_internal_register_collated( sys, sys->temp, 0 );
                 assetsys_internal_recurse_directories( sys, as_dir->collated_index, mount );
                 }
-            }
+            }        
         }
     assetsys_internal_dir_close( dir );
     }
@@ -5865,12 +5865,12 @@ assetsys_error_t assetsys_mount( assetsys_t* sys, char const* path, char const* 
     if( strchr( mount_as, ':' ) ) return ASSETSYS_ERROR_INVALID_PATH;
     if( strchr( mount_as, '\\' ) ) return ASSETSYS_ERROR_INVALID_PATH;
     int len = (int) strlen( path );
-    if( len > 0 && path[ 0 ] == '/' ) return ASSETSYS_ERROR_INVALID_PATH;
-    if( len > 1 && path[ len - 1 ] == '/' ) return ASSETSYS_ERROR_INVALID_PATH;
+    if( len > 0 && path[ 0 ] == '/' ) return ASSETSYS_ERROR_INVALID_PATH;       
+    if( len > 1 && path[ len - 1 ] == '/' ) return ASSETSYS_ERROR_INVALID_PATH;     
     int mount_len = (int) strlen( mount_as );
-    if( mount_len == 0 || mount_as[ 0 ] != '/' || ( mount_len > 1 && mount_as[ mount_len - 1 ] == '/' ) )
-        return ASSETSYS_ERROR_INVALID_PATH;
-
+    if( mount_len == 0 || mount_as[ 0 ] != '/' || ( mount_len > 1 && mount_as[ mount_len - 1 ] == '/' ) ) 
+        return ASSETSYS_ERROR_INVALID_PATH;     
+    
     enum assetsys_internal_mount_type_t type;
 
     #if defined( _MSC_VER ) && _MSC_VER >= 1400
@@ -5894,7 +5894,7 @@ assetsys_error_t assetsys_mount( assetsys_t* sys, char const* path, char const* 
     if( sys->mounts_count >= sys->mounts_capacity )
         {
         sys->mounts_capacity *= 2;
-        struct assetsys_internal_mount_t* new_mounts = (struct assetsys_internal_mount_t*) ASSETSYS_MALLOC( sys->memctx,
+        struct assetsys_internal_mount_t* new_mounts = (struct assetsys_internal_mount_t*) ASSETSYS_MALLOC( sys->memctx, 
             sizeof( *sys->mounts ) * sys->mounts_capacity );
         memcpy( new_mounts, sys->mounts, sizeof( *sys->mounts ) * sys->mounts_count );
         ASSETSYS_FREE( sys->memctx, sys->mounts );
@@ -5907,20 +5907,20 @@ assetsys_error_t assetsys_mount( assetsys_t* sys, char const* path, char const* 
     mount->mount_len = mount_as ? (int) strlen( mount_as ) : 0;
     mount->path = assetsys_internal_add_string( sys, path );
     mount->type = type;
-
+        
     mount->files_count = 0;
     mount->files_capacity = 4096;
-    mount->files = (struct assetsys_internal_file_t*) ASSETSYS_MALLOC( sys->memctx,
+    mount->files = (struct assetsys_internal_file_t*) ASSETSYS_MALLOC( sys->memctx, 
         sizeof( *(mount->files) ) * mount->files_capacity );
 
     mount->dirs_count = 0;
     mount->dirs_capacity = 1024;
-    mount->dirs = (struct assetsys_internal_folder_t*) ASSETSYS_MALLOC( sys->memctx,
+    mount->dirs = (struct assetsys_internal_folder_t*) ASSETSYS_MALLOC( sys->memctx, 
         sizeof( *(mount->dirs) ) * mount->dirs_capacity );
 
     struct assetsys_internal_folder_t* dir = &mount->dirs[ mount->dirs_count++ ];
     dir->collated_index = assetsys_internal_register_collated( sys, mount_as, 0 );
-
+    
     if( type == ASSETSYS_INTERNAL_MOUNT_TYPE_DIR )
         {
         assetsys_internal_recurse_directories( sys, dir->collated_index, mount );
@@ -5949,14 +5949,14 @@ assetsys_error_t assetsys_mount( assetsys_t* sys, char const* path, char const* 
                 if( mount->dirs_count >= mount->dirs_capacity )
                     {
                     mount->dirs_capacity *= 2;
-                    struct assetsys_internal_folder_t* new_dirs = (struct assetsys_internal_folder_t*) ASSETSYS_MALLOC(
+                    struct assetsys_internal_folder_t* new_dirs = (struct assetsys_internal_folder_t*) ASSETSYS_MALLOC( 
                         sys->memctx, sizeof( *(mount->dirs) ) * mount->dirs_capacity );
                     memcpy( new_dirs, mount->dirs, sizeof( *(mount->dirs) ) * mount->dirs_count );
                     ASSETSYS_FREE( sys->memctx, mount->dirs );
                     mount->dirs = new_dirs;
                     }
 
-                char filename[ 1024 ];
+                char filename[ 1024 ];                
                 mz_zip_reader_get_filename( &mount->zip, (mz_uint) i, filename, sizeof( filename ) );
 
                 struct assetsys_internal_folder_t* as_dir = &mount->dirs[ mount->dirs_count++ ];
@@ -5975,7 +5975,7 @@ assetsys_error_t assetsys_mount( assetsys_t* sys, char const* path, char const* 
                 if( mount->files_count >= mount->files_capacity )
                     {
                     mount->files_capacity *= 2;
-                    struct assetsys_internal_file_t* new_files = (struct assetsys_internal_file_t*) ASSETSYS_MALLOC(
+                    struct assetsys_internal_file_t* new_files = (struct assetsys_internal_file_t*) ASSETSYS_MALLOC( 
                         sys->memctx, sizeof( *(mount->files) ) * mount->files_capacity );
                     memcpy( new_files, mount->files, sizeof( *(mount->files) ) * mount->files_count );
                     ASSETSYS_FREE( sys->memctx, mount->files );
@@ -6001,23 +6001,23 @@ assetsys_error_t assetsys_mount( assetsys_t* sys, char const* path, char const* 
                 file->zip_index = i;
 
                 char* dir_path = assetsys_internal_dirname( sys->temp );
-                ASSETSYS_U64 handle = strpool_inject( &sys->strpool, dir_path, (int) strlen( dir_path ) - 1 );
+                ASSETSYS_U64 handle = strpool_inject( &sys->strpool, dir_path, (int) strlen( dir_path ) - 1 );               
                 int found = 0;
                 for( int j = 0; j < mount->dirs_count; ++j )
                     {
                     if( handle == sys->collated[ mount->dirs[ j ].collated_index ].path )
                         found = 1;
                     }
-                if( !found )
+                if( !found ) 
                     {
                     struct assetsys_internal_folder_t* as_dir = &mount->dirs[ mount->dirs_count++ ];
-                    as_dir->collated_index = assetsys_internal_register_collated( sys,
+                    as_dir->collated_index = assetsys_internal_register_collated( sys, 
                         assetsys_internal_get_string( sys, handle ), 0 );
                     }
                 }
             }
         }
-
+        
 
     assetsys_internal_collate_directories( sys, mount );
 
@@ -6059,7 +6059,7 @@ assetsys_error_t assetsys_dismount( assetsys_t* sys, char const* path, char cons
             strpool_decref( &sys->strpool, mount->path );
             strpool_discard( &sys->strpool, mount_handle );
             strpool_discard( &sys->strpool, path_handle );
-
+            
             for( int j = 0; j < mount->dirs_count; ++j )
                 assetsys_internal_remove_collated( sys, mount->dirs[ j ].collated_index );
 
@@ -6135,8 +6135,8 @@ assetsys_error_t assetsys_file_load( assetsys_t* sys, assetsys_file_t f, int* si
         if( size ) *size = (int) file->size;
         if( file->size > capacity ) return ASSETSYS_ERROR_BUFFER_TOO_SMALL;
 
-        mz_bool result = mz_zip_reader_extract_to_mem_no_alloc( &mount->zip, (mz_uint) file->zip_index, buffer,
-            (size_t) file->size, 0, 0, 0 );
+        mz_bool result = mz_zip_reader_extract_to_mem_no_alloc( &mount->zip, (mz_uint) file->zip_index, buffer, 
+            (size_t) file->size, 0, 0, 0 ); 
         return result ? ASSETSYS_SUCCESS : ASSETSYS_ERROR_FAILED_TO_READ_FILE;
         }
     else
@@ -6144,11 +6144,11 @@ assetsys_error_t assetsys_file_load( assetsys_t* sys, assetsys_file_t f, int* si
         if( size ) *size = file->size;
         strcpy( sys->temp, assetsys_internal_get_string( sys, mount->path ) );
         strcat( sys->temp, *sys->temp == '\0' ? "" : "/" );
-        strcat( sys->temp, assetsys_internal_get_string( sys,
+        strcat( sys->temp, assetsys_internal_get_string( sys, 
             sys->collated[ file->collated_index ].path ) + mount->mount_len + 1 );
         FILE* fp = fopen( sys->temp, "rb" );
         if( !fp ) return ASSETSYS_ERROR_FAILED_TO_READ_FILE;
-
+        
         fseek( fp, 0, SEEK_END );
         int file_size = (int) ftell( fp );
         fseek( fp, 0, SEEK_SET );
@@ -6175,13 +6175,13 @@ int assetsys_file_size( assetsys_t* sys, assetsys_file_t file )
         {
         strcpy( sys->temp, assetsys_internal_get_string( sys, mount->path ) );
         strcat( sys->temp, *sys->temp == '\0' ? "" : "/" );
-        strcat( sys->temp, assetsys_internal_get_string( sys,
+        strcat( sys->temp, assetsys_internal_get_string( sys, 
             sys->collated[ mount->files[ file.index ].collated_index ].path ) + mount->mount_len + 1 );
         struct stat s;
         if( stat( sys->temp, &s ) == 0 )
             mount->files[ file.index ].size = (int) s.st_size;
         }
-
+        
     return mount->files[ file.index ].size;
     }
 
@@ -6222,7 +6222,7 @@ int assetsys_file_count( assetsys_t* sys, char const* path )
 char const* assetsys_file_name( assetsys_t* sys, char const* path, int index )
     {
     char const* file_path = assetsys_file_path( sys, path, index );
-    if( file_path )
+    if( file_path ) 
         {
         char const* name = strrchr( file_path, '/' );
         if( !name ) return file_path;
@@ -6269,7 +6269,7 @@ int assetsys_subdir_count( assetsys_t* sys, char const* path )
 char const* assetsys_subdir_name( assetsys_t* sys, char const* path, int index )
     {
     char const* subdir_path = assetsys_subdir_path( sys, path, index );
-    if( subdir_path )
+    if( subdir_path ) 
         {
         char const* name = strrchr( subdir_path, '/' );
         if( !name ) return subdir_path;
@@ -6301,7 +6301,7 @@ static char* assetsys_internal_dirname( char const* path )
     {
     static char result[ 260 ];
     strncpy( result, path, sizeof( result ) );
-
+      
     char* lastForwardSlash = strrchr( result, '/' );
 
     if( lastForwardSlash ) *(lastForwardSlash + 1 ) = '\0';
@@ -6321,7 +6321,7 @@ contributors:
 
 revision history:
     1.1     changes to support loading assets being re-saved during execution
-    1.0     first released version
+    1.0     first released version  
 
 */
 
@@ -6330,7 +6330,7 @@ revision history:
 ------------------------------------------------------------------------------
 
 This software is available under 2 licenses - you may choose the one you like.
-Uses public domain code for "miniz" zip file support - original license can be
+Uses public domain code for "miniz" zip file support - original license can be 
 found in the miniz section of this file.
 
 ------------------------------------------------------------------------------
@@ -6339,22 +6339,22 @@ ALTERNATIVE A - MIT License
 
 Copyright (c) 2015 Mattias Gustavsson
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
+Permission is hereby granted, free of charge, to any person obtaining a copy of 
+this software and associated documentation files (the "Software"), to deal in 
+the Software without restriction, including without limitation the rights to 
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies 
+of the Software, and to permit persons to whom the Software is furnished to do 
 so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
+The above copyright notice and this permission notice shall be included in all 
 copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
 SOFTWARE.
 
 ------------------------------------------------------------------------------
@@ -6363,24 +6363,24 @@ ALTERNATIVE B - Public Domain (www.unlicense.org)
 
 This is free and unencumbered software released into the public domain.
 
-Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
-software, either in source code form or as a compiled binary, for any purpose,
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this 
+software, either in source code form or as a compiled binary, for any purpose, 
 commercial or non-commercial, and by any means.
 
-In jurisdictions that recognize copyright laws, the author or authors of this
-software dedicate any and all copyright interest in the software to the public
-domain. We make this dedication for the benefit of the public at large and to
-the detriment of our heirs and successors. We intend this dedication to be an
-overt act of relinquishment in perpetuity of all present and future rights to
+In jurisdictions that recognize copyright laws, the author or authors of this 
+software dedicate any and all copyright interest in the software to the public 
+domain. We make this dedication for the benefit of the public at large and to 
+the detriment of our heirs and successors. We intend this dedication to be an 
+overt act of relinquishment in perpetuity of all present and future rights to 
 this software under copyright law.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN 
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ------------------------------------------------------------------------------
 */
-
+    

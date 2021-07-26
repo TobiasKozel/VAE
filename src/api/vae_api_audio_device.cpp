@@ -13,7 +13,7 @@ bool PublicDevice::openDevice(int output, int input) {
 	return device.openDevice(output, input);
 }
 
-bool PublicDevice::openDevice(const DeviceInfo& deviceInfo) {
+bool PublicDevice::openDevice(DeviceInfo& deviceInfo) {
 	auto& device = *reinterpret_cast<core::Device*>(this);
 	return device.openDevice(deviceInfo);
 }

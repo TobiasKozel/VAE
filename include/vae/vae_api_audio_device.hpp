@@ -10,7 +10,7 @@ namespace vae {
 	public:
 		bool valid();
 		bool openDevice(int output = 2, int input = 0);
-		bool openDevice(const DeviceInfo& device);
+		bool openDevice(DeviceInfo& device);
 		bool closeDevice();
 		int getChannelsOut();
 		int getChannelsIn();

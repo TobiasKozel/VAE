@@ -38,6 +38,8 @@ namespace vae { namespace core {
 		 * @brief Returns a spefic device info for index.
 		 */
 		virtual DeviceInfo getDevice(uint index) = 0;
+
+		virtual DeviceInfo getDefaultDevice() = 0;
 	};
 
 	/**
@@ -95,16 +97,19 @@ namespace vae { namespace core {
 			mChannelsOut = channelsOut;
 
 			if (sampleRate != Config::SampleRate) {
+				const uint size = Resampler::calculateBufferSize(sampleRate, Config::SampleRate, Config::MaxBlock);
 				if (0 < mChannelsIn) {
 					mResamplerFromDevice.init(sampleRate, Config::SampleRate, Config::MaxBlock);
-					const uint fromSize = Resampler::calculateBufferSize(sampleRate, Config::SampleRate, Config::MaxBlock);
-					mBufferFromDevice.resize(fromSize, channelsIn);
+					mBufferFromDevice.resize(size, channelsIn);
+					// Since it will be resampled to that
+					mBufferFromDevice.sampleRate = Config::SampleRate;
 				}
 
 				if (0 < mChannelsOut) {
 					mResamplerToDevice.init(Config::SampleRate, sampleRate, Config::MaxBlock);
-					const uint toSize = Resampler::calculateBufferSize(Config::SampleRate, sampleRate, Config::MaxBlock);
-					mBufferToDevice.resize(toSize, channelsOut);
+					mBufferToDevice.resize(size, channelsOut);
+					// Same rate as above, since it's the source buffer for the resampler
+					mBufferToDevice.sampleRate = Config::SampleRate;
 				}
 			}
 
@@ -134,8 +139,10 @@ namespace vae { namespace core {
 
 		/**
 		 * @brief Opens a specific audio device.
+		 * The device struct may be altered to match the actual hardware.
+		 * (sampleRate, bufferSize and channel count)
 		 */
-		virtual bool openDevice(const DeviceInfo& device) = 0;
+		virtual bool openDevice(DeviceInfo& device) = 0;
 
 		/**
 		 * @brief Closes the currently open device.
