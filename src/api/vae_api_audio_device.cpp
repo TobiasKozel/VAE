@@ -10,7 +10,7 @@ bool PublicDevice::valid() {
 bool PublicDevice::openDevice(int output, int input) {
 
 	auto& device = *reinterpret_cast<core::Device*>(this);
-	return device.openDevice(output, input);
+	return device.openDevice(false);
 }
 
 bool PublicDevice::openDevice(DeviceInfo& deviceInfo) {

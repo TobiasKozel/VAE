@@ -49,8 +49,12 @@ namespace vae { namespace core {
 
 		const char* getName() override  { return "portaudio"; };
 
-		DeviceInfo getDefaultDevice() override {
+		DeviceInfo getDefaultOutputDevice() override {
 			return getDevice(Pa_GetDefaultOutputDevice());
+		};
+
+		DeviceInfo getDefaultInputDevice() override {
+			return getDevice(Pa_GetDefaultInputDevice());
 		};
 	};
 
@@ -144,14 +148,6 @@ namespace vae { namespace core {
 			cleanUp();
 		}
 
-		bool openDevice(uint output = 2, uint input = 0) override {
-			DeviceInfo device = mBackend.getDefaultDevice();
-			// TODO cap channelcount
-			device.channelsIn = input;
-			device.channelsOut = output;
-			return openDevice(device);
-		}
-
 		bool openDevice(DeviceInfo& device) override {
 			const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(device.id);
 
@@ -227,6 +223,12 @@ namespace vae { namespace core {
 			}
 
 			return true;
+		}
+
+		bool openDevice(bool input = false) override {
+			DeviceInfo device =
+				input ? mBackend.getDefaultInputDevice() : mBackend.getDefaultOutputDevice();
+			return openDevice(device);
 		}
 
 		bool closeDevice() override {

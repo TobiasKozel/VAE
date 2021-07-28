@@ -39,8 +39,12 @@ namespace vae { namespace core {
 
 		const char* getName() override  { return "rtaudio"; };
 
-		DeviceInfo getDefaultDevice() override {
+		DeviceInfo getDefaultInputDevice() override {
 			return getDevice(mAudio.getDefaultInputDevice());
+		};
+
+		DeviceInfo getDefaultOutputDevice() override {
+			return getDevice(mAudio.getDefaultOutputDevice());
 		};
 	};
 
@@ -128,14 +132,6 @@ namespace vae { namespace core {
 
 		~DeviceRtaudio() { cleanUp(); }
 
-		bool openDevice(uint output = 2, uint input = 0) override {
-			DeviceInfo device = mBackend.getDefaultDevice();
-			// TODO cap the channel count
-			device.channelsIn = input;
-			device.channelsOut = output;
-			return openDevice(device);
-		}
-
 		bool openDevice(DeviceInfo& device) override {
 			if (mBackend.getDeviceCount() < device.id) {
 				TKLB_ASSERT(false)
@@ -188,6 +184,12 @@ namespace vae { namespace core {
 			}
 
 			return true;
+		}
+
+		bool openDevice(bool input = false) override {
+			DeviceInfo device =
+				input ? mBackend.getDefaultInputDevice() : mBackend.getDefaultOutputDevice();
+			return openDevice(device);
 		}
 
 		bool closeDevice() override { return cleanUp(); }

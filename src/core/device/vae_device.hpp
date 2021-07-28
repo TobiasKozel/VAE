@@ -39,7 +39,9 @@ namespace vae { namespace core {
 		 */
 		virtual DeviceInfo getDevice(uint index) = 0;
 
-		virtual DeviceInfo getDefaultDevice() = 0;
+		virtual DeviceInfo getDefaultInputDevice() = 0;
+
+		virtual DeviceInfo getDefaultOutputDevice() = 0;
 	};
 
 	/**
@@ -134,8 +136,9 @@ namespace vae { namespace core {
 
 		/**
 		 * @brief Tries to open the default audio device whith desired in out channels
+		 * TODO check why implementation can't be moved up here
 		 */
-		virtual bool openDevice(uint output = 2, uint input = 0) = 0;
+		virtual bool openDevice(bool input = false) = 0;
 
 		/**
 		 * @brief Opens a specific audio device.
