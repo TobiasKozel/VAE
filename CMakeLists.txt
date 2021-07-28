@@ -15,6 +15,15 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed for clang
 # find_package will look for custom scripts in the cmake folder
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
+# Need to define these before loading the packages
+if (VAE_BUILD_STATIC_LIBS)
+	set(TKLB_BUILD_STATIC_LIBS ON)
+	set(RTAUDIO_BUILD_STATIC_LIBS ON)
+else()
+	set(TKLB_BUILD_STATIC_LIBS OFF)
+	set(RTAUDIO_BUILD_STATIC_LIBS OFF)
+endif()
+
 # find_package(portaudio REQUIRED)
 find_package(RtAudio REQUIRED)
 find_package(tklb REQUIRED)
@@ -24,13 +33,24 @@ file(GLOB SRC_CORE "src/core/*.hpp")
 file(GLOB SRC_DEVICE "src/core/device/*.hpp")
 file(GLOB SRC_FILESYSTEM "src/core/filesystem/*.hpp" "src/core/filesystem/*.cpp")
 
-add_library(vae
-	${SRC_CORE}
-	${SRC_DEVICE}
-	${SRC_FILESYSTEM}
-	${PUBLIC_API}
-)
+if (VAE_BUILD_STATIC_LIBS)
+	add_library(vae
+		STATIC
+			${SRC_CORE}
+			${SRC_DEVICE}
+			${SRC_FILESYSTEM}
+			${PUBLIC_API}
+	)
 
+else()
+	add_library(vae
+		SHARED
+			${SRC_CORE}
+			${SRC_DEVICE}
+			${SRC_FILESYSTEM}
+			${PUBLIC_API}
+	)
+endif()
 #Add an alias so that library can be used inside the build tree, e.g. when testing
 add_library(VAE::vae ALIAS vae)
 
@@ -59,11 +79,13 @@ target_link_libraries(vae
 		# portaudio_static
 )
 
+
+
+
 # OPTIONAL
 # create a single lib file from all the objects
 # ${lib_tool}
 # libtool -static -o
-
 if(MSVC)
 	add_custom_target(
 		vae_pack

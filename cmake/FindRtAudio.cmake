@@ -1,7 +1,6 @@
 # set(RTAUDIO_API_ASIO true)
 
 set(RTAUDIO_BUILD_TESTING OFF)
-set(RTAUDIO_BUILD_STATIC_LIBS)
 set(RTAUDIO_API_JACK OFF)
 set(RTAUDIO_API_ALSA OFF)
 add_subdirectory(external/rtaudio)
