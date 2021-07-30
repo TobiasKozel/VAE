@@ -189,6 +189,11 @@ namespace vae { namespace core {
 		bool openDevice(bool input = false) override {
 			DeviceInfo device =
 				input ? mBackend.getDefaultInputDevice() : mBackend.getDefaultOutputDevice();
+			if (input) {
+				device.channelsOut = 0;
+			} else {
+				device.channelsIn = 0;
+			}
 			return openDevice(device);
 		}
 

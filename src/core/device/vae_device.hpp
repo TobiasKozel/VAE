@@ -187,42 +187,20 @@ namespace vae { namespace core {
 		/**
 		 * @brief Called from the backend implementation.
 		 * Don't call this otherwise.
-		 * This only works for duplex callbacks. Getting
-		 * and recieving different amounts needs to be implemented
-		 * in the derived class.
 		 * Derived class is responsible for the Buffer supplied to the function.
 		 * TODO tklb streamtime could be used if device is temporarly disabled
 		 * @param in input frames in device samplerate
 		 * @param out output frames in device samplerate
 		 */
 		void callback(const AudioBuffer& fromDevice, AudioBuffer& toDevice) {
-			// Non duplex devices
 			const uint frames = std::max(fromDevice.validSize(), toDevice.validSize());
+			const bool resampleFrom = mResamplerFromDevice.isInitialized();
+			const bool resampleTo = mResamplerToDevice.isInitialized();
+			const bool needResample = resampleFrom | resampleTo;
 
-			if (mResamplerToDevice.isInitialized()) { // resampling needed
-				// Can't resample only one channel, rates need to match as well
-				TKLB_ASSERT(mResamplerToDevice.isInitialized() == mResamplerFromDevice.isInitialized())
+			mStreamTime += frames;
 
-				mResamplerFromDevice.process(fromDevice, mBufferFromDevice);
-
-				if (mSyncCallback == nullptr) { // async mode
-					Lock lock(mMutex);
-					mQueueFromDevice.push(mBufferFromDevice); // store away the resampled frames
-					// since the two resamplers should be in sync, we can pop the amount of
-					// frames the push resampler emitted to figure out how much we need
-					mQueueToDevice.pop(mBufferToDevice, mBufferFromDevice.validSize());
-					// Only if we got as many samples as we pushed to the device, in out are in sync
-					TKLB_ASSERT(mBufferToDevice.validSize() == mBufferFromDevice.validSize())
-					/**
-					 * No callback here since the consumer is responsible for getting and
-					 * providing audio from the queues in time
-					 */
-				} else { // sync mode
-					mSyncCallback(mBufferFromDevice, mBufferToDevice);
-				}
-
-				mResamplerToDevice.process(mBufferToDevice, toDevice);
-			} else { // No samplerate conversion needed
+			if (!needResample) {
 				if (mSyncCallback == nullptr) { // async mode
 					Lock lock(mMutex);
 					if (0 < mChannelsIn) {
@@ -235,8 +213,49 @@ namespace vae { namespace core {
 				} else { // sync mode
 					mSyncCallback(fromDevice, toDevice);
 				}
+				return;
 			}
-			mStreamTime += fromDevice.validSize();
+
+			if (resampleFrom) {
+				// audio from device can be resampled and put in the buffer
+				mResamplerFromDevice.process(fromDevice, mBufferFromDevice);
+			}
+
+			if (resampleTo) {
+				// however, we don't know how many samples we need to process
+				// since this is determined by the resampler
+				mBufferToDevice.setValidSize(
+					mResamplerToDevice.estimateNeed(toDevice.validSize())
+				);
+			}
+
+			if (mSyncCallback == nullptr) { // async mode
+				Lock lock(mMutex);
+				if (resampleFrom) {
+					mQueueFromDevice.push(mBufferFromDevice); // store away the resampled frames
+				}
+
+				if (resampleTo) {
+					mQueueToDevice.pop(mBufferToDevice, mBufferToDevice.validSize());
+				}
+			} else { // sync mode
+				mSyncCallback(mBufferFromDevice, mBufferToDevice);
+			}
+
+			if (resampleTo) {
+				mResamplerToDevice.process(mBufferToDevice, toDevice);
+			}
+			int out = toDevice.validSize();
+
+			static int miss = 0;
+			static int hit = 0;
+			miss += frames != out;
+			hit += frames == out;
+			if (miss % 100 == 0) {
+				printf("Hit: %i Miss: %i\n", hit, miss);
+			}
+
+
 		}
 	};
 } } // namespace vae::core
