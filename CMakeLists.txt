@@ -17,10 +17,12 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 # Need to define these before loading the packages
 if (VAE_BUILD_STATIC_LIBS)
+	message("Build static vae")
 	set(TKLB_BUILD_STATIC_LIBS ON)
 	set(RTAUDIO_BUILD_STATIC_LIBS ON)
 	set(RTAUDIO_STATIC_MSVCRT OFF)
 else()
+	message("Build shared vae")
 	set(TKLB_BUILD_STATIC_LIBS OFF)
 	set(RTAUDIO_BUILD_STATIC_LIBS OFF)
 endif()
@@ -43,6 +45,7 @@ if (VAE_BUILD_STATIC_LIBS)
 			${PUBLIC_API}
 	)
 else()
+
 	add_library(vae
 		SHARED
 			${SRC_CORE}
