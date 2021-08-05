@@ -4,7 +4,7 @@
 # http://www.portaudio.com/trac/wiki/TutorialDir/Compile/CMake
 #
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0.0)
 
 # Check if the user is building PortAudio stand-alone or as part of a larger
 # project. If this is part of a larger project (i.e. the CMakeLists.txt has
@@ -126,6 +126,7 @@ IF(WIN32)
     src/os/win/pa_win_wdmks_utils.c
     src/os/win/pa_win_coinitialize.c)
   SET(PA_PLATFORM_INCLUDES
+    src/os/win/pa_win_util.h
     src/os/win/pa_win_coinitialize.h
     src/os/win/pa_win_wdmks_utils.h)
 
@@ -477,7 +478,18 @@ ENDIF()
 # Prepared for inclusion of test files
 OPTION(PA_BUILD_TESTS "Include test projects" OFF)
 IF(PA_BUILD_TESTS)
+  MACRO(ADD_TEST appl_name)
+    ADD_EXECUTABLE(${appl_name} "${appl_name}.c")
+    TARGET_LINK_LIBRARIES(${appl_name} portaudio_static)
+    TARGET_INCLUDE_DIRECTORIES(${appl_name} PRIVATE "${CMAKE_SOURCE_DIR}/src/common")
+    SET_TARGET_PROPERTIES(${appl_name}
+        PROPERTIES
+        FOLDER "Test"
+    )
+  ENDMACRO(ADD_TEST)
+
   SUBDIRS(test)
+  SUBDIRS(qa)
 ENDIF()
 
 # Prepared for inclusion of test files

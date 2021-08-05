@@ -1,18 +1,17 @@
 #!/bin/sh
 
-# echo "updating portaudio"
-# rm ./portaudio
-# rm ./master
-# curl -LO https://codeload.github.com/Be-ing/portaudio/zip/refs/heads/cmake_rewrite
-# unzip ./master > /dev/null 2>&1
-# mv ./portaudio-cmake_rewrite ./portaudio
+echo "Updating portaudio"
+curl -LO https://github.com/PortAudio/portaudio/archive/refs/heads/master.zip
+unzip ./master.zip > /dev/null 2>&1
+rm ./master.zip
+rm -rf ./portaudio
+mv ./portaudio-master ./portaudio
 
 echo "Updating rtaudio"
+curl -LO https://github.com/thestk/rtaudio/archive/refs/heads/master.zip
+unzip ./master.zip > /dev/null 2>&1
+rm ./master.zip
 rm -rf ./rtaudio
-rm ./master
-curl -LO https://codeload.github.com/thestk/rtaudio/zip/refs/heads/master
-unzip ./master > /dev/null 2>&1
-rm ./master
 mv ./rtaudio-master ./rtaudio
 
 echo "Updating httplib"
@@ -25,12 +24,10 @@ rm ./strpool.h
 curl -LO https://raw.githubusercontent.com/mattiasgustavsson/libs/main/strpool.h
 curl -LO https://raw.githubusercontent.com/mattiasgustavsson/libs/main/assetsys.h
 
-exit
-echo "Updating flecs"
-rm -rf ./flecs
-rm ./master
-curl -LO https://codeload.github.com/SanderMertens/flecs/zip/refs/heads/master
-unzip ./master > /dev/null 2>&1
-rm ./master
-mv ./flecs-master ./flecs
+echo "Updating glm"
+curl -LO https://github.com/g-truc/glm/archive/refs/heads/master.zip
+unzip ./master.zip > /dev/null 2>&1
+rm ./master.zip
+rm -rf ./glm
+mv ./glm-master ./glm
 
