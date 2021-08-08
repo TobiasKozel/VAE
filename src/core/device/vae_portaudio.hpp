@@ -8,56 +8,6 @@
 #include "../../../external/portaudio/include/portaudio.h"
 
 namespace vae { namespace core {
-
-	class BackendPortAudio final : public Backend {
-		BackendPortAudio() {
-			PaError err = Pa_Initialize();
-			if (err != paNoError) {
-				TKLB_ASSERT(false)
-				return;
-			}
-		}
-
-		~BackendPortAudio() {
-			Pa_Terminate();
-		}
-	public:
-		static BackendPortAudio& instance() {
-			static BackendPortAudio backend;
-			return backend;
-		}
-
-		unsigned int getDeviceCount() override {
-			return Pa_GetDeviceCount();
-		}
-
-		DeviceInfo getDevice(unsigned int index) override {
-			const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(index);
-			if (deviceInfo == nullptr) {
-				TKLB_ASSERT(false)
-				return DeviceInfo();
-			}
-			DeviceInfo info;
-			info.id = index;
-			info.channelsIn = deviceInfo->maxInputChannels;
-			info.channelsOut = deviceInfo->maxOutputChannels;
-			info.sampleRate = uint(deviceInfo->defaultSampleRate);
-			tklb::memory::stringCopy(info.name, deviceInfo->name, sizeof(DeviceInfo::name));
-			tklb::memory::stringCopy(info.api, getName(), sizeof(DeviceInfo::api), false);
-			return info;
-		};
-
-		const char* getName() override  { return "portaudio"; };
-
-		DeviceInfo getDefaultOutputDevice() override {
-			return getDevice(Pa_GetDefaultOutputDevice());
-		};
-
-		DeviceInfo getDefaultInputDevice() override {
-			return getDevice(Pa_GetDefaultInputDevice());
-		};
-	};
-
 	/**
 	 * @brief Portaudio backend implementation.
 	 */
@@ -136,17 +86,9 @@ namespace vae { namespace core {
 
 	public:
 
-		DevicePortaudio() :
-			mShared(*this),
-			Device(BackendPortAudio::instance()) { }
+		DevicePortaudio(Backend& backend) : mShared(*this), Device(backend) { }
 
-		DevicePortaudio(SyncCallback& callback) :
-			mShared(*this),
-			Device(callback, BackendPortAudio::instance()) { }
-
-		~DevicePortaudio() {
-			cleanUp();
-		}
+		~DevicePortaudio() { cleanUp(); }
 
 		bool openDevice(DeviceInfo& device) override {
 			const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(device.id);
@@ -234,6 +176,59 @@ namespace vae { namespace core {
 		bool closeDevice() override {
 			cleanUp();
 			return true;
+		}
+	};
+
+	class BackendPortAudio final : public Backend {
+		BackendPortAudio() {
+			PaError err = Pa_Initialize();
+			if (err != paNoError) {
+				TKLB_ASSERT(false)
+				return;
+			}
+		}
+
+		~BackendPortAudio() {
+			Pa_Terminate();
+		}
+	public:
+		static BackendPortAudio& instance() {
+			static BackendPortAudio backend;
+			return backend;
+		}
+
+		unsigned int getDeviceCount() override {
+			return Pa_GetDeviceCount();
+		}
+
+		DeviceInfo getDevice(unsigned int index) override {
+			const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(index);
+			if (deviceInfo == nullptr) {
+				TKLB_ASSERT(false)
+				return DeviceInfo();
+			}
+			DeviceInfo info;
+			info.id = index;
+			info.channelsIn = deviceInfo->maxInputChannels;
+			info.channelsOut = deviceInfo->maxOutputChannels;
+			info.sampleRate = uint(deviceInfo->defaultSampleRate);
+			tklb::memory::stringCopy(info.name, deviceInfo->name, sizeof(DeviceInfo::name));
+			tklb::memory::stringCopy(info.api, getName(), sizeof(DeviceInfo::api), false);
+			return info;
+		};
+
+		const char* getName() override  { return "portaudio"; };
+
+		DeviceInfo getDefaultOutputDevice() override {
+			return getDevice(Pa_GetDefaultOutputDevice());
+		};
+
+		DeviceInfo getDefaultInputDevice() override {
+			return getDevice(Pa_GetDefaultInputDevice());
+		};
+
+		Device* createDevice() override {
+			return TKLB_NEW(DevicePortaudio, *this);
 		}
 	};
 

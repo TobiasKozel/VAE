@@ -8,51 +8,7 @@
 
 namespace vae { namespace core {
 
-	class BackendRtAudio final : public Backend {
-		RtAudio mAudio; // This instance is only used for probing
-		BackendRtAudio() { }
-
-		~BackendRtAudio() { }
-	public:
-		static BackendRtAudio& instance() {
-			static BackendRtAudio backend;
-			return backend;
-		}
-
-		unsigned int getDeviceCount() override {
-			return mAudio.getDeviceCount();
-		}
-
-		DeviceInfo getDevice(unsigned int index) override {
-			auto rtInfo = mAudio.getDeviceInfo(index);
-			TKLB_ASSERT(rtInfo.probed) // device needs to be probed
-
-			DeviceInfo info;
-			info.id = index;
-			info.channelsIn = rtInfo.inputChannels;
-			info.channelsOut = rtInfo.outputChannels;
-			info.sampleRate = uint(rtInfo.preferredSampleRate);
-			tklb::memory::stringCopy(info.name, rtInfo.name.c_str(), sizeof(DeviceInfo::name));
-			tklb::memory::stringCopy(info.api, getName(), sizeof(DeviceInfo::api), false);
-			return info;
-		};
-
-		const char* getName() override  { return "rtaudio"; };
-
-		DeviceInfo getDefaultInputDevice() override {
-			return getDevice(mAudio.getDefaultInputDevice());
-		};
-
-		DeviceInfo getDefaultOutputDevice() override {
-			return getDevice(mAudio.getDefaultOutputDevice());
-		};
-	};
-
-	/**
-	 * @brief Portaudio backend implementation.
-	 */
 	class DeviceRtaudio final : public Device {
-		RtAudio mAudio;
 
 		/**
 		 * @brief Stuct with data shared with audio thread.
@@ -67,8 +23,8 @@ namespace vae { namespace core {
 			AudioThreadShared(Device& d) : device(d) { }
 		};
 
-		// Data shared with the audio thread
-		AudioThreadShared mShared;
+		RtAudio mAudio; // Rt Device instance
+		AudioThreadShared mShared; // Data shared with the audio thread
 
 		bool cleanUp() {
 			try {
@@ -87,8 +43,8 @@ namespace vae { namespace core {
 		}
 
 		/**
-		 * @brief Function called from the RtAudio thread.
-		 */
+ 		* @brief Function called from the RtAudio thread.
+ 		*/
 		static int AudioCallback(
 			void *out, void *in, unsigned int frames,
 			double streamTime, RtAudioStreamStatus status, void *data
@@ -120,18 +76,10 @@ namespace vae { namespace core {
 			return 0;
 		}
 
+
 	public:
-
-		DeviceRtaudio() :
-			mShared(*this),
-			Device(BackendRtAudio::instance()) { }
-
-		DeviceRtaudio(SyncCallback& callback) :
-			mShared(*this),
-			Device(callback, BackendRtAudio::instance()) { }
-
-		~DeviceRtaudio() { cleanUp(); }
-
+		DeviceRtaudio(Backend& backend) : mShared(*this), Device(backend) { };
+		~DeviceRtaudio();
 		bool openDevice(DeviceInfo& device) override {
 			if (mBackend.getDeviceCount() < device.id) {
 				TKLB_ASSERT(false)
@@ -200,6 +148,49 @@ namespace vae { namespace core {
 		bool closeDevice() override { return cleanUp(); }
 	};
 
+	class BackendRtAudio final : public Backend {
+		RtAudio mAudio; // This instance is only used for probing
+		BackendRtAudio() { }
+
+		~BackendRtAudio() { }
+	public:
+		static BackendRtAudio& instance() {
+			static BackendRtAudio backend;
+			return backend;
+		}
+
+		unsigned int getDeviceCount() override {
+			return mAudio.getDeviceCount();
+		}
+
+		DeviceInfo getDevice(unsigned int index) override {
+			auto rtInfo = mAudio.getDeviceInfo(index);
+			TKLB_ASSERT(rtInfo.probed) // device needs to be probed
+
+			DeviceInfo info;
+			info.id = index;
+			info.channelsIn = rtInfo.inputChannels;
+			info.channelsOut = rtInfo.outputChannels;
+			info.sampleRate = uint(rtInfo.preferredSampleRate);
+			tklb::memory::stringCopy(info.name, rtInfo.name.c_str(), sizeof(DeviceInfo::name));
+			tklb::memory::stringCopy(info.api, getName(), sizeof(DeviceInfo::api), false);
+			return info;
+		};
+
+		const char* getName() override  { return "rtaudio"; };
+
+		DeviceInfo getDefaultInputDevice() override {
+			return getDevice(mAudio.getDefaultInputDevice());
+		};
+
+		DeviceInfo getDefaultOutputDevice() override {
+			return getDevice(mAudio.getDefaultOutputDevice());
+		};
+
+		Device* createDevice() override {
+			return TKLB_NEW(DeviceRtaudio, *this);
+		}
+	};
 } } // namespace vae::core
 
 #endif // VAEZ_RTAUDIO

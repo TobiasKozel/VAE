@@ -4,6 +4,27 @@
 #include "./vae_device.hpp"
 
 namespace vae { namespace core {
+	/**
+	 * @brief Backend without functionality
+	 */
+	class DeviceDummy final : public Device {
+	public:
+		DeviceDummy(Backend& backend) : Device(backend) { }
+
+		bool openDevice(bool input = false) override {
+			init(Config::SampleRate, 0, 2);
+			return true;
+		}
+
+		bool openDevice(DeviceInfo& device) override {
+			// there's only one device
+			TKLB_ASSERT(device.id == 0)
+			return openDevice(false);
+		}
+
+		bool closeDevice() override { return true; }
+	};
+
 	class BackendDummy : public Backend {
 		BackendDummy() { }
 	public:
@@ -26,32 +47,17 @@ namespace vae { namespace core {
 
 		const char* getName() override  { return "dummy"; };
 
-		DeviceInfo getDefaultDevice() override {
+		DeviceInfo getDefaultInputDevice() override {
 			return getDevice(0);
 		};
-	};
 
-	/**
-	 * @brief Backend without functionality
-	 */
-	class DeviceDummy final : public Device {
-	public:
-		DeviceDummy() : Device(BackendDummy::instance()) { }
+		DeviceInfo getDefaultOutputDevice() override {
+			return getDevice(0);
+		};
 
-		DeviceDummy(SyncCallback& callback) : Device(callback, BackendDummy::instance()) { }
-
-		bool openDevice(uint output = 2, uint input = 0) override {
-			init(Config::SampleRate, input, output);
-			return true;
+		Device* createDevice() override {
+			return TKLB_NEW(DeviceDummy, *this);
 		}
-
-		bool openDevice(DeviceInfo& device) override {
-			// there's only one device
-			TKLB_ASSERT(device.id == 0)
-			return openDevice(device.channelsOut, device.channelsIn);
-		}
-
-		bool closeDevice() override { return true; }
 	};
 } } // VAE::core
 
