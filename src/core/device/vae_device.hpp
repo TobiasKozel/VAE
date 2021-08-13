@@ -106,17 +106,16 @@ namespace vae { namespace core {
 			mChannelsOut = channelsOut;
 
 			if (sampleRate != Config::SampleRate) {
-				const uint size = Resampler::calculateBufferSize(sampleRate, Config::SampleRate, Config::MaxBlock);
 				if (0 < mChannelsIn) {
 					mResamplerFromDevice.init(sampleRate, Config::SampleRate, Config::MaxBlock);
-					mBufferFromDevice.resize(size, channelsIn);
+					mBufferFromDevice.resize(mResamplerFromDevice.calculateBufferSize(Config::MaxBlock), channelsIn);
 					// Since it will be resampled to that
 					mBufferFromDevice.sampleRate = Config::SampleRate;
 				}
 
 				if (0 < mChannelsOut) {
 					mResamplerToDevice.init(Config::SampleRate, sampleRate, Config::MaxBlock);
-					mBufferToDevice.resize(size, channelsOut);
+					mBufferToDevice.resize(mResamplerFromDevice.calculateBufferSize(Config::MaxBlock), channelsIn);
 					// Same rate as above, since it's the source buffer for the resampler
 					mBufferToDevice.sampleRate = Config::SampleRate;
 				}

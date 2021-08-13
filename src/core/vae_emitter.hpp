@@ -6,9 +6,13 @@
 #include "../../external/tklb/src/types/THeapBuffer.hpp"
 #include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../external/glm/glm/glm.hpp"
+#include "./vae_config.hpp"
+#include "./vae_handle_pool.hpp"
 
 
+namespace vae { namespace core {
 	struct Clip {
+		Handle id;
 		tklb::AudioBuffer data;
 
 		enum Property {
@@ -27,8 +31,8 @@
 	};
 
 	struct Emitter {
-		Clip* clip = nullptr;
-		size_t time = 0; // time in samples
+		Handle clip;
+		Config::Time time = 0; // time in samples
 		glm::vec3 position;
 		glm::vec3 velocity = { 0, 0, 0 };
 		glm::vec3 direction = { 0, 0, 0 };
@@ -38,7 +42,7 @@
 			playing = 0,
 			loop,
 			virt, // whether voice is virtual
-			canvirt, // whether voice can be turned virtual
+			canvirt, // wheth	er voice can be turned virtual
 			killable, // whether voice will be killed instead of virtual
 			binaural,
 			doppler,
@@ -50,5 +54,5 @@
 		// float radius = 1.0;
 		// float falloff;
 	};
-
+} } // vae::core
 #endif // VAEX_EMITTER
