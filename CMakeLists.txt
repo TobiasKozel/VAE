@@ -1,11 +1,17 @@
 cmake_minimum_required(VERSION 3.8)
 
+cmake_policy(SET CMP0077 NEW) # overrides cmake options with predefined variables
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
 project(
 	vae
 	VERSION 0.0.1
 	DESCRIPTION "An Audio Engine"
 	LANGUAGES CXX
 )
+
+option(VAE_BUILD_STATIC_LIBS "Build static libs" ON)
+option(VAE_PROFILER "Use profiler" OFF)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -33,6 +39,7 @@ find_package(tklb REQUIRED)
 
 file(GLOB PUBLIC_API "src/api/*.cpp")
 file(GLOB SRC_CORE "src/core/*.hpp")
+file(GLOB SRC_WRAPPED "src/wrapped/*.cpp")
 file(GLOB SRC_DEVICE "src/core/device/*.hpp")
 file(GLOB SRC_FILESYSTEM "src/core/filesystem/*.hpp" "src/core/filesystem/*.cpp")
 
@@ -40,15 +47,16 @@ if (VAE_BUILD_STATIC_LIBS)
 	add_library(vae
 		STATIC
 			${SRC_CORE}
+			${SRC_WRAPPED}
 			${SRC_DEVICE}
 			${SRC_FILESYSTEM}
 			${PUBLIC_API}
 	)
 else()
-
 	add_library(vae
 		SHARED
 			${SRC_CORE}
+			${SRC_WRAPPED}
 			${SRC_DEVICE}
 			${SRC_FILESYSTEM}
 			${PUBLIC_API}
@@ -82,11 +90,22 @@ target_link_libraries(vae
 		# portaudio_static
 )
 
+# optional profiler
+if(VAE_PROFILER)
+	target_compile_definitions(
+		vae
+		PUBLIC
+			VAE_USE_PROFILER
+	)
+	# add_compile_definitions(VAE_USE_PROFILER)
+	message("Build with profiler")
+endif()
+
 
 
 
 # OPTIONAL
-# create a single lib file from all the objects
+# create a single lib file from all the objects for prebuild dist
 # ${lib_tool}
 # libtool -static -o
 if(MSVC)

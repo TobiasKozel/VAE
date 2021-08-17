@@ -115,7 +115,7 @@ namespace vae { namespace core {
 
 				if (0 < mChannelsOut) {
 					mResamplerToDevice.init(Config::SampleRate, sampleRate, Config::MaxBlock);
-					mBufferToDevice.resize(mResamplerFromDevice.calculateBufferSize(Config::MaxBlock), channelsIn);
+					mBufferToDevice.resize(mResamplerToDevice.calculateBufferSize(Config::MaxBlock), channelsIn);
 					// Same rate as above, since it's the source buffer for the resampler
 					mBufferToDevice.sampleRate = Config::SampleRate;
 				}
@@ -136,7 +136,7 @@ namespace vae { namespace core {
 
 		virtual ~Device() { }
 
-		virtual void setSync(SyncCallback& callback) {
+		void setSync(const SyncCallback&& callback) {
 			mSyncCallback = callback;
 		}
 
@@ -194,7 +194,7 @@ namespace vae { namespace core {
 		 * @brief Called from the backend implementation.
 		 * Don't call this otherwise.
 		 * Derived class is responsible for the Buffer supplied to the function.
-		 * TODO tklb streamtime could be used if device is temporarly disabled
+		 * TODO streamtime could be used if device is temporarly disabled
 		 * @param in input frames in device samplerate
 		 * @param out output frames in device samplerate
 		 */
