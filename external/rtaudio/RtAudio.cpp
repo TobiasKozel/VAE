@@ -56,7 +56,7 @@ const unsigned int RtApi::SAMPLE_RATES[] = {
   32000, 44100, 48000, 88200, 96000, 176400, 192000
 };
 
-#if defined(__WINDOWS_DS__) || defined(__WINDOWS_ASIO__) || defined(__WINDOWS_WASAPI__)
+#if defined(_WIN32) || defined(__CYGWIN__)
   #define MUTEX_INITIALIZE(A) InitializeCriticalSection(A)
   #define MUTEX_DESTROY(A)    DeleteCriticalSection(A)
   #define MUTEX_LOCK(A)       EnterCriticalSection(A)
@@ -82,15 +82,12 @@ const unsigned int RtApi::SAMPLE_RATES[] = {
     return s;
   }
 
-#elif defined(__LINUX_ALSA__) || defined(__LINUX_PULSE__) || defined(__UNIX_JACK__) || defined(__LINUX_OSS__) || defined(__MACOSX_CORE__)
+#elif defined(__unix__) || defined(__APPLE__)
   // pthread API
   #define MUTEX_INITIALIZE(A) pthread_mutex_init(A, NULL)
   #define MUTEX_DESTROY(A)    pthread_mutex_destroy(A)
   #define MUTEX_LOCK(A)       pthread_mutex_lock(A)
   #define MUTEX_UNLOCK(A)     pthread_mutex_unlock(A)
-#else
-  #define MUTEX_INITIALIZE(A) abs(*A) // dummy definitions
-  #define MUTEX_DESTROY(A)    abs(*A) // dummy definitions
 #endif
 
 // *************************************************** //
@@ -8499,7 +8496,7 @@ static void rt_pa_mainloop_api_quit(int ret) {
     rt_pa_mainloop_api->quit(rt_pa_mainloop_api, ret);
 }
 
-static void rt_pa_server_callback(pa_context *context, const pa_server_info *info, void *data){
+static void rt_pa_set_server_info(pa_context *context, const pa_server_info *info, void *data){
   (void)context;
   (void)data;
   pa_sample_spec ss;
@@ -8512,11 +8509,10 @@ static void rt_pa_server_callback(pa_context *context, const pa_server_info *inf
   rt_pa_info.default_rate = ss.rate;
   rt_pa_info.default_sink_name = info->default_sink_name;
   rt_pa_info.default_source_name = info->default_source_name;
-  rt_pa_mainloop_api_quit(0);
 }
 
-static void rt_pa_sink_info_cb(pa_context * /*c*/, const pa_sink_info *i,
-                               int eol, void * /*userdata*/)
+static void rt_pa_set_sink_info(pa_context * /*c*/, const pa_sink_info *i,
+                                int eol, void * /*userdata*/)
 {
   if (eol) return;
   PaDeviceInfo inf;
@@ -8556,10 +8552,13 @@ static void rt_pa_sink_info_cb(pa_context * /*c*/, const pa_sink_info *i,
     rt_pa_info.dev.push_back(inf);
 }
 
-static void rt_pa_source_info_cb(pa_context * /*c*/, const pa_source_info *i,
-                                 int eol, void * /*userdata*/)
+static void rt_pa_set_source_info_and_quit(pa_context * /*c*/, const pa_source_info *i,
+                                           int eol, void * /*userdata*/)
 {
-  if (eol) return;
+  if (eol) {
+    rt_pa_mainloop_api_quit(0);
+    return;
+  }
   PaDeviceInfo inf;
   inf.info.name = pa_proplist_gets(i->proplist, "device.description");
   inf.info.probed = true;
@@ -8603,7 +8602,8 @@ static void rt_pa_source_info_cb(pa_context * /*c*/, const pa_source_info *i,
 static void rt_pa_context_state_callback(pa_context *context, void *userdata) {
   (void)userdata;
 
-  switch (pa_context_get_state(context)) {
+  auto state = pa_context_get_state(context);
+  switch (state) {
     case PA_CONTEXT_CONNECTING:
     case PA_CONTEXT_AUTHORIZING:
     case PA_CONTEXT_SETTING_NAME:
@@ -8611,9 +8611,9 @@ static void rt_pa_context_state_callback(pa_context *context, void *userdata) {
 
     case PA_CONTEXT_READY:
       rt_pa_info.dev.clear();
-      pa_context_get_server_info(context, rt_pa_server_callback, NULL);
-      pa_context_get_sink_info_list(context, rt_pa_sink_info_cb, NULL);
-      pa_context_get_source_info_list(context, rt_pa_source_info_cb, NULL);
+      pa_context_get_server_info(context, rt_pa_set_server_info, NULL);
+      pa_context_get_sink_info_list(context, rt_pa_set_sink_info, NULL);
+      pa_context_get_source_info_list(context, rt_pa_set_source_info_and_quit, NULL);
       break;
 
     case PA_CONTEXT_TERMINATED:
@@ -8667,6 +8667,13 @@ void RtApiPulse::collectDeviceInfo( void )
 
   if (pa_mainloop_run(m, &ret) < 0) {
     errorStream_ << "pa_mainloop_run() failed.";
+    errorText_ = errorStream_.str();
+    error( RtAudioError::WARNING );
+    goto quit;
+  }
+
+  if (ret != 0) {
+    errorStream_ << "could not get server info.";
     errorText_ = errorStream_.str();
     error( RtAudioError::WARNING );
     goto quit;

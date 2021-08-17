@@ -12,17 +12,6 @@
 *.vcxproj
 *.vcxproj.*
 
-# external libs
-external/flecs
-external/*/.github
-external/*/.azure-pipelines
-external/*/docs
-external/*/doc
-external/*/examples
-external/*/test
-external/rtaudio/tests
-external/*/contrib
-external/*/*.yml
 
 # cmake bullshit
 build

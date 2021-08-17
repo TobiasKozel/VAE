@@ -603,7 +603,7 @@ class RTAUDIO_DLL_PUBLIC RtAudio
 };
 
 // Operating system dependent thread functionality.
-#if defined(__WINDOWS_DS__) || defined(__WINDOWS_ASIO__) || defined(__WINDOWS_WASAPI__)
+#if defined(_WIN32) || defined(__CYGWIN__)
 
   #ifndef NOMINMAX
     #define NOMINMAX
@@ -615,18 +615,22 @@ class RTAUDIO_DLL_PUBLIC RtAudio
   typedef uintptr_t ThreadHandle;
   typedef CRITICAL_SECTION StreamMutex;
 
-#elif defined(__LINUX_ALSA__) || defined(__LINUX_PULSE__) || defined(__UNIX_JACK__) || defined(__LINUX_OSS__) || defined(__MACOSX_CORE__)
+#else
+
   // Using pthread library for various flavors of unix.
   #include <pthread.h>
 
   typedef pthread_t ThreadHandle;
   typedef pthread_mutex_t StreamMutex;
 
-#else // Setup for "dummy" behavior
+#endif
+
+// Setup for "dummy" behavior if no apis specified.
+#if !(defined(__WINDOWS_DS__) || defined(__WINDOWS_ASIO__) || defined(__WINDOWS_WASAPI__) \
+      || defined(__LINUX_ALSA__) || defined(__LINUX_PULSE__) || defined(__UNIX_JACK__) \
+      || defined(__LINUX_OSS__) || defined(__MACOSX_CORE__))
 
   #define __RTAUDIO_DUMMY__
-  typedef int ThreadHandle;
-  typedef int StreamMutex;
 
 #endif
 
