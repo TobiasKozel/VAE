@@ -115,7 +115,7 @@ namespace vae { namespace core {
 
 				if (0 < mChannelsOut) {
 					mResamplerToDevice.init(Config::SampleRate, sampleRate, Config::MaxBlock);
-					mBufferToDevice.resize(mResamplerToDevice.calculateBufferSize(Config::MaxBlock), channelsIn);
+					mBufferToDevice.resize(mResamplerToDevice.calculateBufferSize(Config::MaxBlock), channelsOut);
 					// Same rate as above, since it's the source buffer for the resampler
 					mBufferToDevice.sampleRate = Config::SampleRate;
 				}

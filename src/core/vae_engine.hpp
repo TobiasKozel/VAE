@@ -80,7 +80,7 @@ namespace vae { namespace core {
 		}
 
 		~Engine() {
-			delete mDevice;
+			TKLB_DELETE(mDevice);
 		}
 
 		tklb::Handle createEmitter() {
@@ -108,8 +108,6 @@ namespace vae { namespace core {
 		}
 
 		Listener& listener() { return mListener; }
-
-
 	};
 } } // namespace vae::core
 
