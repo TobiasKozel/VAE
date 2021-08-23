@@ -33,9 +33,9 @@ namespace vae { namespace core {
 	struct Emitter {
 		tklb::Handle clip;			// References a Clip
 		Config::Time time = 0;		// time in samples
-		glm::vec3 position;
+		glm::vec3 position; // TODO config for vector type
 		glm::vec3 velocity = { 0, 0, 0 };
-		glm::vec3 direction = { 0, 0, 0 };
+		glm::vec3 orientation = { 0, 0, 0 };
 		float speed = 1.0;			// playback speed
 		float gain = 1.0;			// volume
 		enum State {

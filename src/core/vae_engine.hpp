@@ -32,6 +32,10 @@ namespace vae { namespace core {
 			const size_t samples = toDevice.validSize();
 			mLock.lock();
 			const int count = mEmitters.size();
+			const glm::vec3 speakers[] = {
+				{ -1, 0, 0}, // left
+				{ +1, 0, 0}, // right
+			};
 			for (int index = 0; index < count; index++) {
 				if (mEmitters.getLastFree() == index) { continue; }
 				auto& i = mEmitters[index];
@@ -47,9 +51,12 @@ namespace vae { namespace core {
 
 				if (!i.state[Emitter::virt]) {
 					for (int c = 0; c < toDevice.channels(); c++) {
+						// TODO braindead attempt, read up on VBAP
+						const auto direction = glm::normalize(i.position);
 						int channel = c % buffer.channels();
+						const Config::Sample pan = glm::dot(speakers[channel], direction);
 						for (size_t s = 0; s < length; s++) {
-							toDevice[c][s] += buffer[c][startTime + s];
+							toDevice[c][s] += buffer[channel][startTime + s] * pan;
 						}
 					}
 				}
