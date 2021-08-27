@@ -79,7 +79,11 @@ namespace vae { namespace core {
 
 	public:
 		DeviceRtaudio(Backend& backend) : mShared(*this), Device(backend) { };
-		~DeviceRtaudio() { }
+
+		~DeviceRtaudio() {
+			cleanUp();
+		}
+
 		bool openDevice(DeviceInfo& device) override {
 			if (mBackend.getDeviceCount() < device.id) {
 				TKLB_ASSERT(false)
