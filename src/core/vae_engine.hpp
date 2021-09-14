@@ -32,10 +32,15 @@ namespace vae { namespace core {
 			const size_t samples = toDevice.validSize();
 			mLock.lock();
 			const int count = mEmitters.size();
-			const glm::vec3 speakers[] = {
-				{ -1, 0, 0}, // left
-				{ +1, 0, 0}, // right
-			};
+
+			const auto speakerL = glm::normalize(glm::vec2(-1, 0.5));
+			const auto speakerR = glm::normalize(glm::vec2(+1, 0.5));
+			const glm::mat2x2 speakers(
+				speakerL.x, speakerL.y,
+				speakerR.x, speakerR.y
+			);
+			const auto matrix = glm::inverse(speakers);
+
 			for (int index = 0; index < count; index++) {
 				if (mEmitters.getLastFree() == index) { continue; }
 				auto& i = mEmitters[index];
@@ -48,15 +53,13 @@ namespace vae { namespace core {
 				auto& buffer = clip->data;
 				const size_t totalLength = buffer.size();
 				const size_t length = std::min(samples, totalLength - startTime);
-
 				if (!i.state[Emitter::virt]) {
+					const auto direction = glm::normalize(glm::vec2(i.position.x, i.position.y));
+					const auto pan = direction * matrix;
 					for (int c = 0; c < toDevice.channels(); c++) {
-						// TODO braindead attempt, read up on VBAP
-						const auto direction = glm::normalize(i.position);
 						int channel = c % buffer.channels();
-						const Config::Sample pan = glm::dot(speakers[channel], direction);
 						for (size_t s = 0; s < length; s++) {
-							toDevice[c][s] += buffer[channel][startTime + s] * pan;
+							toDevice[c][s] += buffer[channel][startTime + s] * pan[c];
 						}
 					}
 				}
