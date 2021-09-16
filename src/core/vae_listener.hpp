@@ -1,5 +1,5 @@
-#ifndef VAE_LISTENER
-#define VAE_LISTENER
+#ifndef _VAE_LISTENER
+#define _VAE_LISTENER
 
 #include "./vae_config.hpp"
 #include "../../external/tklb/src/memory/TMemory.hpp"

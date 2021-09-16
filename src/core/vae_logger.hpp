@@ -1,5 +1,5 @@
-#ifndef VAE_IMPL_LOGGER
-#define VAE_IMPL_LOGGER
+#ifndef _VAE_IMPL_LOGGER
+#define _VAE_IMPL_LOGGER
 
 #include <stdarg.h>
 #include <stdlib.h>

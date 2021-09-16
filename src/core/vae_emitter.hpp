@@ -8,6 +8,7 @@
 #include "../../external/tklb/src/types/THandleBuffer.hpp"
 #include "../../external/glm/glm/glm.hpp"
 #include "./vae_config.hpp"
+#include "./vae_types.hpp"
 
 
 namespace vae { namespace core {
@@ -31,19 +32,20 @@ namespace vae { namespace core {
 	};
 
 	struct Emitter {
-		tklb::Handle clip;			// References a Clip
-		Config::Time time = 0;		// time in samples
-		glm::vec3 position; // TODO config for vector type
+		tklb::Handle clip;				// References a Clip
+		types::SampleIndex time = 0;	// time in samples
+		glm::vec3 position; 			// TODO config for vector type
 		glm::vec3 velocity = { 0, 0, 0 };
 		glm::vec3 orientation = { 0, 0, 0 };
-		float speed = 1.0;			// playback speed
-		float gain = 1.0;			// volume
+		float speed = 1.0;				// playback speed
+		float gain = 1.0;				// volume
 		enum State {
 			playing = 0,
+			ready,
 			loop,
-			virt,					// whether voice is virtual
-			canvirt,				// whether voice can be turned virtual
-			killable,				// whether voice will be killed instead of virtual, if both a re false the voice will keep playing
+			virt,						// whether voice is virtual
+			canvirt,					// whether voice can be turned virtual
+			killable,					// whether voice will be killed instead of virtual, if both a re false the voice will keep playing
 			binaural,
 			doppler,
 			delay,

@@ -1,5 +1,5 @@
-#ifndef VAE_API_DEVICE
-#define VAE_API_DEVICE
+#ifndef _VAE_API_DEVICE
+#define _VAE_API_DEVICE
 
 #include "./vae_device_info.hpp"
 

@@ -1,13 +1,16 @@
-#ifndef VAE_ENGINE
-#define VAE_ENGINE
+#ifndef _VAE_ENGINE
+#define _VAE_ENGINE
 
 #include "../../external/tklb/src/types/THeapBuffer.hpp"
 #include "../../external/tklb/src/types/THandleBuffer.hpp"
 #include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../external/tklb/src/types/TSpinLock.hpp"
+#include "../../external/tklb/src/util/TMath.hpp"
 #include "./device/vae_rtaudio.hpp"
 #include "./vae_emitter.hpp"
 #include "../wrapped/vae_profiler.hpp"
+#include "./vae_types.hpp"
+
 
 namespace vae { namespace core {
 
@@ -22,16 +25,16 @@ namespace vae { namespace core {
 
 		Device* mDevice;
 
-		size_t mTime = 0; // Global time in samples
+		types::SampleIndex mTime = 0; // Global time in samples
 
 		Listener mListener;
 		Mutex mLock;
 
 		void callback(const Device::AudioBuffer& fromDevice, Device::AudioBuffer& toDevice) {
 			toDevice.set(0.0f);
-			const size_t samples = toDevice.validSize();
+			const auto samplesNeded = toDevice.validSize();
 			mLock.lock();
-			const int count = mEmitters.size();
+			const auto count = mEmitters.size();
 
 			const auto speakerL = glm::normalize(glm::vec2(-1, 0.5));
 			const auto speakerR = glm::normalize(glm::vec2(+1, 0.5));
@@ -41,41 +44,59 @@ namespace vae { namespace core {
 			);
 			const auto matrix = glm::inverse(speakers);
 
-			for (int index = 0; index < count; index++) {
+			for (types::Size index = 0; index < count; index++) {
+
 				if (mEmitters.getLastFree() == index) { continue; }
 				auto& i = mEmitters[index];
 
+				if (!(i.state[Emitter::ready]))   { continue; }
 				if (!(i.state[Emitter::playing])) { continue; }
-
-				const size_t startTime = i.time;
 				Clip* clip = mClips.at(i.clip);
 				if (clip == nullptr) { continue; }
 				auto& buffer = clip->data;
-				const size_t totalLength = buffer.size();
-				const size_t length = std::min(samples, totalLength - startTime);
+				const auto totalLength = buffer.size();
+
+				const auto startTime = i.time;
+
 				if (!i.state[Emitter::virt]) {
 					const auto direction = glm::normalize(glm::vec2(i.position.x, i.position.y));
-					const auto pan = direction * matrix;
-					for (int c = 0; c < toDevice.channels(); c++) {
-						int channel = c % buffer.channels();
-						for (size_t s = 0; s < length; s++) {
-							toDevice[c][s] += buffer[channel][startTime + s] * pan[c];
+					auto pan = direction * matrix;
+					pan[1] = tklb::clamp<float>(+direction.x, 0, 1.0);
+					pan[0] = tklb::clamp<float>(-direction.x, 0, 1.0);
+					// pan[0] = 1;
+					// pan[1] = 1;
+					// pan[0] = std::min(std::max(-i.position.x, 0.f));
+
+					if (i.state[Emitter::loop]) {
+						for (int c = 0; c < toDevice.channels(); c++) {
+							const int channel = c % buffer.channels();
+							for (size_t s = 0; s < samplesNeded; s++) {
+								toDevice[c][s] += buffer[channel][(startTime + s) % totalLength] * pan[c];
+							}
+						}
+					} else {
+						const auto length = std::min(samplesNeded, totalLength - startTime);
+						for (int c = 0; c < toDevice.channels(); c++) {
+							const int channel = c % buffer.channels();
+							for (size_t s = 0; s < length; s++) {
+								toDevice[c][s] += buffer[channel][startTime + s] * pan[c];
+							}
 						}
 					}
 				}
 
-				if (totalLength <= startTime + length) {
+				if (!i.state[Emitter::loop] && totalLength <= startTime + samplesNeded) {
+					// stop if not looping and end is reached
 					i.time = 0;
-					if (!i.state[Emitter::loop]) {
-						i.state[Emitter::playing] = false; // stop if not looping
-					}
+					i.state[Emitter::playing] = false;
 				} else {
-					i.time = startTime + length;
+					// move time forward
+					i.time = startTime + samplesNeded % totalLength;
 				}
 			}
 			mLock.unlock();
 
-			mTime += samples;
+			mTime += samplesNeded;
 			VAE_PROFILER_FRAME_MARK
 		}
 

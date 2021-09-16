@@ -1,5 +1,5 @@
-#ifndef VAE_FACTORY
-#define VAE_FACTORY
+#ifndef _VAE_FACTORY
+#define _VAE_FACTORY
 
 namespace vae { namespace core {
 

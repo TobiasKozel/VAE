@@ -1,10 +1,8 @@
-#ifndef VAE_IMPL_CONFIG
-#define VAE_IMPL_CONFIG
+#ifndef _VAE_CONFIG
+#define _VAE_CONFIG
 
 namespace vae {
 	namespace Config {
-		typedef float Sample;
-		typedef unsigned int Time;
 		constexpr int SampleRate = 48000; // Internal Samplerate everything will run at
 		constexpr unsigned char MaxChannels = 16;
 		// DSP can only handle blocks smaller to save space
@@ -13,4 +11,4 @@ namespace vae {
 	}
 }
 
-#endif // VAE_IMPL_CONFIG
+#endif // VAE_CONFIG

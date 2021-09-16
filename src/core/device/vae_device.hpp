@@ -2,6 +2,7 @@
 #define VAEZ_DEVICE
 
 #include "../vae_config.hpp"
+#include "../vae_types.hpp"
 #include "../../../include/vae/vae_device_info.hpp"
 #include "../../../external/tklb/src/memory/TMemory.hpp"
 #include "../../../external/tklb/src/types/audio/TAudioBuffer.hpp"
@@ -59,9 +60,9 @@ namespace vae { namespace core {
 	public:
 		using uint = unsigned int;
 		using uchar = unsigned char;
-		using AudioBuffer = tklb::AudioBufferTpl<Config::Sample>;
-		using Resampler = tklb::ResamplerTpl<Config::Sample>;
-		using RingBuffer = tklb::AudioRingBufferTpl<Config::Sample>;
+		using AudioBuffer = types::AudioBuffer;
+		using Resampler = tklb::ResamplerTpl<types::Sample>;
+		using RingBuffer = types::RingBuffer;
 		using Mutex = tklb::SpinLock;
 		using Lock = tklb::LockGuard<Mutex>;
 		using SyncCallback = std::function<void(const AudioBuffer& fromDevice, AudioBuffer& toDevice)>;

@@ -1,5 +1,5 @@
-#ifndef VAE_API_DEVICE_INFO
-#define VAE_API_DEVICE_INFO
+#ifndef _VAE_API_DEVICE_INFO
+#define _VAE_API_DEVICE_INFO
 
 namespace vae {
 	struct DeviceInfo {
