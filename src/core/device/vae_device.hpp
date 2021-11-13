@@ -60,9 +60,9 @@ namespace vae { namespace core {
 	public:
 		using uint = unsigned int;
 		using uchar = unsigned char;
-		using AudioBuffer = types::AudioBuffer;
-		using Resampler = tklb::ResamplerTpl<types::Sample>;
-		using RingBuffer = types::RingBuffer;
+		using AudioBuffer = AudioBuffer;
+		using Resampler = tklb::ResamplerTpl<Sample>;
+		using RingBuffer = RingBuffer;
 		using Mutex = tklb::SpinLock;
 		using Lock = tklb::LockGuard<Mutex>;
 		using SyncCallback = std::function<void(const AudioBuffer& fromDevice, AudioBuffer& toDevice)>;

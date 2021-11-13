@@ -46,8 +46,8 @@ namespace vae { namespace core {
  		* @brief Function called from the RtAudio thread.
  		*/
 		static int AudioCallback(
-			void *out, void *in, unsigned int frames,
-			double streamTime, RtAudioStreamStatus status, void *data
+			void* out, void* in, unsigned int frames,
+			double streamTime, RtAudioStreamStatus status, void* data
 		) {
 			AudioThreadShared& shared = *reinterpret_cast<AudioThreadShared*>(data);
 

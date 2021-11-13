@@ -11,7 +11,6 @@
 #include "../wrapped/vae_profiler.hpp"
 #include "./vae_types.hpp"
 
-
 namespace vae { namespace core {
 
 	class Engine {
@@ -25,7 +24,7 @@ namespace vae { namespace core {
 
 		Device* mDevice;
 
-		types::SampleIndex mTime = 0; // Global time in samples
+		SampleIndex mTime = 0; // Global time in samples
 
 		Listener mListener;
 		Mutex mLock;
