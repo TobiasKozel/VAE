@@ -1,8 +1,9 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(RtAudio, 5.1.0, gary@music.mcgill.ca, rtaudio)
+
+AC_INIT(RtAudio, 6.0.0beta1, gary.scavone@mcgill.ca, rtaudio)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(RtAudio.cpp)
-AC_CONFIG_FILES([rtaudio.pc Makefile tests/Makefile doc/Makefile doc/doxygen/Doxyfile])
+AC_CONFIG_FILES([rtaudio.pc Makefile tests/Makefile doc/Makefile doc/Doxyfile])
 AM_INIT_AUTOMAKE([1.14 -Wall -Werror foreign subdir-objects])
 
 # libtool version: current:revision:age
@@ -19,7 +20,7 @@ AM_INIT_AUTOMAKE([1.14 -Wall -Werror foreign subdir-objects])
 # If any interfaces have been removed since the last public release, then set
 # age to 0.
 m4_define([lt_current], 6)
-m4_define([lt_revision], 1)
+m4_define([lt_revision], 2)
 m4_define([lt_age], 0)
 
 m4_define([lt_version_info], [lt_current:lt_revision:lt_age])
@@ -209,6 +210,7 @@ AS_CASE(["$systems"], [*" pulse "*], [
      req="$req libpulse-simple"
      need_pthread=yes
      found="$found PulseAudio"
+     AC_CHECK_LIB(pulse, pa_strerror, [LIBS="$LIBS -lpulse"])
      LIBS="-lpulse-simple $LIBS"],
     AS_CASE(["$required"], [*" pulse "*],
       AC_MSG_ERROR([PulseAudio support requires the pulse-simple library!])))

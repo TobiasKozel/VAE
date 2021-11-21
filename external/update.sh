@@ -39,3 +39,6 @@ rm -rf ./tracy
 mv ./tracy-0.7.8 ./tracy
 
 
+echo "Updating json"
+rm ./json.hpp
+curl -LO https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp
