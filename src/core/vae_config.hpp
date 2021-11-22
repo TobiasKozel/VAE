@@ -4,17 +4,10 @@
 namespace vae {
 
 	/**
-	 * Contains some fundamental Configuration
+	 * Contains some fundamental Configuration needed at compile time
+	 * Dynamic settings are contained in the EngineSettings struct
 	 */
 	namespace Config {
-		/**
-		 * When a device is openeed. it will try to use this samplerate.
-		 * If it doesn't support it, a resampler is used.
-		 * This is efficient if most of the audio is in the preferred samplerate,
-		 * since they don't need to be resampled.
-		 */
-		constexpr int PreferredSampleRate = 48000;
-
 		/**
 		 * Maximum channel count used to pre allocate buffers
 		 */

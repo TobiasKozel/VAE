@@ -1,5 +1,5 @@
-#ifndef VAEZ_RTAUDIO
-#define VAEZ_RTAUDIO
+#ifndef _VAE_RTAUDIO
+#define _VAE_RTAUDIO
 
 #include "./vae_device.hpp"
 #include "../vae_config.hpp"
@@ -17,8 +17,8 @@ namespace vae { namespace core {
 		struct AudioThreadShared {
 			Device& device;
 			// buffer for interleaving and deinterleaving
-			Device::AudioBuffer bufferTo;
-			Device::AudioBuffer bufferFrom;
+			AudioBuffer bufferTo;
+			AudioBuffer bufferFrom;
 			size_t underruns = 0;
 			AudioThreadShared(Device& d) : device(d) { }
 		};
@@ -78,7 +78,9 @@ namespace vae { namespace core {
 
 
 	public:
-		DeviceRtaudio(Backend& backend) : mShared(*this), Device(backend) { };
+		DeviceRtaudio(
+			Backend& backend, EngineConfig& config
+		) : mShared(*this), Device(backend, config) { };
 
 		~DeviceRtaudio() {
 			cleanUp();
@@ -191,10 +193,10 @@ namespace vae { namespace core {
 			return getDevice(mAudio.getDefaultOutputDevice());
 		};
 
-		Device* createDevice() override {
-			return TKLB_NEW(DeviceRtaudio, *this);
+		Device* createDevice(EngineConfig& config) override {
+			return TKLB_NEW(DeviceRtaudio, *this, config);
 		}
 	};
 } } // namespace vae::core
 
-#endif // VAEZ_RTAUDIO
+#endif // _VAE_RTAUDIO

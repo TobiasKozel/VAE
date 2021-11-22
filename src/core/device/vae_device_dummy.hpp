@@ -9,10 +9,12 @@ namespace vae { namespace core {
 	 */
 	class DeviceDummy final : public Device {
 	public:
-		DeviceDummy(Backend& backend) : Device(backend) { }
+		DeviceDummy(
+			Backend& backend, EngineConfig& config
+		) : Device(backend, config) { }
 
 		bool openDevice(bool input = false) override {
-			init(Config::SampleRate, 0, 2);
+			init(mConfig.preferredSampleRate, 0, 2);
 			return true;
 		}
 

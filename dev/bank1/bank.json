@@ -1,0 +1,43 @@
+{
+	"id": 0,
+	"name": "Bank1",
+	"sources": [
+		{
+			"id": 0,
+			"name": "Sound1",
+			"path": "sound1.wav",
+			"format": "wav",
+			"type": "preload",
+			"channels": 1,
+			"length": 1000,
+			"rate": 44100
+		}
+	],
+	"automation": [],
+	"events": [
+		{
+			"id": 0,
+			"name": "Event1",
+			"type": "start",
+			"sources": [0],
+			"on_start": [2],
+			"on_end": [1]
+		},
+		{
+			"id": 1,
+			"name": "Event2",
+			"type": "emit",
+			"sources": [],
+			"on_start": [],
+			"on_end": []
+		},
+		{
+			"id": 2,
+			"name": "Event3",
+			"type": "emit",
+			"sources": [],
+			"on_start": [],
+			"on_end": []
+		}
+	]
+}

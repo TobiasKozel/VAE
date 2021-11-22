@@ -1,9 +1,11 @@
-#ifndef VAEZ_DEVICE
-#define VAEZ_DEVICE
+#ifndef _VAE_DEVICE
+#define _VAE_DEVICE
+
+#include "../../../include/vae/vae.hpp"
 
 #include "../vae_config.hpp"
 #include "../vae_types.hpp"
-#include "../../../include/vae/vae_device_info.hpp"
+
 #include "../../../external/tklb/src/memory/TMemory.hpp"
 #include "../../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../../external/tklb/src/types/audio/TAudioRingBuffer.hpp"
@@ -11,8 +13,7 @@
 #include "../../../external/tklb/src/types/TSpinLock.hpp"
 #include "../../../external/tklb/src/types/TLockGuard.hpp"
 
-#include <functional>
-
+#include <functional> // TODO replace with delegates
 
 namespace vae { namespace core {
 
@@ -49,7 +50,7 @@ namespace vae { namespace core {
 		/**
 		 * Creates a device instance for this backend
 		 */
-		virtual Device* createDevice() = 0;
+		virtual Device* createDevice(EngineConfig&) = 0;
 	};
 
 	/**
@@ -60,15 +61,14 @@ namespace vae { namespace core {
 	public:
 		using uint = unsigned int;
 		using uchar = unsigned char;
-		using AudioBuffer = AudioBuffer;
 		using Resampler = tklb::ResamplerTpl<Sample>;
-		using RingBuffer = RingBuffer;
 		using Mutex = tklb::SpinLock;
 		using Lock = tklb::LockGuard<Mutex>;
 		using SyncCallback = std::function<void(const AudioBuffer& fromDevice, AudioBuffer& toDevice)>;
 
 	protected:
 		Backend& mBackend;
+		EngineConfig& mConfig;
 		RingBuffer mQueueToDevice;   // Queue needed for async mode
 		RingBuffer mQueueFromDevice; // Queue needed for async mode
 
@@ -106,19 +106,19 @@ namespace vae { namespace core {
 			mChannelsIn = channelsIn;
 			mChannelsOut = channelsOut;
 
-			if (sampleRate != Config::SampleRate) {
+			if (sampleRate != mConfig.preferredSampleRate) {
 				if (0 < mChannelsIn) {
-					mResamplerFromDevice.init(sampleRate, Config::SampleRate, Config::MaxBlock);
+					mResamplerFromDevice.init(sampleRate, mConfig.preferredSampleRate, Config::MaxBlock);
 					mBufferFromDevice.resize(mResamplerFromDevice.calculateBufferSize(Config::MaxBlock), channelsIn);
 					// Since it will be resampled to that
-					mBufferFromDevice.sampleRate = Config::SampleRate;
+					mBufferFromDevice.sampleRate = mConfig.preferredSampleRate;
 				}
 
 				if (0 < mChannelsOut) {
-					mResamplerToDevice.init(Config::SampleRate, sampleRate, Config::MaxBlock);
+					mResamplerToDevice.init(mConfig.preferredSampleRate, sampleRate, Config::MaxBlock);
 					mBufferToDevice.resize(mResamplerToDevice.calculateBufferSize(Config::MaxBlock), channelsOut);
 					// Same rate as above, since it's the source buffer for the resampler
-					mBufferToDevice.sampleRate = Config::SampleRate;
+					mBufferToDevice.sampleRate = mConfig.preferredSampleRate;
 				}
 			}
 
@@ -133,7 +133,9 @@ namespace vae { namespace core {
 		}
 
 	public:
-		Device(Backend& backend) : mBackend(backend) { }
+		Device(
+			Backend& backend, EngineConfig& config
+		) : mBackend(backend), mConfig(config) { }
 
 		virtual ~Device() { }
 
@@ -256,5 +258,5 @@ namespace vae { namespace core {
 	};
 } } // namespace vae::core
 
-#endif // VAEZ_DEVICE
+#endif // _VAE_DEVICE
 

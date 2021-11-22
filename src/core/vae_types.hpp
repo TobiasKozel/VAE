@@ -9,11 +9,17 @@ namespace vae {
 	 * Types used internally
 	 */
 	namespace core {
+		//
+		template <class T> using HeapBuffer = tklb::HeapBuffer<T>;
+		// How the elements are addressed
+		using Size = HeapBuffer<int>::Size;
+		// Default sample types used whereever possible
 		using Sample = float;
-		using Size = tklb::HeapBuffer<int>::Size;
 		using AudioBuffer = tklb::AudioBufferTpl<Sample>;
 		using RingBuffer = tklb::AudioRingBufferTpl<Sample>;
+		// Time sotred in seconds
 		using Time = double;
+		// Time stored in samples
 		using SampleIndex = AudioBuffer::Size;
 	}
 }

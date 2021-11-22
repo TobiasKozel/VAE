@@ -1,143 +1,161 @@
 #ifndef _VAE_ENGINE
 #define _VAE_ENGINE
 
+#include <cstring>
+#include <vector>
+
 #include "../../external/tklb/src/types/THeapBuffer.hpp"
 #include "../../external/tklb/src/types/THandleBuffer.hpp"
 #include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../external/tklb/src/types/TSpinLock.hpp"
 #include "../../external/tklb/src/util/TMath.hpp"
-#include "./device/vae_rtaudio.hpp"
-#include "./vae_emitter.hpp"
+
+
+#include "../../include/vae/vae.hpp"
+// #include "./device/vae_rtaudio.hpp"
+#include "./device/vae_portaudio.hpp"
+// #include "./vae_emitter.hpp"
 #include "../wrapped/vae_profiler.hpp"
 #include "./vae_types.hpp"
+#include "./vae_bus_events.hpp"
+#include "./voice/vae_voice.hpp"
+#include "./pod/vae_bank.hpp"
 
 namespace vae { namespace core {
 
 	class Engine {
 		using Mutex = tklb::SpinLock;
-		using CurrentBackend = BackendRtAudio;
+		using Lock = tklb::LockGuard<Mutex>;
+		using CurrentBackend = BackendPortAudio;
 
-		static constexpr int EmitterSize = sizeof(Emitter);
+		/**
+		 * Main messaging instance, most objects hold a
+		 * reference to this instead of the engine itself
+		 */
+		EventBus mBus;
+		EngineConfig mConfig;
 
-		tklb::HandleBuffer<Emitter> mEmitters = { &Emitter::clip };
-		tklb::HandleBuffer<Clip> mClips = { &Clip::id };
+		HeapBuffer<Voice> mVoices;
+		HeapBuffer<Voice> mVirtualVoices;
+		// tklb::HandleBuffer<Clip> mClips = { &Clip::id };
+
+		std::vector<Bank> mBanks;
 
 		Device* mDevice;
 
 		SampleIndex mTime = 0; // Global time in samples
 
-		Listener mListener;
-		Mutex mLock;
+		// Listener mListener;
+		Mutex mMutex;
 
-		void callback(const Device::AudioBuffer& fromDevice, Device::AudioBuffer& toDevice) {
-			toDevice.set(0.0f);
-			const auto samplesNeded = toDevice.validSize();
-			mLock.lock();
-			const auto count = mEmitters.size();
-
-			const auto speakerL = glm::normalize(glm::vec2(-1, 0.5));
-			const auto speakerR = glm::normalize(glm::vec2(+1, 0.5));
-			const glm::mat2x2 speakers(
-				speakerL.x, speakerL.y,
-				speakerR.x, speakerR.y
-			);
-			const auto matrix = glm::inverse(speakers);
-
-			for (types::Size index = 0; index < count; index++) {
-
-				if (mEmitters.getLastFree() == index) { continue; }
-				auto& i = mEmitters[index];
-
-				if (!(i.state[Emitter::ready]))   { continue; }
-				if (!(i.state[Emitter::playing])) { continue; }
-				Clip* clip = mClips.at(i.clip);
-				if (clip == nullptr) { continue; }
-				auto& buffer = clip->data;
-				const auto totalLength = buffer.size();
-
-				const auto startTime = i.time;
-
-				if (!i.state[Emitter::virt]) {
-					const auto direction = glm::normalize(glm::vec2(i.position.x, i.position.y));
-					auto pan = direction * matrix;
-					pan[1] = tklb::clamp<float>(+direction.x, 0, 1.0);
-					pan[0] = tklb::clamp<float>(-direction.x, 0, 1.0);
-					// pan[0] = 1;
-					// pan[1] = 1;
-					// pan[0] = std::min(std::max(-i.position.x, 0.f));
-
-					if (i.state[Emitter::loop]) {
-						for (int c = 0; c < toDevice.channels(); c++) {
-							const int channel = c % buffer.channels();
-							for (size_t s = 0; s < samplesNeded; s++) {
-								toDevice[c][s] += buffer[channel][(startTime + s) % totalLength] * pan[c];
-							}
-						}
-					} else {
-						const auto length = std::min(samplesNeded, totalLength - startTime);
-						for (int c = 0; c < toDevice.channels(); c++) {
-							const int channel = c % buffer.channels();
-							for (size_t s = 0; s < length; s++) {
-								toDevice[c][s] += buffer[channel][startTime + s] * pan[c];
-							}
-						}
-					}
-				}
-
-				if (!i.state[Emitter::loop] && totalLength <= startTime + samplesNeded) {
-					// stop if not looping and end is reached
-					i.time = 0;
-					i.state[Emitter::playing] = false;
-				} else {
-					// move time forward
-					i.time = startTime + samplesNeded % totalLength;
-				}
-			}
-			mLock.unlock();
-
-			mTime += samplesNeded;
+		void callback(const AudioBuffer& fromDevice, AudioBuffer& toDevice) {
 			VAE_PROFILER_FRAME_MARK
 		}
 
+		Engine(const Engine&) = delete;
+		Engine(const Engine*) = delete;
+		Engine(Engine&&) = delete;
+		Engine& operator= (const Engine&) = delete;
+		Engine& operator= (Engine&&) = delete;
+
 	public:
-		Engine() {
-			Backend& backend = CurrentBackend::instance();
-			mDevice = backend.createDevice();
-			mDevice->setSync([&](const Device::AudioBuffer& fromDevice, Device::AudioBuffer& toDevice) {
-				callback(fromDevice, toDevice);
-			});
-			mDevice->openDevice();
+		Engine(EngineConfig& config) {
+			mConfig = config;
+
+			// Backend& backend = CurrentBackend::instance();
+			// mDevice = backend.createDevice();
+			// mDevice->setSync([&](const Device::AudioBuffer& fromDevice, Device::AudioBuffer& toDevice) {
+			// 	callback(fromDevice, toDevice);
+			// });
+			// mDevice->openDevice();
 		}
 
 		~Engine() {
 			TKLB_DELETE(mDevice);
 		}
 
-		tklb::Handle createEmitter() {
-			return mEmitters.create();
+
+		/**
+		 * Main mechanism to start and stop sounds
+		 */
+		Result fireEvent(BankHandle bank, EventHandle event) {
+			auto& e = mBanks[bank].events[event];
+			switch (e.type)
+			{
+			case Event::EventType::start:
+				for (auto& i : e.sources) {
+					// TODO
+					// start sources
+					// associate event with sounds
+					// fire on_end when all sounds are done
+				}
+				break;
+			case Event::EventType::stop:
+				for (auto& i : e.sources) {
+					// TODO
+					// Stop sources
+				}
+				// directly fire on end since the sounds should now
+				// be stopped maybe?
+				for (auto& i : e.on_end) {
+					fireEvent(bank, i);
+				}
+				break;
+			case Event::EventType::emit:
+				if (mConfig.eventCallback == nullptr) { break; }
+				EventCallbackData data;
+				data.bank = bank;
+				data.event = event;
+				data.name = e.name.c_str();
+				data.payload = mConfig.eventCallbackPayload;
+				mConfig.eventCallback(data);
+				break;
+			default:
+				break;
+			}
+
+			// Always trigger on start events
+			for (auto& i : e.on_start) {
+				fireEvent(bank, i);
+			}
+			return Result::Success;
 		}
 
-		bool destroyEmitter(tklb::Handle h) {
-			return mEmitters.pop(h);
+
+		Result loadBank(const char* path) {
+			Bank bank;
+			auto result = Bank::Loader{}(path, bank);
+			if (result) { return result; }
+			Lock l(mMutex);
+			if (mBanks.size() < bank.id + 1) {
+				mBanks.resize(bank.id + 1);
+			}
+			mBanks[bank.id] = std::move(bank);
+			return Result::Success;
 		}
 
-		Emitter* getEmitter(tklb::Handle h) {
-			return mEmitters.at(h);
+		Result unloadBank(const char* path) {
+			// for (Size i = 0; i < mBanks.size(); i++) {
+			// 	if (strcmp(mBanks[i].path, path) == 0) {
+			// 		return unloadBank(mBanks[i]);
+			// 	}
+			// }
+			return Result::GenericFailure;
 		}
 
-		tklb::Handle createClip() {
-			return mClips.create();
-		}
+		Result unloadBank(Bank& bank) {
+			// Lock l(mMutex);
+			// // TODO
+			// for (Size i = 0; i < bank.sources.size(); i++) {
 
-		bool destroyClip(tklb::Handle h) {
-			return mClips.pop(h);
-		}
+			// }
 
-		Clip* getClip(tklb::Handle h) {
-			return mClips.at(h);
-		}
+			// for (Size i = 0; i < bank.events.size(); i++) {
 
-		Listener& listener() { return mListener; }
+			// }
+			// mBanks.remove(&bank);
+			return Result::Success;
+		}
 	};
 } } // namespace vae::core
 

@@ -4,7 +4,6 @@
 #include "./vae_device.hpp"
 #include "../vae_config.hpp"
 
-// #include "portaudio.h"
 #include "../../../external/portaudio/include/portaudio.h"
 
 namespace vae { namespace core {
@@ -20,8 +19,8 @@ namespace vae { namespace core {
 		struct AudioThreadShared {
 			Device& device;
 			// buffer for interleaving and deinterleaving
-			Device::AudioBuffer bufferTo;
-			Device::AudioBuffer bufferFrom;
+			AudioBuffer bufferTo;
+			AudioBuffer bufferFrom;
 
 			AudioThreadShared(Device& d) : device(d) { }
 		};
@@ -86,7 +85,9 @@ namespace vae { namespace core {
 
 	public:
 
-		DevicePortaudio(Backend& backend) : mShared(*this), Device(backend) { }
+		DevicePortaudio(
+			Backend& backend, EngineConfig& config
+		) : mShared(*this), Device(backend, config) { }
 
 		~DevicePortaudio() { cleanUp(); }
 
@@ -118,7 +119,7 @@ namespace vae { namespace core {
 				&mStream,
 				0 < inputParameters.channelCount ? &inputParameters : NULL,
 				0 < outputParameters.channelCount ? &outputParameters : NULL,
-				Config::SampleRate, // try getting internal samplerate
+				mConfig.preferredSampleRate, // try getting internal samplerate
 				device.bufferSize,
 				paClipOff, // no clipping, device will do that
 				AudioCallback,
@@ -227,8 +228,8 @@ namespace vae { namespace core {
 			return getDevice(Pa_GetDefaultInputDevice());
 		};
 
-		Device* createDevice() override {
-			return TKLB_NEW(DevicePortaudio, *this);
+		Device* createDevice(EngineConfig& config) override {
+			return TKLB_NEW(DevicePortaudio, *this, config);
 		}
 	};
 
