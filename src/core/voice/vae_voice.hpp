@@ -6,11 +6,11 @@
 
 namespace vae { namespace core {
 
-	class Voice {
-		Emitter* mEmitter = nullptr;
-		SampleIndex mSampleIndex = 0;
-		Time mTime = 0.0;
-	};
+	// class Voice {
+	// 	Emitter* mEmitter = nullptr;
+	// 	SampleIndex mSampleIndex = 0;
+	// 	Time mTime = 0.0;
+	// };
 
 } } // namespace vae::core
 

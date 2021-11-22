@@ -1,15 +1,15 @@
 #ifndef _VAE_API_TYPES
 #define _VAE_API_TYPES
 
-#include <stddef.h>
-
 namespace vae {
+	using GenericHandle = unsigned int;
+	using EventHandle 	= GenericHandle;
+	using SourceHandle 	= GenericHandle;
+	using BankHandle 	= GenericHandle;
+	using EmitterHandle = GenericHandle;
+	constexpr GenericHandle InvalidHandle = ~0;
 
-	using EventHandle = size_t;
-	using SourceHandle = size_t;
-	using BankHandle = size_t;
-
-	enum Result {
+	enum class Result {
 		Success,
 		GenericFailure,
 		BankFormatError,
@@ -30,10 +30,11 @@ namespace vae {
 	};
 
 	struct EventCallbackData {
-		BankHandle bank;
-		EventHandle event;
 		const char* name;
 		void* payload;
+		BankHandle bank;
+		EventHandle event;
+		EmitterHandle emitter;
 	};
 
 	/**

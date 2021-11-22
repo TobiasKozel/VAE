@@ -1,5 +1,7 @@
 #!/bin/sh
 
+cd ../external
+
 echo "Updating portaudio"
 curl -LO https://github.com/PortAudio/portaudio/archive/refs/heads/master.zip
 unzip ./master.zip > /dev/null 2>&1
@@ -42,3 +44,7 @@ mv ./tracy-0.7.8 ./tracy
 echo "Updating json"
 rm ./json.hpp
 curl -LO https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp
+
+echo "Updating hash map"
+rm ./robin_hood.h
+curl -LO https://raw.githubusercontent.com/martinus/robin-hood-hashing/master/src/include/robin_hood.h

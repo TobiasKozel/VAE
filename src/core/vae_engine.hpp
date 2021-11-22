@@ -10,16 +10,18 @@
 #include "../../external/tklb/src/types/TSpinLock.hpp"
 #include "../../external/tklb/src/util/TMath.hpp"
 
+#include "../wrapped/vae_profiler.hpp"
 
-#include "../../include/vae/vae.hpp"
+#include "./vae_types.hpp"
+
 // #include "./device/vae_rtaudio.hpp"
 #include "./device/vae_portaudio.hpp"
+
 // #include "./vae_emitter.hpp"
-#include "../wrapped/vae_profiler.hpp"
-#include "./vae_types.hpp"
 #include "./vae_bus_events.hpp"
 #include "./voice/vae_voice.hpp"
-#include "./pod/vae_bank.hpp"
+#include "./fs/vae_bank_loader.hpp"
+#include "./vae_util.hpp"
 
 namespace vae { namespace core {
 
@@ -34,10 +36,6 @@ namespace vae { namespace core {
 		 */
 		EventBus mBus;
 		EngineConfig mConfig;
-
-		HeapBuffer<Voice> mVoices;
-		HeapBuffer<Voice> mVirtualVoices;
-		// tklb::HandleBuffer<Clip> mClips = { &Clip::id };
 
 		std::vector<Bank> mBanks;
 
@@ -59,9 +57,13 @@ namespace vae { namespace core {
 		Engine& operator= (Engine&&) = delete;
 
 	public:
-		Engine(EngineConfig& config) {
-			mConfig = config;
+		Engine(EngineConfig& config) : mConfig(config) { }
 
+		~Engine() {
+			// TKLB_DELETE(mDevice);
+		}
+
+		Result init() {
 			// Backend& backend = CurrentBackend::instance();
 			// mDevice = backend.createDevice();
 			// mDevice->setSync([&](const Device::AudioBuffer& fromDevice, Device::AudioBuffer& toDevice) {
@@ -70,62 +72,79 @@ namespace vae { namespace core {
 			// mDevice->openDevice();
 		}
 
-		~Engine() {
-			TKLB_DELETE(mDevice);
-		}
-
 
 		/**
-		 * Main mechanism to start and stop sounds
+		 * @brief Main mechanism to start and stop sounds
+		 *
+		 * @param bankHandle
+		 * @param eventHandle
+		 * @param emitterHandle
+		 * @return Result
 		 */
-		Result fireEvent(BankHandle bank, EventHandle event) {
-			auto& e = mBanks[bank].events[event];
-			switch (e.type)
-			{
+		Result fireEvent(
+			BankHandle bankHandle, EventHandle eventHandle,
+			EmitterHandle emitterHandle = InvalidHandle)
+		{
+			auto& bank = mBanks[bankHandle];
+			auto& event = bank.events[eventHandle];
+			switch (event.type) {
 			case Event::EventType::start:
-				for (auto& i : e.sources) {
+				for (auto& i : event.sources) {
+					auto& Source = bank.sources[i];
 					// TODO
 					// start sources
 					// associate event with sounds
 					// fire on_end when all sounds are done
 				}
+
+				for (auto& i : event.on_start) {
+					fireEvent(bankHandle, i, emitterHandle);
+				}
 				break;
 			case Event::EventType::stop:
-				for (auto& i : e.sources) {
+				for (auto& i : event.sources) {
 					// TODO
 					// Stop sources
 				}
-				// directly fire on end since the sounds should now
-				// be stopped maybe?
-				for (auto& i : e.on_end) {
-					fireEvent(bank, i);
+				for (auto& i : event.on_start) {
+					// TODO
+					// kill every voice started from these events
 				}
 				break;
 			case Event::EventType::emit:
 				if (mConfig.eventCallback == nullptr) { break; }
 				EventCallbackData data;
-				data.bank = bank;
-				data.event = event;
-				data.name = e.name.c_str();
+				constexpr int as = sizeof(data);
+				data.name = event.name.c_str();
 				data.payload = mConfig.eventCallbackPayload;
+				data.bank = bankHandle;
+				data.event = eventHandle;
+				data.emitter = emitterHandle;
 				mConfig.eventCallback(data);
-				break;
-			default:
 				break;
 			}
 
-			// Always trigger on start events
-			for (auto& i : e.on_start) {
-				fireEvent(bank, i);
-			}
+
 			return Result::Success;
 		}
 
 
+#pragma region bank_handling
+		/**
+		 * Load bank from filesystem
+		 */
 		Result loadBank(const char* path) {
 			Bank bank;
-			auto result = Bank::Loader{}(path, bank);
-			if (result) { return result; }
+			auto result = BankLoader::load(path, bank);
+			if (result != Result::Success) { return result; }
+			return loadBank(bank);
+		}
+
+		/**
+		 * Load the bank from memory
+		 * will move the bank object!
+		 */
+		Result loadBank(Bank& bank) {
 			Lock l(mMutex);
 			if (mBanks.size() < bank.id + 1) {
 				mBanks.resize(bank.id + 1);
@@ -135,28 +154,20 @@ namespace vae { namespace core {
 		}
 
 		Result unloadBank(const char* path) {
-			// for (Size i = 0; i < mBanks.size(); i++) {
-			// 	if (strcmp(mBanks[i].path, path) == 0) {
-			// 		return unloadBank(mBanks[i]);
-			// 	}
-			// }
+			VAE_ASSERT(false)
+			// TODO
+
 			return Result::GenericFailure;
 		}
 
 		Result unloadBank(Bank& bank) {
-			// Lock l(mMutex);
-			// // TODO
-			// for (Size i = 0; i < bank.sources.size(); i++) {
-
-			// }
-
-			// for (Size i = 0; i < bank.events.size(); i++) {
-
-			// }
-			// mBanks.remove(&bank);
+			VAE_ASSERT(false)
+			// TODO
 			return Result::Success;
 		}
-	};
+#pragma endregion bank_handling
+
+	}; // Engine class
 } } // namespace vae::core
 
 #endif // VAE_ENGINE

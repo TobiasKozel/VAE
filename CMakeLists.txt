@@ -41,7 +41,6 @@ file(GLOB PUBLIC_API "src/api/*.cpp")
 file(GLOB SRC_CORE "src/core/*.hpp")
 file(GLOB SRC_WRAPPED "src/wrapped/*.cpp")
 file(GLOB SRC_DEVICE "src/core/device/*.hpp")
-file(GLOB SRC_FILESYSTEM "src/core/filesystem/*.hpp" "src/core/filesystem/*.cpp")
 
 if (VAE_BUILD_STATIC_LIBS)
 	add_library(vae
@@ -49,7 +48,6 @@ if (VAE_BUILD_STATIC_LIBS)
 			${SRC_CORE}
 			${SRC_WRAPPED}
 			${SRC_DEVICE}
-			${SRC_FILESYSTEM}
 			${PUBLIC_API}
 	)
 else()
@@ -58,7 +56,6 @@ else()
 			${SRC_CORE}
 			${SRC_WRAPPED}
 			${SRC_DEVICE}
-			${SRC_FILESYSTEM}
 			${PUBLIC_API}
 	)
 endif()

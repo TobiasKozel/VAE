@@ -38,6 +38,14 @@
 			"sources": [],
 			"on_start": [],
 			"on_end": []
+		},
+		{
+			"id": 3,
+			"name": "Event4",
+			"type": "stop",
+			"sources": [],
+			"on_start": [0],
+			"on_end": []
 		}
 	]
 }
