@@ -7,6 +7,7 @@
 #include "../../../external/tklb/src/types/audio/TWaveFile.hpp"
 
 #include "../vae_types.hpp"
+#include "../vae_config.hpp"
 #include "../pod/vae_source.hpp"
 #include "../pod/vae_event.hpp"
 #include "../pod/vae_bank.hpp"
@@ -34,16 +35,21 @@ namespace vae { namespace core {
 
 	struct BankLoader {
 		static Result loadSource(Source& s, std::string path) {
+			constexpr int tes = sizeof(Source);
 			if (s.type == Source::SourceType::preload) {
-				AudioBuffer buffer;
 				path += s.path;
-				auto result = tklb::wave::load(path.c_str(), buffer);
+				auto result = tklb::wave::load(path.c_str(), s.signal);
 				return result ? Result::Success : Result::GenericFailure;
 			}
 			if (s.type == Source::SourceType::stream) {
+				return Result::GenericFailure;
 				// TODO preload a few samples from the wave file
+				path += s.path;
+				s.signal.setValidSize(Config::StreamPrefetch);
+				auto result = tklb::wave::load(path.c_str(), s.signal);
+				return result ? Result::Success : Result::GenericFailure;
 			}
-			return Result::Success;
+			return Result::GenericFailure;
 		}
 
 		static Result load(const char* path, Bank& bank) {
@@ -62,8 +68,9 @@ namespace vae { namespace core {
 			if (!sources.empty()) {
 				bank.sources.resize(sources.size());
 				for (auto& i : sources) {
-					Source s;
-					s.id		= i["id"];
+					SourceHandle id = i["id"];
+					Source& s = bank.sources[id];
+					s.id		= id;
 					if (sources.size() <= s.id) {
 						return Result::BankFormatError;
 					}
@@ -75,15 +82,15 @@ namespace vae { namespace core {
 					s.length	= i["length"];
 					s.rate		= i["rate"];
 					loadSource(s, folder);
-					bank.sources[s.id] = s;
 				}
 			}
 			auto events = data["events"];
 			if (!events.empty()) {
 				bank.events.resize(events.size());
 				for (auto& i : events) {
-					Event e;
-					e.id		= i["id"];
+					EventHandle id = i["id"];
+					Event& e = bank.events[id];
+					e.id		= id;
 					if (events.size() <= e.id) {
 						return Result::BankFormatError;
 					}
@@ -107,8 +114,6 @@ namespace vae { namespace core {
 					for (auto& j : onEnd) {
 						e.on_end.push_back(j);
 					}
-
-					bank.events[e.id] = e;
 				}
 			}
 			return Result::Success;

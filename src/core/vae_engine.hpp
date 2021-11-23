@@ -19,7 +19,7 @@
 
 // #include "./vae_emitter.hpp"
 #include "./vae_bus_events.hpp"
-#include "./voice/vae_voice.hpp"
+#include "./voice/vae_voice_manager.hpp"
 #include "./fs/vae_bank_loader.hpp"
 #include "./vae_util.hpp"
 
@@ -38,6 +38,7 @@ namespace vae { namespace core {
 		EngineConfig mConfig;
 
 		std::vector<Bank> mBanks;
+		VoiceManger mVoiceManager;
 
 		Device* mDevice;
 
@@ -90,7 +91,8 @@ namespace vae { namespace core {
 			switch (event.type) {
 			case Event::EventType::start:
 				for (auto& i : event.sources) {
-					auto& Source = bank.sources[i];
+					auto& source = bank.sources[i];
+					mVoiceManager.play(source, eventHandle, emitterHandle);
 					// TODO
 					// start sources
 					// associate event with sounds
@@ -103,12 +105,12 @@ namespace vae { namespace core {
 				break;
 			case Event::EventType::stop:
 				for (auto& i : event.sources) {
-					// TODO
-					// Stop sources
+					// Kill every voice started from this source
+					mVoiceManager.stopFromSource(i, emitterHandle);
 				}
 				for (auto& i : event.on_start) {
-					// TODO
 					// kill every voice started from these events
+					mVoiceManager.stopFromEvent(i, emitterHandle);
 				}
 				break;
 			case Event::EventType::emit:
@@ -123,7 +125,6 @@ namespace vae { namespace core {
 				mConfig.eventCallback(data);
 				break;
 			}
-
 
 			return Result::Success;
 		}

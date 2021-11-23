@@ -9,6 +9,7 @@ void eventTriggered(EventCallbackData data) {
 }
 
 int main() {
+	constexpr int test = sizeof(core::Engine);
 	tklb::AudioBuffer buffer;
 	buffer.resize(44100, 1);
 	buffer.sampleRate = 44100;

@@ -17,13 +17,14 @@ namespace vae { namespace core {
 			vorbis
 		};
 		SourceHandle id;
-		std::string name;
-		std::string path;
-		SourceFormat format;
-		SourceType type;
-		size_t length;
 		unsigned int rate;
 		unsigned int channels;
+		size_t length;
+		AudioBuffer signal;
+		SourceFormat format;
+		SourceType type;
+		std::string name;
+		std::string path;
 	};
 } } // namespace vae::vore
 

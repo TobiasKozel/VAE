@@ -27,6 +27,11 @@ namespace vae {
 		 * since it's more forgiving to the scheduler.
 		 */
 		constexpr unsigned int DeviceMaxPeriods = 3;
+
+		/**
+		 * @brief How many Samples to prefetch for streaming sources
+		 */
+		constexpr unsigned int StreamPrefetch = 1024 * 8;
 	}
 }
 
