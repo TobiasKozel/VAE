@@ -10,15 +10,17 @@ void eventTriggered(EventCallbackData data) {
 
 int main() {
 	constexpr int test = sizeof(core::Engine);
+	constexpr int rate = 44100;
 	tklb::AudioBuffer buffer;
-	buffer.resize(44100, 1);
-	buffer.sampleRate = 44100;
+	buffer.resize(rate, 1);
+	buffer.sampleRate = rate;
 	for (int i = 0; i < buffer.size(); i++) {
 		buffer[0][i] = sin(i * 0.1) * 0.7;
 	}
 	tklb::wave::write(buffer, "../../../dev/bank1/sound1.wav");
 	EngineConfig config;
 	config.eventCallback = &eventTriggered;
+	config.preferredSampleRate = rate;
 	core::Engine engine(config);
 	if (engine.loadBank("../../../dev/bank1") == Result::Success) {
 		engine.fireEvent(0, 0);

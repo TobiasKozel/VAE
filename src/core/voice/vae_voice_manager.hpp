@@ -7,18 +7,17 @@
 #include "../pod/vae_source.hpp"
 #include "../pod/vae_event.hpp"
 
-
 #include "../../../include/vae/vae.hpp"
 #include "../../../external/robin_hood.h"
 
-
 namespace vae { namespace core {
-	class Voice {
-		SampleIndex mSampleIndex = 0;
-		Time mTime = 0.0;
-		EmitterHandle mEmitter;
-		SourceHandle mSource;
-		EventHandle mEvent;
+	struct Voice {
+		BankHandle bank = InvalidHandle;
+		SourceHandle source;
+		EventHandle event;
+		SampleIndex time = 0;
+		Time timeFract = 0.0;
+		EmitterHandle emitter;
 	};
 
 	class VoiceManger {
@@ -28,13 +27,18 @@ namespace vae { namespace core {
 		Map<GenericHandle, Voice> mVoices;
 		Map<GenericHandle, Voice> mVirtualVoices;
 		std::vector<Voice*> mFinishedVoices;
+		VoiceHandle mCurrentVoiceIndex = 0;
 
 	public:
 		VoiceManger(EngineConfig& config) {
 			mVoices.reserve(config.voices);
 		}
 
-		Result play(Source& source, EventHandle event, EmitterHandle emitter) {
+		Result play(SourceHandle source, EventHandle event, EmitterHandle emitter) {
+			Voice voice;
+			voice.emitter = emitter;
+			voice.event = event;
+			voice.source = source;
 			return Result::GenericFailure;
 		}
 

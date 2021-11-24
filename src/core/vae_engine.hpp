@@ -37,8 +37,9 @@ namespace vae { namespace core {
 		EventBus mBus;
 		EngineConfig mConfig;
 
-		std::vector<Bank> mBanks;
+		std::vector<Bank> mBanks;		// All the currently loaded banks
 		VoiceManger mVoiceManager;
+		Mixer mMaster;					// Master channel which will be output
 
 		Device* mDevice;
 
@@ -58,7 +59,9 @@ namespace vae { namespace core {
 		Engine& operator= (Engine&&) = delete;
 
 	public:
-		Engine(EngineConfig& config) : mConfig(config) { }
+		Engine(
+			EngineConfig& config
+		) : mConfig(config), mVoiceManager(config) { }
 
 		~Engine() {
 			// TKLB_DELETE(mDevice);
@@ -91,8 +94,7 @@ namespace vae { namespace core {
 			switch (event.type) {
 			case Event::EventType::start:
 				for (auto& i : event.sources) {
-					auto& source = bank.sources[i];
-					mVoiceManager.play(source, eventHandle, emitterHandle);
+					mVoiceManager.play(i, eventHandle, emitterHandle);
 					// TODO
 					// start sources
 					// associate event with sounds
@@ -132,7 +134,10 @@ namespace vae { namespace core {
 
 #pragma region bank_handling
 		/**
-		 * Load bank from filesystem
+		 * @brief Load bank from filesystem
+		 * Locks audio thread
+		 * @param path
+		 * @return Result
 		 */
 		Result loadBank(const char* path) {
 			Bank bank;
@@ -142,8 +147,10 @@ namespace vae { namespace core {
 		}
 
 		/**
-		 * Load the bank from memory
-		 * will move the bank object!
+		 * @brief Load bank from memory
+		 * Locks audio thread
+		 * @param bank Moved and now owned by the engine
+		 * @return Result
 		 */
 		Result loadBank(Bank& bank) {
 			Lock l(mMutex);
@@ -151,20 +158,77 @@ namespace vae { namespace core {
 				mBanks.resize(bank.id + 1);
 			}
 			mBanks[bank.id] = std::move(bank);
+			// todo update master channel
+			// and init effects
 			return Result::Success;
 		}
 
+		/**
+		 * @brief Add or replace a source in a bank
+		 * Locks audio thread
+		 * @param bankHandle
+		 * @param source Moved and now owned by bank
+		 * @return Result
+		 */
+		Result addSource(BankHandle bankHandle, Source& source) {
+			auto& bank = mBanks[bankHandle];
+			Lock l(mMutex);
+			if (bank.sources.size() <= source.id) {
+				bank.sources.resize(source.id + 1);
+			}
+			bank.sources[source.id] = std::move(source);
+			return Result::Success;
+		}
+
+		/**
+		 * @brief Add or replace event in a bank
+		 * Locks audio thread
+		 * @param bankHandle
+		 * @param event Moved and now owned by bank
+		 * @return Result
+		 */
+		Result addEvent(BankHandle bankHandle, Event& event) {
+			auto& bank = mBanks[bankHandle];
+			Lock l(mMutex);
+			if (bank.events.size() <= event.id) {
+				bank.events.resize(event.id + 1);
+			}
+			bank.events[event.id] = std::move(event);
+			return Result::Success;
+		}
+
+		/**
+		 * @brief Unload bank from path
+		 * Locks audio thread
+		 * @param path
+		 * @return Result
+		 */
 		Result unloadBank(const char* path) {
-			VAE_ASSERT(false)
-			// TODO
-
-			return Result::GenericFailure;
+			Lock l(mMutex);
+			for (auto& i : mBanks) {
+				if (strcmp(path, i.path.c_str()) == 0) {
+					i = { }; // should free all the memory
+					return Result::Success;
+				}
+			}
+			return Result::ElementNotFound;
 		}
 
-		Result unloadBank(Bank& bank) {
-			VAE_ASSERT(false)
-			// TODO
-			return Result::Success;
+		/**
+		 * @brief Unload bank from handle
+		 * Locks audio thread
+		 * @param bankHandle
+		 * @return Result
+		 */
+		Result unloadBank(BankHandle bankHandle) {
+			Lock l(mMutex);
+			for (auto& i : mBanks) {
+				if (i.id == bankHandle) {
+					i = { }; // should free all the memory
+					return Result::Success;
+				}
+			}
+			return Result::ElementNotFound;
 		}
 #pragma endregion bank_handling
 

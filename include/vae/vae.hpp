@@ -7,6 +7,8 @@ namespace vae {
 	using SourceHandle 	= GenericHandle;
 	using BankHandle 	= GenericHandle;
 	using EmitterHandle = GenericHandle;
+	using VoiceHandle	= GenericHandle;
+	using MixerHandle	= GenericHandle;
 	constexpr GenericHandle InvalidHandle = ~0;
 
 	enum class Result {
@@ -14,6 +16,7 @@ namespace vae {
 		GenericFailure,
 		BankFormatError,
 		FileNotFound,
+		ElementNotFound
 	};
 
 	struct DeviceInfo {

@@ -3,6 +3,9 @@
 
 #include "../vae_types.hpp"
 
+#include <string>
+#include <vector>
+
 namespace vae { namespace core {
 	struct Event {
 		enum class EventType {
@@ -11,7 +14,7 @@ namespace vae { namespace core {
 			stop,
 			emit
 		};
-		EventHandle id;
+		EventHandle id = InvalidHandle;
 		std::string name;
 		EventType type;
 		std::vector<SourceHandle> sources;

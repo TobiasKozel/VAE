@@ -13,7 +13,21 @@
 			"rate": 44100
 		}
 	],
-	"automation": [],
+	"mixers": [
+		{
+			"id": 0,
+			"name": "Master",
+			"effects": [],
+			"parent": 0
+		},
+		{
+			"id": 1,
+			"name": "Mixer1",
+			"effects": [],
+			"parent": 0
+		}
+	],
+	"rtcpcs": [],
 	"events": [
 		{
 			"id": 0,
@@ -21,7 +35,8 @@
 			"type": "start",
 			"sources": [0],
 			"on_start": [2],
-			"on_end": [1]
+			"on_end": [1],
+			"mixer": 1
 		},
 		{
 			"id": 1,
@@ -29,7 +44,8 @@
 			"type": "emit",
 			"sources": [],
 			"on_start": [],
-			"on_end": []
+			"on_end": [],
+			"mixer": 0
 		},
 		{
 			"id": 2,
@@ -37,7 +53,8 @@
 			"type": "emit",
 			"sources": [],
 			"on_start": [],
-			"on_end": []
+			"on_end": [],
+			"mixer": 0
 		},
 		{
 			"id": 3,
@@ -45,7 +62,8 @@
 			"type": "stop",
 			"sources": [],
 			"on_start": [0],
-			"on_end": []
+			"on_end": [],
+			"mixer": 0
 		}
 	]
 }

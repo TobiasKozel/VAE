@@ -3,6 +3,9 @@
 
 #include "../vae_types.hpp"
 
+#include <stddef.h>
+#include <string>
+
 namespace vae { namespace core {
 	struct Source {
 		enum class SourceType {
@@ -16,15 +19,15 @@ namespace vae { namespace core {
 			wav,
 			vorbis
 		};
-		SourceHandle id;
+		SourceHandle id = InvalidHandle;
 		unsigned int rate;
 		unsigned int channels;
 		size_t length;
-		AudioBuffer signal;
 		SourceFormat format;
 		SourceType type;
 		std::string name;
-		std::string path;
+		std::string path;		// Filesystem path
+		AudioBuffer signal;		// Signal or scratch buffer for generated types
 	};
 } } // namespace vae::vore
 
