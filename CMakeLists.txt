@@ -6,7 +6,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 project(
 	vae
 	VERSION 0.0.1
-	DESCRIPTION "An Audio Engine"
+	DESCRIPTION "Virtual Audio Engine"
 	LANGUAGES CXX
 )
 
@@ -25,16 +25,15 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 if (VAE_BUILD_STATIC_LIBS)
 	message("Build static vae")
 	set(TKLB_BUILD_STATIC_LIBS ON)
-	set(RTAUDIO_BUILD_STATIC_LIBS ON)
-	set(RTAUDIO_STATIC_MSVCRT OFF)
+	set(BUILD_SHARED_LIBS OFF)
 else()
 	message("Build shared vae")
 	set(TKLB_BUILD_STATIC_LIBS OFF)
-	set(RTAUDIO_BUILD_STATIC_LIBS OFF)
+	set(BUILD_SHARED_LIBS ON)
 endif()
 
-# find_package(portaudio REQUIRED)
-find_package(RtAudio REQUIRED)
+find_package(PortAudio REQUIRED)
+# find_package(RtAudio REQUIRED)
 find_package(tklb REQUIRED)
 
 file(GLOB PUBLIC_API "src/api/*.cpp")
@@ -71,8 +70,8 @@ target_include_directories(vae
 		tklb
 	PRIVATE
 		${CMAKE_CURRENT_SOURCE_DIR}/src
-		# portaudio_static
-		rtaudio
+		PortAudio
+		# rtaudio
 		tklb
 )
 
@@ -83,8 +82,8 @@ target_link_libraries(vae
 # Goal is to have no public dependencies
 	PRIVATE
 		tklb
-		rtaudio
-		# portaudio_static
+		PortAudio
+		# rtaudio
 )
 
 # optional profiler
