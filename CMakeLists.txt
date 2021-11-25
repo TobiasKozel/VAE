@@ -117,6 +117,7 @@ if(MSVC)
 			$<TARGET_OBJECTS:vae>
 			$<TARGET_OBJECTS:tklb>
 			# $<TARGET_OBJECTS:PortAudio>
+			$<TARGET_OBJECTS:PortAudio>
 		COMMAND_EXPAND_LISTS
 	)
 else()
@@ -131,10 +132,10 @@ else()
 			${CMAKE_STATIC_LIBRARY_PREFIX}vae_pack${CMAKE_STATIC_LIBRARY_SUFFIX}
 			$<TARGET_OBJECTS:vae>
 			$<TARGET_OBJECTS:tklb>
-			$<TARGET_OBJECTS:rtaudio>
+			# $<TARGET_OBJECTS:rtaudio>
 			# ${ALSA_LIBRARY}
 			# ${PULSE_LIB} ${PULSESIMPLE_LIB}
-			# $<TARGET_OBJECTS:portaudio_static>
+			$<TARGET_OBJECTS:PortAudio>
 		COMMAND_EXPAND_LISTS # this is important to expand cmake lists properly
 	)
 endif()
