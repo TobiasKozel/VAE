@@ -22,6 +22,7 @@ namespace vae { namespace core {
 		 * It's the only mixer shared across banks.
 		 */
 		MixerHandle parent;
+		AudioBuffer buffer;
 	};
 } } // vae::core
 

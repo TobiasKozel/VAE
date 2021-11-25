@@ -10,6 +10,7 @@
 #include "../../external/tklb/src/types/TSpinLock.hpp"
 #include "../../external/tklb/src/util/TMath.hpp"
 
+#include "./vae_util.hpp"
 #include "../wrapped/vae_profiler.hpp"
 
 #include "./vae_types.hpp"
@@ -21,6 +22,7 @@
 #include "./vae_bus_events.hpp"
 #include "./voice/vae_voice_manager.hpp"
 #include "./fs/vae_bank_loader.hpp"
+#include "./processor/vae_processor.hpp"
 #include "./vae_util.hpp"
 
 namespace vae { namespace core {
@@ -48,16 +50,12 @@ namespace vae { namespace core {
 		 */
 		BankHandle mMasterBank = InvalidHandle;
 
-		Device* mDevice;
+		Device* mDevice = nullptr;
 
 		SampleIndex mTime = 0; // Global time in samples
 
 		// Listener mListener;
 		Mutex mMutex;
-
-		void callback(const AudioBuffer& fromDevice, AudioBuffer& toDevice) {
-			VAE_PROFILER_FRAME_MARK
-		}
 
 		Engine(const Engine&) = delete;
 		Engine(const Engine*) = delete;
@@ -71,16 +69,52 @@ namespace vae { namespace core {
 		) : mConfig(config), mVoiceManager(config) { }
 
 		~Engine() {
-			// TKLB_DELETE(mDevice);
+			stop();
 		}
 
 		Result init() {
-			// Backend& backend = CurrentBackend::instance();
-			// mDevice = backend.createDevice();
-			// mDevice->setSync([&](const Device::AudioBuffer& fromDevice, Device::AudioBuffer& toDevice) {
-			// 	callback(fromDevice, toDevice);
-			// });
-			// mDevice->openDevice();
+			Backend& backend = CurrentBackend::instance();
+			mDevice = backend.createDevice(mConfig);
+			mDevice->setSync([&](const AudioBuffer& fromDevice, AudioBuffer& toDevice) {
+				callback(fromDevice, toDevice);
+			});
+			mDevice->openDevice();
+			return Result::Success;
+		}
+
+		Result stop() {
+			TKLB_DELETE(mDevice);
+			return Result::Success;
+		}
+
+
+		void callback(const AudioBuffer& fromDevice, AudioBuffer& toDevice) {
+			{
+				Lock l(mMutex);
+				Processor::mix(mVoiceManager, mBanks, mMasterBank, toDevice.validSize());
+				AudioBuffer test;
+
+				// toDevice.set(mBanks[mMasterBank].mixers[Mixer::MasterMixerHandle].buffer);
+				// toDevice.set(0);
+				// for (int i = 0; i < toDevice.size(); i++) {
+				// 	toDevice[0][i] = sin(i * 0.01) * 0.3;
+				// }
+			}
+			VAE_PROFILER_FRAME_MARK
+		}
+
+		/**
+		 * @brief Update function needs to be called regularly to handle outbound events
+		 *
+		 */
+		void update() {
+			for (auto& v : mVoiceManager.voicesFinished) {
+				if (v.source == InvalidHandle) { continue; }
+				for (auto& i : mBanks[v.bank].events[v.event].on_end) {
+					fireEvent(v.bank, i, v.emitter, v.mixer);
+				}
+				v.source = InvalidHandle;
+			}
 		}
 
 
@@ -102,14 +136,8 @@ namespace vae { namespace core {
 			auto& event = bank.events[eventHandle];
 			switch (event.type) {
 			case Event::EventType::start:
-				for (auto& i : event.sources) {
-					mVoiceManager.play(i, eventHandle, emitterHandle, mixerHandle);
-					// TODO
-					// start sources
-					// associate event with sounds
-					// fire on_end when all sounds are done
-				}
-
+				mVoiceManager.play(event, bankHandle, emitterHandle, mixerHandle);
+				// Fire all other chained events
 				for (auto& i : event.on_start) {
 					fireEvent(bankHandle, i, emitterHandle);
 				}
@@ -143,7 +171,6 @@ namespace vae { namespace core {
 
 			return Result::Success;
 		}
-
 
 #pragma region bank_handling
 		/**

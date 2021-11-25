@@ -1,5 +1,5 @@
 #include <stdio.h>
-#define TKLB_ASSERT_SEGFAULT
+#include <thread>
 #include "../src/core/vae_engine.hpp"
 
 using namespace vae;
@@ -24,8 +24,23 @@ int main() {
 	config.preferredSampleRate = rate;
 
 	core::Engine engine(config);
+
+	engine.init();
+
+	std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(20));
+
 	if (engine.loadBank("../../../dev/bank1") == Result::Success) {
+		printf("Waiting 2 secs\n");
+		std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(2000));
+
 		engine.fireEvent(0, 0);
+
+		printf("Polling for a little...\n");
+		for (int i = 0; i < 200; i++) {
+			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(30));
+			engine.update();
+		}
+		printf("Shutting down...\n");
 	};
 
 	engine.unloadBankFromId(0);

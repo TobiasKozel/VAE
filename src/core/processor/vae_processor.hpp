@@ -1,66 +1,74 @@
-			// toDevice.set(0.0f);
-			// const auto samplesNeded = toDevice.validSize();
-			// mLock.lock();
-			// const auto count = mEmitters.size();
+#ifndef _VAE_PROCESSOR
+#define _VAE_PROCESSOR
 
-			// const auto speakerL = glm::normalize(glm::vec2(-1, 0.5));
-			// const auto speakerR = glm::normalize(glm::vec2(+1, 0.5));
-			// const glm::mat2x2 speakers(
-			// 	speakerL.x, speakerL.y,
-			// 	speakerR.x, speakerR.y
-			// );
-			// const auto matrix = glm::inverse(speakers);
+#include "../vae_types.hpp"
+#include "../pod/vae_bank.hpp"
+#include "../pod/vae_voice.hpp"
+#include "../voice/vae_voice_manager.hpp"
 
-			// for (Size index = 0; index < count; index++) {
+namespace vae { namespace core {
 
-			// 	if (mEmitters.getLastFree() == index) { continue; }
-			// 	auto& i = mEmitters[index];
+	struct Processor {
+		static void mix(
+			VoiceManger& manager, std::vector<Bank>& banks,
+			BankHandle masterBank, SampleIndex frames
+		) {
+			auto& master = banks[masterBank].mixers[Mixer::MasterMixerHandle];
 
-			// 	if (!(i.state[Emitter::ready]))   { continue; }
-			// 	if (!(i.state[Emitter::playing])) { continue; }
-			// 	Clip* clip = mClips.at(i.clip);
-			// 	if (clip == nullptr) { continue; }
-			// 	auto& buffer = clip->data;
-			// 	const auto totalLength = buffer.size();
+			for (auto& v : manager.voices) {
+				if (v.source == InvalidHandle) { continue; }
+				auto& bank = banks[v.bank];
+				auto& source = bank.sources[v.source];
+				auto& parent =
+					(v.mixer == Mixer::MasterMixerHandle) ?
+					master : bank.mixers[v.mixer];
 
-			// 	const auto startTime = i.time;
 
-			// 	if (!i.state[Emitter::virt]) {
-			// 		const auto direction = glm::normalize(glm::vec2(i.position.x, i.position.y));
-			// 		auto pan = direction * matrix;
-			// 		pan[1] = tklb::clamp<float>(+direction.x, 0, 1.0);
-			// 		pan[0] = tklb::clamp<float>(-direction.x, 0, 1.0);
-			// 		// pan[0] = 1;
-			// 		// pan[1] = 1;
-			// 		// pan[0] = std::min(std::max(-i.position.x, 0.f));
+				auto& signal = source.signal;
+				auto& target = parent.buffer;
 
-			// 		if (i.state[Emitter::loop]) {
-			// 			for (int c = 0; c < toDevice.channels(); c++) {
-			// 				const int channel = c % buffer.channels();
-			// 				for (size_t s = 0; s < samplesNeded; s++) {
-			// 					toDevice[c][s] += buffer[channel][(startTime + s) % totalLength] * pan[c];
-			// 				}
-			// 			}
-			// 		} else {
-			// 			const auto length = std::min(samplesNeded, totalLength - startTime);
-			// 			for (int c = 0; c < toDevice.channels(); c++) {
-			// 				const int channel = c % buffer.channels();
-			// 				for (size_t s = 0; s < length; s++) {
-			// 					toDevice[c][s] += buffer[channel][startTime + s] * pan[c];
-			// 				}
-			// 			}
-			// 		}
-			// 	}
+				const SampleIndex remaining = std::min(
+					frames, SampleIndex(signal.size() - v.time
+				));
 
-			// 	if (!i.state[Emitter::loop] && totalLength <= startTime + samplesNeded) {
-			// 		// stop if not looping and end is reached
-			// 		i.time = 0;
-			// 		i.state[Emitter::playing] = false;
-			// 	} else {
-			// 		// move time forward
-			// 		i.time = startTime + samplesNeded % totalLength;
-			// 	}
-			// }
-			// mLock.unlock();
+				for (int c = 0; c < target.channels(); c++) {
+					const int channel = c % signal.channels();
+					for (SampleIndex s = 0; s < remaining; s++) {
+						target[c][s] += signal[channel][v.time + s];
+					}
+				}
 
-			// mTime += samplesNeded;
+				v.time += remaining; // progress time in voice
+
+				if (remaining != frames) {
+					auto& event = bank.events[v.event];
+					if (event.on_end.empty()) {
+						v.source = InvalidHandle; // Mark voice as free
+						continue;
+					}
+					// If the event triggers something once a voice is done
+					// it needs to be added to the voicesFinished array in the voice manager
+
+					// TODO VAE PERF
+					bool finished = false;
+					for (auto& i : manager.voicesFinished) {
+						if (i.source == InvalidHandle) {
+							finished = true;
+							i = std::move(v);
+							break;
+						}
+					}
+					v.source = InvalidHandle; // Mark voice as free
+
+					if (!finished) {
+						// Failed to find a free spot in finished voices array
+						VAE_ASSERT(false)
+					}
+				}
+			}
+		}
+	};
+
+} } // vae::core
+
+#endif // _VAE_PROCESSOR

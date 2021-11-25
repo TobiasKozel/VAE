@@ -3,60 +3,94 @@
 
 #include <vector>
 
+#include "../vae_util.hpp"
+
 #include "../vae_types.hpp"
 #include "../pod/vae_source.hpp"
 #include "../pod/vae_event.hpp"
 
 #include "../../../include/vae/vae.hpp"
-#include "../../../external/robin_hood.h"
+#include "../pod/vae_voice.hpp"
+// #include "../../../external/robin_hood.h"
 
 namespace vae { namespace core {
-	struct Voice {
-		BankHandle bank = InvalidHandle;
-		SourceHandle source;
-		EventHandle event;
-		MixerHandle mixer;
-		EmitterHandle emitter;
-		SampleIndex time = 0;
-		Time timeFract = 0.0;
-	};
+	struct VoiceManger {
+		std::vector<Voice> voices;				// Currently playing voice are here
+		std::vector<Voice> voicesFinished;		// voices that finished playing are here
+		EventHandle currentEventInstance = 0;
 
-	class VoiceManger {
-		template <typename key, class T>
-		using Map = robin_hood::unordered_flat_map<key, T>;
-
-		Map<GenericHandle, Voice> mVoices;
-		Map<GenericHandle, Voice> mVirtualVoices;
-		std::vector<Voice*> mFinishedVoices;
-		VoiceHandle mCurrentVoiceIndex = 0;
-
-	public:
 		VoiceManger(EngineConfig& config) {
-			mVoices.reserve(config.voices);
+			voices.resize(config.voices);
+			voicesFinished.resize(config.voices * 2);
 		}
 
 		Result play(
-			SourceHandle source, EventHandle event,
+			Event& event, BankHandle bank,
 			EmitterHandle emitter, MixerHandle mixer
 		) {
-			Voice voice;
-			voice.emitter = emitter;
-			voice.event = event;
-			voice.source = source;
-			voice.mixer = mixer;
-			return Result::GenericFailure;
+			// One event can trigger multiple voices
+			for (auto& source : event.sources) {
+				// TODO
+				// start sources
+				// associate event with sounds
+				// fire on_end when all sounds are done
+
+				// Find a free voice
+				// TODO VAE PERF
+				for (auto& i : voices) {
+					if(i.source == InvalidHandle) {
+						i.source = source;
+						i.event = event.id;
+						i.mixer = mixer;
+						i.emitter = emitter;
+						i.bank = bank;
+						i.eventInstance = currentEventInstance;
+						break;
+					}
+				}
+			}
+
+			currentEventInstance++;
+			return Result::Success;
 		}
 
 		Result stopFromSource(SourceHandle source, EmitterHandle emitter) {
-			return Result::GenericFailure;
+			for (auto& i : voices) {
+				if(i.source == source) {
+					if (emitter == InvalidHandle) {
+						i.source = InvalidHandle;
+					} else if (i.emitter == emitter) {
+						i.source = InvalidHandle;
+					}
+				}
+			}
+			return Result::Success;
 		}
 
 		Result stopFromEvent(EventHandle event, EmitterHandle emitter) {
-			return Result::GenericFailure;
+			for (auto& i : voices) {
+				if(i.event == event) {
+					if (emitter == InvalidHandle) {
+						i.source = InvalidHandle;
+					} else if (i.emitter == emitter) {
+						i.source = InvalidHandle;
+					}
+				}
+			}
+			return Result::Success;
 		}
 
 		Result stopFromMixer(MixerHandle mixer, EmitterHandle emitter) {
-			return Result::GenericFailure;
+			for (auto& i : voices) {
+				if(i.mixer == mixer) {
+					if (emitter == InvalidHandle) {
+						i.source = InvalidHandle;
+					} else if (i.emitter == emitter) {
+						i.source = InvalidHandle;
+					}
+				}
+			}
+			return Result::Success;
 		}
 	};
 } } // vae::core

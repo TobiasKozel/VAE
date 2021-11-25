@@ -116,7 +116,7 @@ if(MSVC)
 			/OUT:${CMAKE_STATIC_LIBRARY_PREFIX}vae_pack${CMAKE_STATIC_LIBRARY_SUFFIX}
 			$<TARGET_OBJECTS:vae>
 			$<TARGET_OBJECTS:tklb>
-			# $<TARGET_OBJECTS:portaudio_static>
+			# $<TARGET_OBJECTS:PortAudio>
 		COMMAND_EXPAND_LISTS
 	)
 else()
