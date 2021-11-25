@@ -10,7 +10,7 @@
 namespace vae { namespace core {
 	struct Mixer {
 		/**
-		 * @brief The handle used to identify a master channel
+		 * @brief This is the master mixer for a bank
 		 */
 		static constexpr MixerHandle MasterMixerHandle = 0;
 		MixerHandle id = InvalidHandle;

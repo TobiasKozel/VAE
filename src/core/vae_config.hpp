@@ -11,7 +11,7 @@ namespace vae {
 		/**
 		 * Maximum channel count used to pre allocate buffers
 		 */
-		constexpr unsigned char MaxChannels = 16;
+		constexpr unsigned char MaxChannels = 2;
 
 		/**
 		 * Maximum block size.

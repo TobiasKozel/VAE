@@ -9,22 +9,23 @@
 namespace vae { namespace core {
 
 	struct Processor {
+		/**
+		 * @brief Process a single bank
+		 *
+		 * @param manager
+		 * @param banks
+		 * @param frames
+		 */
 		static void mix(
-			VoiceManger& manager, std::vector<Bank>& banks,
-			BankHandle masterBank, SampleIndex frames
+			VoiceManger& manager, Bank& bank, SampleIndex frames
 		) {
-			auto& master = banks[masterBank].mixers[Mixer::MasterMixerHandle];
-
 			for (auto& v : manager.voices) {
 				if (v.source == InvalidHandle) { continue; }
-				auto& bank = banks[v.bank];
+				if (v.bank != bank.id) { continue; }
 				auto& source = bank.sources[v.source];
-				auto& parent =
-					(v.mixer == Mixer::MasterMixerHandle) ?
-					master : bank.mixers[v.mixer];
-
-
 				auto& signal = source.signal;
+				if (signal.size() == 0) { continue; }
+				auto& parent = bank.mixers[v.mixer];
 				auto& target = parent.buffer;
 
 				const SampleIndex remaining = std::min(

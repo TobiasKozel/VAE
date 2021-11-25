@@ -42,17 +42,10 @@ namespace vae { namespace core {
 		std::vector<Bank> mBanks;		// All the currently loaded banks
 		VoiceManger mVoiceManager;
 
-
-		/**
-		 * @brief Master channel which will be used for output.
-		 * Any Bank can provide one, but only the most recent
-		 * bank which does is the master.
-		 */
-		BankHandle mMasterBank = InvalidHandle;
-
 		Device* mDevice = nullptr;
 
 		SampleIndex mTime = 0; // Global time in samples
+		Time mTimeFract = 0;
 
 		// Listener mListener;
 		Mutex mMutex;
@@ -90,22 +83,30 @@ namespace vae { namespace core {
 
 		void callback(const AudioBuffer& fromDevice, AudioBuffer& toDevice) {
 			{
+				toDevice.set(0);
 				Lock l(mMutex);
-				Processor::mix(mVoiceManager, mBanks, mMasterBank, toDevice.validSize());
-				AudioBuffer test;
+				// TODO banks could be processed in parellel
+				for (auto& i : mBanks) {
+					Processor::mix(mVoiceManager, i, toDevice.validSize());
+					auto& bankMaster = i.mixers[Mixer::MasterMixerHandle].buffer;
+					toDevice.add(bankMaster);
+					bankMaster.set(0);
+				}
 
-				// toDevice.set(mBanks[mMasterBank].mixers[Mixer::MasterMixerHandle].buffer);
-				// toDevice.set(0);
+				// const double step = 1.0 / double(toDevice.sampleRate);
+				// // const double bufferTime = step * toDevice.validSize();
 				// for (int i = 0; i < toDevice.size(); i++) {
-				// 	toDevice[0][i] = sin(i * 0.01) * 0.3;
+				// 	toDevice[0][i] = sin(mTimeFract * 440 * 2) * 0.4;
+				// 	mTimeFract += step;
 				// }
+				// // mTimeFract += bufferTime;
 			}
 			VAE_PROFILER_FRAME_MARK
 		}
 
 		/**
-		 * @brief Update function needs to be called regularly to handle outbound events
-		 *
+		 * @brief Update function needs to be called regularly to handle outbound events.
+		 * If this isn't called regularly events might be lost.
 		 */
 		void update() {
 			for (auto& v : mVoiceManager.voicesFinished) {
@@ -194,12 +195,22 @@ namespace vae { namespace core {
 		 */
 		Result loadBank(Bank& bank) {
 			// TODO init mixer effects
+
+			if (bank.mixers.empty()) {
+				// Ensure there's a master channel per bank
+				bank.mixers.resize(1);
+				bank.mixers[0].id = 0;
+				bank.mixers[0].name = "Bank Master";
+			}
+
+			for (auto& m : bank.mixers) {
+				m.buffer.resize(Config::MaxBlock, Config::MaxChannels);
+			}
+
 			Lock l(mMutex);
+
 			if (mBanks.size() < bank.id + 1) {
 				mBanks.resize(bank.id + 1);
-			}
-			if (bank.mixers[Mixer::MasterMixerHandle].id != InvalidHandle) {
-				mMasterBank = bank.id;
 			}
 			mBanks[bank.id] = std::move(bank);
 			return Result::Success;
@@ -241,13 +252,11 @@ namespace vae { namespace core {
 
 		Result addMixer(BankHandle bankHandle, Mixer& mixer) {
 			// TODO init mixer effects
+			mixer.buffer.resize(Config::MaxBlock, Config::MaxChannels);
 			Lock l(mMutex);
 			auto& bank = mBanks[bankHandle];
 			if (bank.mixers.size() <= mixer.id) {
 				bank.mixers.resize(mixer.id + 1);
-			}
-			if (mixer.id == Mixer::MasterMixerHandle) {
-				mMasterBank = bank.id;
 			}
 			bank.mixers[mixer.id] = std::move(mixer);
 			return Result::Success;

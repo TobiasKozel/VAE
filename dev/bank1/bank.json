@@ -16,7 +16,7 @@
 	"mixers": [
 		{
 			"id": 0,
-			"name": "Master",
+			"name": "Bank Master",
 			"effects": [],
 			"parent": 0
 		},
