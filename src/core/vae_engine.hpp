@@ -34,12 +34,19 @@ namespace vae { namespace core {
 		 * Main messaging instance, most objects hold a
 		 * reference to this instead of the engine itself
 		 */
-		EventBus mBus;
+		// EventBus mBus;
 		EngineConfig mConfig;
 
 		std::vector<Bank> mBanks;		// All the currently loaded banks
 		VoiceManger mVoiceManager;
-		Mixer mMaster;					// Master channel which will be output
+
+
+		/**
+		 * @brief Master channel which will be used for output.
+		 * Any Bank can provide one, but only the most recent
+		 * bank which does is the master.
+		 */
+		BankHandle mMasterBank = InvalidHandle;
 
 		Device* mDevice;
 
@@ -80,21 +87,23 @@ namespace vae { namespace core {
 		/**
 		 * @brief Main mechanism to start and stop sounds
 		 *
-		 * @param bankHandle
-		 * @param eventHandle
-		 * @param emitterHandle
+		 * @param bankHandle bank id where the event is provided
+		 * @param eventHandle id of the event
+		 * @param emitterHandle optional handle of the emitter, needed for spatial audio
+		 * @param mixerHandle id of mixer channel sound will be routed to, master by default
 		 * @return Result
 		 */
 		Result fireEvent(
 			BankHandle bankHandle, EventHandle eventHandle,
-			EmitterHandle emitterHandle = InvalidHandle)
-		{
+			EmitterHandle emitterHandle = InvalidHandle,
+			MixerHandle mixerHandle = Mixer::MasterMixerHandle
+		) {
 			auto& bank = mBanks[bankHandle];
 			auto& event = bank.events[eventHandle];
 			switch (event.type) {
 			case Event::EventType::start:
 				for (auto& i : event.sources) {
-					mVoiceManager.play(i, eventHandle, emitterHandle);
+					mVoiceManager.play(i, eventHandle, emitterHandle, mixerHandle);
 					// TODO
 					// start sources
 					// associate event with sounds
@@ -113,6 +122,10 @@ namespace vae { namespace core {
 				for (auto& i : event.on_start) {
 					// kill every voice started from these events
 					mVoiceManager.stopFromEvent(i, emitterHandle);
+				}
+				if (event.mixer != Mixer::MasterMixerHandle) {
+					// kill every voice in a mixer channel
+					mVoiceManager.stopFromMixer(event.mixer, emitterHandle);
 				}
 				break;
 			case Event::EventType::emit:
@@ -153,13 +166,15 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result loadBank(Bank& bank) {
+			// TODO init mixer effects
 			Lock l(mMutex);
 			if (mBanks.size() < bank.id + 1) {
 				mBanks.resize(bank.id + 1);
 			}
+			if (bank.mixers[Mixer::MasterMixerHandle].id != InvalidHandle) {
+				mMasterBank = bank.id;
+			}
 			mBanks[bank.id] = std::move(bank);
-			// todo update master channel
-			// and init effects
 			return Result::Success;
 		}
 
@@ -197,13 +212,27 @@ namespace vae { namespace core {
 			return Result::Success;
 		}
 
+		Result addMixer(BankHandle bankHandle, Mixer& mixer) {
+			// TODO init mixer effects
+			Lock l(mMutex);
+			auto& bank = mBanks[bankHandle];
+			if (bank.mixers.size() <= mixer.id) {
+				bank.mixers.resize(mixer.id + 1);
+			}
+			if (mixer.id == Mixer::MasterMixerHandle) {
+				mMasterBank = bank.id;
+			}
+			bank.mixers[mixer.id] = std::move(mixer);
+			return Result::Success;
+		}
+
 		/**
 		 * @brief Unload bank from path
 		 * Locks audio thread
 		 * @param path
 		 * @return Result
 		 */
-		Result unloadBank(const char* path) {
+		Result unloadBankFromPath(const char* path) {
 			Lock l(mMutex);
 			for (auto& i : mBanks) {
 				if (strcmp(path, i.path.c_str()) == 0) {
@@ -220,7 +249,7 @@ namespace vae { namespace core {
 		 * @param bankHandle
 		 * @return Result
 		 */
-		Result unloadBank(BankHandle bankHandle) {
+		Result unloadBankFromId(BankHandle bankHandle) {
 			Lock l(mMutex);
 			for (auto& i : mBanks) {
 				if (i.id == bankHandle) {

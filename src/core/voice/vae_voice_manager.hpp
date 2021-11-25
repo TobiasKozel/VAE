@@ -15,9 +15,10 @@ namespace vae { namespace core {
 		BankHandle bank = InvalidHandle;
 		SourceHandle source;
 		EventHandle event;
+		MixerHandle mixer;
+		EmitterHandle emitter;
 		SampleIndex time = 0;
 		Time timeFract = 0.0;
-		EmitterHandle emitter;
 	};
 
 	class VoiceManger {
@@ -34,11 +35,15 @@ namespace vae { namespace core {
 			mVoices.reserve(config.voices);
 		}
 
-		Result play(SourceHandle source, EventHandle event, EmitterHandle emitter) {
+		Result play(
+			SourceHandle source, EventHandle event,
+			EmitterHandle emitter, MixerHandle mixer
+		) {
 			Voice voice;
 			voice.emitter = emitter;
 			voice.event = event;
 			voice.source = source;
+			voice.mixer = mixer;
 			return Result::GenericFailure;
 		}
 
@@ -47,6 +52,10 @@ namespace vae { namespace core {
 		}
 
 		Result stopFromEvent(EventHandle event, EmitterHandle emitter) {
+			return Result::GenericFailure;
+		}
+
+		Result stopFromMixer(MixerHandle mixer, EmitterHandle emitter) {
 			return Result::GenericFailure;
 		}
 	};

@@ -33,7 +33,13 @@ namespace vae { namespace core {
 		{Source::SourceFormat::vorbis, "vorbis"},
 	})
 
-	struct BankLoader {
+	class BankLoader {
+		/**
+		 * @brief Loads a wav file for the resource
+		 * @param s
+		 * @param path
+		 * @return Result
+		 */
 		static Result loadSource(Source& s, std::string path) {
 			constexpr int tes = sizeof(Source);
 			if (s.type == Source::SourceType::preload) {
@@ -51,29 +57,43 @@ namespace vae { namespace core {
 			}
 			return Result::GenericFailure;
 		}
-
+	public:
+		/**
+		 * @brief Load a bank.json and all wav files referenced in it.
+		 * @param path The path to the bank folder. Folder must contain a bank.json. Wav files are relative to this path
+		 * @param bank The bank object to populae
+		 * @return Result
+		 */
 		static Result load(const char* path, Bank& bank) {
+			/**
+			 *					Open file and decode json
+			 */
 			std::string folder = path;
 			folder += "/";
 			std::string json = folder + "bank.json";
 			std::ifstream file(json);
+
 			if (!file.is_open()) { return Result::FileNotFound; }
+
 			auto data = nlohmann::json::parse(file);
 
-			bank.name = data["name"];
-			bank.id = data["id"];
-			bank.path = path;
+			bank.name	= data["name"];
+			bank.id		= data["id"];
+			bank.path	= path;
 
+			/**
+			 * 			Deserialize Source and preload additional data
+			 */
 			auto sources = data["sources"];
 			if (!sources.empty()) {
 				bank.sources.resize(sources.size());
 				for (auto& i : sources) {
 					SourceHandle id = i["id"];
+
+					if (sources.size() <= id) { return Result::BankFormatError; }
+
 					Source& s = bank.sources[id];
 					s.id		= id;
-					if (sources.size() <= s.id) {
-						return Result::BankFormatError;
-					}
 					s.name		= i["name"];
 					s.path		= i["path"];
 					s.format	= i["format"];
@@ -84,16 +104,40 @@ namespace vae { namespace core {
 					loadSource(s, folder);
 				}
 			}
+
+			/**
+			 * 			Deserialize Mixers. Don't initialize anything yet
+			 */
+			auto mixers = data["mixers"];
+			if (!mixers.empty()) {
+				bank.mixers.resize(mixers.size());
+				for (auto& i : mixers) {
+					MixerHandle id = i["id"];
+
+					if (mixers.size() <= id) { return Result::BankFormatError; }
+
+					auto& m = bank.mixers[id];
+					m.id 			= id;
+					m.name			= i["name"];
+					m.parent		= i["parent"];
+					auto effects	= i["effects"];
+					m.effects.reserve(effects.size());
+					for (auto& j : effects) {
+						m.effects.push_back({ });
+					}
+				}
+			}
+
 			auto events = data["events"];
 			if (!events.empty()) {
 				bank.events.resize(events.size());
 				for (auto& i : events) {
 					EventHandle id = i["id"];
+
+					if (events.size() <= id) { return Result::BankFormatError; }
+
 					Event& e = bank.events[id];
 					e.id		= id;
-					if (events.size() <= e.id) {
-						return Result::BankFormatError;
-					}
 					e.name		= i["name"];
 					e.type		= i["type"];
 
@@ -114,6 +158,8 @@ namespace vae { namespace core {
 					for (auto& j : onEnd) {
 						e.on_end.push_back(j);
 					}
+
+					e.mixer = i["mixer"];
 				}
 			}
 			return Result::Success;

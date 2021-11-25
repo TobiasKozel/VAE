@@ -18,12 +18,19 @@ int main() {
 		buffer[0][i] = sin(i * 0.1) * 0.7;
 	}
 	tklb::wave::write(buffer, "../../../dev/bank1/sound1.wav");
+
 	EngineConfig config;
 	config.eventCallback = &eventTriggered;
 	config.preferredSampleRate = rate;
+
 	core::Engine engine(config);
 	if (engine.loadBank("../../../dev/bank1") == Result::Success) {
 		engine.fireEvent(0, 0);
 	};
+
+	engine.unloadBankFromId(0);
+
+	int i = 0;
+
 	return 0;
 }

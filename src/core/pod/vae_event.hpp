@@ -2,6 +2,7 @@
 #define _VAE_EVENT
 
 #include "../vae_types.hpp"
+#include "./vae_mixer.hpp"
 
 #include <string>
 #include <vector>
@@ -15,8 +16,9 @@ namespace vae { namespace core {
 			emit
 		};
 		EventHandle id = InvalidHandle;
-		std::string name;
 		EventType type;
+		MixerHandle mixer = Mixer::MasterMixerHandle;
+		std::string name;
 		std::vector<SourceHandle> sources;
 		std::vector<EventHandle> on_start;
 		std::vector<EventHandle> on_end;
