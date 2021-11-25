@@ -15,7 +15,7 @@
 
 #include "./vae_types.hpp"
 
-// #include "./device/vae_rtaudio.hpp"
+#include "./device/vae_rtaudio.hpp"
 #include "./device/vae_portaudio.hpp"
 
 // #include "./vae_emitter.hpp"
@@ -30,7 +30,7 @@ namespace vae { namespace core {
 	class Engine {
 		using Mutex = tklb::SpinLock;
 		using Lock = tklb::LockGuard<Mutex>;
-		using CurrentBackend = BackendPortAudio;
+		using CurrentBackend = BackendRtAudio;
 
 		/**
 		 * Main messaging instance, most objects hold a

@@ -3,6 +3,7 @@
 
 #include "./vae_device.hpp"
 #include "../vae_config.hpp"
+#include "../vae_util.hpp"
 
 #include "../../../external/rtaudio/RtAudio.h"
 
@@ -27,17 +28,15 @@ namespace vae { namespace core {
 		AudioThreadShared mShared; // Data shared with the audio thread
 
 		bool cleanUp() {
-			try {
-				if (mAudio.isStreamRunning()) {
-					mAudio.stopStream();
+			if (mAudio.isStreamRunning()) {
+				auto result = mAudio.stopStream();
+				if (result != RTAUDIO_NO_ERROR) {
+					VAE_ASSERT(false)
+					return false;
 				}
-				if (mAudio.isStreamOpen()) {
-					mAudio.closeStream();
-				}
-			} catch (RtAudioError& e) {
-				e.printMessage();
-				TKLB_ASSERT(false)
-				return false;
+			}
+			if (mAudio.isStreamOpen()) {
+				mAudio.closeStream();
 			}
 			return true;
 		}
@@ -98,16 +97,14 @@ namespace vae { namespace core {
 			outParams.deviceId = device.id;
 			outParams.nChannels = device.channelsOut;
 
-			try {
-				mAudio.openStream(
-					outParams.nChannels ? &outParams : nullptr,
-					inParams.nChannels  ? &inParams  : nullptr,
-					RTAUDIO_FLOAT32, device.sampleRate,
-					&device.bufferSize, &AudioCallback, &mShared
-				);
-			} catch (RtAudioError& e) {
-				e.printMessage();
-				TKLB_ASSERT(false)
+			auto result = mAudio.openStream(
+				outParams.nChannels ? &outParams : nullptr,
+				inParams.nChannels  ? &inParams  : nullptr,
+				RTAUDIO_FLOAT32, device.sampleRate,
+				&device.bufferSize, &AudioCallback, &mShared
+			);
+
+			if (result != RTAUDIO_NO_ERROR) {
 				return false;
 			}
 
@@ -128,12 +125,9 @@ namespace vae { namespace core {
 				mShared.bufferTo.sampleRate = device.sampleRate;
 			}
 
-			try {
-				mAudio.startStream();
-			} catch (RtAudioError& e) {
-				e.printMessage();
+			result = mAudio.startStream();
+			if (result != RTAUDIO_NO_ERROR) {
 				cleanUp();
-				TKLB_ASSERT(false)
 				return false;
 			}
 
