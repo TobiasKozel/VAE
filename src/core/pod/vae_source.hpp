@@ -20,9 +20,6 @@ namespace vae { namespace core {
 			vorbis
 		};
 		SourceHandle id = InvalidHandle;
-		unsigned int rate;
-		unsigned int channels;
-		size_t length;
 		SourceFormat format;
 		SourceType type;
 		std::string name;

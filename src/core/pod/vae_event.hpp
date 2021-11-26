@@ -19,7 +19,7 @@ namespace vae { namespace core {
 		EventType type;
 		MixerHandle mixer = Mixer::MasterMixerHandle;
 		std::string name;
-		std::vector<SourceHandle> sources;
+		SourceHandle source;
 		std::vector<EventHandle> on_start;
 		std::vector<EventHandle> on_end;
 	};

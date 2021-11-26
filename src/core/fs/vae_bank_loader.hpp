@@ -98,9 +98,6 @@ namespace vae { namespace core {
 					s.path		= i["path"];
 					s.format	= i["format"];
 					s.type		= i["type"];
-					s.channels	= i["channels"];
-					s.length	= i["length"];
-					s.rate		= i["rate"];
 					loadSource(s, folder);
 				}
 			}
@@ -141,10 +138,10 @@ namespace vae { namespace core {
 					e.name		= i["name"];
 					e.type		= i["type"];
 
-					auto trigSources = i["sources"];
-					e.sources.reserve(trigSources.size());
-					for (auto& s : trigSources) {
-						e.sources.push_back(s);
+					if (i["source"].is_null()) {
+						e.source = InvalidHandle;
+					} else {
+						e.source = i["source"];
 					}
 
 					auto onStart = i["on_start"];

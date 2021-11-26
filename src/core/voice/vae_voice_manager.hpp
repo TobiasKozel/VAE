@@ -28,33 +28,28 @@ namespace vae { namespace core {
 			Event& event, BankHandle bank,
 			EmitterHandle emitter, MixerHandle mixer
 		) {
-			// One event can trigger multiple voices
-			for (auto& source : event.sources) {
-				// TODO
-				// start sources
-				// associate event with sounds
-				// fire on_end when all sounds are done
-
-				// Find a free voice
-				// TODO VAE PERF
-				for (auto& i : voices) {
-					if(i.source == InvalidHandle) {
-						i.source = source;
-						i.event = event.id;
-						i.mixer = mixer;
-						i.emitter = emitter;
-						i.bank = bank;
-						i.eventInstance = currentEventInstance;
-						break;
-					}
+			// Find a free voice
+			// TODO VAE PERF
+			for (auto& i : voices) {
+				if(i.source == InvalidHandle) {
+					i.source = event.source;
+					i.event = event.id;
+					i.mixer = (mixer != InvalidHandle) ? mixer : event.mixer;
+					i.emitter = emitter;
+					i.bank = bank;
+					i.eventInstance = currentEventInstance;
+					currentEventInstance++;
+					return Result::Success;
 				}
 			}
 
-			currentEventInstance++;
-			return Result::Success;
+			return Result::VoiceStarvation;
 		}
 
 		Result stopFromSource(SourceHandle source, EmitterHandle emitter) {
+			if (source == InvalidHandle) {
+				return Result::Success;
+			}
 			for (auto& i : voices) {
 				if(i.source == source) {
 					if (emitter == InvalidHandle) {

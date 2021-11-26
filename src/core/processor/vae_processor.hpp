@@ -22,11 +22,13 @@ namespace vae { namespace core {
 			for (auto& v : manager.voices) {
 				if (v.source == InvalidHandle) { continue; }
 				if (v.bank != bank.id) { continue; }
+
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
 				if (signal.size() == 0) { continue; }
-				auto& parent = bank.mixers[v.mixer];
-				auto& target = parent.buffer;
+
+				auto& mixer = bank.mixers[v.mixer];
+				auto& target = mixer.buffer;
 
 				const SampleIndex remaining = std::min(
 					frames, SampleIndex(signal.size() - v.time

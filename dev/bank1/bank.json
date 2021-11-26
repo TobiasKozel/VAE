@@ -7,10 +7,7 @@
 			"name": "Sound1",
 			"path": "sound1.wav",
 			"format": "wav",
-			"type": "preload",
-			"channels": 1,
-			"length": 1000,
-			"rate": 44100
+			"type": "preload"
 		}
 	],
 	"mixers": [
@@ -33,7 +30,7 @@
 			"id": 0,
 			"name": "Event1",
 			"type": "start",
-			"sources": [0],
+			"source": 0,
 			"on_start": [2],
 			"on_end": [1],
 			"mixer": 1
@@ -42,7 +39,7 @@
 			"id": 1,
 			"name": "Event2",
 			"type": "emit",
-			"sources": [],
+			"source": null,
 			"on_start": [],
 			"on_end": [],
 			"mixer": 0
@@ -51,7 +48,7 @@
 			"id": 2,
 			"name": "Event3",
 			"type": "emit",
-			"sources": [],
+			"source": null,
 			"on_start": [],
 			"on_end": [],
 			"mixer": 0
@@ -60,7 +57,7 @@
 			"id": 3,
 			"name": "Event4",
 			"type": "stop",
-			"sources": [],
+			"source": null,
 			"on_start": [0],
 			"on_end": [],
 			"mixer": 0

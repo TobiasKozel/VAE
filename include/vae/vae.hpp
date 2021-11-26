@@ -20,6 +20,7 @@ namespace vae {
 		GenericFailure,
 		BankFormatError,
 		FileNotFound,
+		VoiceStarvation,
 		ElementNotFound
 	};
 

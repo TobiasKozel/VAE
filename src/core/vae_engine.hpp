@@ -114,7 +114,7 @@ namespace vae { namespace core {
 				for (auto& i : mBanks[v.bank].events[v.event].on_end) {
 					fireEvent(v.bank, i, v.emitter, v.mixer);
 				}
-				v.source = InvalidHandle;
+				v.source = InvalidHandle; // now the finished voice is handled
 			}
 		}
 
@@ -125,29 +125,30 @@ namespace vae { namespace core {
 		 * @param bankHandle bank id where the event is provided
 		 * @param eventHandle id of the event
 		 * @param emitterHandle optional handle of the emitter, needed for spatial audio
-		 * @param mixerHandle id of mixer channel sound will be routed to, master by default
+		 * @param mixerHandle id of mixer channel sound will be routed to, this will override the one set in the event
 		 * @return Result
 		 */
 		Result fireEvent(
 			BankHandle bankHandle, EventHandle eventHandle,
 			EmitterHandle emitterHandle = InvalidHandle,
-			MixerHandle mixerHandle = Mixer::MasterMixerHandle
+			MixerHandle mixerHandle = InvalidHandle
 		) {
 			auto& bank = mBanks[bankHandle];
 			auto& event = bank.events[eventHandle];
+			Result result;
 			switch (event.type) {
 			case Event::EventType::start:
-				mVoiceManager.play(event, bankHandle, emitterHandle, mixerHandle);
+				result = mVoiceManager.play(event, bankHandle, emitterHandle, mixerHandle);
+				if (result != Result::Success) {
+					return result;
+				}
 				// Fire all other chained events
 				for (auto& i : event.on_start) {
 					fireEvent(bankHandle, i, emitterHandle);
 				}
 				break;
 			case Event::EventType::stop:
-				for (auto& i : event.sources) {
-					// Kill every voice started from this source
-					mVoiceManager.stopFromSource(i, emitterHandle);
-				}
+				mVoiceManager.stopFromSource(event.source, emitterHandle);
 				for (auto& i : event.on_start) {
 					// kill every voice started from these events
 					mVoiceManager.stopFromEvent(i, emitterHandle);
