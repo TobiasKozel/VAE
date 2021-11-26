@@ -28,8 +28,8 @@ int main() {
 	engine.init();
 
 	std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(20));
-
-	if (engine.loadBank("../../dev/bank1") == Result::Success) {
+	auto result = engine.loadBank("../../dev/bank1");
+	if (result == Result::Success) {
 		printf("Waiting 2 secs\n");
 		std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(2000));
 

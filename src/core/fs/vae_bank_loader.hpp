@@ -73,7 +73,7 @@ namespace vae { namespace core {
 			std::string json = folder + "bank.json";
 			std::ifstream file(json);
 
-			if (!file.is_open()) { return Result::FileNotFound; }
+			if (!file.is_open()) { return Result::FileOpenError; }
 
 			auto data = nlohmann::json::parse(file);
 
@@ -82,7 +82,7 @@ namespace vae { namespace core {
 			bank.path	= path;
 
 			/**
-			 * 			Deserialize Source and preload additional data
+			 * 			Deserialize Source and preload signal data
 			 */
 			auto sources = data["sources"];
 			if (!sources.empty()) {
@@ -90,7 +90,7 @@ namespace vae { namespace core {
 				for (auto& i : sources) {
 					SourceHandle id = i["id"];
 
-					if (sources.size() <= id) { return Result::BankFormatError; }
+					if (sources.size() <= id) { return Result::BankFormatIndexError; }
 
 					Source& s = bank.sources[id];
 					s.id		= id;
@@ -111,12 +111,19 @@ namespace vae { namespace core {
 				for (auto& i : mixers) {
 					MixerHandle id = i["id"];
 
-					if (mixers.size() <= id) { return Result::BankFormatError; }
+					if (mixers.size() <= id) { return Result::BankFormatIndexError; }
 
 					auto& m = bank.mixers[id];
 					m.id 			= id;
 					m.name			= i["name"];
 					m.parent		= i["parent"];
+
+					if (m.id != Mixer::MasterMixerHandle && m.id <= m.parent) {
+						// Mixer can only write to mixers with lower ids than themselves
+						// this avoids recursion and makes mixing easier
+						return Result::BankFormatBadMixHirarchy;
+					}
+
 					auto effects	= i["effects"];
 					m.effects.reserve(effects.size());
 					for (auto& j : effects) {
@@ -131,7 +138,7 @@ namespace vae { namespace core {
 				for (auto& i : events) {
 					EventHandle id = i["id"];
 
-					if (events.size() <= id) { return Result::BankFormatError; }
+					if (events.size() <= id) { return Result::BankFormatIndexError; }
 
 					Event& e = bank.events[id];
 					e.id		= id;

@@ -84,22 +84,20 @@ namespace vae { namespace core {
 		void callback(const AudioBuffer& fromDevice, AudioBuffer& toDevice) {
 			{
 				toDevice.set(0);
+				const double step = 1.0 / double(toDevice.sampleRate);
+				const auto frames = toDevice.validSize();
+
 				Lock l(mMutex);
-				// TODO banks could be processed in parellel
+				// TODO PERF VAE banks could be processed in parellel
 				for (auto& i : mBanks) {
-					Processor::mix(mVoiceManager, i, toDevice.validSize());
+					Processor::mix(mVoiceManager, i, frames);
 					auto& bankMaster = i.mixers[Mixer::MasterMixerHandle].buffer;
 					toDevice.add(bankMaster);
 					bankMaster.set(0);
 				}
 
-				// const double step = 1.0 / double(toDevice.sampleRate);
-				// // const double bufferTime = step * toDevice.validSize();
-				// for (int i = 0; i < toDevice.size(); i++) {
-				// 	toDevice[0][i] = sin(mTimeFract * 440 * 2) * 0.4;
-				// 	mTimeFract += step;
-				// }
-				// // mTimeFract += bufferTime;
+				mTimeFract += step;
+				mTime += frames;
 			}
 			VAE_PROFILER_FRAME_MARK
 		}

@@ -19,6 +19,11 @@ namespace vae { namespace core {
 		static void mix(
 			VoiceManger& manager, Bank& bank, SampleIndex frames
 		) {
+			/**
+			 *
+			 * Mix all the currently active voices first
+			 *
+			 */
 			for (auto& v : manager.voices) {
 				if (v.source == InvalidHandle) { continue; }
 				if (v.bank != bank.id) { continue; }
@@ -29,6 +34,8 @@ namespace vae { namespace core {
 
 				auto& mixer = bank.mixers[v.mixer];
 				auto& target = mixer.buffer;
+
+				target.setValidSize(frames); // mark mixer as active
 
 				const SampleIndex remaining = std::min(
 					frames, SampleIndex(signal.size() - v.time
@@ -44,6 +51,7 @@ namespace vae { namespace core {
 				v.time += remaining; // progress time in voice
 
 				if (remaining != frames) {
+					// end is reached
 					auto& event = bank.events[v.event];
 					if (event.on_end.empty()) {
 						v.source = InvalidHandle; // Mark voice as free
@@ -69,6 +77,25 @@ namespace vae { namespace core {
 					}
 				}
 			}
+
+			// mix all non master channels
+			// start from back since mixer can only write to mixer with
+			// a lower id than themselves to avoid recursion
+			for (int i = bank.mixers.size() - 1; 0 < i; i--) {
+				auto& mixer = bank.mixers[i];
+				// skip inactive mixers
+				if (mixer.buffer.validSize() == 0) { continue; }
+
+				auto& targetMixer = bank.mixers[mixer.parent];
+				// mark mixer as active
+				targetMixer.buffer.setValidSize(frames);
+				targetMixer.buffer.add(mixer.buffer);
+
+				// clear current mixer for next block
+				mixer.buffer.set(0);
+			}
+
+			// Master mixer will be mixed to the final output in the engineand then cleared
 		}
 	};
 
