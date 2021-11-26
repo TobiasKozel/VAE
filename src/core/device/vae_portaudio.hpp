@@ -1,5 +1,5 @@
-#ifndef VAEZ_PORTAUDIO
-#define VAEZ_PORTAUDIO
+#ifndef _VAE_PORTAUDIO
+#define _VAE_PORTAUDIO
 
 #include "./vae_device.hpp"
 #include "../vae_config.hpp"
@@ -235,4 +235,4 @@ namespace vae { namespace core {
 
 } } // namespace vae::core
 
-#endif // VAEZ_PORTAUDIO
+#endif // _VAE_PORTAUDIO

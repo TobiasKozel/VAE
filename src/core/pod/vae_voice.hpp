@@ -8,12 +8,14 @@ namespace vae { namespace core {
 		SourceHandle source = InvalidHandle;	// If invalid, means voice is not playing.
 		EventHandle event;
 		EventHandle eventInstance;
-		MixerHandle mixer;
 		EmitterHandle emitter;
+		MixerHandle mixer;
 		BankHandle bank;
 		SampleIndex time = 0;
 		Time timeFract = 0.0;
 	};
+
+	constexpr int _VAE_VOICE_SIZE = sizeof(Voice);
 } } // core::vae
 
-#endif // _vAE_VOICE
+#endif // _VAE_VOICE

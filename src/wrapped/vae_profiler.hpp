@@ -1,5 +1,5 @@
-#ifndef VAEX_PROFILER
-#define VAEX_PROFILER
+#ifndef _VAE_PROFILER
+#define _VAE_PROFILER
 
 #ifdef VAE_USE_PROFILER
 	#define TRACY_ENABLE
@@ -11,4 +11,4 @@
 	#define VAE_PROFILER_SCOPE
 #endif // VAE_USE_PROFILER
 
-#endif // VAEX_PROFILER
+#endif // _VAE_PROFILER

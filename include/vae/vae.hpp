@@ -2,14 +2,17 @@
 #define _VAE_API_TYPES
 
 namespace vae {
-	using GenericHandle = unsigned int;
+	using GenericHandle = unsigned short;
 	using EventHandle 	= GenericHandle;
 	using SourceHandle 	= GenericHandle;
-	using BankHandle 	= GenericHandle;
+	using BankHandle 	= unsigned char;
 	using EmitterHandle = GenericHandle;
 	using VoiceHandle	= GenericHandle;
-	using MixerHandle	= GenericHandle;
-	constexpr GenericHandle InvalidHandle = ~0;
+	using MixerHandle	= unsigned char;
+
+	constexpr BankHandle InvalidBankHandle		= ~0;
+	constexpr MixerHandle InvalidMixerHandle	= ~0;
+	constexpr GenericHandle InvalidHandle		= ~0;
 
 	/**
 	 * @brief Return Types for most engine function

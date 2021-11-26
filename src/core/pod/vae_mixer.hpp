@@ -13,18 +13,21 @@ namespace vae { namespace core {
 		 * @brief This is the master mixer for a bank
 		 */
 		static constexpr MixerHandle MasterMixerHandle = 0;
-		MixerHandle id = InvalidHandle;
-		std::string name;
-		std::vector<Effect> effects;
+		AudioBuffer buffer;
+		Sample gain = 1.0;
+		MixerHandle parent;
 		/**
 		 * @brief The handle of the mixer the signal will be routed to.
 		 * 0 is always the master and the default.
 		 * It's the only mixer shared across banks.
 		 */
-		MixerHandle parent;
-		AudioBuffer buffer;
-		Sample gain = 1.0;
+		MixerHandle id = InvalidMixerHandle;
+		std::vector<Effect> effects;
+		std::string name;
 	};
+
+	constexpr int _VAE_VECTOR_SIZE = sizeof(std::vector<Effect>);
+	constexpr int _VAE_MIXER_SIZE = sizeof(Mixer);
 } } // vae::core
 
 #endif // _VAE_MIXER

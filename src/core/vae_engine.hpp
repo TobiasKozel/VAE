@@ -23,6 +23,7 @@
 #include "./voice/vae_voice_manager.hpp"
 #include "./fs/vae_bank_loader.hpp"
 #include "./processor/vae_processor.hpp"
+#include "./processor/vae_mixer_processor.hpp"
 #include "./vae_util.hpp"
 
 namespace vae { namespace core {
@@ -72,6 +73,7 @@ namespace vae { namespace core {
 				callback(fromDevice, toDevice);
 			});
 			mDevice->openDevice();
+			VAE_DEBUG("Opened Audio Device with samplerate %i", mDevice->getSampleRate());
 			return Result::Success;
 		}
 
@@ -83,14 +85,15 @@ namespace vae { namespace core {
 
 		void callback(const AudioBuffer& fromDevice, AudioBuffer& toDevice) {
 			{
-				toDevice.set(0);
+				toDevice.set(0);	// TODO VAE maybe make sure the buffer is zeroed in the device
 				const double step = 1.0 / double(toDevice.sampleRate);
 				const auto frames = toDevice.validSize();
 
 				Lock l(mMutex);
 				// TODO PERF VAE banks could be processed in parellel
 				for (auto& i : mBanks) {
-					Processor::mix(mVoiceManager, i, frames);
+					Processor::mix(mVoiceManager, i, frames, toDevice.sampleRate);
+					MixerProcessor::mix(mVoiceManager, i, frames);
 					auto& bankMaster = i.mixers[Mixer::MasterMixerHandle].buffer;
 					toDevice.add(bankMaster);
 					bankMaster.set(0);
@@ -129,7 +132,7 @@ namespace vae { namespace core {
 		Result fireEvent(
 			BankHandle bankHandle, EventHandle eventHandle,
 			EmitterHandle emitterHandle = InvalidHandle,
-			MixerHandle mixerHandle = InvalidHandle
+			MixerHandle mixerHandle = InvalidMixerHandle
 		) {
 			auto& bank = mBanks[bankHandle];
 			auto& event = bank.events[eventHandle];
@@ -152,6 +155,7 @@ namespace vae { namespace core {
 				}
 				break;
 			case Event::EventType::stop:
+				// TODO test stopping
 				mVoiceManager.stopFromSource(event.source, emitterHandle);
 				for (auto& i : event.on_start) {
 					// kill every voice started from these events

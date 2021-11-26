@@ -2,6 +2,7 @@
 #define _VAE_PROCESSOR
 
 #include "../vae_types.hpp"
+#include "../vae_util.hpp"
 #include "../pod/vae_bank.hpp"
 #include "../pod/vae_voice.hpp"
 #include "../voice/vae_voice_manager.hpp"
@@ -15,16 +16,12 @@ namespace vae { namespace core {
 		 * @param manager
 		 * @param banks
 		 * @param frames
+		 * @param sampleRate
 		 */
 		static void mix(
-			VoiceManger& manager, Bank& bank, SampleIndex frames
+			VoiceManger& manager, Bank& bank,
+			SampleIndex frames, Size sampleRate
 		) {
-			/**
-			 *
-			 * Mix all the currently active voices first
-			 *
-			 */
-
 			for (auto& v : manager.voices) {
 				if (v.source == InvalidHandle) { continue; }
 				if (v.bank != bank.id) { continue; }
@@ -32,6 +29,8 @@ namespace vae { namespace core {
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
 				if (signal.size() == 0) { continue; }
+
+				VAE_ASSERT(signal.sampleRate == sampleRate);
 
 				auto& mixer = bank.mixers[v.mixer];
 				auto& target = mixer.buffer;
@@ -58,15 +57,27 @@ namespace vae { namespace core {
 						v.source = InvalidHandle; // Mark voice as free
 						continue;
 					}
-					// If the event triggers something once a voice is done
-					// it needs to be added to the voicesFinished array in the voice manager
+					/**
+					 * If the event triggers something on_end
+					 * it needs to be added to the voicesFinished
+					 * array in the voice manager.
+					 * The update() function on the engine will handle it
+					 */
 
 					// TODO VAE PERF
 					bool finished = false;
 					for (auto& i : manager.voicesFinished) {
 						if (i.source == InvalidHandle) {
 							finished = true;
-							i = std::move(v);
+							i.event = v.event;
+							i.eventInstance = v.eventInstance;
+							i.mixer = v.mixer;
+							i.emitter = v.emitter;
+							i.bank = v.bank;
+
+							// This is set last since it marks the
+							// finished voice for other threads
+							i.source = v.source;
 							break;
 						}
 					}
@@ -74,39 +85,11 @@ namespace vae { namespace core {
 
 					if (!finished) {
 						// Failed to find a free spot in finished voices array
+						// TODO handle this gracefully
 						VAE_ASSERT(false)
 					}
 				}
 			}
-
-			/**
-			 * mix all non master channels
-			 * start from back since mixer can only write to mixer with
-			 * a lower id than themselves to avoid recursion
-			 */
-			for (int i = bank.mixers.size() - 1; 0 < i; i--) {
-				auto& sourceMixer = bank.mixers[i];
-				// skip inactive mixers
-				if (sourceMixer.buffer.validSize() == 0) { continue; }
-
-				// Apply mixer volume
-				// TODO PERF VAE might be better to apply gain and mix in one go
-				// TODO effects processing
-				sourceMixer.buffer.multiply(sourceMixer.gain);
-				auto& targetMixer = bank.mixers[sourceMixer.parent];
-				// mark mixer as active
-				targetMixer.buffer.setValidSize(frames);
-				targetMixer.buffer.add(sourceMixer.buffer);
-
-				// clear current mixer for next block
-				sourceMixer.buffer.set(0);
-			}
-
-			// Apply gain on master as well
-			// TODO effects processing
-			auto& masterMixer = bank.mixers[Mixer::MasterMixerHandle];
-			masterMixer.buffer.multiply(masterMixer.gain);
-			// Master mixer will be mixed to the final output in the engineand then cleared
 		}
 	};
 

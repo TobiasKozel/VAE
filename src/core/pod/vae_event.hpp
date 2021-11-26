@@ -16,14 +16,16 @@ namespace vae { namespace core {
 			emit				// Emits an event to the EventCallback defined in the engine config
 		};
 		EventHandle id = InvalidHandle;
-		EventType type;									// Defines what the event does
 		MixerHandle mixer = Mixer::MasterMixerHandle;	// Mixer the source gets written to
+		bool force_mixer = false;						// Prevents overriding the mixer from chained events or fireEvent
 		std::string name;								// Name for debugging
-		SourceHandle source = InvalidHandle;			// Handle to a source
 		std::vector<EventHandle> on_start;				// Events called when the source starts playing
 		std::vector<EventHandle> on_end;				// Events fired once the source is finished, not called when there's no source
-		bool force_mixer = false;						// Prevents overriding the mixer from chained events or fireEvent
+		SourceHandle source = InvalidHandle;			// Handle to a source
+		EventType type;									// Defines what the event does
 	};
+
+	constexpr int _VAE_EVENT_SIZE = sizeof(Event);
 } } // namespace vae::vore
 
 #endif // _VAE_EVENT

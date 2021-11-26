@@ -2,9 +2,10 @@
 #define _VAE_UTIL
 
 #include "../../external/tklb/src/util/TAssert.h"
+#include "./vae_logger.hpp"
 
+#define VAE_ASSERT(condition) TKLB_ASSERT(condition)
 namespace vae { namespace core {
-	#define VAE_ASSERT(condition) TKLB_ASSERT(condition)
 } } // namespace vae::core
 
 

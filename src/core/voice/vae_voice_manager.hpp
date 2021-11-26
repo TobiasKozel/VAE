@@ -21,7 +21,7 @@ namespace vae { namespace core {
 
 		VoiceManger(EngineConfig& config) {
 			voices.resize(config.voices);
-			voicesFinished.resize(config.voices * 2);
+			voicesFinished.resize(config.voices);
 		}
 
 		Result play(
@@ -36,7 +36,7 @@ namespace vae { namespace core {
 					i.source = event.source;
 					i.event = event.id;
 
-					if (mixer != InvalidHandle && !event.force_mixer) {
+					if (mixer != InvalidMixerHandle && !event.force_mixer) {
 						// Only use the mixer provided if it's valid
 						// and the event allows overriding it
 						i.mixer = mixer;

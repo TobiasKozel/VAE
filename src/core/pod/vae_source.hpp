@@ -26,6 +26,10 @@ namespace vae { namespace core {
 		std::string path;		// Filesystem path
 		AudioBuffer signal;		// Signal or scratch buffer for generated types
 	};
+
+	constexpr int _VAE_STRING_SIZE = sizeof(std::string);
+	constexpr int _VAE_BUF_SIZE = sizeof(AudioBuffer);
+	constexpr int _VAE_SOURCE_SIZE = sizeof(Source);
 } } // namespace vae::vore
 
 #endif // _VAE_SOURCE

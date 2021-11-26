@@ -15,13 +15,15 @@ namespace vae { namespace core {
 	 * Can be loaded and unloaded at runtime
 	 */
 	struct Bank {
-		BankHandle id = InvalidHandle;
 		std::string name;				// Name of the bank used for debugging
 		std::string path;				// Path to the bank definition file
 		std::vector<Source> sources;	// Audio sources defined
 		std::vector<Mixer> mixers;		// Audio Mixers which can have effects ! is presorted !
 		std::vector<Event> events;		// Events defined
+		BankHandle id = InvalidBankHandle;
 	};
+
+	constexpr int _VAE_BANK_SIZE = sizeof(Bank);
 } } // namespace vae::vore
 
 #endif // _VAE_BANK

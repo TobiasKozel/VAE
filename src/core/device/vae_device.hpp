@@ -12,6 +12,7 @@
 #include "../../../external/tklb/src/types/audio/resampler/TResampler.hpp"
 #include "../../../external/tklb/src/types/TSpinLock.hpp"
 #include "../../../external/tklb/src/types/TLockGuard.hpp"
+#include "../vae_util.hpp"
 
 #include <functional> // TODO replace with delegates
 
@@ -25,10 +26,8 @@ namespace vae { namespace core {
 	 */
 	class Backend {
 	public:
-		using uint = unsigned int;
-
 		/**
-		 * Returns name of the api
+		 * @brief Returns name of the api
 		 */
 		virtual const char* getName() = 0;
 
@@ -36,12 +35,12 @@ namespace vae { namespace core {
 		 * @brief Gets number of devices, needed to iterate them.
 		 * Device index != does not have to be the device index!
 		 */
-		virtual uint getDeviceCount() = 0;
+		virtual Size getDeviceCount() = 0;
 
 		/**
 		 * @brief Returns a spefic device info for index.
 		 */
-		virtual DeviceInfo getDevice(uint index) = 0;
+		virtual DeviceInfo getDevice(Size index) = 0;
 
 		virtual DeviceInfo getDefaultInputDevice() = 0;
 
@@ -51,7 +50,7 @@ namespace vae { namespace core {
 		 * Creates a device instance for this backend
 		 */
 		virtual Device* createDevice(EngineConfig&) = 0;
-	};
+	}; // class Backend
 
 	/**
 	 * @brief Interface for audio devices.
@@ -59,7 +58,6 @@ namespace vae { namespace core {
 	 */
 	class Device {
 	public:
-		using uint = unsigned int;
 		using uchar = unsigned char;
 		using Resampler = tklb::ResamplerTpl<Sample>;
 		using Mutex = tklb::SpinLock;
@@ -69,21 +67,23 @@ namespace vae { namespace core {
 	protected:
 		Backend& mBackend;
 		EngineConfig& mConfig;
-		RingBuffer mQueueToDevice;   // Queue needed for async mode
-		RingBuffer mQueueFromDevice; // Queue needed for async mode
+		RingBuffer mQueueToDevice;		// Queue needed for async mode
+		RingBuffer mQueueFromDevice;	// Queue needed for async mode
 
 		Resampler mResamplerToDevice;
 		Resampler mResamplerFromDevice;
 
-		AudioBuffer mBufferToDevice;   // Engine samplerate only needed for resampling
-		AudioBuffer mBufferFromDevice; // Engine samplerate only needed for resampling
+		AudioBuffer mBufferToDevice;	// Engine samplerate only needed for resampling
+		AudioBuffer mBufferFromDevice;	// Engine samplerate only needed for resampling
 
-		uint mChannelsOut = 0;
-		uint mChannelsIn = 0;
+		Size mChannelsOut = 0;
+		Size mChannelsIn = 0;
+
+		Size mUnderruns = 0;
+		Size mSampleRate = 0;
 
 		size_t mStreamTime = 0;
 
-		uint mUnderruns = 0;
 
 		/**
 		 * @brief If set, the backend will operate in sync/pull mode and drive
@@ -101,10 +101,15 @@ namespace vae { namespace core {
 		 * @brief initializes buffers, queues and resamplers if needed
 		 * Has to be called in openDevice once the samplerate
 		 * and channel config is known
+		 *
+		 * @param sampleRate The actual samplerate the device has, might not match requested rate
+		 * @param channelsIn
+		 * @param channelsOut
 		 */
-		void init(uint sampleRate, uint channelsIn, uint channelsOut) {
+		void init(Size sampleRate, Size channelsIn, Size channelsOut) {
 			mChannelsIn = channelsIn;
 			mChannelsOut = channelsOut;
+			mSampleRate = sampleRate;
 
 			if (sampleRate != mConfig.preferredSampleRate) {
 				if (0 < mChannelsIn) {
@@ -167,10 +172,10 @@ namespace vae { namespace core {
 		 * @param buffer Always a stereo buffer, pushes the amount of valid samples
 		 */
 		void push(const AudioBuffer& buffer) {
-			TKLB_ASSERT(0 < mChannelsOut)
+			VAE_ASSERT(0 < mChannelsOut)
 			auto frames = buffer.validSize();
-			TKLB_ASSERT(frames != 0) // need to have valid frames
-			TKLB_ASSERT(mSyncCallback == nullptr) // can't be called in sync mode
+			VAE_ASSERT(frames != 0) // need to have valid frames
+			VAE_ASSERT(mSyncCallback == nullptr) // can't be called in sync mode
 			Lock lock(mMutex);
 			mQueueToDevice.push(buffer);
 		}
@@ -179,17 +184,19 @@ namespace vae { namespace core {
 		 * @brief Get samples form audio device
 		 */
 		void pop(AudioBuffer& buffer) {
-			TKLB_ASSERT(0 < mChannelsIn)
+			VAE_ASSERT(0 < mChannelsIn)
 			auto frames = buffer.validSize();
-			TKLB_ASSERT(frames != 0) // need to have valid frames
-			TKLB_ASSERT(mSyncCallback == nullptr) // can't be called in sync mode
+			VAE_ASSERT(frames != 0) // need to have valid frames
+			VAE_ASSERT(mSyncCallback == nullptr) // can't be called in sync mode
 			Lock lock(mMutex);
 			mQueueFromDevice.pop(buffer, frames);
 		}
 
-		uint getChannelsOut() const { return mChannelsOut; }
+		Size getChannelsOut() const { return mChannelsOut; }
 
-		uint getChannelsIn() const { return mChannelsIn; }
+		Size getChannelsIn() const { return mChannelsIn; }
+
+		Size getSampleRate() const { return mSampleRate; }
 
 		size_t getStreamTime() const { return mStreamTime; }
 
@@ -197,7 +204,6 @@ namespace vae { namespace core {
 		 * @brief Called from the backend implementation.
 		 * Don't call this otherwise.
 		 * Derived class is responsible for the Buffer supplied to the function.
-		 * TODO streamtime could be used if device is temporarly disabled
 		 * @param in input frames in device samplerate
 		 * @param out output frames in device samplerate
 		 */
@@ -255,7 +261,10 @@ namespace vae { namespace core {
 				mResamplerToDevice.process(mBufferToDevice, toDevice);
 			}
 		}
-	};
+	}; // class Device
+
+	// TODO VAE this seems a bit excessive
+	constexpr int _VAE_DEVICE_SIZE = sizeof(Device);
 } } // namespace vae::core
 
 #endif // _VAE_DEVICE

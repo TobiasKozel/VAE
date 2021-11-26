@@ -10,10 +10,15 @@ namespace vae { namespace core {
 	template <class T> using HeapBuffer = tklb::HeapBuffer<T>;
 	// How the elements are addressed
 	using Size = HeapBuffer<int>::Size;
+	constexpr int _VAE_SIZE_HEAPBUFFER = sizeof(HeapBuffer<int>);
 	// Default sample types used whereever possible
 	using Sample = float;
+
 	using AudioBuffer = tklb::AudioBufferTpl<Sample>;
+	constexpr int _VAE_SIZE_AUDIOBUFFER = sizeof(AudioBuffer);
+
 	using RingBuffer = tklb::AudioRingBufferTpl<Sample>;
+	constexpr int _VAE_SIZE_RINGBUFFER = sizeof(RingBuffer);
 	// Time sotred in seconds
 	using Time = double;
 	// Time stored in samples
