@@ -134,15 +134,21 @@ namespace vae { namespace core {
 			auto& bank = mBanks[bankHandle];
 			auto& event = bank.events[eventHandle];
 			Result result;
+
 			switch (event.type) {
 			case Event::EventType::start:
-				result = mVoiceManager.play(event, bankHandle, emitterHandle, mixerHandle);
-				if (result != Result::Success) {
-					return result;
+				if (event.source != InvalidHandle) {
+					// Has source attached
+					result = mVoiceManager.play(event, bankHandle, emitterHandle, mixerHandle);
+					if (result != Result::Success) {
+						// Failed to play for some reason
+						return result;
+					}
 				}
+
 				// Fire all other chained events
 				for (auto& i : event.on_start) {
-					fireEvent(bankHandle, i, emitterHandle);
+					fireEvent(bankHandle, i, emitterHandle, mixerHandle);
 				}
 				break;
 			case Event::EventType::stop:

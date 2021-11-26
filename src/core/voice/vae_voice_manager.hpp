@@ -32,9 +32,19 @@ namespace vae { namespace core {
 			// TODO VAE PERF
 			for (auto& i : voices) {
 				if(i.source == InvalidHandle) {
+					i = {}; // re init object resets time and so on
 					i.source = event.source;
 					i.event = event.id;
-					i.mixer = (mixer != InvalidHandle) ? mixer : event.mixer;
+
+					if (mixer != InvalidHandle && !event.force_mixer) {
+						// Only use the mixer provided if it's valid
+						// and the event allows overriding it
+						i.mixer = mixer;
+					} else {
+						// Otherwise use the mixer from the event
+						i.mixer = event.mixer;
+					}
+
 					i.emitter = emitter;
 					i.bank = bank;
 					i.eventInstance = currentEventInstance;

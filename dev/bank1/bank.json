@@ -14,12 +14,14 @@
 		{
 			"id": 0,
 			"name": "Bank Master",
+			"gain": 1.0,
 			"effects": [],
 			"parent": 0
 		},
 		{
 			"id": 1,
 			"name": "Mixer1",
+			"gain": 0.5,
 			"effects": [],
 			"parent": 0
 		}
@@ -32,8 +34,9 @@
 			"type": "start",
 			"source": 0,
 			"on_start": [2],
-			"on_end": [1],
-			"mixer": 1
+			"on_end": [1, 4],
+			"mixer": 1,
+			"force_mixer": false
 		},
 		{
 			"id": 1,
@@ -42,25 +45,38 @@
 			"source": null,
 			"on_start": [],
 			"on_end": [],
-			"mixer": 0
+			"mixer": 0,
+			"force_mixer": false
 		},
 		{
 			"id": 2,
-			"name": "Event3",
+			"name": "Start Event3",
 			"type": "emit",
 			"source": null,
 			"on_start": [],
 			"on_end": [],
-			"mixer": 0
+			"mixer": 0,
+			"force_mixer": false
 		},
 		{
 			"id": 3,
-			"name": "Event4",
+			"name": "End Event4",
 			"type": "stop",
 			"source": null,
 			"on_start": [0],
 			"on_end": [],
-			"mixer": 0
+			"mixer": 0,
+			"force_mixer": false
+		},
+		{
+			"id": 4,
+			"name": "Event5",
+			"type": "start",
+			"source": 0,
+			"on_start": [2],
+			"on_end": [1, 4],
+			"mixer": 0,
+			"force_mixer": true
 		}
 	]
 }

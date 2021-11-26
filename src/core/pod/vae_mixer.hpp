@@ -23,6 +23,7 @@ namespace vae { namespace core {
 		 */
 		MixerHandle parent;
 		AudioBuffer buffer;
+		Sample gain = 1.0;
 	};
 } } // vae::core
 

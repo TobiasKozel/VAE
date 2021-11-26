@@ -114,16 +114,16 @@ namespace vae { namespace core {
 					if (mixers.size() <= id) { return Result::BankFormatIndexError; }
 
 					auto& m = bank.mixers[id];
-					m.id 			= id;
-					m.name			= i["name"];
-					m.parent		= i["parent"];
-
 					if (m.id != Mixer::MasterMixerHandle && m.id <= m.parent) {
 						// Mixer can only write to mixers with lower ids than themselves
 						// this avoids recursion and makes mixing easier
 						return Result::BankFormatBadMixHirarchy;
 					}
 
+					m.id 			= id;
+					m.name			= i["name"];
+					m.parent		= i["parent"];
+					m.gain			= i["gain"];
 					auto effects	= i["effects"];
 					m.effects.reserve(effects.size());
 					for (auto& j : effects) {
@@ -141,9 +141,10 @@ namespace vae { namespace core {
 					if (events.size() <= id) { return Result::BankFormatIndexError; }
 
 					Event& e = bank.events[id];
-					e.id		= id;
-					e.name		= i["name"];
-					e.type		= i["type"];
+					e.id			= id;
+					e.name			= i["name"];
+					e.type			= i["type"];
+					e.force_mixer	= i["force_mixer"];
 
 					if (i["source"].is_null()) {
 						e.source = InvalidHandle;

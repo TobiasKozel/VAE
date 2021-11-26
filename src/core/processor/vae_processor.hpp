@@ -24,6 +24,7 @@ namespace vae { namespace core {
 			 * Mix all the currently active voices first
 			 *
 			 */
+
 			for (auto& v : manager.voices) {
 				if (v.source == InvalidHandle) { continue; }
 				if (v.bank != bank.id) { continue; }
@@ -78,23 +79,33 @@ namespace vae { namespace core {
 				}
 			}
 
-			// mix all non master channels
-			// start from back since mixer can only write to mixer with
-			// a lower id than themselves to avoid recursion
+			/**
+			 * mix all non master channels
+			 * start from back since mixer can only write to mixer with
+			 * a lower id than themselves to avoid recursion
+			 */
 			for (int i = bank.mixers.size() - 1; 0 < i; i--) {
-				auto& mixer = bank.mixers[i];
+				auto& sourceMixer = bank.mixers[i];
 				// skip inactive mixers
-				if (mixer.buffer.validSize() == 0) { continue; }
+				if (sourceMixer.buffer.validSize() == 0) { continue; }
 
-				auto& targetMixer = bank.mixers[mixer.parent];
+				// Apply mixer volume
+				// TODO PERF VAE might be better to apply gain and mix in one go
+				// TODO effects processing
+				sourceMixer.buffer.multiply(sourceMixer.gain);
+				auto& targetMixer = bank.mixers[sourceMixer.parent];
 				// mark mixer as active
 				targetMixer.buffer.setValidSize(frames);
-				targetMixer.buffer.add(mixer.buffer);
+				targetMixer.buffer.add(sourceMixer.buffer);
 
 				// clear current mixer for next block
-				mixer.buffer.set(0);
+				sourceMixer.buffer.set(0);
 			}
 
+			// Apply gain on master as well
+			// TODO effects processing
+			auto& masterMixer = bank.mixers[Mixer::MasterMixerHandle];
+			masterMixer.buffer.multiply(masterMixer.gain);
 			// Master mixer will be mixed to the final output in the engineand then cleared
 		}
 	};
