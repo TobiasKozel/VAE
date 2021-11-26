@@ -21,15 +21,15 @@ namespace vae { namespace core { namespace log {
 
 	#define __FILENAME__ ({ constexpr ::vae::core::log::cstr sf__ {::vae::core::log::past_last_slash(__FILE__)}; sf__; })
 
-	#define VAE_DEBUG(msg, module, ...) printf("DEBUG\t| %s:%i \t|\t" msg "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
-	#define VAE_INFO(msg, module, ...)  printf ("INFO\t| %s:%i \t|\t" msg "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
-	#define VAE_WARN(msg, module, ...)  printf ("WARN\t| %s:%i \t|\t" msg "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
-	#define VAE_ERROR(msg, module, ...) printf("ERROR\t| %s:%i \t|\t" msg "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
+	#define VAE_DEBUG(msg, ...) printf("DEBUG\t| %s:%i \t|\t" msg "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
+	#define VAE_INFO(msg, ...)  printf ("INFO\t| %s:%i \t|\t" msg "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
+	#define VAE_WARN(msg, ...)  printf ("WARN\t| %s:%i \t|\t" msg "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
+	#define VAE_ERROR(msg, ...) printf("ERROR\t| %s:%i \t|\t" msg "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
 #else
-	#define VAE_DEBUG(msg, module, ...)
-	#define VAE_INFO(msg, module, ...)
-	#define VAE_WARN(msg, module, ...)
-	#define VAE_ERROR(msg, module, ...)
+	#define VAE_DEBUG(msg, ...)
+	#define VAE_INFO(msg, ...)
+	#define VAE_WARN(msg, ...)
+	#define VAE_ERROR(msg, ...)
 #endif // _NDEBUG
 
 #endif // _VAE_LOGGER
