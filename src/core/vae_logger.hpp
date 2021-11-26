@@ -1,46 +1,35 @@
-#ifndef _VAE_IMPL_LOGGER
-#define _VAE_IMPL_LOGGER
+#ifndef _VAE_LOGGER
+#define _VAE_LOGGER
 
-#include <stdarg.h>
-#include <stdlib.h>
+namespace vae { namespace core { namespace log {
+	using cstr = const char* const;
 
-namespace vae { namespace core {
-	/**
-	 * Logger singleton class
-	 * TODO expose the callback to public API
-	 */
-	class Logger {
-		/**
-		 * Function to format the log message and possibly print it.
-		 * @param msg Message
-		 * @param level Logleven, 0 for debug, higher for everything else
-		 * @param channel Channel name, maximum of 10 characters
-		 */
-		using LogFormatFunc = void (*)(const char* channel, const char* msg, int level);
+	static constexpr cstr past_last_slash(cstr str, cstr last_slash) {
+		return
+			*str == '\0' ? last_slash :
+			*str == '/'  ? past_last_slash(str + 1, str + 1) :
+			past_last_slash(str + 1, last_slash);
+	}
 
-		/**
-		 * Function to print formatted message.
-		 * At least this needs to be provided
-		 */
-		using LogPrintFunc = void (*)(const char* msg);
+	static constexpr cstr past_last_slash(cstr str) {
+		return past_last_slash(str, str);
+	}
+} } }
 
-		Logger() { }
+#ifndef _NDEBUG
+	#include <stdio.h>
 
-		LogFormatFunc mFormatFunc = nullptr;
-		LogPrintFunc  mPringFunc  = nullptr;
+	#define __FILENAME__ ({ constexpr ::vae::core::log::cstr sf__ {::vae::core::log::past_last_slash(__FILE__)}; sf__; })
 
-		void logFormat(const char* channel, const char* msg, int level) {
-		}
+	#define VAE_DEBUG(msg, module, ...) printf("DEBUG\t| %s:%i \t|\t" msg "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
+	#define VAE_INFO(msg, module, ...)  printf ("INFO\t| %s:%i \t|\t" msg "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
+	#define VAE_WARN(msg, module, ...)  printf ("WARN\t| %s:%i \t|\t" msg "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
+	#define VAE_ERROR(msg, module, ...) printf("ERROR\t| %s:%i \t|\t" msg "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
+#else
+	#define VAE_DEBUG(msg, module, ...)
+	#define VAE_INFO(msg, module, ...)
+	#define VAE_WARN(msg, module, ...)
+	#define VAE_ERROR(msg, module, ...)
+#endif // _NDEBUG
 
-		static Logger& instance() {
-			static Logger logger;
-			return logger;
-		}
-	public:
-		static void debug(const char* a) {
-		}
-
-	};
-} }
-
-#endif // VAE_IMPL_LOGGER
+#endif // _VAE_LOGGER
