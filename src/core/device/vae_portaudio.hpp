@@ -127,7 +127,7 @@ namespace vae { namespace core {
 				cleanUp();
 				return false;
 			}
-
+			postInit();
 			return true;
 		}
 

@@ -31,6 +31,7 @@ namespace vae { namespace core {
 		EngineConfig& mConfig;
 		using Callback = tklb::Delegate<void(Device*)>;
 		Size mSampleRate = 0;
+		Size mRealSampleRate = 0;
 
 		Resampler mResamplerToDevice;
 		AudioBuffer mResamplerBufferToDevice;
@@ -114,21 +115,24 @@ namespace vae { namespace core {
 		void init(Size sampleRate, Uchar channelsIn, Uchar channelsOut, Size bufferSize) {
 			mWorker.channelsIn  = channelsIn;
 			mWorker.channelsOut = channelsOut;
-			mSampleRate  = sampleRate;
+			mRealSampleRate  = sampleRate;
 
 			if (sampleRate != mConfig.preferredSampleRate) {
 				if (0 < channelsIn) {
+					// we get full device buffersize for these buffers
 					mWorker.resamplerFromDevice.init(
-						sampleRate, mConfig.preferredSampleRate, Config::MaxBlock
+						sampleRate, mConfig.preferredSampleRate, bufferSize
 					);
 					mWorker.resampleBufferFromdevice.resize(
-						mWorker.resamplerFromDevice.calculateBufferSize(Config::MaxBlock),
+						mWorker.resamplerFromDevice.calculateBufferSize(bufferSize),
 						channelsIn
 					);
 					mWorker.resampleBufferFromdevice.sampleRate =
-						mConfig.preferredSampleRate; // we'll get the prefered rate
+						mConfig.preferredSampleRate;
+					mSampleRate = mConfig.preferredSampleRate;
 				}
 				if (0 < channelsOut) {
+					// But only DSP max block size in this direction
 					mResamplerToDevice.init(
 						mConfig.preferredSampleRate, sampleRate, Config::MaxBlock
 					);
@@ -136,7 +140,8 @@ namespace vae { namespace core {
 						mResamplerToDevice.calculateBufferSize(Config::MaxBlock),
 						channelsOut
 					);
-					mResamplerBufferToDevice.sampleRate = mConfig.preferredSampleRate; // we'll provide the prefered rate
+					mResamplerBufferToDevice.sampleRate = sampleRate;
+					mSampleRate = mConfig.preferredSampleRate;
 				}
 			}
 
@@ -153,11 +158,18 @@ namespace vae { namespace core {
 				);
 			}
 
-
+			mWorker.convertBuffer.sampleRate = sampleRate;
 			mWorker.convertBuffer.resize(
 				bufferSize,
 				std::max(channelsOut, channelsIn) // buffer is sharedfor in and out, so make sure it has space for both
 			);
+		}
+
+		void postInit() {
+			VAE_DEBUG("Opened Audio Device with samplerate %i", mRealSampleRate)
+			if (mRealSampleRate != mSampleRate) {
+				VAE_DEBUG("Audio Device resamples to %i", mSampleRate)
+			}
 		}
 
 	public:
@@ -165,11 +177,14 @@ namespace vae { namespace core {
 			Backend& backend, EngineConfig& config
 		) : mBackend(backend), mConfig(config) { }
 
-		virtual ~Device() { }
+		virtual ~Device() {
+			VAE_DEBUG("Device destructed: Underruns %i\t overruns %i", mWorker.underruns, mWorker.overruns)
+		}
 
 		void setCallback(Callback callback) {
 			mWorker.device = this;
 			mWorker.callback = callback;
+			VAE_DEBUG("Device uses sync callback")
 		}
 
 		/**
@@ -240,9 +255,23 @@ namespace vae { namespace core {
 
 		Size getChannelsIn() const { return mWorker.channelsIn; }
 
+		/**
+		 * @brief Get the sample rate
+		 * @return samplerate after resampling
+		 */
 		Size getSampleRate() const { return mSampleRate; }
 
+		/**
+		 * @brief Get the Real Sample Rate before resampling
+		 *
+		 * @return Size
+		 */
+		Size getRealSampleRate() const { return mRealSampleRate; }
+
 		size_t getStreamTime() const { return mWorker.streamTime; }
+
+		Size getOverruns() const { return mWorker.overruns; }
+		Size getUnderruns() const { return mWorker.underruns; }
 	}; // class Device
 
 	// TODO VAE this seems a bit excessive

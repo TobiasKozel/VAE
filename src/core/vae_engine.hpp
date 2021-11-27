@@ -64,7 +64,9 @@ namespace vae { namespace core {
 	public:
 		Engine(
 			EngineConfig& config
-		) : mConfig(config), mVoiceManager(config) { }
+		) : mConfig(config), mVoiceManager(config) {
+			VAE_DEBUG("Engine constructed")
+		}
 
 		~Engine() { stop(); }
 
@@ -74,7 +76,6 @@ namespace vae { namespace core {
 			mDevice->setCallback(TKLB_DELEGATE(&Engine::process, *this));
 			mDevice->openDevice();
 
-			VAE_DEBUG("Opened Audio Device with samplerate %i", mDevice->getSampleRate());
 			mAudioThreadRunning = true;
 			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
 			mScratchBuffer.sampleRate = mConfig.preferredSampleRate;
@@ -84,6 +85,7 @@ namespace vae { namespace core {
 			// 		process(mDevice);
 			// 	}
 			// });
+			// VAE_DEBUG("Audio thread running")
 			return Result::Success;
 		}
 
@@ -97,6 +99,7 @@ namespace vae { namespace core {
 				mAudioThread.join();
 			}
 			TKLB_DELETE(mDevice);
+			VAE_INFO("Engine stopped")
 			return Result::Success;
 		}
 
@@ -219,9 +222,13 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result loadBank(const char* path) {
+			VAE_INFO("Loading bank from file %s", path)
 			Bank bank;
 			auto result = BankLoader::load(path, bank);
-			if (result != Result::Success) { return result; }
+			if (result != Result::Success) {
+				VAE_WARN("Failed to load bank from file %i with error %i", path, result)
+				return result;
+			}
 			return loadBank(bank);
 		}
 
@@ -245,12 +252,14 @@ namespace vae { namespace core {
 				m.buffer.resize(Config::MaxBlock, Config::MaxChannels);
 			}
 
-			Lock l(mMutex);
-
-			if (mBanks.size() < bank.id + 1) {
-				mBanks.resize(bank.id + 1);
+			{
+				Lock l(mMutex);
+				if (mBanks.size() < bank.id + 1) {
+					mBanks.resize(bank.id + 1);
+				}
+				mBanks[bank.id] = std::move(bank);
 			}
-			mBanks[bank.id] = std::move(bank);
+			VAE_INFO("Bank %s loaded.", mBanks[bank.id].name)
 			return Result::Success;
 		}
 
@@ -311,9 +320,11 @@ namespace vae { namespace core {
 			for (auto& i : mBanks) {
 				if (strcmp(path, i.path.c_str()) == 0) {
 					i = { }; // should free all the memory
+					VAE_DEBUG("Bank %s unloaded.", path)
 					return Result::Success;
 				}
 			}
+			VAE_WARN("Could not unload Bank %s", path)
 			return Result::ElementNotFound;
 		}
 
@@ -327,10 +338,12 @@ namespace vae { namespace core {
 			Lock l(mMutex);
 			for (auto& i : mBanks) {
 				if (i.id == bankHandle) {
+					VAE_INFO("Unloading bank %s", i.name.c_str())
 					i = { }; // should free all the memory
 					return Result::Success;
 				}
 			}
+			VAE_INFO("Could not unload bank with handle %i", bankHandle)
 			return Result::ElementNotFound;
 		}
 #pragma endregion bank_handling

@@ -93,6 +93,8 @@ namespace vae { namespace core {
 				return false;
 			}
 
+			postInit();
+
 			return true;
 		}
 
