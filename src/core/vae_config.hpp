@@ -16,9 +16,9 @@ namespace vae {
 		/**
 		 * Maximum block size.
 		 * Used to preallocate buffers.
-		 * Higher values increase latency but might play better with CPU caches.
+		 * Higher values need more memory might play better with instruction caches.
 		 */
-		constexpr unsigned int MaxBlock = 512;
+		constexpr unsigned int MaxBlock = 256;
 
 		/**
 		 * When not running in synchronous mode, this represents the
@@ -30,6 +30,7 @@ namespace vae {
 
 		/**
 		 * @brief How many Samples to prefetch for streaming sources
+		 * TODO no streaming for now
 		 */
 		constexpr unsigned int StreamPrefetch = 1024 * 8;
 	}

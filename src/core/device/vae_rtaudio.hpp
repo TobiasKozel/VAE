@@ -10,22 +10,7 @@
 namespace vae { namespace core {
 
 	class DeviceRtaudio final : public Device {
-
-		/**
-		 * @brief Stuct with data shared with audio thread.
-		 * Mutex is in the Device class
-		 */
-		struct AudioThreadShared {
-			Device& device;
-			// buffer for interleaving and deinterleaving
-			AudioBuffer bufferTo;
-			AudioBuffer bufferFrom;
-			size_t underruns = 0;
-			AudioThreadShared(Device& d) : device(d) { }
-		};
-
 		RtAudio mAudio; // Rt Device instance
-		AudioThreadShared mShared; // Data shared with the audio thread
 
 		bool cleanUp() {
 			if (mAudio.isStreamRunning()) {
@@ -48,30 +33,12 @@ namespace vae { namespace core {
 			void* out, void* in, unsigned int frames,
 			double streamTime, RtAudioStreamStatus status, void* data
 		) {
-			AudioThreadShared& shared = *reinterpret_cast<AudioThreadShared*>(data);
-
-			if (status) { shared.underruns++; }
-
-			(void) streamTime;
-
-			if (in != nullptr) {
-				const float* inBuffer = reinterpret_cast<const float*>(in);
-				shared.bufferFrom.setFromInterleaved(inBuffer, frames, shared.device.getChannelsIn());
-				TKLB_ASSERT(shared.bufferFrom.validSize() == frames)
-			}
-
-			if (out != nullptr) {
-				// make sure to inform the callback about the amount of samples needed
-				shared.bufferTo.setValidSize(frames);
-			}
-
-			shared.device.callback(shared.bufferFrom, shared.bufferTo);
-
-			if (out != nullptr) {
-				float* outBuffer = reinterpret_cast<float*>(out);
-				shared.bufferTo.putInterleaved(outBuffer, shared.bufferTo.validSize());
-			}
-
+			(void) streamTime;	// Prevent unused variable warnings.
+			(void) status;		// Prevent unused variable warnings.
+			auto inFloat = static_cast<const float*>(in);
+			auto outFloat = static_cast<float*>(out);
+			static_cast<AudioThreadWorker*>(data)
+				->swapBufferInterleaved(inFloat, outFloat, frames);
 			return 0;
 		}
 
@@ -79,7 +46,7 @@ namespace vae { namespace core {
 	public:
 		DeviceRtaudio(
 			Backend& backend, EngineConfig& config
-		) : mShared(*this), Device(backend, config) { };
+		) : Device(backend, config) { };
 
 		~DeviceRtaudio() {
 			cleanUp();
@@ -96,12 +63,15 @@ namespace vae { namespace core {
 			inParams.nChannels = device.channelsIn;
 			outParams.deviceId = device.id;
 			outParams.nChannels = device.channelsOut;
+			if (device.bufferSize == 0) {
+				device.bufferSize = mConfig.preferredBufferSize;
+			}
 
 			auto result = mAudio.openStream(
 				outParams.nChannels ? &outParams : nullptr,
 				inParams.nChannels  ? &inParams  : nullptr,
 				RTAUDIO_FLOAT32, device.sampleRate,
-				&device.bufferSize, &AudioCallback, &mShared
+				&device.bufferSize, &AudioCallback, &mWorker
 			);
 
 			if (result != RTAUDIO_NO_ERROR) {
@@ -112,18 +82,10 @@ namespace vae { namespace core {
 			device.channelsIn = inParams.nChannels;
 			device.channelsOut = outParams.nChannels;
 
-			init(device.sampleRate, device.channelsIn, device.channelsOut);
-
-			// Setup deinterleave buffers
-			if (0 < inParams.nChannels) {
-				mShared.bufferFrom.resize(device.bufferSize, inParams.nChannels);
-				mShared.bufferFrom.sampleRate = device.sampleRate;
-			}
-
-			if (0 < outParams.nChannels) {
-				mShared.bufferTo.resize(device.bufferSize, outParams.nChannels);
-				mShared.bufferTo.sampleRate = device.sampleRate;
-			}
+			init(
+				device.sampleRate, device.channelsIn, device.channelsOut,
+				device.bufferSize // RtAudio writes back to this on openStream
+			);
 
 			result = mAudio.startStream();
 			if (result != RTAUDIO_NO_ERROR) {
@@ -132,17 +94,6 @@ namespace vae { namespace core {
 			}
 
 			return true;
-		}
-
-		bool openDevice(bool input = false) override {
-			DeviceInfo device =
-				input ? mBackend.getDefaultInputDevice() : mBackend.getDefaultOutputDevice();
-			if (input) {
-				device.channelsOut = 0;
-			} else {
-				device.channelsIn = 0;
-			}
-			return openDevice(device);
 		}
 
 		bool closeDevice() override { return cleanUp(); }

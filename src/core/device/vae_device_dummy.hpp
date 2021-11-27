@@ -14,7 +14,7 @@ namespace vae { namespace core {
 		) : Device(backend, config) { }
 
 		bool openDevice(bool input = false) override {
-			init(mConfig.preferredSampleRate, 0, 2);
+			init(mConfig.preferredSampleRate, 0, 2, Config::MaxBlock);
 			return true;
 		}
 
@@ -25,6 +25,19 @@ namespace vae { namespace core {
 		}
 
 		bool closeDevice() override { return true; }
+
+		/**
+		 * @brief Simulate the callback from the audio device
+		 *
+		 * @tparam T
+		 * @param from
+		 * @param to
+		 * @param frames
+		 */
+		template <typename T>
+		void swapBufferInterleaved(const T* from, T* to, Size frames) {
+			mWorker.swapBuffer<T>(from, to, frames);
+		}
 	};
 
 	class BackendDummy : public Backend {
@@ -57,8 +70,8 @@ namespace vae { namespace core {
 			return getDevice(0);
 		};
 
-		Device* createDevice() override {
-			return TKLB_NEW(DeviceDummy, *this);
+		Device* createDevice(EngineConfig& config) override {
+			return TKLB_NEW(DeviceDummy, *this, config);
 		}
 	};
 } } // VAE::core

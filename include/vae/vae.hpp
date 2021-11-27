@@ -1,3 +1,15 @@
+/**
+ * @file vae.hpp
+ * @author Tobias Kozel (t.kozel@pm.me)
+ * @brief Contains all public API types for VAE
+ * @version 0.1
+ * @date 2021-11-27
+ *
+ * @copyright Copyright (c) 2021
+ *
+ */
+
+
 #ifndef _VAE_API_TYPES
 #define _VAE_API_TYPES
 
@@ -37,12 +49,12 @@ namespace vae {
 		 * Negative values for invalid device.
 		 */
 		int id;
-		unsigned int channelsIn;
-		unsigned int channelsOut;
-		unsigned int sampleRate;
+		unsigned int sampleRate = 0;
 		char name[255];
 		char api[4]; // API abbreviation
-		unsigned int bufferSize = 512;
+		unsigned int bufferSize = 0;
+		unsigned char channelsIn = 0;
+		unsigned char channelsOut = 0;
 	};
 
 	/**
@@ -62,38 +74,41 @@ namespace vae {
 	 * at construction of the engine object.
 	 */
 	struct EngineConfig {
-		using EventCallback = void(*)(EventCallbackData);
+		using EventCallback = void(*)(const EventCallbackData*);
 		/**
-		 * Each time a event of the type emit gets triggered
+		 * @brief Each time a event of the type emit gets triggered
 		 * Used to get information about ending sounds and similar
 		 */
 		EventCallback eventCallback = nullptr;
 
 		/**
-		 * Custom data that can be accached to the EventCallback
+		 * @brief Custom data that can be accached to the EventCallback
 		 * to maintain context
 		 */
 		void* eventCallbackPayload = nullptr;
 
 		/**
-		 * Hard limit on concurrentvoices, can't be 0
+		 * @brief Hard limit on concurrentvoices, can't be 0
 		 */
 		unsigned int voices = 1024;
 
 		/**
-		 * Hard limit on virtal voices
+		 * @brief Hard limit on virtal voices
+		 * TODO no virtual voice system for now
 		 * Can be zero for no limit but will cause allocations on fireEvent
 		 * If non zero value fireEvent might not return a handle
 		 */
 		unsigned int virtualVoices = 0;
 
 		/**
-		 * When a device is openeed. it will try to use this samplerate.
+		 * @brief When a device is openeed. it will try to use this samplerate.
 		 * If it doesn't support it, a resampler is used.
 		 * This is efficient if most of the audio is in the preferred samplerate,
 		 * since they don't need to be resampled.
 		 */
 		unsigned int preferredSampleRate = 48000;
+
+		unsigned int preferredBufferSize = 512;
 	};
 } // namespace vae
 

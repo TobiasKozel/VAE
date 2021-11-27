@@ -3,6 +3,7 @@
 
 #include "./vae_device.hpp"
 #include "../vae_config.hpp"
+#include "../vae_util.hpp"
 
 #include "../../../external/portaudio/include/portaudio.h"
 
@@ -11,24 +12,7 @@ namespace vae { namespace core {
 	 * @brief Portaudio backend implementation.
 	 */
 	class DevicePortaudio final : public Device {
-
-		/**
-		 * @brief Stuct with data shared with audio thread.
-		 * Mutex is in the Device class
-		 */
-		struct AudioThreadShared {
-			Device& device;
-			// buffer for interleaving and deinterleaving
-			AudioBuffer bufferTo;
-			AudioBuffer bufferFrom;
-
-			AudioThreadShared(Device& d) : device(d) { }
-		};
-
 		PaStream *mStream = nullptr;
-
-		// Data shared with the audio thread
-		AudioThreadShared mShared;
 		bool mInitialized = false;
 
 		void cleanUp() {
@@ -37,10 +21,10 @@ namespace vae { namespace core {
 			}
 
 			PaError err = Pa_StopStream(mStream);
-			TKLB_ASSERT(err == paNoError)
+			VAE_ASSERT(err == paNoError)
 
 			err = Pa_CloseStream(mStream);
-			TKLB_ASSERT(err == paNoError)
+			VAE_ASSERT(err == paNoError)
 			mInitialized = false;
 		}
 
@@ -52,42 +36,24 @@ namespace vae { namespace core {
 			const PaStreamCallbackTimeInfo* timeInfo,
 			PaStreamCallbackFlags statusFlags, void *data
 		) {
-			// Prevent unused variable warnings.
-			(void) timeInfo;
-			(void) statusFlags;
-
-			AudioThreadShared& shared = *reinterpret_cast<AudioThreadShared*>(data);
-
-			if (in != nullptr) {
-				const float* inBuffer = reinterpret_cast<const float*>(in);
-				shared.bufferFrom.setFromInterleaved(inBuffer, frames, shared.device.getChannelsIn());
-				TKLB_ASSERT(shared.bufferFrom.validSize() == frames)
-			}
-
-			if (out != nullptr) {
-				// make sure to inform the callback about the amount of samples needed
-				shared.bufferTo.setValidSize(frames);
-			}
-
-			shared.device.callback(shared.bufferFrom, shared.bufferTo);
-
-			if (out != nullptr) {
-				float* outBuffer = reinterpret_cast<float*>(out);
-				shared.bufferTo.putInterleaved(outBuffer, shared.bufferTo.validSize());
-			}
-
+			(void) timeInfo;	// Prevent unused variable warnings.
+			(void) statusFlags;	// Prevent unused variable warnings.
+			auto inFloat = static_cast<const float*>(in);
+			auto outFloat = static_cast<float*>(out);
+			static_cast<AudioThreadWorker*>(data)
+				->swapBufferInterleaved(inFloat, outFloat, frames);
 			return paContinue;
 		}
 
 		static void StreamFinished(void* data) {
-			AudioThreadShared& shared = *reinterpret_cast<AudioThreadShared*>(data);
+			(void) data;	// Prevent unused variable warnings.
 		}
 
 	public:
 
 		DevicePortaudio(
 			Backend& backend, EngineConfig& config
-		) : mShared(*this), Device(backend, config) { }
+		) : Device(backend, config) { }
 
 		~DevicePortaudio() { cleanUp(); }
 
@@ -95,7 +61,7 @@ namespace vae { namespace core {
 			const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(device.id);
 
 			if (deviceInfo == nullptr) {
-				TKLB_ASSERT(false)
+				VAE_ASSERT(false)
 				return false;
 			}
 
@@ -104,7 +70,7 @@ namespace vae { namespace core {
 			inputParameters.sampleFormat = paFloat32;
 			inputParameters.suggestedLatency = deviceInfo->defaultLowInputLatency;
 			inputParameters.hostApiSpecificStreamInfo = NULL;
-			TKLB_ASSERT(device.channelsIn <= uint(deviceInfo->maxInputChannels))
+			VAE_ASSERT(device.channelsIn <= uint(deviceInfo->maxInputChannels))
 			inputParameters.channelCount = device.channelsIn;
 
 			PaStreamParameters outputParameters;
@@ -112,8 +78,12 @@ namespace vae { namespace core {
 			outputParameters.sampleFormat = paFloat32;
 			outputParameters.suggestedLatency = deviceInfo->defaultLowOutputLatency;
 			outputParameters.hostApiSpecificStreamInfo = NULL;
-			TKLB_ASSERT(device.channelsOut <= uint(deviceInfo->maxOutputChannels))
+			VAE_ASSERT(device.channelsOut <= uint(deviceInfo->maxOutputChannels))
 			outputParameters.channelCount = device.channelsOut;
+
+			if (device.bufferSize == 0) {
+				device.bufferSize = mConfig.preferredBufferSize;
+			}
 
 			PaError err = Pa_OpenStream(
 				&mStream,
@@ -123,11 +93,11 @@ namespace vae { namespace core {
 				device.bufferSize,
 				paClipOff, // no clipping, device will do that
 				AudioCallback,
-				&mShared
+				&mWorker
 			);
 
 			if (err != paNoError) {
-				TKLB_ASSERT(false)
+				VAE_ASSERT(false)
 				cleanUp();
 				return false;
 			}
@@ -137,41 +107,28 @@ namespace vae { namespace core {
 			);
 
 			if (err != paNoError) {
-				TKLB_ASSERT(false)
+				VAE_ASSERT(false)
 				cleanUp();
 				return false;
 			}
 
 			// Might have gotten different samplerate
 			const PaStreamInfo* streamInfo = Pa_GetStreamInfo(mStream);
-			init(uint(streamInfo->sampleRate), device.channelsIn, device.channelsOut);
-
-			// Setup deinterleave buffers
-			if (0 < inputParameters.channelCount) {
-				mShared.bufferFrom.resize(device.bufferSize, inputParameters.channelCount);
-				mShared.bufferFrom.sampleRate = device.sampleRate;
-			}
-
-			if (0 < outputParameters.channelCount) {
-				mShared.bufferTo.resize(device.bufferSize, outputParameters.channelCount);
-				mShared.bufferTo.sampleRate = device.sampleRate;
-			}
+			init(
+				uint(streamInfo->sampleRate),
+				device.channelsIn, device.channelsOut,
+				device.bufferSize // Pa doesn't provide any info, so we assume we got what we wanted
+			);
 
 			err = Pa_StartStream(mStream);
 
 			if (err != paNoError) {
-				TKLB_ASSERT(false)
+				VAE_ASSERT(false)
 				cleanUp();
 				return false;
 			}
 
 			return true;
-		}
-
-		bool openDevice(bool input = false) override {
-			DeviceInfo device =
-				input ? mBackend.getDefaultInputDevice() : mBackend.getDefaultOutputDevice();
-			return openDevice(device);
 		}
 
 		bool closeDevice() override {
@@ -184,7 +141,7 @@ namespace vae { namespace core {
 		BackendPortAudio() {
 			PaError err = Pa_Initialize();
 			if (err != paNoError) {
-				TKLB_ASSERT(false)
+				VAE_ASSERT(false)
 				return;
 			}
 		}
@@ -205,7 +162,7 @@ namespace vae { namespace core {
 		DeviceInfo getDevice(unsigned int index) override {
 			const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(index);
 			if (deviceInfo == nullptr) {
-				TKLB_ASSERT(false)
+				VAE_ASSERT(false)
 				return DeviceInfo();
 			}
 			DeviceInfo info;

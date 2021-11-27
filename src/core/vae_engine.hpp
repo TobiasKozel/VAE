@@ -1,14 +1,6 @@
 #ifndef _VAE_ENGINE
 #define _VAE_ENGINE
 
-#include <cstring>
-#include <vector>
-
-#include "../../external/tklb/src/types/THeapBuffer.hpp"
-#include "../../external/tklb/src/types/THandleBuffer.hpp"
-#include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
-#include "../../external/tklb/src/types/TSpinLock.hpp"
-#include "../../external/tklb/src/util/TMath.hpp"
 
 #include "./vae_util.hpp"
 #include "../wrapped/vae_profiler.hpp"
@@ -26,30 +18,42 @@
 #include "./processor/vae_mixer_processor.hpp"
 #include "./vae_util.hpp"
 
+#include "../../external/tklb/src/types/THeapBuffer.hpp"
+#include "../../external/tklb/src/types/THandleBuffer.hpp"
+#include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
+#include "../../external/tklb/src/types/TSpinLock.hpp"
+#include "../../external/tklb/src/util/TMath.hpp"
+
+#include <cstring>	// strcmp
+#include <vector>	// mBanks
+#include <thread>	// mAudioThread
+
+
 namespace vae { namespace core {
 
 	class Engine {
 		using Mutex = tklb::SpinLock;
 		using Lock = tklb::LockGuard<Mutex>;
 		using CurrentBackend = BackendRtAudio;
+		using Thread = std::thread;
 
 		/**
 		 * Main messaging instance, most objects hold a
 		 * reference to this instead of the engine itself
 		 */
 		// EventBus mBus;
-		EngineConfig mConfig;
 
+		EngineConfig mConfig;			// Config provided at construction
 		std::vector<Bank> mBanks;		// All the currently loaded banks
-		VoiceManger mVoiceManager;
-
-		Device* mDevice = nullptr;
-
-		SampleIndex mTime = 0; // Global time in samples
-		Time mTimeFract = 0;
-
+		VoiceManger mVoiceManager;		// Stores and handle voices
+		Device* mDevice = nullptr;		// Output device
+		SampleIndex mTime = 0;			// Global engine time in samples
+		Time mTimeFract = 0;			// Global engine time in seconds
+		Mutex mMutex;					// Mutex to lock AudioThread and bank operations
+		Thread mAudioThread;			// Thread processing voices and mixers
+		AudioBuffer mScratchBuffer;		//
+		bool mAudioThreadRunning = false;
 		// Listener mListener;
-		Mutex mMutex;
 
 		Engine(const Engine&) = delete;
 		Engine(const Engine*) = delete;
@@ -62,45 +66,70 @@ namespace vae { namespace core {
 			EngineConfig& config
 		) : mConfig(config), mVoiceManager(config) { }
 
-		~Engine() {
-			stop();
-		}
+		~Engine() { stop(); }
 
 		Result init() {
 			Backend& backend = CurrentBackend::instance();
 			mDevice = backend.createDevice(mConfig);
-			mDevice->setSync([&](const AudioBuffer& fromDevice, AudioBuffer& toDevice) {
-				callback(fromDevice, toDevice);
-			});
+			mDevice->setCallback(TKLB_DELEGATE(&Engine::process, *this));
 			mDevice->openDevice();
+
 			VAE_DEBUG("Opened Audio Device with samplerate %i", mDevice->getSampleRate());
+			mAudioThreadRunning = true;
+			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
+			mScratchBuffer.sampleRate = mConfig.preferredSampleRate;
+			// mAudioThread = Thread([&]() {
+			// 	while(mAudioThreadRunning) {
+			// 		// TODO wait for notification from device
+			// 		process(mDevice);
+			// 	}
+			// });
 			return Result::Success;
 		}
 
+		/**
+		 * @brief Stops processing and waits for audio thead to clean up
+		 * @return Result
+		 */
 		Result stop() {
+			mAudioThreadRunning = false;
+			if(mAudioThread.joinable()) {
+				mAudioThread.join();
+			}
 			TKLB_DELETE(mDevice);
 			return Result::Success;
 		}
 
+		/**
+		 * @brief Main processing function
+		 *
+		 * @param device Output device
+		 */
+		void process(Device* device) {
+			auto& d = *device;
 
-		void callback(const AudioBuffer& fromDevice, AudioBuffer& toDevice) {
-			{
-				toDevice.set(0);	// TODO VAE maybe make sure the buffer is zeroed in the device
-				const double step = 1.0 / double(toDevice.sampleRate);
-				const auto frames = toDevice.validSize();
+			auto sampleRate = d.getSampleRate();
+			const Time step = 1.0 / Time(sampleRate);
+			Lock l(mMutex);
 
-				Lock l(mMutex);
+			// process until output is full
+			while (true) {
+				// split larger chunks
+				auto remaining = std::min(d.canPush(), Config::MaxBlock);
+				if (remaining == 0) { break; }
+				mScratchBuffer.setValidSize(remaining);
 				// TODO PERF VAE banks could be processed in parellel
 				for (auto& i : mBanks) {
-					Processor::mix(mVoiceManager, i, frames, toDevice.sampleRate);
-					MixerProcessor::mix(mVoiceManager, i, frames);
+					Processor::mix(mVoiceManager, i, remaining, sampleRate);
+					MixerProcessor::mix(mVoiceManager, i, remaining);
 					auto& bankMaster = i.mixers[Mixer::MasterMixerHandle].buffer;
-					toDevice.add(bankMaster);
+					mScratchBuffer.add(bankMaster);
 					bankMaster.set(0);
 				}
-
-				mTimeFract += step;
-				mTime += frames;
+				d.push(mScratchBuffer);
+				mScratchBuffer.set(0);
+				mTime += remaining;
+				mTimeFract += step * remaining;
 			}
 			VAE_PROFILER_FRAME_MARK
 		}
@@ -175,7 +204,7 @@ namespace vae { namespace core {
 				data.bank = bankHandle;
 				data.event = eventHandle;
 				data.emitter = emitterHandle;
-				mConfig.eventCallback(data);
+				mConfig.eventCallback(&data);
 				break;
 			}
 

@@ -4,14 +4,14 @@
 
 using namespace vae;
 
-void eventTriggered(EventCallbackData data) {
-	printf("callback event %i %s from bank %i\n", (int) data.event, data.name, (int) data.bank);
+void eventTriggered(const EventCallbackData* data) {
+	printf("callback event %i %s from bank %i\n", (int) data->event, data->name, (int) data->bank);
 }
 
 int main() {
 	constexpr int test = sizeof(core::Engine);
-	constexpr int rate = 48000;
-	// constexpr int rate = 44100;
+	// constexpr int rate = 48000;
+	constexpr int rate = 44100;
 	const double step = 1.0 / double(rate);
 	tklb::AudioBuffer buffer;
 	buffer.resize(rate, 1);

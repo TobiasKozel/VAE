@@ -1,101 +1,105 @@
 #ifndef _VAE_DEVICE
 #define _VAE_DEVICE
 
-#include "../../../include/vae/vae.hpp"
-
-#include "../vae_config.hpp"
-#include "../vae_types.hpp"
-
 #include "../../../external/tklb/src/memory/TMemory.hpp"
 #include "../../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../../external/tklb/src/types/audio/TAudioRingBuffer.hpp"
 #include "../../../external/tklb/src/types/audio/resampler/TResampler.hpp"
 #include "../../../external/tklb/src/types/TSpinLock.hpp"
 #include "../../../external/tklb/src/types/TLockGuard.hpp"
-#include "../vae_util.hpp"
+#include "../../../external/tklb/src/types/TDelegate.hpp"
 
-#include <functional> // TODO replace with delegates
+#include "../../../include/vae/vae.hpp"
+#include "../vae_types.hpp"
+#include "../vae_config.hpp"
+#include "../vae_util.hpp"
+#include "./vae_backend.hpp"
 
 namespace vae { namespace core {
-
-	class Device;
-
-	/**
-	 * @brief Backend interface used to query devices before
-	 * creating a actual device object
-	 */
-	class Backend {
-	public:
-		/**
-		 * @brief Returns name of the api
-		 */
-		virtual const char* getName() = 0;
-
-		/**
-		 * @brief Gets number of devices, needed to iterate them.
-		 * Device index != does not have to be the device index!
-		 */
-		virtual Size getDeviceCount() = 0;
-
-		/**
-		 * @brief Returns a spefic device info for index.
-		 */
-		virtual DeviceInfo getDevice(Size index) = 0;
-
-		virtual DeviceInfo getDefaultInputDevice() = 0;
-
-		virtual DeviceInfo getDefaultOutputDevice() = 0;
-
-		/**
-		 * Creates a device instance for this backend
-		 */
-		virtual Device* createDevice(EngineConfig&) = 0;
-	}; // class Backend
-
 	/**
 	 * @brief Interface for audio devices.
 	 * Default implementation for resampling already provided.
 	 */
 	class Device {
 	public:
-		using uchar = unsigned char;
 		using Resampler = tklb::ResamplerTpl<Sample>;
 		using Mutex = tklb::SpinLock;
 		using Lock = tklb::LockGuard<Mutex>;
-		using SyncCallback = std::function<void(const AudioBuffer& fromDevice, AudioBuffer& toDevice)>;
 
 	protected:
 		Backend& mBackend;
 		EngineConfig& mConfig;
-		RingBuffer mQueueToDevice;		// Queue needed for async mode
-		RingBuffer mQueueFromDevice;	// Queue needed for async mode
-
-		Resampler mResamplerToDevice;
-		Resampler mResamplerFromDevice;
-
-		AudioBuffer mBufferToDevice;	// Engine samplerate only needed for resampling
-		AudioBuffer mBufferFromDevice;	// Engine samplerate only needed for resampling
-
-		Size mChannelsOut = 0;
-		Size mChannelsIn = 0;
-
-		Size mUnderruns = 0;
+		using Callback = tklb::Delegate<void(Device*)>;
 		Size mSampleRate = 0;
 
-		size_t mStreamTime = 0;
-
-
-		/**
-		 * @brief If set, the backend will operate in sync/pull mode and drive
-		 * the engine mainloop. Only one backend can be used in sync mode.
-		 */
-		SyncCallback mSyncCallback = nullptr;
+		Resampler mResamplerToDevice;
+		AudioBuffer mResamplerBufferToDevice;
 
 		/**
-		 * @brief Needed in async mode to pretect the queues from clashes.
-		 * Maybe a lock free queue at some point.
+		 * @brief Data shared with audio thread
 		 */
-		Mutex mMutex;
+		struct AudioThreadWorker {
+			Callback callback;				// Optional callback to process synchronously in the audio callback
+			Device* device;					// Device passed to callback function
+			RingBuffer queueToDevice;		// Deinterleaved data in device samplerate
+			RingBuffer queueFromDevice;		// Deinterleaved data in device samplerate
+			AudioBuffer convertBuffer;		// convert from interleaved, and Sample type
+
+			Resampler resamplerFromDevice;	// Resample audio before putting it in queueFromDevice
+			AudioBuffer resampleBufferFromdevice;
+
+			size_t streamTime = 0;			// device time without regard of underruns and overruns
+			Size underruns = 0;				// Happens when the sound card needs more data than queueToDevice provides
+			Size overruns = 0;				// Happens when the sound card emites more data than queueFromDevice fits
+			Mutex mutex;					// Lock the queues
+			Uchar channelsOut = 0;
+			Uchar channelsIn = 0;
+
+			/**
+			 * @brief Called from audio backend to push in interleaved audio data
+			 *
+			 * @tparam T Sample type
+			 * @tparam INTERLEAVED Whether to treat data as interleaved
+			 * @param from
+			 * @param to
+			 * @param frames
+			 */
+			template <typename T>
+			void swapBufferInterleaved(const T* from, T* to, Size frames) {
+				if (from != nullptr) {
+					convertBuffer.setFromInterleaved(from, frames, channelsIn);
+					if (resamplerFromDevice.isInitialized()) {
+						resamplerFromDevice.process(convertBuffer, resampleBufferFromdevice);
+						Lock l(mutex);
+						auto pushed = queueFromDevice.push(resampleBufferFromdevice);
+						overruns += (frames - pushed);
+					} else {
+						Lock l(mutex);
+						auto pushed = queueFromDevice.push(convertBuffer);
+						overruns += (frames - pushed);
+					}
+				}
+
+				if (callback.valid()) {
+					callback(device);
+				}
+
+				if (to != nullptr) {
+					int popped;
+					{
+						Lock l(mutex);
+						popped = queueToDevice.pop(convertBuffer, frames);
+						if (popped != frames) {
+							underruns += (frames - popped);
+						}
+					}
+					convertBuffer.putInterleaved(to, popped);
+				}
+				streamTime += frames;
+			}
+		};
+
+		AudioThreadWorker mWorker;
 
 		/**
 		 * @brief initializes buffers, queues and resamplers if needed
@@ -103,38 +107,57 @@ namespace vae { namespace core {
 		 * and channel config is known
 		 *
 		 * @param sampleRate The actual samplerate the device has, might not match requested rate
-		 * @param channelsIn
-		 * @param channelsOut
+		 * @param channelsIn The real channelcount, might not match requested
+		 * @param channelsOut The real channelcount, might not match requested
+		 * @param bufferSize The amount of frames a callback will provide/request
 		 */
-		void init(Size sampleRate, Size channelsIn, Size channelsOut) {
-			mChannelsIn = channelsIn;
-			mChannelsOut = channelsOut;
-			mSampleRate = sampleRate;
+		void init(Size sampleRate, Uchar channelsIn, Uchar channelsOut, Size bufferSize) {
+			mWorker.channelsIn  = channelsIn;
+			mWorker.channelsOut = channelsOut;
+			mSampleRate  = sampleRate;
 
 			if (sampleRate != mConfig.preferredSampleRate) {
-				if (0 < mChannelsIn) {
-					mResamplerFromDevice.init(sampleRate, mConfig.preferredSampleRate, Config::MaxBlock);
-					mBufferFromDevice.resize(mResamplerFromDevice.calculateBufferSize(Config::MaxBlock), channelsIn);
-					// Since it will be resampled to that
-					mBufferFromDevice.sampleRate = mConfig.preferredSampleRate;
+				if (0 < channelsIn) {
+					mWorker.resamplerFromDevice.init(
+						sampleRate, mConfig.preferredSampleRate, Config::MaxBlock
+					);
+					mWorker.resampleBufferFromdevice.resize(
+						mWorker.resamplerFromDevice.calculateBufferSize(Config::MaxBlock),
+						channelsIn
+					);
+					mWorker.resampleBufferFromdevice.sampleRate =
+						mConfig.preferredSampleRate; // we'll get the prefered rate
 				}
-
-				if (0 < mChannelsOut) {
-					mResamplerToDevice.init(mConfig.preferredSampleRate, sampleRate, Config::MaxBlock);
-					mBufferToDevice.resize(mResamplerToDevice.calculateBufferSize(Config::MaxBlock), channelsOut);
-					// Same rate as above, since it's the source buffer for the resampler
-					mBufferToDevice.sampleRate = mConfig.preferredSampleRate;
+				if (0 < channelsOut) {
+					mResamplerToDevice.init(
+						mConfig.preferredSampleRate, sampleRate, Config::MaxBlock
+					);
+					mResamplerBufferToDevice.resize(
+						mResamplerToDevice.calculateBufferSize(Config::MaxBlock),
+						channelsOut
+					);
+					mResamplerBufferToDevice.sampleRate = mConfig.preferredSampleRate; // we'll provide the prefered rate
 				}
 			}
 
-			if (mSyncCallback == nullptr) { // need queues for async mode
-				if (0 < mChannelsIn) {
-					mQueueFromDevice.resize(Config::MaxBlock * Config::DeviceMaxPeriods, channelsIn);
-				}
-				if (0 < mChannelsOut) {
-					mQueueToDevice.resize(Config::MaxBlock * Config::DeviceMaxPeriods, channelsIn);
-				}
+			if (0 < channelsIn) {
+				mWorker.queueFromDevice.resize(
+					bufferSize * Config::DeviceMaxPeriods,
+					channelsIn
+				);
 			}
+			if (0 < channelsOut) {
+				mWorker.queueToDevice.resize(
+					bufferSize * Config::DeviceMaxPeriods,
+					channelsIn
+				);
+			}
+
+
+			mWorker.convertBuffer.resize(
+				bufferSize,
+				std::max(channelsOut, channelsIn) // buffer is sharedfor in and out, so make sure it has space for both
+			);
 		}
 
 	public:
@@ -144,15 +167,10 @@ namespace vae { namespace core {
 
 		virtual ~Device() { }
 
-		void setSync(const SyncCallback&& callback) {
-			mSyncCallback = callback;
+		void setCallback(Callback callback) {
+			mWorker.device = this;
+			mWorker.callback = callback;
 		}
-
-		/**
-		 * @brief Tries to open the default audio device whith desired in out channels
-		 * TODO check why implementation can't be moved up here
-		 */
-		virtual bool openDevice(bool input = false) = 0;
 
 		/**
 		 * @brief Opens a specific audio device.
@@ -162,6 +180,15 @@ namespace vae { namespace core {
 		virtual bool openDevice(DeviceInfo& device) = 0;
 
 		/**
+		 * @brief Tries to open the default audio device whith desired in out channels
+		 */
+		virtual bool openDevice(bool input = false) {
+			DeviceInfo device =
+				input ? mBackend.getDefaultInputDevice() : mBackend.getDefaultOutputDevice();
+			return openDevice(device);
+		};
+
+		/**
 		 * @brief Closes the currently open device.
 		 * Otherwise does nothing.
 		 */
@@ -169,98 +196,53 @@ namespace vae { namespace core {
 
 		/**
 		 * @brief Push samples to the audio device
-		 * @param buffer Always a stereo buffer, pushes the amount of valid samples
+		 * @param buffer Pushes the amount of valid samples
 		 */
 		void push(const AudioBuffer& buffer) {
-			VAE_ASSERT(0 < mChannelsOut)
+			VAE_ASSERT(0 < mWorker.channelsOut)
 			auto frames = buffer.validSize();
 			VAE_ASSERT(frames != 0) // need to have valid frames
-			VAE_ASSERT(mSyncCallback == nullptr) // can't be called in sync mode
-			Lock lock(mMutex);
-			mQueueToDevice.push(buffer);
+			if (mResamplerToDevice.isInitialized()) {
+				mResamplerToDevice.process(buffer, mResamplerBufferToDevice);
+				Lock lock(mWorker.mutex);
+				mWorker.queueToDevice.push(mResamplerBufferToDevice);
+			} else {
+				Lock lock(mWorker.mutex);
+				mWorker.queueToDevice.push(buffer);
+			}
+		}
+
+		Size canPush() const {
+			auto remaining = mWorker.queueToDevice.remaining();
+			if (mResamplerToDevice.isInitialized()) {
+				return mResamplerToDevice.estimateNeed(remaining);
+			}
+			return remaining;
 		}
 
 		/**
 		 * @brief Get samples form audio device
+		 * @param buffer Gets the amount of valid samples, might actualy get less
 		 */
 		void pop(AudioBuffer& buffer) {
-			VAE_ASSERT(0 < mChannelsIn)
+			VAE_ASSERT(0 < mWorker.channelsIn)
 			auto frames = buffer.validSize();
 			VAE_ASSERT(frames != 0) // need to have valid frames
-			VAE_ASSERT(mSyncCallback == nullptr) // can't be called in sync mode
-			Lock lock(mMutex);
-			mQueueFromDevice.pop(buffer, frames);
+			Lock lock(mWorker.mutex);
+			mWorker.queueFromDevice.pop(buffer, frames);
 		}
 
-		Size getChannelsOut() const { return mChannelsOut; }
+		Size canPop() const {
+			return mWorker.queueFromDevice.filled();
+		}
 
-		Size getChannelsIn() const { return mChannelsIn; }
+		Size getChannelsOut() const { return mWorker.channelsOut; }
+
+		Size getChannelsIn() const { return mWorker.channelsIn; }
 
 		Size getSampleRate() const { return mSampleRate; }
 
-		size_t getStreamTime() const { return mStreamTime; }
-
-		/**
-		 * @brief Called from the backend implementation.
-		 * Don't call this otherwise.
-		 * Derived class is responsible for the Buffer supplied to the function.
-		 * @param in input frames in device samplerate
-		 * @param out output frames in device samplerate
-		 */
-		void callback(const AudioBuffer& fromDevice, AudioBuffer& toDevice) {
-			const uint frames = std::max(fromDevice.validSize(), toDevice.validSize());
-			const bool resampleFrom = mResamplerFromDevice.isInitialized();
-			const bool resampleTo = mResamplerToDevice.isInitialized();
-			const bool needResample = resampleFrom | resampleTo;
-
-			mStreamTime += frames;
-
-			if (!needResample) {
-				if (mSyncCallback == nullptr) { // async mode
-					Lock lock(mMutex);
-					if (0 < mChannelsIn) {
-						mQueueFromDevice.push(fromDevice);
-					}
-					if (0 < mChannelsOut) {
-						// Push the same amout to the device
-						mQueueToDevice.pop(toDevice, frames);
-					}
-				} else { // sync mode
-					mSyncCallback(fromDevice, toDevice);
-				}
-				return;
-			}
-
-			if (resampleFrom) {
-				// audio from device can be resampled and put in the buffer
-				mResamplerFromDevice.process(fromDevice, mBufferFromDevice);
-			}
-
-			if (resampleTo) {
-				// however, we don't know how many samples we need to process
-				// since this is determined by the resampler
-				mBufferToDevice.setValidSize(
-					mResamplerToDevice.estimateNeed(toDevice.validSize())
-				);
-			}
-
-			if (mSyncCallback == nullptr) { // async mode
-				Lock lock(mMutex);
-				if (resampleFrom) {
-					mQueueFromDevice.push(mBufferFromDevice); // store away the resampled frames
-				}
-
-				if (resampleTo) {
-					mQueueToDevice.pop(mBufferToDevice, mBufferToDevice.validSize());
-				}
-			} else { // sync mode
-				mSyncCallback(mBufferFromDevice, mBufferToDevice);
-			}
-
-			if (resampleTo) {
-				mResamplerToDevice.process(mBufferToDevice, toDevice);
-			}
-		}
+		size_t getStreamTime() const { return mWorker.streamTime; }
 	}; // class Device
 
 	// TODO VAE this seems a bit excessive

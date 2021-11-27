@@ -17,12 +17,16 @@ namespace vae { namespace core {
 	using AudioBuffer = tklb::AudioBufferTpl<Sample>;
 	constexpr int _VAE_SIZE_AUDIOBUFFER = sizeof(AudioBuffer);
 
+	template <class T> using AudioBufferTpl = tklb::AudioBufferTpl<T>;
+
 	using RingBuffer = tklb::AudioRingBufferTpl<Sample>;
 	constexpr int _VAE_SIZE_RINGBUFFER = sizeof(RingBuffer);
 	// Time sotred in seconds
 	using Time = double;
 	// Time stored in samples
 	using SampleIndex = AudioBuffer::Size;
+
+	using Uchar = unsigned char;
 } } // namespace vae::core
 
 
