@@ -24,7 +24,7 @@ namespace vae { namespace core {
 			 * start from back since mixer can only write to mixer with
 			 * a lower id than themselves to avoid recursion
 			 */
-			for (int i = bank.mixers.size() - 1; 0 < i; i--) {
+			for (Uint i = Uint(bank.mixers.size()) - 1; 0 < i; i--) {
 				auto& sourceMixer = bank.mixers[i];
 				// skip inactive mixers
 				if (sourceMixer.buffer.validSize() == 0) { continue; }

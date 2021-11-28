@@ -70,7 +70,7 @@ namespace vae { namespace core {
 			inputParameters.sampleFormat = paFloat32;
 			inputParameters.suggestedLatency = deviceInfo->defaultLowInputLatency;
 			inputParameters.hostApiSpecificStreamInfo = NULL;
-			VAE_ASSERT(device.channelsIn <= uint(deviceInfo->maxInputChannels))
+			VAE_ASSERT(device.channelsIn <= Uint(deviceInfo->maxInputChannels))
 			inputParameters.channelCount = device.channelsIn;
 
 			PaStreamParameters outputParameters;
@@ -78,7 +78,7 @@ namespace vae { namespace core {
 			outputParameters.sampleFormat = paFloat32;
 			outputParameters.suggestedLatency = deviceInfo->defaultLowOutputLatency;
 			outputParameters.hostApiSpecificStreamInfo = NULL;
-			VAE_ASSERT(device.channelsOut <= uint(deviceInfo->maxOutputChannels))
+			VAE_ASSERT(device.channelsOut <= Uint(deviceInfo->maxOutputChannels))
 			outputParameters.channelCount = device.channelsOut;
 
 			if (device.bufferSize == 0) {
@@ -115,7 +115,7 @@ namespace vae { namespace core {
 			// Might have gotten different samplerate
 			const PaStreamInfo* streamInfo = Pa_GetStreamInfo(mStream);
 			init(
-				uint(streamInfo->sampleRate),
+				Uint(streamInfo->sampleRate),
 				device.channelsIn, device.channelsOut,
 				device.bufferSize // Pa doesn't provide any info, so we assume we got what we wanted
 			);
@@ -169,7 +169,7 @@ namespace vae { namespace core {
 			info.id = index;
 			info.channelsIn = deviceInfo->maxInputChannels;
 			info.channelsOut = deviceInfo->maxOutputChannels;
-			info.sampleRate = uint(deviceInfo->defaultSampleRate);
+			info.sampleRate = Uint(deviceInfo->defaultSampleRate);
 			tklb::memory::stringCopy(info.name, deviceInfo->name, sizeof(DeviceInfo::name));
 			tklb::memory::stringCopy(info.api, getName(), sizeof(DeviceInfo::api), false);
 			return info;

@@ -143,6 +143,8 @@ namespace vae { namespace core {
 					mResamplerBufferToDevice.sampleRate = sampleRate;
 					mSampleRate = mConfig.preferredSampleRate;
 				}
+			} else {
+				mSampleRate = mConfig.preferredSampleRate;
 			}
 
 			if (0 < channelsIn) {
@@ -178,7 +180,7 @@ namespace vae { namespace core {
 		) : mBackend(backend), mConfig(config) { }
 
 		virtual ~Device() {
-			VAE_DEBUG("Device destructed: Underruns %i\t overruns %i", mWorker.underruns, mWorker.overruns)
+			VAE_DEBUG("Device destructed. Underruns: %i Overruns:%i", mWorker.underruns, mWorker.overruns)
 		}
 
 		void setCallback(Callback callback) {

@@ -53,7 +53,7 @@ namespace vae { namespace core {
 		}
 
 		bool openDevice(DeviceInfo& device) override {
-			if (mBackend.getDeviceCount() < device.id) {
+			if (mBackend.getDeviceCount() < Size(device.id)) {
 				TKLB_ASSERT(false)
 				return false;
 			}
@@ -124,7 +124,7 @@ namespace vae { namespace core {
 			info.id = index;
 			info.channelsIn = rtInfo.inputChannels;
 			info.channelsOut = rtInfo.outputChannels;
-			info.sampleRate = uint(rtInfo.preferredSampleRate);
+			info.sampleRate = Uint(rtInfo.preferredSampleRate);
 			tklb::memory::stringCopy(info.name, rtInfo.name.c_str(), sizeof(DeviceInfo::name));
 			tklb::memory::stringCopy(info.api, getName(), sizeof(DeviceInfo::api), false);
 			return info;

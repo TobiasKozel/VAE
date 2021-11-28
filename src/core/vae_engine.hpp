@@ -226,7 +226,7 @@ namespace vae { namespace core {
 			Bank bank;
 			auto result = BankLoader::load(path, bank);
 			if (result != Result::Success) {
-				VAE_WARN("Failed to load bank from file %i with error %i", path, result)
+				VAE_WARN("Failed to load bank from file %s with error %i", path, result)
 				return result;
 			}
 			return loadBank(bank);
@@ -259,7 +259,7 @@ namespace vae { namespace core {
 				}
 				mBanks[bank.id] = std::move(bank);
 			}
-			VAE_INFO("Bank %s loaded.", mBanks[bank.id].name)
+			VAE_INFO("Bank %s loaded.", mBanks[bank.id].name.c_str())
 			return Result::Success;
 		}
 

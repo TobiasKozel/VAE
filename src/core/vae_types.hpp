@@ -27,6 +27,8 @@ namespace vae { namespace core {
 	using SampleIndex = AudioBuffer::Size;
 
 	using Uchar = unsigned char;
+
+	using Uint = unsigned int;
 } } // namespace vae::core
 
 
