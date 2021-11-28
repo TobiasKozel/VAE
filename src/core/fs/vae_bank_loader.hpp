@@ -77,7 +77,7 @@ namespace vae { namespace core {
 					s.type		= i["type"];
 					auto result = SourceLoader::load(s, folder);
 					if (result != Result::Success) {
-						VAE_WARN("Failed to load source %s", s.path.c_str());
+						VAE_ERROR("Failed to load source %s", s.path.c_str());
 					}
 				}
 			}

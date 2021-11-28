@@ -71,14 +71,15 @@ namespace vae { namespace core {
 		~Engine() { stop(); }
 
 		Result init() {
+			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
+			mScratchBuffer.sampleRate = mConfig.preferredSampleRate;
+
 			Backend& backend = CurrentBackend::instance();
 			mDevice = backend.createDevice(mConfig);
 			mDevice->setCallback(TKLB_DELEGATE(&Engine::process, *this));
 			mDevice->openDevice();
 
 			mAudioThreadRunning = true;
-			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
-			mScratchBuffer.sampleRate = mConfig.preferredSampleRate;
 			// mAudioThread = Thread([&]() {
 			// 	while(mAudioThreadRunning) {
 			// 		// TODO wait for notification from device
@@ -119,7 +120,9 @@ namespace vae { namespace core {
 			while (true) {
 				// split larger chunks
 				auto remaining = std::min(d.canPush(), Config::MaxBlock);
-				if (remaining == 0) { break; }
+
+				if (remaining == 0) { break; } // ! Done if the outbuffer can't fit more
+
 				mScratchBuffer.setValidSize(remaining);
 				// TODO PERF VAE banks could be processed in parellel
 				for (auto& i : mBanks) {
@@ -129,7 +132,8 @@ namespace vae { namespace core {
 					mScratchBuffer.add(bankMaster);
 					bankMaster.set(0);
 				}
-				d.push(mScratchBuffer);
+				auto pushed = d.push(mScratchBuffer);
+				VAE_ASSERT(pushed != 0)
 				mScratchBuffer.set(0);
 				mTime += remaining;
 				mTimeFract += step * remaining;
@@ -226,7 +230,7 @@ namespace vae { namespace core {
 			Bank bank;
 			auto result = BankLoader::load(path, bank);
 			if (result != Result::Success) {
-				VAE_WARN("Failed to load bank from file %s with error %i", path, result)
+				VAE_ERROR("Failed to load bank from file %s with error %i", path, result)
 				return result;
 			}
 			return loadBank(bank);

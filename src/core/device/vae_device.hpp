@@ -90,15 +90,15 @@ namespace vae { namespace core {
 					{
 						Lock l(mutex);
 						popped = queueToDevice.pop(convertBuffer, frames);
-						if (popped != frames) {
-							underruns += (frames - popped);
-						}
+						underruns += (frames - popped);
 					}
 					convertBuffer.putInterleaved(to, popped);
 				}
 				streamTime += frames;
 			}
 		};
+
+		static constexpr int _VAE_WORKER_SIZE = sizeof(AudioThreadWorker);
 
 		AudioThreadWorker mWorker;
 
@@ -156,7 +156,7 @@ namespace vae { namespace core {
 			if (0 < channelsOut) {
 				mWorker.queueToDevice.resize(
 					bufferSize * Config::DeviceMaxPeriods,
-					channelsIn
+					channelsOut
 				);
 			}
 
@@ -215,17 +215,17 @@ namespace vae { namespace core {
 		 * @brief Push samples to the audio device
 		 * @param buffer Pushes the amount of valid samples
 		 */
-		void push(const AudioBuffer& buffer) {
+		Size push(const AudioBuffer& buffer) {
 			VAE_ASSERT(0 < mWorker.channelsOut)
 			auto frames = buffer.validSize();
 			VAE_ASSERT(frames != 0) // need to have valid frames
 			if (mResamplerToDevice.isInitialized()) {
 				mResamplerToDevice.process(buffer, mResamplerBufferToDevice);
 				Lock lock(mWorker.mutex);
-				mWorker.queueToDevice.push(mResamplerBufferToDevice);
+				return mWorker.queueToDevice.push(mResamplerBufferToDevice);
 			} else {
 				Lock lock(mWorker.mutex);
-				mWorker.queueToDevice.push(buffer);
+				return mWorker.queueToDevice.push(buffer);
 			}
 		}
 

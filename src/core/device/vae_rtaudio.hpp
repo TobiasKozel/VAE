@@ -54,7 +54,7 @@ namespace vae { namespace core {
 
 		bool openDevice(DeviceInfo& device) override {
 			if (mBackend.getDeviceCount() < Size(device.id)) {
-				TKLB_ASSERT(false)
+				VAE_ERROR("Failed to open deivce with index out of bounds")
 				return false;
 			}
 
@@ -75,6 +75,7 @@ namespace vae { namespace core {
 			);
 
 			if (result != RTAUDIO_NO_ERROR) {
+				VAE_ERROR("Failed to open RtAudio device with code %i", result)
 				return false;
 			}
 
@@ -89,6 +90,7 @@ namespace vae { namespace core {
 
 			result = mAudio.startStream();
 			if (result != RTAUDIO_NO_ERROR) {
+				VAE_ERROR("Failed to open RtAudio device with code %i", result)
 				cleanUp();
 				return false;
 			}
