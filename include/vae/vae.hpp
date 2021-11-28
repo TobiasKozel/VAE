@@ -38,7 +38,8 @@ namespace vae {
 		FileOpenError,				// File system could not load file
 		VoiceStarvation,			// Could not play sound because of voice limit
 		BankFormatBadMixHirarchy,	// A mixer can only write to mixers with lower ids than themselves (no recursion)
-		ElementNotFound				// Referenced data not found
+		ElementNotFound,			// Referenced data not found
+		ValidHandleRequired			// Handle provided wasn't valid but needs to be
 	};
 
 	/**

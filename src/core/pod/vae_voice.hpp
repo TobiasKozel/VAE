@@ -11,6 +11,7 @@ namespace vae { namespace core {
 		EmitterHandle emitter;
 		MixerHandle mixer;
 		BankHandle bank;
+		bool chainedEvents = false;	// True if the event has on_stop events chained
 		SampleIndex time = 0;
 		Time timeFract = 0.0;
 	};

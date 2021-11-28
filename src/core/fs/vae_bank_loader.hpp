@@ -1,16 +1,17 @@
 #ifndef _VAE_BANK_LOADER
 #define _VAE_BANK_LOADER
 
-#include <fstream>
-
-#include "../../../external/json.hpp"
-#include "../../../external/tklb/src/types/audio/TWaveFile.hpp"
-
 #include "../vae_types.hpp"
 #include "../vae_config.hpp"
+#include "../vae_util.hpp"
 #include "../pod/vae_source.hpp"
 #include "../pod/vae_event.hpp"
 #include "../pod/vae_bank.hpp"
+
+#include "./vae_source_loader.hpp"
+
+#include <fstream>
+#include "../../../external/json.hpp"
 
 namespace vae { namespace core {
 	NLOHMANN_JSON_SERIALIZE_ENUM(Event::EventType, {
@@ -33,31 +34,7 @@ namespace vae { namespace core {
 		{Source::SourceFormat::vorbis, "vorbis"},
 	})
 
-	class BankLoader {
-		/**
-		 * @brief Loads a wav file for the resource
-		 * @param s
-		 * @param path
-		 * @return Result
-		 */
-		static Result loadSource(Source& s, std::string path) {
-			constexpr int tes = sizeof(Source);
-			if (s.type == Source::SourceType::preload) {
-				path += s.path;
-				auto result = tklb::wave::load(path.c_str(), s.signal);
-				return result ? Result::Success : Result::GenericFailure;
-			}
-			if (s.type == Source::SourceType::stream) {
-				return Result::GenericFailure;
-				// TODO preload a few samples from the wave file
-				path += s.path;
-				s.signal.setValidSize(Config::StreamPrefetch);
-				auto result = tklb::wave::load(path.c_str(), s.signal);
-				return result ? Result::Success : Result::GenericFailure;
-			}
-			return Result::GenericFailure;
-		}
-	public:
+	struct BankLoader {
 		/**
 		 * @brief Load a bank.json and all wav files referenced in it.
 		 * @param path The path to the bank folder. Folder must contain a bank.json. Wav files are relative to this path
@@ -98,7 +75,10 @@ namespace vae { namespace core {
 					s.path		= i["path"];
 					s.format	= i["format"];
 					s.type		= i["type"];
-					loadSource(s, folder);
+					auto result = SourceLoader::load(s, folder);
+					if (result != Result::Success) {
+						VAE_WARN("Failed to load source %s", s.path.c_str());
+					}
 				}
 			}
 

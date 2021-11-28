@@ -142,7 +142,7 @@ namespace vae { namespace core {
 		 * If this isn't called regularly events might be lost.
 		 */
 		void update() {
-			for (auto& v : mVoiceManager.voicesFinished) {
+			for (auto& v : mVoiceManager.finishedVoiceQueue) {
 				if (v.source == InvalidHandle) { continue; }
 				for (auto& i : mBanks[v.bank].events[v.event].on_end) {
 					fireEvent(v.bank, i, v.emitter, v.mixer);

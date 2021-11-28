@@ -51,43 +51,8 @@ namespace vae { namespace core {
 				v.time += remaining; // progress time in voice
 
 				if (remaining != frames) {
-					// end is reached
-					auto& event = bank.events[v.event];
-					if (event.on_end.empty()) {
-						v.source = InvalidHandle; // Mark voice as free
-						continue;
-					}
-					/**
-					 * If the event triggers something on_end
-					 * it needs to be added to the voicesFinished
-					 * array in the voice manager.
-					 * The update() function on the engine will handle it
-					 */
-
-					// TODO VAE PERF
-					bool finished = false;
-					for (auto& i : manager.voicesFinished) {
-						if (i.source == InvalidHandle) {
-							finished = true;
-							i.event = v.event;
-							i.eventInstance = v.eventInstance;
-							i.mixer = v.mixer;
-							i.emitter = v.emitter;
-							i.bank = v.bank;
-
-							// This is set last since it marks the
-							// finished voice for other threads
-							i.source = v.source;
-							break;
-						}
-					}
-					v.source = InvalidHandle; // Mark voice as free
-
-					if (!finished) {
-						// Failed to find a free spot in finished voices array
-						// TODO handle this gracefully
-						VAE_ASSERT(false)
-					}
+					// end is reached, voice needs to be stopped
+					manager.stopVoice(v);
 				}
 			}
 		}
