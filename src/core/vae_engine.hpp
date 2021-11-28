@@ -68,7 +68,10 @@ namespace vae { namespace core {
 			VAE_DEBUG("Engine constructed")
 		}
 
-		~Engine() { stop(); }
+		~Engine() {
+			unloadAllBanks();
+			stop();
+		}
 
 		Result init() {
 			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
@@ -126,6 +129,7 @@ namespace vae { namespace core {
 				mScratchBuffer.setValidSize(remaining);
 				// TODO PERF VAE banks could be processed in parellel
 				for (auto& i : mBanks) {
+					if (i.id == InvalidBankHandle) { continue; } // skip unloaded banks
 					Processor::mix(mVoiceManager, i, remaining, sampleRate);
 					MixerProcessor::mix(mVoiceManager, i, remaining);
 					auto& bankMaster = i.mixers[Mixer::MasterMixerHandle].buffer;
@@ -323,9 +327,7 @@ namespace vae { namespace core {
 			Lock l(mMutex);
 			for (auto& i : mBanks) {
 				if (strcmp(path, i.path.c_str()) == 0) {
-					i = { }; // should free all the memory
-					VAE_DEBUG("Bank %s unloaded.", path)
-					return Result::Success;
+					return unloadBankFromId(i.id);
 				}
 			}
 			VAE_WARN("Could not unload Bank %s", path)
@@ -340,15 +342,20 @@ namespace vae { namespace core {
 		 */
 		Result unloadBankFromId(BankHandle bankHandle) {
 			Lock l(mMutex);
-			for (auto& i : mBanks) {
-				if (i.id == bankHandle) {
-					VAE_INFO("Unloading bank %s", i.name.c_str())
-					i = { }; // should free all the memory
-					return Result::Success;
-				}
+			if (mBanks.size() <= bankHandle) {
+				VAE_WARN("Could not unload bank with handle %i", bankHandle)
+				return Result::ElementNotFound;
 			}
-			VAE_INFO("Could not unload bank with handle %i", bankHandle)
-			return Result::ElementNotFound;
+			auto& bank = mBanks[bankHandle];
+			VAE_ASSERT(bank.id == bankHandle)
+			VAE_INFO("Unloading bank %s", bank.name.c_str())
+			bank = { }; // should free all the memory
+			return Result::Success;
+		}
+
+		void unloadAllBanks() {
+			Lock l(mMutex);
+			mBanks.resize(0);
 		}
 #pragma endregion bank_handling
 

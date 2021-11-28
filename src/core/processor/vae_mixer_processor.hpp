@@ -19,6 +19,8 @@ namespace vae { namespace core {
 		static void mix(
 			VoiceManger& manager, Bank& bank, SampleIndex frames
 		) {
+			VAE_ASSERT(!bank.mixers.empty()) // can't happen
+
 			/**
 			 * mix all non master mixers
 			 * start from back since mixer can only write to mixer with
