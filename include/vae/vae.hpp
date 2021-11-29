@@ -39,7 +39,8 @@ namespace vae {
 		VoiceStarvation,			// Could not play sound because of voice limit
 		BankFormatBadMixHirarchy,	// A mixer can only write to mixers with lower ids than themselves (no recursion)
 		ElementNotFound,			// Referenced data not found
-		ValidHandleRequired			// Handle provided wasn't valid but needs to be
+		ValidHandleRequired,		// Handle provided wasn't valid but needs to be
+		TooManyRecords				// Can't fit all data in fixed size array
 	};
 
 	/**
@@ -63,11 +64,10 @@ namespace vae {
 	 * to EventCallback provided in the EngineConfig.
 	 */
 	struct EventCallbackData {
-		const char* name;		// name of the event for debugging
-		void* payload;			// Can point to custom context data also provided when setting the callback
+		void* context;			// Can point to custom context data also provided when setting the callback, ! not context based on event!
 		BankHandle bank;		// Which bank the event is from
 		EventHandle event;		// Which event
-		EmitterHandle emitter;	// Which emitter
+		EmitterHandle emitter;	// Which emitter if any
 	};
 
 	/**
@@ -86,10 +86,10 @@ namespace vae {
 		 * @brief Custom data that can be accached to the EventCallback
 		 * to maintain context
 		 */
-		void* eventCallbackPayload = nullptr;
+		void* eventCallbackContext = nullptr;
 
 		/**
-		 * @brief Hard limit on concurrentvoices, can't be 0
+		 * @brief Hard limit on concurrent voices, can't be 0
 		 */
 		unsigned int voices = 1024;
 
@@ -109,7 +109,36 @@ namespace vae {
 		 */
 		unsigned int preferredSampleRate = 48000;
 
+		/**
+		 * @brief Higher values increase latency but reduce chanes of
+		 * crackles and other artefacts. Some audio backends need
+		 * higher values to work properly.
+		 * The actual buffer size might based on the device.
+		 */
 		unsigned int preferredBufferSize = 512;
+
+		/**
+		 * @brief Number of blocks/buffers to processed ahead.
+		 * Increases latency but reduces chances of underruns
+		 * since it's more forgiving to the scheduler.
+		 */
+		unsigned int bufferPeriods = 3;
+
+		/**
+		 * @brief If this is true update() does not need to be called on the engine instance.
+		 * This means events will be emitted more offen
+		 * and if a lot of work is done in the EventCallback defined above,
+		 * the audio thread will be blocked and underruns occur.
+		 */
+		bool updateInAudioThread = false;
+
+		/**
+		 * @brief If enabled, all processing and mixing will happen in the audio callback.
+		 * This results in lower latency and one less thread running, but this
+		 * isn't good practice apparently.
+		 *
+		 */
+		bool processInBufferSwitch = true;
 	};
 } // namespace vae
 

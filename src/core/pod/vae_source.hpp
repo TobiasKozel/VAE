@@ -5,26 +5,26 @@
 
 #include <stddef.h>
 #include <string>
+#include <bitset>
 
 namespace vae { namespace core {
 	struct Source {
-		enum class SourceType {
-			undefined = 0,
-			preload,
-			stream,
-			generator
-		};
-		enum class SourceFormat {
-			undefined = 0,
-			wav,
-			vorbis
+		struct Flags {
+			enum {
+				preload,	// Entire signal will be loaded into ram
+				stream,		// TODO Signal will be streamed
+				generator,	// TODO Signal will be generated
+				wav,		// Format is wav
+				vorbis,		// TODO Formatis ogg
+				FLAG_COUNT
+			};
 		};
 		SourceHandle id = InvalidHandle;
-		SourceFormat format;
-		SourceType type;
-		std::string name;
 		std::string path;		// Filesystem path
+		Sample gain = 1.0;		// Gain applied to every voice creatd frin this source
 		AudioBuffer signal;		// Signal or scratch buffer for generated types
+		std::bitset<Flags::FLAG_COUNT> flags;
+		NameString name;		// Name for debugging
 	};
 
 	constexpr int _VAE_STRING_SIZE = sizeof(std::string);

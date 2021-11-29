@@ -3,9 +3,9 @@
 
 #include "../vae_types.hpp"
 #include "./vae_effect.hpp"
+#include "../vae_config.hpp"
 
-#include <string>
-#include <vector>
+#include <array>
 
 namespace vae { namespace core {
 	struct Mixer {
@@ -22,11 +22,10 @@ namespace vae { namespace core {
 		 * It's the only mixer shared across banks.
 		 */
 		MixerHandle id = InvalidMixerHandle;
-		std::vector<Effect> effects;
-		std::string name;
+		std::array<Effect, Config::MaxMixerEffects> effects;
+		NameString name; // name for debugging
 	};
 
-	constexpr int _VAE_VECTOR_SIZE = sizeof(std::vector<Effect>);
 	constexpr int _VAE_MIXER_SIZE = sizeof(Mixer);
 } } // vae::core
 

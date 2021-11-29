@@ -1,7 +1,7 @@
 #ifndef _VAE_LOGGER
 #define _VAE_LOGGER
 
-#ifndef _NDEBUG
+#ifndef VAE_RELEASE
 	#ifdef _VAE_LOG_CONST_EXPR_FILEPATH
 		namespace vae { namespace core { namespace log {
 			using cstr = const char* const;
@@ -19,7 +19,7 @@
 		#include <stdio.h>
 		#define __FILENAME__ ({ constexpr ::vae::core::log::cstr sf__ {::vae::core::log::past_last_slash(__FILE__)}; sf__; })
 	#else
-		#include <string.h>
+		#include <cstring>
 		#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 	#endif // _VAE_LOG_CONST_EXPR_FILEPATH
 
@@ -27,11 +27,17 @@
 	#define VAE_INFO(msg, ...)  printf ("INFO\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
 	#define VAE_WARN(msg, ...)  printf ("WARN\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
 	#define VAE_ERROR(msg, ...) printf("ERROR\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
+	#ifdef VAE_LOG_EVENTS
+		#define VAE_DEBUG_EVENT(msg, ...) printf("EVENT\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
+	#else
+		#define VAE_DEBUG_EVENT(msg, ...) ;
+	#endif // VAE_LOG_EVENTS
 #else
 	#define VAE_DEBUG(msg, ...) ;
 	#define VAE_INFO(msg, ...)  ;
 	#define VAE_WARN(msg, ...)  ;
 	#define VAE_ERROR(msg, ...) ;
+	#define VAE_DEBUG_EVENT(msg, ...) ;
 #endif // _NDEBUG
 
 #endif // _VAE_LOGGER

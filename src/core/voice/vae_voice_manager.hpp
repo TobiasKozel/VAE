@@ -50,32 +50,37 @@ namespace vae { namespace core {
 		) {
 			// Find a free voice
 			// TODO VAE PERF
-			for (auto& i : voices) {
-				if(i.source == InvalidHandle) {
-					i = {}; // re init object resets time and so on
-					i.source = event.source;
-					i.event = event.id;
-					i.chainedEvents = !event.on_end.empty();
+			for (auto& v : voices) {
+				if(v.source == InvalidHandle) {
+					v = {}; // re init object resets time and so on
+					v.source = event.source;
+					v.event = event.id;
 
-					if (mixer != InvalidMixerHandle && !event.force_mixer) {
-						// Only use the mixer provided if it's valid
-						// and the event allows overriding it
-						i.mixer = mixer;
-					} else {
-						// Otherwise use the mixer from the event
-						i.mixer = event.mixer;
+					for (auto& i : event.on_end) {
+						v.flags[Voice::Flags::chainedEvents] =
+							v.flags[Voice::Flags::chainedEvents] || (i != InvalidHandle);
 					}
 
-					i.emitter = emitter;
-					i.bank = bank;
-					i.eventInstance = currentEventInstance;
+					if (mixer != InvalidMixerHandle && !event.flags[Event::Flags::force_mixer]) {
+						// Only use the mixer provided if it's valid
+						// and the event allows overriding it
+						v.mixer = mixer;
+					} else {
+						// Otherwise use the mixer from the event
+						v.mixer = event.mixer;
+					}
+
+					v.emitter = emitter;
+					v.bank = bank;
+					v.eventInstance = currentEventInstance;
+					v.gain = event.gain;
 					currentEventInstance++;
 					activeVoices++;
 					return Result::Success;
 				}
 			}
 
-			VAE_WARN("Voice starvation. Can't start voice from event %i in bank %i", event.id, bank)
+			VAE_WARN("Voice starvation. Can't start voice from event %i:%i", event.id, bank)
 
 			return Result::VoiceStarvation;
 		}
@@ -89,7 +94,7 @@ namespace vae { namespace core {
 		Result stopVoice(Voice& v) {
 			VAE_ASSERT(v.source != InvalidHandle) // voice already stopped
 
-			if (!v.chainedEvents) {
+			if (!v.flags[Voice::Flags::chainedEvents]) {
 				v.source = InvalidHandle; // Mark voice as free
 				activeVoices--;
 				return Result::Success;
@@ -103,18 +108,18 @@ namespace vae { namespace core {
 
 			// TODO VAE PERF
 			bool finished = false;
-			for (auto& i : finishedVoiceQueue) {
-				if (i.source == InvalidHandle) {
+			for (auto& f : finishedVoiceQueue) {
+				if (f.source == InvalidHandle) {
 					finished = true;
-					i.event = v.event;
-					i.eventInstance = v.eventInstance;
-					i.mixer = v.mixer;
-					i.emitter = v.emitter;
-					i.bank = v.bank;
+					f.event = v.event;
+					f.eventInstance = v.eventInstance;
+					f.mixer = v.mixer;
+					f.emitter = v.emitter;
+					f.bank = v.bank;
 
 					// This is set last since it marks the
 					// finished voice for other threads
-					i.source = v.source;
+					f.source = v.source;
 					break;
 				}
 			}
@@ -137,13 +142,13 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stopFromSource(SourceHandle source, EmitterHandle emitter) {
-			if (source == InvalidHandle) { return Result::ValidHandleRequired; }
-			for (auto& i : voices) {
-				if(i.source == source) {
+			VAE_ASSERT(source != InvalidHandle)
+			for (auto& v : voices) {
+				if(v.source == source) {
 					if (emitter == InvalidHandle) {
-						stopVoice(i);
-					} else if (i.emitter == emitter) {
-						stopVoice(i);
+						stopVoice(v);
+					} else if (v.emitter == emitter) {
+						stopVoice(v);
 					}
 				}
 			}
@@ -158,13 +163,13 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stopFromEvent(EventHandle event, EmitterHandle emitter) {
-			if (event == InvalidHandle) { return Result::ValidHandleRequired; }
-			for (auto& i : voices) {
-				if(i.event == event) {
+			VAE_ASSERT(event != InvalidHandle)
+			for (auto& v : voices) {
+				if(v.event == event) {
 					if (emitter == InvalidHandle) {
-						stopVoice(i);
-					} else if (i.emitter == emitter) {
-						stopVoice(i);
+						stopVoice(v);
+					} else if (v.emitter == emitter) {
+						stopVoice(v);
 					}
 				}
 			}
@@ -179,13 +184,13 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stopFromMixer(MixerHandle mixer, EmitterHandle emitter) {
-			if (mixer == InvalidMixerHandle) { return Result::ValidHandleRequired; }
-			for (auto& i : voices) {
-				if(i.mixer == mixer) {
+			VAE_ASSERT(mixer != InvalidMixerHandle)
+			for (auto& v : voices) {
+				if(v.mixer == mixer) {
 					if (emitter == InvalidHandle) {
-						stopVoice(i);
-					} else if (i.emitter == emitter) {
-						stopVoice(i);
+						stopVoice(v);
+					} else if (v.emitter == emitter) {
+						stopVoice(v);
 					}
 				}
 			}
@@ -199,10 +204,10 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stopEmitter(EmitterHandle emitter) {
-			if (emitter == InvalidMixerHandle) { return Result::ValidHandleRequired; }
-			for (auto& i : voices) {
-				if(i.emitter == emitter) {
-					stopVoice(i);
+			VAE_ASSERT(emitter != InvalidHandle)
+			for (auto& v : voices) {
+				if(v.emitter == emitter) {
+					stopVoice(v);
 				}
 			}
 			return Result::Success;

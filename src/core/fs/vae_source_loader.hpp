@@ -20,12 +20,12 @@ namespace vae { namespace core {
 		static Result load(Source& s, std::string path) {
 			// TODO handle path always relative to some predefined root path
 			constexpr int tes = sizeof(Source);
-			if (s.type == Source::SourceType::preload) {
+			if (s.flags[Source::Flags::preload]) {
 				path += s.path;
 				auto result = tklb::wave::load(path.c_str(), s.signal);
 				return result ? Result::Success : Result::GenericFailure;
 			}
-			if (s.type == Source::SourceType::stream) {
+			if (s.flags[Source::Flags::stream]) {
 				return Result::GenericFailure;
 				// TODO preload a few samples from the wave file
 				path += s.path;

@@ -149,13 +149,13 @@ namespace vae { namespace core {
 
 			if (0 < channelsIn) {
 				mWorker.queueFromDevice.resize(
-					bufferSize * Config::DeviceMaxPeriods,
+					bufferSize * mConfig.bufferPeriods,
 					channelsIn
 				);
 			}
 			if (0 < channelsOut) {
 				mWorker.queueToDevice.resize(
-					bufferSize * Config::DeviceMaxPeriods,
+					bufferSize * mConfig.bufferPeriods,
 					channelsOut
 				);
 			}

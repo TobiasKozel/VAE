@@ -7,7 +7,8 @@
 			"name": "Sound1",
 			"path": "sound1.wav",
 			"format": "wav",
-			"type": "preload"
+			"type": "preload",
+			"gain": 0.6
 		}
 	],
 	"mixers": [

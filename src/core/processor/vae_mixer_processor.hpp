@@ -51,7 +51,7 @@ namespace vae { namespace core {
 			// TODO effects processing
 			auto& masterMixer = bank.mixers[Mixer::MasterMixerHandle];
 			masterMixer.buffer.multiply(masterMixer.gain);
-			// Master mixer will be mixed to the final output in the engineand then cleared
+			// Master mixer will be mixed to the final output in the engine and then cleared
 		}
 	};
 

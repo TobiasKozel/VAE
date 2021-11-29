@@ -14,26 +14,6 @@
 #include "../../../external/json.hpp"
 
 namespace vae { namespace core {
-	NLOHMANN_JSON_SERIALIZE_ENUM(Event::EventType, {
-		{Event::EventType::undefined, nullptr},
-		{Event::EventType::start, "start"},
-		{Event::EventType::stop, "stop"},
-		{Event::EventType::emit, "emit"},
-	})
-
-	NLOHMANN_JSON_SERIALIZE_ENUM(Source::SourceType, {
-		{Source::SourceType::undefined, nullptr},
-		{Source::SourceType::generator, "generator"},
-		{Source::SourceType::preload, "preload"},
-		{Source::SourceType::stream, "stream"},
-	})
-
-	NLOHMANN_JSON_SERIALIZE_ENUM(Source::SourceFormat, {
-		{Source::SourceFormat::undefined, nullptr},
-		{Source::SourceFormat::wav, "wav"},
-		{Source::SourceFormat::vorbis, "vorbis"},
-	})
-
 	struct BankLoader {
 		/**
 		 * @brief Load a bank.json and all wav files referenced in it.
@@ -73,11 +53,19 @@ namespace vae { namespace core {
 					s.id		= id;
 					s.name		= i["name"];
 					s.path		= i["path"];
-					s.format	= i["format"];
-					s.type		= i["type"];
+					s.gain		= i["gain"];
+
+					std::string format	= i["format"];
+					std::string	type	= i["type"];
+					s.flags[Source::Flags::generator]	= type == "generator";
+					s.flags[Source::Flags::preload]		= type == "preload";
+					s.flags[Source::Flags::stream]		= type == "stream";
+					s.flags[Source::Flags::vorbis]	= format == "vorbis";
+					s.flags[Source::Flags::wav]		= format == "wav";
+
 					auto result = SourceLoader::load(s, folder);
 					if (result != Result::Success) {
-						VAE_ERROR("Failed to load source %s", s.path.c_str());
+						VAE_ERROR("Failed to load source %s", s.path.c_str())
 					}
 				}
 			}
@@ -87,27 +75,32 @@ namespace vae { namespace core {
 			 */
 			auto mixers = data["mixers"];
 			if (!mixers.empty()) {
-				bank.mixers.resize(mixers.size());
+				const auto mixerCount = mixers.size();
+				bank.mixers.resize(mixerCount);
 				for (auto& i : mixers) {
 					MixerHandle id = i["id"];
 
-					if (mixers.size() <= id) { return Result::BankFormatIndexError; }
+					if (mixerCount <= id) {
+						VAE_ERROR("Mixer %i:%i id out of bounds.", id, bank.id);
+						return Result::BankFormatIndexError;
+					}
 
 					auto& m = bank.mixers[id];
+					m.parent = i["parent"];
+
 					if (m.id != Mixer::MasterMixerHandle && m.id <= m.parent) {
 						// Mixer can only write to mixers with lower ids than themselves
 						// this avoids recursion and makes mixing easier
+						VAE_ERROR("Mixer %i:%i tried to mix to %i. ", id, bank.id, m.parent);
 						return Result::BankFormatBadMixHirarchy;
 					}
 
 					m.id 			= id;
 					m.name			= i["name"];
-					m.parent		= i["parent"];
 					m.gain			= i["gain"];
 					auto effects	= i["effects"];
-					m.effects.reserve(effects.size());
-					for (auto& j : effects) {
-						m.effects.push_back({ });
+					for (size_t j = 0; j < Config::MaxMixerEffects; j++) {
+						m.effects[j] = { };
 					}
 				}
 			}
@@ -118,13 +111,21 @@ namespace vae { namespace core {
 				for (auto& i : events) {
 					EventHandle id = i["id"];
 
-					if (events.size() <= id) { return Result::BankFormatIndexError; }
+					if (events.size() <= id) {
+						VAE_ERROR("Event %i:%i id out of bounds.", id, bank.id)
+						return Result::BankFormatIndexError;
+					}
 
 					Event& e = bank.events[id];
-					e.id			= id;
-					e.name			= i["name"];
-					e.type			= i["type"];
-					e.force_mixer	= i["force_mixer"];
+
+					e.id	= id;
+					e.name	= i["name"];
+
+					std::string type = i["type"];
+					e.flags[size_t(Event::Flags::start)] = type == "start";
+					e.flags[size_t(Event::Flags::stop)]  = type == "stop";
+					e.flags[size_t(Event::Flags::emit)]  = type == "emit";
+					e.flags[size_t(Event::Flags::force_mixer)] = bool(i["force_mixer"]);
 
 					if (i["source"].is_null()) {
 						e.source = InvalidHandle;
@@ -133,15 +134,21 @@ namespace vae { namespace core {
 					}
 
 					auto onStart = i["on_start"];
-					e.on_start.reserve(onStart.size());
-					for (auto& j : onStart) {
-						e.on_start.push_back(j);
+					if (Config::MaxChainedEvents < onStart.size()) {
+						VAE_ERROR("Event %i:%i has too many chained on_start events.", id, bank.id)
+						return Result::TooManyRecords;
+					}
+					for (size_t j = 0; j < onStart.size(); j++) {
+						e.on_start[j] = onStart[j];
 					}
 
 					auto onEnd = i["on_end"];
-					e.on_end.reserve(onEnd.size());
-					for (auto& j : onEnd) {
-						e.on_end.push_back(j);
+					if (Config::MaxChainedEvents < onEnd.size()) {
+						VAE_ERROR("Event %i:%i has too many chained on_end events.", id, bank.id)
+						return Result::TooManyRecords;
+					}
+					for (size_t j = 0; j < onEnd.size(); j++) {
+						e.on_end[j] = onEnd[j];
 					}
 
 					e.mixer = i["mixer"];

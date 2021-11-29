@@ -2,27 +2,42 @@
 #define _VAE_EVENT
 
 #include "../vae_types.hpp"
+#include "../vae_config.hpp"
 #include "./vae_mixer.hpp"
 
-#include <string>
-#include <vector>
+#include <array>
+#include <bitset>
 
 namespace vae { namespace core {
 	struct Event {
-		enum class EventType {
-			undefined = 0,
-			start,				// Starts a source
-			stop,				// Stops a source
-			emit				// Emits an event to the EventCallback defined in the engine config
+		struct Flags {
+			enum {
+				start = 0,		// Starts a source
+				stop,			// Stops a source
+				emit,			// Emits an event to the EventCallback defined in the engine config
+				force_mixer,	// Prevents overriding the mixer from chained events or fireEvent
+				FLAG_COUNT
+			};
 		};
-		EventHandle id = InvalidHandle;
-		MixerHandle mixer = Mixer::MasterMixerHandle;	// Mixer the source gets written to
-		bool force_mixer = false;						// Prevents overriding the mixer from chained events or fireEvent
-		std::string name;								// Name for debugging
-		std::vector<EventHandle> on_start;				// Events called when the source starts playing
-		std::vector<EventHandle> on_end;				// Events fired once the source is finished, not called when there's no source
-		SourceHandle source = InvalidHandle;			// Handle to a source
-		EventType type;									// Defines what the event does
+		std::bitset<Flags::FLAG_COUNT> flags;						// Contains flags from above
+		EventHandle id = InvalidHandle;								// Own id
+		SourceHandle source = InvalidHandle;						// Handle to a source
+		Sample gain = 1.0;											// Volume applied to triggered voice
+		std::array<EventHandle, Config::MaxChainedEvents> on_start;	// Events called when the source starts playing
+		std::array<EventHandle, Config::MaxChainedEvents> on_end;	// Events fired once the source is finished, not called when there's no source
+		MixerHandle mixer = Mixer::MasterMixerHandle;				// Mixer the source gets written to
+		NameString name;											// Name for debugging
+
+		/**
+		 * TODO this isn't exactly pod style but the arrays need to be
+		 *  initialized properly since 0 is a valid event handle
+		 */
+		Event() {
+			for (size_t i = 0; i < Config::MaxChainedEvents; i++) {
+				on_start[i] = InvalidHandle;
+				on_end[i] = InvalidHandle;
+			}
+		}
 	};
 
 	constexpr int _VAE_EVENT_SIZE = sizeof(Event);

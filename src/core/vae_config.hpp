@@ -21,18 +21,25 @@ namespace vae {
 		constexpr unsigned int MaxBlock = 256;
 
 		/**
-		 * When not running in synchronous mode, this represents the
-		 * number of blocks processed ahead for swapping.
-		 * Increases latency but reduces chances of underruns
-		 * since it's more forgiving to the scheduler.
-		 */
-		constexpr unsigned int DeviceMaxPeriods = 3;
-
-		/**
 		 * @brief How many Samples to prefetch for streaming sources
 		 * TODO no streaming for now
 		 */
 		constexpr unsigned int StreamPrefetch = 1024 * 8;
+
+		/**
+		 * @brief How many listeners can observe 3D voices
+		 */
+		constexpr size_t MaxListeners = 4;
+
+		/**
+		 * @brief How many effects a mixer channel can process
+		 */
+		constexpr size_t MaxMixerEffects = 4;
+
+		/**
+		 * @brief How many chained events can fit in on_start and on_end
+		 */
+		constexpr size_t MaxChainedEvents = 4;
 	}
 }
 

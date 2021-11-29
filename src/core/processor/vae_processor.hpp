@@ -41,10 +41,12 @@ namespace vae { namespace core {
 					frames, SampleIndex(signal.size() - v.time
 				));
 
+				const auto gain = v.gain * source.gain;
+
 				for (int c = 0; c < target.channels(); c++) {
 					const int channel = c % signal.channels();
 					for (SampleIndex s = 0; s < remaining; s++) {
-						target[c][s] += signal[channel][v.time + s];
+						target[c][s] += signal[channel][v.time + s] * gain;
 					}
 				}
 
