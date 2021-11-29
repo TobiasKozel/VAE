@@ -12,6 +12,7 @@
 #ifndef _VAE_TYPES
 #define _VAE_TYPES
 
+#include "../../external/glm/glm/glm.hpp"
 #include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../external/tklb/src/types/audio/TAudioRingBuffer.hpp"
 #include "../../include/vae/vae.hpp"
@@ -41,6 +42,8 @@ namespace vae { namespace core {
 	using Uchar = unsigned char;
 
 	using Uint = unsigned int;
+
+	using Vec3 = glm::vec3;
 
 	#ifdef VAE_RELEASE
 		/**

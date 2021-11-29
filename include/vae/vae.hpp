@@ -14,21 +14,23 @@
 #define _VAE_API_TYPES
 
 namespace vae {
-	using GenericHandle = unsigned short;
-	using EventHandle 	= GenericHandle;
-	using SourceHandle 	= GenericHandle;
-	using BankHandle 	= unsigned char;
-	using EmitterHandle = GenericHandle;
-	using VoiceHandle	= GenericHandle;
-	using MixerHandle	= unsigned char;
+	using SmallHandle		= unsigned char;
+	using GenericHandle 	= unsigned short;
+	using EventHandle 		= GenericHandle;
+	using SourceHandle 		= GenericHandle;
+	using BankHandle 		= SmallHandle;
+	using EmitterHandle 	= GenericHandle;
+	using VoiceHandle		= GenericHandle;
+	using MixerHandle		= SmallHandle;
+	using ListenerHandle	= SmallHandle;
 
-	constexpr BankHandle InvalidBankHandle		= ~0;
-	constexpr MixerHandle InvalidMixerHandle	= ~0;
-	constexpr GenericHandle InvalidHandle		= ~0;
+	constexpr BankHandle InvalidBankHandle			= ~0;
+	constexpr MixerHandle InvalidMixerHandle		= ~0;
+	constexpr ListenerHandle InvalidListenerHandle	= ~0;
+	constexpr GenericHandle InvalidHandle			= ~0;
 
 	/**
-	 * @brief Return Types for most engine function
-	 *
+	 * @brief Return Types for most engine functions
 	 */
 	enum class Result {
 		Success,					// :)
@@ -47,13 +49,10 @@ namespace vae {
 	 * @brief Basic struct describing a audio device
 	 */
 	struct DeviceInfo {
-		/**
-		 * Negative values for invalid device.
-		 */
-		int id;
-		unsigned int sampleRate = 0;
-		char name[255];
-		char api[4]; // API abbreviation
+		int id;							// Negative values for invalid device.
+		unsigned int sampleRate = 0;	// TODO not used?
+		char name[255];					// Device name reported from backend
+		char api[4];					// API abbreviation
 		unsigned int bufferSize = 0;
 		unsigned char channelsIn = 0;
 		unsigned char channelsOut = 0;

@@ -15,6 +15,7 @@
 #include "./voice/vae_voice_manager.hpp"
 #include "./fs/vae_bank_loader.hpp"
 #include "./processor/vae_processor.hpp"
+#include "./processor/vae_spatial_processor.hpp"
 #include "./processor/vae_mixer_processor.hpp"
 #include "./vae_util.hpp"
 #include "./pod/vae_listener.hpp"
@@ -27,6 +28,7 @@
 
 #include <cstring>	// strcmp
 #include <vector>	// mBanks
+#include <array>	// mListeners
 #include <thread>	// mAudioThread
 
 
@@ -38,12 +40,6 @@ namespace vae { namespace core {
 		using CurrentBackend = BackendRtAudio;
 		using Thread = std::thread;
 
-		/**
-		 * Main messaging instance, most objects hold a
-		 * reference to this instead of the engine itself
-		 */
-		// EventBus mBus;
-
 		EngineConfig mConfig;			// Config provided at construction
 		std::vector<Bank> mBanks;		// All the currently loaded banks
 		VoiceManger mVoiceManager;		// Stores and handle voices
@@ -51,9 +47,9 @@ namespace vae { namespace core {
 		SampleIndex mTime = 0;			// Global engine time in samples
 		Time mTimeFract = 0;			// Global engine time in seconds
 		Mutex mMutex;					// Mutex to lock AudioThread and bank operations
-		Listener mListeners[Config::MaxListeners];
+		Listeners mListeners;
 		Thread mAudioThread;			// Thread processing voices and mixers
-		AudioBuffer mScratchBuffer;		//
+		AudioBuffer mScratchBuffer;		// used to combine the signal from all banks and push it to the device
 		bool mAudioThreadRunning = false;
 
 		/**
@@ -140,11 +136,22 @@ namespace vae { namespace core {
 					// TODO PERF VAE banks could be processed in parellel
 					for (auto& i : mBanks) {
 						if (i.id == InvalidBankHandle) { continue; } // skip unloaded banks
+
 						Processor::mix(mVoiceManager, i, remaining, sampleRate);
+						SpatialProcessor::mix(mVoiceManager, i, mListeners,remaining, sampleRate);
+
 						MixerProcessor::mix(mVoiceManager, i, remaining);
 						auto& bankMaster = i.mixers[Mixer::MasterMixerHandle].buffer;
 						mScratchBuffer.add(bankMaster);
 						bankMaster.set(0);
+					}
+					{
+						// Shitty limiter
+						Sample max = 0;
+						for (Size i = 0; i < mScratchBuffer.size(); i++) {
+							max = std::max(max, mScratchBuffer[0][i]);
+						}
+						mScratchBuffer.multiply(1.0 / max);
 					}
 					auto pushed = d.push(mScratchBuffer);
 					VAE_ASSERT(pushed != 0)
@@ -247,6 +254,21 @@ namespace vae { namespace core {
 			return Result::Success;
 		}
 
+		/**
+		 * @brief Set the position of a listener
+		 *
+		 * @param listener
+		 * @return Result
+		 */
+		Result setListener(ListenerHandle listener, float x, float y, float z, float rx, float ry, float rz) {
+			if (Config::MaxListeners < listener) { return Result::ValidHandleRequired; }
+			auto& l = mListeners[listener];
+			l.postion = { x, y, z };
+			l.orientation = { rx, ry, rz };
+			l.id = listener;
+			return Result::Success;
+		}
+
 #pragma region bank_handling
 		/**
 		 * @brief Load bank from filesystem
@@ -294,6 +316,10 @@ namespace vae { namespace core {
 			}
 			VAE_INFO("Bank %s loaded.", mBanks[bank.id].name.c_str())
 			return Result::Success;
+		}
+
+		Result loadWorld() {
+			// TODO load static emitters
 		}
 
 		/**

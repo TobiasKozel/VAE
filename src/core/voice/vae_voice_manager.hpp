@@ -28,7 +28,7 @@ namespace vae { namespace core {
 		std::vector<Voice> voices;				// Currently playing voice are here
 		std::vector<Voice> finishedVoiceQueue;	// voices that finished playing are here
 		EventHandle currentEventInstance = 0;
-		Uint activeVoices = 0;
+		Size activeVoices = 0;
 
 		VoiceManger(EngineConfig& config) {
 			voices.resize(config.voices);
