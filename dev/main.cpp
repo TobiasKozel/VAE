@@ -19,9 +19,16 @@ int main() {
 	for (unsigned int i = 0; i < buffer.size(); i++) {
 		buffer[0][i] = sin(i * step * 440 * 3.141 * 2) * 0.7;
 	}
-	tklb::wave::write(buffer, "../../../dev/bank1/sound1.wav");
 
 	EngineConfig config;
+	#ifdef _MSC_VER
+		tklb::wave::write(buffer, "../../../dev/bank1/sound1.wav");
+		config.rootPath = "../../../dev/";
+	#else
+		tklb::wave::write(buffer, "../../dev/bank1/sound1.wav");
+		config.rootPath = "../../dev/";
+	#endif
+
 	// config.eventCallback = &eventTriggered;
 	config.preferredSampleRate = rate;
 
@@ -30,7 +37,7 @@ int main() {
 	engine.init();
 
 	std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(20));
-	auto result = engine.loadBank("../../../dev/bank1");
+	auto result = engine.loadBank("bank1");
 	if (result == Result::Success) {
 		printf("Waiting 2 secs\n");
 		std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(2000));

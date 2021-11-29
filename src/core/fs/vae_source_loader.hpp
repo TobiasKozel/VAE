@@ -19,16 +19,15 @@ namespace vae { namespace core {
 		 */
 		static Result load(Source& s, std::string path) {
 			// TODO handle path always relative to some predefined root path
-			constexpr int tes = sizeof(Source);
+			path = path + s.path;
 			if (s.flags[Source::Flags::preload]) {
-				path += s.path;
 				auto result = tklb::wave::load(path.c_str(), s.signal);
 				return result ? Result::Success : Result::GenericFailure;
 			}
 			if (s.flags[Source::Flags::stream]) {
-				return Result::GenericFailure;
+				VAE_ASSERT(false)
 				// TODO preload a few samples from the wave file
-				path += s.path;
+				return Result::GenericFailure;
 				s.signal.setValidSize(Config::StreamPrefetch);
 				auto result = tklb::wave::load(path.c_str(), s.signal);
 				return result ? Result::Success : Result::GenericFailure;

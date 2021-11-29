@@ -21,12 +21,12 @@ namespace vae { namespace core {
 		 * @param bank The bank object to populae
 		 * @return Result
 		 */
-		static Result load(const char* path, Bank& bank) {
+		static Result load(const char* path, const char* rootPath, Bank& bank) {
 			/**
 			 *					Open file and decode json
 			 */
 			std::string folder = path;
-			folder += "/";
+			folder = rootPath + folder + "/";
 			std::string json = folder + "bank.json";
 			std::ifstream file(json);
 

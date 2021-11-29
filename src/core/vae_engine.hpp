@@ -279,7 +279,7 @@ namespace vae { namespace core {
 		Result loadBank(const char* path) {
 			VAE_INFO("Loading bank from file %s", path)
 			Bank bank;
-			auto result = BankLoader::load(path, bank);
+			auto result = BankLoader::load(path, mConfig.rootPath, bank);
 			if (result != Result::Success) {
 				VAE_ERROR("Failed to load bank from file %s with error %i", path, result)
 				return result;
@@ -320,6 +320,7 @@ namespace vae { namespace core {
 
 		Result loadWorld() {
 			// TODO load static emitters
+			return Result::GenericFailure;
 		}
 
 		/**

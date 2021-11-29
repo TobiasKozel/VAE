@@ -76,6 +76,11 @@ namespace vae {
 	struct EngineConfig {
 		using EventCallback = void(*)(const EventCallbackData*);
 		/**
+		 * @brief Path where the bank files are located
+		 */
+		const char* rootPath = "./";
+
+		/**
 		 * @brief Each time a event of the type emit gets triggered
 		 * Used to get information about ending sounds and similar
 		 */
