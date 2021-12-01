@@ -19,12 +19,12 @@ namespace vae { namespace core {
 				FLAG_COUNT
 			};
 		};
-		SourceHandle id = InvalidHandle;
-		std::string path;		// Filesystem path
+		SourceHandle id = InvalidSourceHandle;
 		Sample gain = 1.0;		// Gain applied to every voice creatd frin this source
 		AudioBuffer signal;		// Signal or scratch buffer for generated types
 		std::bitset<Flags::FLAG_COUNT> flags;
 		NameString name;		// Name for debugging
+		PathString path;		// Filesystem path
 	};
 
 	constexpr int _VAE_STRING_SIZE = sizeof(std::string);

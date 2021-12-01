@@ -20,8 +20,8 @@ namespace vae { namespace core {
 			};
 		};
 		std::bitset<Flags::FLAG_COUNT> flags;						// Contains flags from above
-		EventHandle id = InvalidHandle;								// Own id
-		SourceHandle source = InvalidHandle;						// Handle to a source
+		EventHandle id = InvalidEventHandle;								// Own id
+		SourceHandle source = InvalidSourceHandle;						// Handle to a source
 		Sample gain = 1.0;											// Volume applied to triggered voice
 		std::array<EventHandle, Config::MaxChainedEvents> on_start;	// Events called when the source starts playing
 		std::array<EventHandle, Config::MaxChainedEvents> on_end;	// Events fired once the source is finished, not called when there's no source
@@ -34,8 +34,8 @@ namespace vae { namespace core {
 		 */
 		Event() {
 			for (size_t i = 0; i < Config::MaxChainedEvents; i++) {
-				on_start[i] = InvalidHandle;
-				on_end[i] = InvalidHandle;
+				on_start[i] = InvalidEventHandle;
+				on_end[i] = InvalidEventHandle;
 			}
 		}
 	};

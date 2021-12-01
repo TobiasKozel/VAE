@@ -6,6 +6,7 @@
 
 #define VAE_ASSERT(condition) TKLB_ASSERT(condition)
 namespace vae { namespace core {
+
 } } // namespace vae::core
 
 

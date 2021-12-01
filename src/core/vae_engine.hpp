@@ -1,35 +1,26 @@
 #ifndef _VAE_ENGINE
 #define _VAE_ENGINE
 
-
 #include "./vae_util.hpp"
-#include "../wrapped/vae_profiler.hpp"
-
 #include "./vae_types.hpp"
+#include "../wrapped/vae_profiler.hpp"
 
 #include "./device/vae_rtaudio.hpp"
 #include "./device/vae_portaudio.hpp"
 
-// #include "./vae_emitter.hpp"
-#include "./vae_bus_events.hpp"
-#include "./voice/vae_voice_manager.hpp"
+#include "./pod/vae_listener.hpp"
 #include "./fs/vae_bank_loader.hpp"
+#include "./vae_voice_manager.hpp"
 #include "./processor/vae_processor.hpp"
 #include "./processor/vae_spatial_processor.hpp"
 #include "./processor/vae_mixer_processor.hpp"
-#include "./vae_util.hpp"
-#include "./pod/vae_listener.hpp"
 
-#include "../../external/tklb/src/types/THeapBuffer.hpp"
-#include "../../external/tklb/src/types/THandleBuffer.hpp"
-#include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../external/tklb/src/types/TSpinLock.hpp"
 #include "../../external/tklb/src/util/TMath.hpp"
 
-#include <cstring>	// strcmp
-#include <vector>	// mBanks
-#include <array>	// mListeners
-#include <thread>	// mAudioThread
+#include <cstring>				// strcmp
+#include <thread>				// mAudioThread
+#include <condition_variable>	// mAudioConsumed
 
 
 namespace vae { namespace core {
@@ -39,18 +30,21 @@ namespace vae { namespace core {
 		using Lock = tklb::LockGuard<Mutex>;
 		using CurrentBackend = BackendRtAudio;
 		using Thread = std::thread;
+		using Semaphore = std::condition_variable;
 
 		EngineConfig mConfig;			// Config provided at construction
-		std::vector<Bank> mBanks;		// All the currently loaded banks
+		HeapBuffer<Bank> mBanks;		// All the currently loaded banks
 		VoiceManger mVoiceManager;		// Stores and handle voices
 		Device* mDevice = nullptr;		// Output device
 		SampleIndex mTime = 0;			// Global engine time in samples
 		Time mTimeFract = 0;			// Global engine time in seconds
 		Mutex mMutex;					// Mutex to lock AudioThread and bank operations
 		Listeners mListeners;
-		Thread mAudioThread;			// Thread processing voices and mixers
 		AudioBuffer mScratchBuffer;		// used to combine the signal from all banks and push it to the device
+		Thread mAudioThread;			// Thread processing voices and mixers
+		Semaphore mAudioConsumed;		// Notifies the audio thread when more audio is needed
 		bool mAudioThreadRunning = false;
+		Sample mLimiterLastPeak = 1.0;	// Master limiter last peak
 
 		/**
 		 * Don't allow any kind of move of copy of the object
@@ -61,76 +55,29 @@ namespace vae { namespace core {
 		Engine& operator= (const Engine&) = delete;
 		Engine& operator= (Engine&&) = delete;
 
-	public:
-		Engine(
-			EngineConfig& config
-		) : mConfig(config), mVoiceManager(config) {
-			VAE_DEBUG("Engine constructed")
-		}
-
-		~Engine() {
-			unloadAllBanks();
-			stop();
-		}
-
-		Result init() {
-			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
-			mScratchBuffer.sampleRate = mConfig.preferredSampleRate;
-
-			Backend& backend = CurrentBackend::instance();
-			mDevice = backend.createDevice(mConfig);
-			if (mConfig.processInBufferSwitch) {
-				mDevice->setCallback(TKLB_DELEGATE(&Engine::process, *this));
-				VAE_DEBUG("Mixing in buffer switch")
-			} else {
-				mAudioThreadRunning = true;
-				mAudioThread = Thread([&]() {
-					while(mAudioThreadRunning) {
-						// TODO wait for notification from device
-						process(mDevice);
-					}
-				});
-				VAE_DEBUG("Mixing in seperate thread")
-			}
-			mDevice->openDevice();
-
-			return Result::Success;
-		}
-
-		/**
-		 * @brief Stops processing and waits for audio thead to clean up
-		 * @return Result
-		 */
-		Result stop() {
-			if (mAudioThreadRunning) {
-				mAudioThreadRunning = false;
-				if(mAudioThread.joinable()) {
-					mAudioThread.join();
-				}
-			}
-			TKLB_DELETE(mDevice);
-			VAE_INFO("Engine stopped")
-			return Result::Success;
-		}
-
 		/**
 		 * @brief Main processing function
-		 *
-		 * @param device Output device
+		 * Called either from onBufferSwap or threadedProcess
 		 */
-		void process(Device* device) {
-			auto& d = *device;
-
+		void process() {
+			auto& d = *mDevice;
 			auto sampleRate = d.getSampleRate();
+
 			const Time step = 1.0 / Time(sampleRate);
 			{
 				Lock l(mMutex);
 				// process until output is full
 				while (true) {
-					// split larger chunks
-					auto remaining = std::min(d.canPush(), Config::MaxBlock);
+					// ! this is an estimate when resampling
+					auto remaining = d.canPush();
 
-					if (remaining == 0) { break; } // ! Done if the outbuffer can't fit more
+					if (remaining < 32) {
+						static_assert(32 <= Config::MaxBlock, "MaxBlock needs to be larger");
+						break; // Don't bother for small blocks
+					}
+
+					// clamp to max processable size
+					remaining = std::min(remaining, Config::MaxBlock);
 
 					mScratchBuffer.setValidSize(remaining);
 					// TODO PERF VAE banks could be processed in parellel
@@ -145,16 +92,22 @@ namespace vae { namespace core {
 						mScratchBuffer.add(bankMaster);
 						bankMaster.set(0);
 					}
+
 					{
 						// Shitty limiter
-						Sample max = 0;
-						for (Size i = 0; i < mScratchBuffer.size(); i++) {
-							max = std::max(max, mScratchBuffer[0][i]);
+						mLimiterLastPeak *= 0.7; // return to normal slowly
+						mLimiterLastPeak = std::max(Sample(1.0), mLimiterLastPeak);
+						Sample currentPeak = 0;
+						for (Uchar c = 0; c < mScratchBuffer.channels(); c++) {
+							for (Size i = 0; i < mScratchBuffer.size(); i++) {
+								currentPeak = std::max(currentPeak, mScratchBuffer[c][i]);
+							}
 						}
-						mScratchBuffer.multiply(1.0 / max);
+						mLimiterLastPeak = std::max(mLimiterLastPeak, currentPeak);
+						mScratchBuffer.multiply(1.0 / mLimiterLastPeak);
 					}
-					auto pushed = d.push(mScratchBuffer);
-					VAE_ASSERT(pushed != 0)
+
+					d.push(mScratchBuffer);
 					mScratchBuffer.set(0);
 					mTime += remaining;
 					mTimeFract += step * remaining;
@@ -164,18 +117,99 @@ namespace vae { namespace core {
 			VAE_PROFILER_FRAME_MARK
 		}
 
+		void threadedProcess() {
+			while(mAudioThreadRunning) {
+				process();
+				// TODO wait for device to notify
+				std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(2));
+				// std::unique_lock<std::mutex> lck(mutex_);
+				// mAudioConsumed.wait(lck);
+			}
+		}
+
+		/**
+		 * @brief Called from audio devices when they are about to
+		 * swap buffers. This will do sync audio processing
+		 * @param device
+		 */
+		void onBufferSwap(Device* device) {
+			process();
+		}
+
+		/**
+		 * @brief Called from audio devices when they are about to
+		 * swap buffers. This will only notify the audio thread to wake up.
+		 * @param device
+		 */
+		void onThreadedBufferSwap(Device* device) {
+			mAudioConsumed.notify_one();
+		}
+
+	public:
+		Engine(
+			EngineConfig& config
+		) : mConfig(config), mVoiceManager(config) {
+			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
+			mScratchBuffer.set(0);
+			mScratchBuffer.sampleRate = mConfig.preferredSampleRate;
+			VAE_DEBUG("Engine constructed")
+		}
+
+		~Engine() {
+			unloadAllBanks();
+			stop();
+		}
+
+		/**
+		 * @brief Tries to open default device and start audio thread.
+		 * @return Result
+		 */
+		Result init() {
+			Backend& backend = CurrentBackend::instance();
+			mDevice = backend.createDevice(mConfig);
+			if (mConfig.processInBufferSwitch) {
+				mDevice->setCallback(TKLB_DELEGATE(&Engine::onBufferSwap, *this));
+				VAE_DEBUG("Mixing in buffer switch")
+			} else {
+				mDevice->setCallback(TKLB_DELEGATE(&Engine::onThreadedBufferSwap, *this));
+				mAudioThreadRunning = true;
+				mAudioThread = Thread(&Engine::threadedProcess, this);
+				VAE_DEBUG("Mixing in seperate thread")
+			}
+			return mDevice->openDevice() ? Result::Success : Result::DeviceError;
+		}
+
+		/**
+		 * @brief Stops processing and waits for audio thead to clean up
+		 * @return Result
+		 */
+		Result stop() {
+			if (mAudioThreadRunning) {
+				mAudioThreadRunning = false;
+				if(mAudioThread.joinable()) {
+					mAudioThread.join();
+					VAE_DEBUG("Audio thread stopped")
+				} else {
+					VAE_ERROR("Can't join audio thread")
+				}
+			}
+			delete mDevice;
+			VAE_INFO("Engine stopped")
+			return Result::Success;
+		}
+
 		/**
 		 * @brief Update function needs to be called regularly to handle outbound events.
 		 * If this isn't called regularly events might be lost.
 		 */
 		void update() {
 			for (auto& v : mVoiceManager.finishedVoiceQueue) {
-				if (v.source == InvalidHandle) { continue; }
+				if (v.source == InvalidSourceHandle) { continue; }
 				for (auto& i : mBanks[v.bank].events[v.event].on_end) {
-					if (i == InvalidHandle) { continue; }
+					if (i == InvalidEventHandle) { continue; }
 					fireEvent(v.bank, i, v.emitter, v.mixer);
 				}
-				v.source = InvalidHandle; // now the finished voice is handled
+				v.source = InvalidSourceHandle; // now the finished voice is handled
 			}
 		}
 
@@ -191,17 +225,17 @@ namespace vae { namespace core {
 		 */
 		Result fireEvent(
 			BankHandle bankHandle, EventHandle eventHandle,
-			EmitterHandle emitterHandle = InvalidHandle,
+			EmitterHandle emitterHandle = InvalidEmitterHandle,
 			MixerHandle mixerHandle = InvalidMixerHandle
 		) {
-			VAE_ASSERT(eventHandle != InvalidHandle)
+			VAE_ASSERT(eventHandle != InvalidEventHandle)
 
 			auto& bank = mBanks[bankHandle];
 			auto& event = bank.events[eventHandle];
 			Result result;
 
 			if (event.flags[Event::Flags::start]) {
-				if (event.source != InvalidHandle) {
+				if (event.source != InvalidSourceHandle) {
 					VAE_DEBUG_EVENT("Event %i:%i starts source %i", eventHandle, bankHandle, event.source)
 					// Has source attached
 					result = mVoiceManager.play(event, bankHandle, emitterHandle, mixerHandle);
@@ -213,7 +247,7 @@ namespace vae { namespace core {
 
 				// Fire all other chained events
 				for (auto& i : event.on_start) {
-					if (i == InvalidHandle) { continue; }
+					if (i == InvalidEventHandle) { continue; }
 					VAE_DEBUG_EVENT("Event %i:%i starts chained event %i", eventHandle, bankHandle, i)
 					fireEvent(bankHandle, i, emitterHandle, mixerHandle);
 				}
@@ -221,12 +255,12 @@ namespace vae { namespace core {
 
 			if (event.flags[Event::Flags::stop]) {
 				// TODO test stopping
-				if (event.source != InvalidHandle) {
+				if (event.source != InvalidSourceHandle) {
 					VAE_DEBUG_EVENT("Event %i:%i stops source %i", eventHandle, bankHandle, event.source)
 					mVoiceManager.stopFromSource(event.source, emitterHandle);
 				}
 				for (auto& i : event.on_start) {
-					if (i == InvalidHandle) { continue; }
+					if (i == InvalidEventHandle) { continue; }
 					// kill every voice started from these events
 					VAE_DEBUG_EVENT("Event %i:%i stops voices from event %i", eventHandle, bankHandle, i)
 					mVoiceManager.stopFromEvent(i, emitterHandle);
@@ -260,11 +294,10 @@ namespace vae { namespace core {
 		 * @param listener
 		 * @return Result
 		 */
-		Result setListener(ListenerHandle listener, float x, float y, float z, float rx, float ry, float rz) {
+		Result setListener(ListenerHandle listener, float x, float y, float z) {
 			if (Config::MaxListeners < listener) { return Result::ValidHandleRequired; }
 			auto& l = mListeners[listener];
 			l.postion = { x, y, z };
-			l.orientation = { rx, ry, rz };
 			l.id = listener;
 			return Result::Success;
 		}

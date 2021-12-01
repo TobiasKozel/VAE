@@ -5,7 +5,7 @@
 #include "../vae_util.hpp"
 #include "../pod/vae_bank.hpp"
 #include "../pod/vae_voice.hpp"
-#include "../voice/vae_voice_manager.hpp"
+#include "../vae_voice_manager.hpp"
 
 namespace vae { namespace core {
 
@@ -23,7 +23,7 @@ namespace vae { namespace core {
 			SampleIndex frames, Size sampleRate
 		) {
 			for (auto& v : manager.voices) {
-				if (v.source == InvalidHandle) { continue; }
+				if (v.source == InvalidSourceHandle) { continue; }
 				if (v.bank != bank.id) { continue; }
 
 				auto& source = bank.sources[v.source];

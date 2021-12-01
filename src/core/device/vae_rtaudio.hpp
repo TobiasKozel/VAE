@@ -143,7 +143,7 @@ namespace vae { namespace core {
 		};
 
 		Device* createDevice(EngineConfig& config) override {
-			return TKLB_NEW(DeviceRtaudio, *this, config);
+			return new DeviceRtaudio(*this, config);
 		}
 	};
 } } // namespace vae::core

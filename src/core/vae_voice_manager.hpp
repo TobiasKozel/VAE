@@ -14,19 +14,19 @@
 
 #include <vector>
 
-#include "../vae_util.hpp"
+#include "./vae_util.hpp"
 
-#include "../vae_types.hpp"
-#include "../pod/vae_source.hpp"
-#include "../pod/vae_event.hpp"
+#include "./vae_types.hpp"
+#include "./pod/vae_source.hpp"
+#include "./pod/vae_event.hpp"
 
-#include "../../../include/vae/vae.hpp"
-#include "../pod/vae_voice.hpp"
+#include "./../../include/vae/vae.hpp"
+#include "./pod/vae_voice.hpp"
 
 namespace vae { namespace core {
 	struct VoiceManger {
-		std::vector<Voice> voices;				// Currently playing voice are here
-		std::vector<Voice> finishedVoiceQueue;	// voices that finished playing are here
+		HeapBuffer<Voice> voices;				// Currently playing voice are here
+		HeapBuffer<Voice> finishedVoiceQueue;	// voices that finished playing are queued here
 		EventHandle currentEventInstance = 0;
 		Size activeVoices = 0;
 
@@ -51,14 +51,14 @@ namespace vae { namespace core {
 			// Find a free voice
 			// TODO VAE PERF
 			for (auto& v : voices) {
-				if(v.source == InvalidHandle) {
+				if(v.source == InvalidSourceHandle) {
 					v = {}; // re init object resets time and so on
 					v.source = event.source;
 					v.event = event.id;
 
 					for (auto& i : event.on_end) {
 						v.flags[Voice::Flags::chainedEvents] =
-							v.flags[Voice::Flags::chainedEvents] || (i != InvalidHandle);
+							v.flags[Voice::Flags::chainedEvents] || (i != InvalidEventHandle);
 					}
 
 					if (mixer != InvalidMixerHandle && !event.flags[Event::Flags::force_mixer]) {
@@ -92,10 +92,10 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stopVoice(Voice& v) {
-			VAE_ASSERT(v.source != InvalidHandle) // voice already stopped
+			VAE_ASSERT(v.source != InvalidSourceHandle) // voice already stopped
 
 			if (!v.flags[Voice::Flags::chainedEvents]) {
-				v.source = InvalidHandle; // Mark voice as free
+				v.source = InvalidSourceHandle; // Mark voice as free
 				activeVoices--;
 				return Result::Success;
 			}
@@ -109,7 +109,7 @@ namespace vae { namespace core {
 			// TODO VAE PERF
 			bool finished = false;
 			for (auto& f : finishedVoiceQueue) {
-				if (f.source == InvalidHandle) {
+				if (f.source == InvalidSourceHandle) {
 					finished = true;
 					f.event = v.event;
 					f.eventInstance = v.eventInstance;
@@ -123,7 +123,7 @@ namespace vae { namespace core {
 					break;
 				}
 			}
-			v.source = InvalidHandle; // Mark voice as free
+			v.source = InvalidSourceHandle; // Mark voice as free
 			activeVoices--;
 
 			if (!finished) {
@@ -142,10 +142,10 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stopFromSource(SourceHandle source, EmitterHandle emitter) {
-			VAE_ASSERT(source != InvalidHandle)
+			VAE_ASSERT(source != InvalidSourceHandle)
 			for (auto& v : voices) {
 				if(v.source == source) {
-					if (emitter == InvalidHandle) {
+					if (emitter == InvalidEmitterHandle) {
 						stopVoice(v);
 					} else if (v.emitter == emitter) {
 						stopVoice(v);
@@ -163,10 +163,10 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stopFromEvent(EventHandle event, EmitterHandle emitter) {
-			VAE_ASSERT(event != InvalidHandle)
+			VAE_ASSERT(event != InvalidEventHandle)
 			for (auto& v : voices) {
 				if(v.event == event) {
-					if (emitter == InvalidHandle) {
+					if (emitter == InvalidEmitterHandle) {
 						stopVoice(v);
 					} else if (v.emitter == emitter) {
 						stopVoice(v);
@@ -187,7 +187,7 @@ namespace vae { namespace core {
 			VAE_ASSERT(mixer != InvalidMixerHandle)
 			for (auto& v : voices) {
 				if(v.mixer == mixer) {
-					if (emitter == InvalidHandle) {
+					if (emitter == InvalidEmitterHandle) {
 						stopVoice(v);
 					} else if (v.emitter == emitter) {
 						stopVoice(v);
@@ -204,7 +204,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stopEmitter(EmitterHandle emitter) {
-			VAE_ASSERT(emitter != InvalidHandle)
+			VAE_ASSERT(emitter != InvalidEmitterHandle)
 			for (auto& v : voices) {
 				if(v.emitter == emitter) {
 					stopVoice(v);

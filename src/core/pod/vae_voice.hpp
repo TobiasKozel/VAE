@@ -15,15 +15,14 @@ namespace vae { namespace core {
 				FLAG_COUNT
 			};
 		};
-		SourceHandle source = InvalidHandle;	// If invalid, means voice is not playing.
-		EventHandle event;						// Which event triggered the voice to be played
-		EventHandle eventInstance;				//
-		EmitterHandle emitter;					//
-		MixerHandle mixer;						// Where the voice should mix to
-		BankHandle bank;						// Which bank it belongs to
-		Sample gain = 1.0;						// Volume of the voice
-		SampleIndex time = 0;					// Current time in samples
-		Time timeFract = 0.0;					// Current time in seconds
+		SourceHandle source = InvalidSourceHandle;	// If invalid, means voice is not playing.
+		EventHandle event;							// Which event triggered the voice to be played
+		EventHandle eventInstance;					// Not needed?
+		EmitterHandle emitter;						//
+		MixerHandle mixer;							// Where the voice should mix to
+		BankHandle bank;							// Which bank it belongs to
+		Sample gain = 1.0;							// Volume of the voice
+		SampleIndex time = 0;						// Current time in samples
 		std::bitset<Flags::FLAG_COUNT> flags;
 	};
 

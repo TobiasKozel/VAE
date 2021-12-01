@@ -71,7 +71,7 @@ namespace vae { namespace core {
 		};
 
 		Device* createDevice(EngineConfig& config) override {
-			return TKLB_NEW(DeviceDummy, *this, config);
+			return new DeviceDummy(*this, config);
 		}
 	};
 } } // VAE::core

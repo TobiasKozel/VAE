@@ -30,8 +30,10 @@ namespace vae { namespace core {
 		Backend& mBackend;
 		EngineConfig& mConfig;
 		using Callback = tklb::Delegate<void(Device*)>;
-		Size mSampleRate = 0;
-		Size mRealSampleRate = 0;
+		Size mSampleRate = 0;		// Samplerate after resampling
+		Size mRealSampleRate = 0;	// Device sample rate
+		Size mOverruns = 0;			// Happens when too many frames are pushed to the deivce
+		Size mUnderruns = 0;		// Happens when too many frames are popper from the device
 
 		Resampler mResamplerToDevice;
 		AudioBuffer mResamplerBufferToDevice;
@@ -73,7 +75,7 @@ namespace vae { namespace core {
 						resamplerFromDevice.process(convertBuffer, resampleBufferFromdevice);
 						Lock l(mutex);
 						auto pushed = queueFromDevice.push(resampleBufferFromdevice);
-						overruns += (frames - pushed);
+						overruns += (resampleBufferFromdevice.validSize() - pushed);
 					} else {
 						Lock l(mutex);
 						auto pushed = queueFromDevice.push(convertBuffer);
@@ -158,12 +160,13 @@ namespace vae { namespace core {
 					bufferSize * mConfig.bufferPeriods,
 					channelsOut
 				);
+				mWorker.queueToDevice.set(0);
 			}
 
 			mWorker.convertBuffer.sampleRate = sampleRate;
 			mWorker.convertBuffer.resize(
 				bufferSize,
-				std::max(channelsOut, channelsIn) // buffer is sharedfor in and out, so make sure it has space for both
+				std::max(channelsOut, channelsIn) // buffer is shared for in and out, so make sure it has space for both
 			);
 		}
 
@@ -180,7 +183,11 @@ namespace vae { namespace core {
 		) : mBackend(backend), mConfig(config) { }
 
 		virtual ~Device() {
-			VAE_DEBUG("Device destructed. Underruns: %i Overruns:%i", mWorker.underruns, mWorker.overruns)
+			VAE_DEBUG(
+				"Device destructed. Underruns: %i %i Overruns:%i %i",
+				mWorker.underruns, mUnderruns,
+				mWorker.overruns, mOverruns
+			)
 		}
 
 		void setCallback(Callback callback) {
@@ -217,18 +224,27 @@ namespace vae { namespace core {
 		 */
 		Size push(const AudioBuffer& buffer) {
 			VAE_ASSERT(0 < mWorker.channelsOut)
-			auto frames = buffer.validSize();
+			const auto frames = buffer.validSize();
 			VAE_ASSERT(frames != 0) // need to have valid frames
 			if (mResamplerToDevice.isInitialized()) {
 				mResamplerToDevice.process(buffer, mResamplerBufferToDevice);
 				Lock lock(mWorker.mutex);
-				return mWorker.queueToDevice.push(mResamplerBufferToDevice);
+				const auto pushed = mWorker.queueToDevice.push(mResamplerBufferToDevice);
+				mOverruns += (mResamplerBufferToDevice.validSize() - pushed);
+				return pushed;
 			} else {
 				Lock lock(mWorker.mutex);
-				return mWorker.queueToDevice.push(buffer);
+				const auto pushed = mWorker.queueToDevice.push(buffer);
+				mOverruns += (frames - pushed);
+				return pushed;
 			}
 		}
 
+		/**
+		 * @brief Return amount of audio frames which can be pushed in buffer
+		 * ! this is an estimate when resampling !
+		 * @return Size
+		 */
 		Size canPush() const {
 			auto remaining = mWorker.queueToDevice.remaining();
 			if (mResamplerToDevice.isInitialized()) {
@@ -246,7 +262,8 @@ namespace vae { namespace core {
 			auto frames = buffer.validSize();
 			VAE_ASSERT(frames != 0) // need to have valid frames
 			Lock lock(mWorker.mutex);
-			mWorker.queueFromDevice.pop(buffer, frames);
+			const auto popped = mWorker.queueFromDevice.pop(buffer, frames);
+			mUnderruns += (frames - popped);
 		}
 
 		Size canPop() const {

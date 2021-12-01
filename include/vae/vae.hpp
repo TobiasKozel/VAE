@@ -9,25 +9,28 @@
  *
  */
 
-
 #ifndef _VAE_API_TYPES
 #define _VAE_API_TYPES
 
 namespace vae {
 	using SmallHandle		= unsigned char;
 	using GenericHandle 	= unsigned short;
+	using LargeHandle		= unsigned int;
+
 	using EventHandle 		= GenericHandle;
 	using SourceHandle 		= GenericHandle;
 	using BankHandle 		= SmallHandle;
-	using EmitterHandle 	= GenericHandle;
-	using VoiceHandle		= GenericHandle;
+	using EmitterHandle 	= LargeHandle;
 	using MixerHandle		= SmallHandle;
 	using ListenerHandle	= SmallHandle;
 
+	constexpr EventHandle InvalidEventHandle		= ~0;
+	constexpr SourceHandle InvalidSourceHandle		= ~0;
 	constexpr BankHandle InvalidBankHandle			= ~0;
 	constexpr MixerHandle InvalidMixerHandle		= ~0;
 	constexpr ListenerHandle InvalidListenerHandle	= ~0;
 	constexpr GenericHandle InvalidHandle			= ~0;
+	constexpr EmitterHandle InvalidEmitterHandle	= ~0;
 
 	/**
 	 * @brief Return Types for most engine functions
@@ -42,7 +45,8 @@ namespace vae {
 		BankFormatBadMixHirarchy,	// A mixer can only write to mixers with lower ids than themselves (no recursion)
 		ElementNotFound,			// Referenced data not found
 		ValidHandleRequired,		// Handle provided wasn't valid but needs to be
-		TooManyRecords				// Can't fit all data in fixed size array
+		TooManyRecords,				// Can't fit all data in fixed size array
+		DeviceError					// Can't open audio device
 	};
 
 	/**
@@ -106,18 +110,18 @@ namespace vae {
 		unsigned int virtualVoices = 0;
 
 		/**
-		 * @brief When a device is openeed. it will try to use this samplerate.
+		 * @brief Samplerate requested from device.
 		 * If it doesn't support it, a resampler is used.
-		 * This is efficient if most of the audio is in the preferred samplerate,
-		 * since they don't need to be resampled.
+		 * Most of the audio samples used should be in this rate.
 		 */
 		unsigned int preferredSampleRate = 48000;
 
 		/**
-		 * @brief Higher values increase latency but reduce chanes of
+		 * @brief Buffer size that will be requested from device.
+		 * Higher values increase latency but reduce chanes of
 		 * crackles and other artefacts. Some audio backends need
 		 * higher values to work properly.
-		 * The actual buffer size might based on the device.
+		 * The actual buffer size might vary based on the device.
 		 */
 		unsigned int preferredBufferSize = 512;
 

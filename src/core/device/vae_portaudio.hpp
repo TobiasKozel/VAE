@@ -186,7 +186,7 @@ namespace vae { namespace core {
 		};
 
 		Device* createDevice(EngineConfig& config) override {
-			return TKLB_NEW(DevicePortaudio, *this, config);
+			return new DevicePortaudio(*this, config);
 		}
 	};
 

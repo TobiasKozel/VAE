@@ -6,7 +6,7 @@
 #include "../pod/vae_bank.hpp"
 #include "../pod/vae_voice.hpp"
 #include "../pod/vae_listener.hpp"
-#include "../voice/vae_voice_manager.hpp"
+#include "../vae_voice_manager.hpp"
 
 namespace vae { namespace core {
 	struct SpatialProcessor {
@@ -24,7 +24,7 @@ namespace vae { namespace core {
 			SampleIndex frames, Size sampleRate
 		) {
 			for (auto& v : manager.voices) {
-				if (v.source == InvalidHandle) { continue; }			// not playing
+				if (v.source == InvalidSourceHandle) { continue; }			// not playing
 				if (v.bank != bank.id) { continue; }					// wrong bank
 				if (!v.flags[Voice::Flags::spatialized]) { continue; }	// not spatialized
 

@@ -4,7 +4,7 @@
 #include "../vae_types.hpp"
 #include "../pod/vae_bank.hpp"
 #include "../pod/vae_mixer.hpp"
-#include "../voice/vae_voice_manager.hpp"
+#include "../vae_voice_manager.hpp"
 
 namespace vae { namespace core {
 

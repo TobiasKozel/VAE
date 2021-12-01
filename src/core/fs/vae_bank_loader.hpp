@@ -128,7 +128,7 @@ namespace vae { namespace core {
 					e.flags[size_t(Event::Flags::force_mixer)] = bool(i["force_mixer"]);
 
 					if (i["source"].is_null()) {
-						e.source = InvalidHandle;
+						e.source = InvalidSourceHandle;
 					} else {
 						e.source = i["source"];
 					}

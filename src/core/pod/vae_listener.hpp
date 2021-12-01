@@ -9,7 +9,8 @@ namespace vae { namespace core {
 
 	struct Listener {
 		Vec3 postion;
-		Vec3 orientation;
+		Vec3 front;
+		Vec3 up;
 		ListenerHandle id = InvalidListenerHandle;
 	};
 
