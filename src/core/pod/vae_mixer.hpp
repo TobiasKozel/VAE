@@ -18,8 +18,7 @@ namespace vae { namespace core {
 		MixerHandle parent;
 		/**
 		 * @brief The handle of the mixer the signal will be routed to.
-		 * 0 is always the master and the default.
-		 * It's the only mixer shared across banks.
+		 * 0 is always the bank master and the default.
 		 */
 		MixerHandle id = InvalidMixerHandle;
 		std::array<Effect, Config::MaxMixerEffects> effects;

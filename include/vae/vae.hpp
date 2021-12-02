@@ -46,7 +46,8 @@ namespace vae {
 		ElementNotFound,			// Referenced data not found
 		ValidHandleRequired,		// Handle provided wasn't valid but needs to be
 		TooManyRecords,				// Can't fit all data in fixed size array
-		DeviceError					// Can't open audio device
+		DeviceError,				// Can't open audio device
+		DuplicateEmitter
 	};
 
 	/**

@@ -9,6 +9,7 @@
 #include "./device/vae_portaudio.hpp"
 
 #include "./pod/vae_listener.hpp"
+#include "./pod/vae_emitter.hpp"
 #include "./fs/vae_bank_loader.hpp"
 #include "./vae_voice_manager.hpp"
 #include "./processor/vae_processor.hpp"
@@ -29,6 +30,7 @@ namespace vae { namespace core {
 		using Mutex = tklb::SpinLock;
 		using Lock = tklb::LockGuard<Mutex>;
 		using CurrentBackend = BackendRtAudio;
+
 		using Thread = std::thread;
 		using Semaphore = std::condition_variable;
 
@@ -38,13 +40,13 @@ namespace vae { namespace core {
 		Device* mDevice = nullptr;		// Output device
 		SampleIndex mTime = 0;			// Global engine time in samples
 		Time mTimeFract = 0;			// Global engine time in seconds
-		Mutex mMutex;					// Mutex to lock AudioThread and bank operations
 		Listeners mListeners;
 		AudioBuffer mScratchBuffer;		// used to combine the signal from all banks and push it to the device
+		Sample mLimiterLastPeak = 1.0;	// Master limiter last peak
 		Thread mAudioThread;			// Thread processing voices and mixers
 		Semaphore mAudioConsumed;		// Notifies the audio thread when more audio is needed
+		Mutex mMutex;					// Mutex to lock AudioThread and bank operations
 		bool mAudioThreadRunning = false;
-		Sample mLimiterLastPeak = 1.0;	// Master limiter last peak
 
 		/**
 		 * Don't allow any kind of move of copy of the object
@@ -64,6 +66,7 @@ namespace vae { namespace core {
 			auto sampleRate = d.getSampleRate();
 
 			const Time step = 1.0 / Time(sampleRate);
+
 			{
 				Lock l(mMutex);
 				// process until output is full
@@ -71,16 +74,17 @@ namespace vae { namespace core {
 					// ! this is an estimate when resampling
 					auto remaining = d.canPush();
 
+					static_assert(32 <= Config::MaxBlock, "MaxBlock needs to be larger");
+
 					if (remaining < 32) {
-						static_assert(32 <= Config::MaxBlock, "MaxBlock needs to be larger");
-						break; // Don't bother for small blocks
+						break; // ! Don't even bother with small blocks, we'll get em next time
 					}
 
 					// clamp to max processable size
 					remaining = std::min(remaining, Config::MaxBlock);
 
 					mScratchBuffer.setValidSize(remaining);
-					// TODO PERF VAE banks could be processed in parellel
+					// TODO PERF VAE banks could be processed in parallel
 					for (auto& i : mBanks) {
 						if (i.id == InvalidBankHandle) { continue; } // skip unloaded banks
 
