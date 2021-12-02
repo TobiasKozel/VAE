@@ -30,9 +30,9 @@ namespace vae { namespace core {
 		EventHandle currentEventInstance = 0;
 		Size activeVoices = 0;
 
-		VoiceManger(EngineConfig& config) {
-			voices.resize(config.voices);
-			finishedVoiceQueue.resize(config.voices);
+		VoiceManger(Size voiceCount, Size virtualVoiceCount) {
+			voices.resize(voiceCount);
+			finishedVoiceQueue.resize(voiceCount);
 		}
 
 		/**
@@ -71,6 +71,7 @@ namespace vae { namespace core {
 					}
 
 					v.emitter = emitter;
+					v.flags[Voice::Flags::spatialized] = emitter != InvalidEmitterHandle;
 					v.bank = bank;
 					v.eventInstance = currentEventInstance;
 					v.gain = event.gain;

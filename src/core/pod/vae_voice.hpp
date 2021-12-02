@@ -9,6 +9,7 @@ namespace vae { namespace core {
 		struct Flags {
 			enum {
 				chainedEvents = 0,	// If this voice triggers events after it stopped playing
+				started,
 				spatialized,		// If the voice has spatialization data
 				mixMatrix,			// If the voice has a mix matrix
 				filtered,			// If the voice is filtered

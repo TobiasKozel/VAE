@@ -8,10 +8,27 @@
 namespace vae { namespace core {
 
 	struct Listener {
-		Vec3 postion;
-		Vec3 front;
-		Vec3 up;
+		struct Configuration {
+			enum {
+				Mono = 0,
+				Headphones,
+				Stereo,
+				HRTF,
+				Quadrophonic,
+				Suround
+			};
+		};
+		Vec3 postion = { 0, 0, 0 };						// Absolute position
+		Vec3 front = { 0, 0, 1 };						// used for non HRTF panning
+		Vec3 up = { 0, 1, 0 };							// user for HRTF
 		ListenerHandle id = InvalidListenerHandle;
+		/**
+		 * ! Listeners all mix to the same mixer channels and have the same configuration
+		 * This might change, so that's why it's stored here
+		 * Only the configuration for the first listeners is used
+		 */
+		Uchar configuraion = Configuration::Headphones;
+
 	};
 
 	using Listeners = std::array<Listener, Config::MaxListeners>;

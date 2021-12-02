@@ -9,8 +9,13 @@
  *
  */
 
-#ifndef _VAE_API_TYPES
-#define _VAE_API_TYPES
+#ifndef _VAE_API
+#define _VAE_API
+
+// see https://semver.org/
+#define VAE_VERSION_MAJOR 0		// for incompatible API changes
+#define VAE_VERSION_MINOR 0		// for adding functionality in a backwards-compatible manner
+#define VAE_VERSION_PATCH 1		// for backwards-compatible bug fixes
 
 namespace vae {
 	using SmallHandle		= unsigned char;
@@ -36,7 +41,7 @@ namespace vae {
 	 * @brief Return Types for most engine functions
 	 */
 	enum class Result {
-		Success,					// :)
+		Success = 0,				// :)
 		GenericFailure,				// :(
 		BankFormatError,			// Generic bank loading error
 		BankFormatIndexError,		// A index is out of bounds
@@ -62,6 +67,17 @@ namespace vae {
 		unsigned char channelsIn = 0;
 		unsigned char channelsOut = 0;
 	};
+	struct Vector3 {
+		float x, y, z;
+	};
+	struct LocationDirection {
+		Vector3 position, direction;
+	};
+
+	struct LocationOrientation {
+		Vector3 position, front, up;
+	};
+
 
 	/**
 	 * @brief Struct containing relevant data passed
@@ -74,12 +90,13 @@ namespace vae {
 		EmitterHandle emitter;	// Which emitter if any
 	};
 
+	using EventCallback = void(*)(const EventCallbackData*);
+
 	/**
 	 * @brief Settings for the engine defined
 	 * at construction of the engine object.
 	 */
 	struct EngineConfig {
-		using EventCallback = void(*)(const EventCallbackData*);
 		/**
 		 * @brief Path where the bank files are located
 		 */
@@ -109,6 +126,15 @@ namespace vae {
 		 * If non zero value fireEvent might not return a handle
 		 */
 		unsigned int virtualVoices = 0;
+
+		/**
+		 * @brief How many emitters to allocate upfront.
+		 * Once this number is exceeded a reallocation will take place.
+		 * This might cause a short audio dropout depending on the size.
+		 * ! internal map allocates power of 2 sizes !
+		 * This makes space for 16384 emitters.
+		 */
+		unsigned int preAllocatedEmitters = 1 << 14;
 
 		/**
 		 * @brief Samplerate requested from device.
@@ -151,4 +177,4 @@ namespace vae {
 	};
 } // namespace vae
 
-#endif // _VAE_API_TYPES
+#endif // _VAE_API

@@ -12,6 +12,7 @@
 #include "./pod/vae_emitter.hpp"
 #include "./fs/vae_bank_loader.hpp"
 #include "./vae_voice_manager.hpp"
+#include "./vae_spatial_manager.hpp"
 #include "./processor/vae_processor.hpp"
 #include "./processor/vae_spatial_processor.hpp"
 #include "./processor/vae_mixer_processor.hpp"
@@ -33,14 +34,13 @@ namespace vae { namespace core {
 
 		using Thread = std::thread;
 		using Semaphore = std::condition_variable;
-
-		EngineConfig mConfig;			// Config provided at construction
+		EngineConfig mConfig;			// Config object provided at construction
 		HeapBuffer<Bank> mBanks;		// All the currently loaded banks
 		VoiceManger mVoiceManager;		// Stores and handle voices
+		SpatialManager mSpatialManager;	// Manages spatial emitters
 		Device* mDevice = nullptr;		// Output device
 		SampleIndex mTime = 0;			// Global engine time in samples
 		Time mTimeFract = 0;			// Global engine time in seconds
-		Listeners mListeners;
 		AudioBuffer mScratchBuffer;		// used to combine the signal from all banks and push it to the device
 		Sample mLimiterLastPeak = 1.0;	// Master limiter last peak
 		Thread mAudioThread;			// Thread processing voices and mixers
@@ -89,7 +89,7 @@ namespace vae { namespace core {
 						if (i.id == InvalidBankHandle) { continue; } // skip unloaded banks
 
 						Processor::mix(mVoiceManager, i, remaining, sampleRate);
-						SpatialProcessor::mix(mVoiceManager, i, mListeners,remaining, sampleRate);
+						SpatialProcessor::mix(mVoiceManager, i, mSpatialManager, remaining, sampleRate);
 
 						MixerProcessor::mix(mVoiceManager, i, remaining);
 						auto& bankMaster = i.mixers[Mixer::MasterMixerHandle].buffer;
@@ -150,12 +150,14 @@ namespace vae { namespace core {
 		}
 
 	public:
-		Engine(
-			EngineConfig& config
-		) : mConfig(config), mVoiceManager(config) {
+		Engine(EngineConfig& config) :
+			mConfig(config),
+		 	mVoiceManager(config.voices, config.virtualVoices),
+			mSpatialManager(config.preAllocatedEmitters)
+		{
 			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
 			mScratchBuffer.set(0);
-			mScratchBuffer.sampleRate = mConfig.preferredSampleRate;
+			mScratchBuffer.sampleRate = config.preferredSampleRate;
 			VAE_DEBUG("Engine constructed")
 		}
 
@@ -168,7 +170,7 @@ namespace vae { namespace core {
 		 * @brief Tries to open default device and start audio thread.
 		 * @return Result
 		 */
-		Result init() {
+		Result start() {
 			Backend& backend = CurrentBackend::instance();
 			mDevice = backend.createDevice(mConfig);
 			if (mConfig.processInBufferSwitch) {
@@ -207,6 +209,7 @@ namespace vae { namespace core {
 		 * If this isn't called regularly events might be lost.
 		 */
 		void update() {
+			// Handle finished voices and their events
 			for (auto& v : mVoiceManager.finishedVoiceQueue) {
 				if (v.source == InvalidSourceHandle) { continue; }
 				for (auto& i : mBanks[v.bank].events[v.event].on_end) {
@@ -215,6 +218,9 @@ namespace vae { namespace core {
 				}
 				v.source = InvalidSourceHandle; // now the finished voice is handled
 			}
+
+			// Update emitters
+			mSpatialManager.update();
 		}
 
 
@@ -233,9 +239,16 @@ namespace vae { namespace core {
 			MixerHandle mixerHandle = InvalidMixerHandle
 		) {
 			VAE_ASSERT(eventHandle != InvalidEventHandle)
+			VAE_ASSERT(bankHandle < mBanks.size())
 
 			auto& bank = mBanks[bankHandle];
+			VAE_ASSERT(eventHandle < bank.events.size())
 			auto& event = bank.events[eventHandle];
+
+			if (emitterHandle != InvalidEmitterHandle && !mSpatialManager.hasEmitter(emitterHandle)) {
+				VAE_ERROR("No emitter %u registered, voice won't be audible.", emitterHandle)
+			}
+
 			Result result;
 
 			if (event.flags[Event::Flags::start]) {
@@ -294,16 +307,41 @@ namespace vae { namespace core {
 
 		/**
 		 * @brief Set the position of a listener
-		 *
 		 * @param listener
 		 * @return Result
 		 */
-		Result setListener(ListenerHandle listener, float x, float y, float z) {
-			if (Config::MaxListeners < listener) { return Result::ValidHandleRequired; }
-			auto& l = mListeners[listener];
-			l.postion = { x, y, z };
-			l.id = listener;
-			return Result::Success;
+		Result setListener(ListenerHandle listener, const LocationOrientation& locOr) {
+			return mSpatialManager.setListener(listener, locOr);
+		}
+
+#pragma region emitter
+
+		EmitterHandle createEmitter() {
+			return mSpatialManager.createEmitter();
+		}
+
+		Result addEmitter(EmitterHandle h) {
+			return mSpatialManager.addEmitter(h);
+		}
+
+		Result removeEmitter(EmitterHandle h) {
+			return mSpatialManager.removeEmitter(h);
+		}
+
+		Result setEmitter(
+			EmitterHandle emitter, const LocationDirection& locDir,
+			Sample spread
+		) {
+			return mSpatialManager.setEmitter(emitter, locDir, spread);
+		}
+
+
+
+#pragma endregion emitter
+
+		Result loadWorld() {
+			// TODO load static emitters
+			return Result::GenericFailure;
 		}
 
 #pragma region bank_handling
@@ -314,11 +352,11 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result loadBank(const char* path) {
-			VAE_INFO("Loading bank from file %s", path)
+			VAE_INFO("Loading bank from file %s%s", mConfig.rootPath, path)
 			Bank bank;
 			auto result = BankLoader::load(path, mConfig.rootPath, bank);
 			if (result != Result::Success) {
-				VAE_ERROR("Failed to load bank from file %s with error %i", path, result)
+				VAE_ERROR("Failed to load bank from file %s%s with error %i", mConfig.rootPath, path, result)
 				return result;
 			}
 			return loadBank(bank);
@@ -353,11 +391,6 @@ namespace vae { namespace core {
 			}
 			VAE_INFO("Bank %s loaded.", mBanks[bank.id].name.c_str())
 			return Result::Success;
-		}
-
-		Result loadWorld() {
-			// TODO load static emitters
-			return Result::GenericFailure;
 		}
 
 		/**
@@ -439,12 +472,18 @@ namespace vae { namespace core {
 			VAE_ASSERT(bank.id == bankHandle)
 			VAE_INFO("Unloading bank %s", bank.name.c_str())
 			bank = { }; // should free all the memory
+			mSpatialManager.compact();
 			return Result::Success;
 		}
 
+		/**
+		 * @brief Unload every bank and data associated with it
+		 */
 		void unloadAllBanks() {
-			Lock l(mMutex);
-			mBanks.resize(0);
+			for (auto& i : mBanks) {
+				if (i.id == InvalidBankHandle) { continue; }
+				unloadBankFromId(i.id);
+			}
 		}
 #pragma endregion bank_handling
 

@@ -25,6 +25,7 @@ namespace vae { namespace core {
 			for (auto& v : manager.voices) {
 				if (v.source == InvalidSourceHandle) { continue; }
 				if (v.bank != bank.id) { continue; }
+				if (v.flags[Voice::Flags::spatialized]) { continue; }
 
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
@@ -49,6 +50,8 @@ namespace vae { namespace core {
 						target[c][s] += signal[channel][v.time + s] * gain;
 					}
 				}
+
+				v.flags[Voice::Flags::started] = true;
 
 				v.time += remaining; // progress time in voice
 
