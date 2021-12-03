@@ -3,8 +3,11 @@
 
 #include "../vae_types.hpp"
 #include <bitset>
-
+#include <limits>
 namespace vae { namespace core {
+	/**
+	 * @brief Barebones voice.
+	 */
 	struct Voice {
 		struct Flags {
 			enum {
@@ -28,6 +31,28 @@ namespace vae { namespace core {
 	};
 
 	constexpr int _VAE_VOICE_SIZE = sizeof(Voice);
+
+	/**
+	 * @brief VoicePanningInterpolation data
+	 *
+	 */
+	struct VoicePIP {
+		struct Panning {
+			Sample volumes[Config::MaxChannels];
+			Sample phases[Config::MaxChannels];
+		};
+		Panning listeners[Config::MaxListeners];
+
+		VoicePIP() {
+			for (auto& l : listeners) {
+				for (int i = 0; i < Config::MaxChannels; i++) {
+					l.volumes[i] = std::numeric_limits<Sample>::min();
+					l.phases[i] = std::numeric_limits<Sample>::min();
+				}
+			}
+		}
+	};
+
 } } // core::vae
 
 #endif // _VAE_VOICE

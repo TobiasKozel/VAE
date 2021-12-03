@@ -21,10 +21,11 @@ int main() {
 
 
 	{
+		constexpr auto length = Config::MaxBlock * 128;
 		tklb::AudioBuffer buffer;
-		buffer.resize(rate, 1);
+		buffer.resize(length , 1);
 		buffer.sampleRate = rate;
-		constexpr unsigned int rampLength = 20;
+		constexpr unsigned int rampLength = 100;
 		constexpr unsigned int rampStart = rampLength;
 		const unsigned int rampEnd = buffer.size() - rampLength;
 		for (unsigned int i = 0; i < buffer.size(); i++) {

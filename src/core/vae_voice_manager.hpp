@@ -27,6 +27,7 @@ namespace vae { namespace core {
 	class VoiceManger {
 		HeapBuffer<Voice> mVoices;				// Currently playing voice are here
 		HeapBuffer<Voice> mFinishedVoiceQueue;	// voices that finished playing are queued here
+		HeapBuffer<VoicePIP> mVoicePIPs;		// Interpolation data for the panning algorithm
 		EventHandle mCurrentEventInstance = 0;
 		Size mActiveVoices = 0;
 
@@ -34,6 +35,7 @@ namespace vae { namespace core {
 		VoiceManger(Size voiceCount, Size virtualVoiceCount) {
 			mVoices.resize(voiceCount);
 			mFinishedVoiceQueue.resize(voiceCount);
+			mVoicePIPs.reserve(voiceCount);
 		}
 
 		HeapBuffer<Voice>& all() {
@@ -46,12 +48,17 @@ namespace vae { namespace core {
 
 		template <class Func>
 		void forEachVoice(const Func&& func) {
-			for (auto& i : mVoices) {
+			for (Size index = 0; index < mVoices.size(); index++) {
+				auto& i = mVoices[index];
 				if (i.source == InvalidSourceHandle) { continue; }
-				if (!func(i)) {
+				if (!func(i, index)) {
 					stopVoice(i);
 				}
 			}
+		}
+
+		VoicePIP& getVoicePIP(Size index) {
+			return mVoicePIPs[index];
 		}
 
 		/**
@@ -69,7 +76,8 @@ namespace vae { namespace core {
 		) {
 			// Find a free voice
 			// TODO VAE PERF
-			for (auto& v : mVoices) {
+			for (Size i = 0; i < mVoices.size(); i++) {
+				auto& v = mVoices[i];
 				if(v.source == InvalidSourceHandle) {
 					v = {}; // re init object resets time and so on
 					v.source = event.source;
@@ -90,7 +98,10 @@ namespace vae { namespace core {
 					}
 
 					v.emitter = emitter;
-					v.flags[Voice::Flags::spatialized] = emitter != InvalidEmitterHandle;
+					if (emitter != InvalidEmitterHandle) {
+						v.flags[Voice::Flags::spatialized] = true;
+						mVoicePIPs[i] = { };
+					}
 					v.bank = bank;
 					v.eventInstance = mCurrentEventInstance;
 					v.gain = event.gain;

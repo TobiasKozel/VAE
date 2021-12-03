@@ -80,9 +80,11 @@ namespace vae { namespace core {
 
 		template <class Func>
 		void forEachListener(const Func&& func) {
-			for(auto& i : mListeners) {
+
+			for(ListenerHandle index = 0; index < Config::MaxListeners; index++) {
+				auto& i = mListeners[index];
 				if (i.id == InvalidListenerHandle) { continue; }
-				func(i);
+				func(i, index);
 			}
 		}
 

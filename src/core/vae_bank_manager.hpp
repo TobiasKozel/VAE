@@ -29,6 +29,7 @@ namespace vae { namespace core {
 
 		template <class Func>
 		void forEach(const Func&& func) {
+			Lock l(mMutex);
 			for (auto& i : mBanks) {
 				if (i.id == InvalidBankHandle) { continue; }
 				func(i);

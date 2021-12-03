@@ -23,7 +23,7 @@ namespace vae { namespace core {
 			SpatialManager& spatial,
 			SampleIndex frames, Size sampleRate
 		) {
-			manager.forEachVoice([&](Voice& v) {
+			manager.forEachVoice([&](Voice& v, Size vi) {
 				if (v.bank != bank.id) { return true; }						// wrong bank
 				if (!v.flags[Voice::Flags::spatialized]) { return true; }	// not spatialized
 
@@ -49,27 +49,46 @@ namespace vae { namespace core {
 				auto& target = mixer.buffer;
 				auto& emitter = spatial.getEmitter(v.emitter);
 
+				auto& lastPip = manager.getVoicePIP(vi);
+				VoicePIP currentPip;
+
 				target.setValidSize(frames); // mark mixer as active
 
 				const auto gain = v.gain * source.gain;
+				const Sample step = Sample(1) / Sample(frames);
 
-				spatial.forEachListener([&](Listener& l) {
+				spatial.forEachListener([&](Listener& l, ListenerHandle li) {
+					// Each listener gets the sound mixed in from it's position
+					// ! this means mixing configurations doesn't work !
 					switch (l.configuraion) {
 					case Listener::Configuration::Headphones:
-						// Each listener gets the sound mixed in from it's position
+						auto& currentVolumes = currentPip.listeners[li].volumes;
+						auto& lastVolumes = lastPip.listeners[li].volumes;
+
 						Sample distance = glm::distance(l.postion, emitter.position);
 						distance = std::max(distance, Sample(1));
 						distance = std::min(distance, Sample(1000000));
 						distance = std::pow(distance / 1, -Sample(1));
 						distance *= gain;
+
+						currentVolumes[0] = distance;
+						currentVolumes[1] = distance;
+
+						if (v.time == 0) {
+							lastVolumes[0] = currentVolumes[0];
+							lastVolumes[1] = currentVolumes[1];
+						}
+
 						for (SampleIndex s = 0; s < remaining; s++) {
-							const Sample sample = signal[0][v.time + s] * distance;
-							target[0][s] += sample;
-							target[1][s] += sample;
+							const Sample sample = signal[0][v.time + s];
+							target[0][s] += sample * tklb::lerp(lastVolumes[0], currentVolumes[0], s * step);
+							target[1][s] += sample * tklb::lerp(lastVolumes[1], currentVolumes[1], s * step);
 						}
 						break;
 					}
 				});
+
+				lastPip = std::move(currentPip);
 
 				v.time += remaining; // progress time in voice
 				return remaining == frames;

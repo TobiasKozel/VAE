@@ -22,7 +22,7 @@ namespace vae { namespace core {
 			VoiceManger& manager, Bank& bank,
 			SampleIndex frames, Size sampleRate
 		) {
-			manager.forEachVoice([&](Voice& v) {
+			manager.forEachVoice([&](Voice& v, Size index) {
 				if (v.bank != bank.id) { return true; }
 				if (v.flags[Voice::Flags::spatialized]) { return true; }
 

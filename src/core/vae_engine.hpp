@@ -165,6 +165,7 @@ namespace vae { namespace core {
 		}
 
 		~Engine() {
+
 			unloadAllBanks();
 			stop();
 		}
