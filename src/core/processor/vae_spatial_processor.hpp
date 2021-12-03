@@ -23,18 +23,14 @@ namespace vae { namespace core {
 			SpatialManager& spatial,
 			SampleIndex frames, Size sampleRate
 		) {
-			for (auto& v : manager.voices) {
-				if (v.source == InvalidSourceHandle) { continue; }			// not playing
-				if (v.bank != bank.id) { continue; }						// wrong bank
-				if (!v.flags[Voice::Flags::spatialized]) { continue; }		// not spatialized
+			manager.forEachVoice([&](Voice& v) {
+				if (v.bank != bank.id) { return true; }						// wrong bank
+				if (!v.flags[Voice::Flags::spatialized]) { return true; }	// not spatialized
 
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
 
-				if (signal.size() == 0) {
-					manager.stopVoice(v);
-					continue; // no signal
-				}
+				if (signal.size() == 0) { return false; }
 
 				VAE_ASSERT(signal.sampleRate == sampleRate)					// needs resampling
 
@@ -46,47 +42,38 @@ namespace vae { namespace core {
 
 				if (!spatial.hasEmitter(v.emitter)) { // emitter missing
 					v.time += remaining; // progress time in voice
-					if (remaining != frames) {
-						manager.stopVoice(v); // end is reached
-					}
-					continue;
+					return remaining == frames;
 				}
 
 				auto& mixer = bank.mixers[v.mixer];
 				auto& target = mixer.buffer;
 				auto& emitter = spatial.getEmitter(v.emitter);
-				auto& listeners = spatial.getListeners();
 
 				target.setValidSize(frames); // mark mixer as active
 
 				const auto gain = v.gain * source.gain;
 
-				switch (listeners[0].configuraion) {
-				case Listener::Configuration::Headphones:
-					// Each listener gets the sound mixed in from it's position
-					for (auto& listener : listeners) {
-						if (listener.id == InvalidListenerHandle) { continue; }
-						Sample distance = glm::distance(listener.postion, emitter.position);
+				spatial.forEachListener([&](Listener& l) {
+					switch (l.configuraion) {
+					case Listener::Configuration::Headphones:
+						// Each listener gets the sound mixed in from it's position
+						Sample distance = glm::distance(l.postion, emitter.position);
 						distance = std::max(distance, Sample(1));
 						distance = std::min(distance, Sample(1000000));
 						distance = std::pow(distance / 1, -Sample(1));
-						const auto attenuated = gain * distance;
+						distance *= gain;
 						for (SampleIndex s = 0; s < remaining; s++) {
-							const Sample sample = signal[0][v.time + s] * attenuated;
+							const Sample sample = signal[0][v.time + s] * distance;
 							target[0][s] += sample;
 							target[1][s] += sample;
 						}
+						break;
 					}
-					break;
-				default:
-					break;
-				}
+				});
 
 				v.time += remaining; // progress time in voice
-				if (remaining != frames) {
-					manager.stopVoice(v); // end is reached
-				}
-			}
+				return remaining == frames;
+			});
 		}
 	};
 

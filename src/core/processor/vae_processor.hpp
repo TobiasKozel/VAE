@@ -22,14 +22,14 @@ namespace vae { namespace core {
 			VoiceManger& manager, Bank& bank,
 			SampleIndex frames, Size sampleRate
 		) {
-			for (auto& v : manager.voices) {
-				if (v.source == InvalidSourceHandle) { continue; }
-				if (v.bank != bank.id) { continue; }
-				if (v.flags[Voice::Flags::spatialized]) { continue; }
+			manager.forEachVoice([&](Voice& v) {
+				if (v.bank != bank.id) { return true; }
+				if (v.flags[Voice::Flags::spatialized]) { return true; }
 
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
-				if (signal.size() == 0) { continue; }
+
+				if (signal.size() == 0) { return false; }
 
 				VAE_ASSERT(signal.sampleRate == sampleRate);
 
@@ -54,12 +54,8 @@ namespace vae { namespace core {
 				v.flags[Voice::Flags::started] = true;
 
 				v.time += remaining; // progress time in voice
-
-				if (remaining != frames) {
-					// end is reached, voice needs to be stopped
-					manager.stopVoice(v);
-				}
-			}
+				return remaining != frames;
+			});
 		}
 	};
 

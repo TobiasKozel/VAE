@@ -16,6 +16,7 @@
 #include "./processor/vae_processor.hpp"
 #include "./processor/vae_spatial_processor.hpp"
 #include "./processor/vae_mixer_processor.hpp"
+#include "./vae_bank_manager.hpp"
 
 #include "../../external/tklb/src/types/TSpinLock.hpp"
 #include "../../external/tklb/src/util/TMath.hpp"
@@ -34,15 +35,19 @@ namespace vae { namespace core {
 
 		using Thread = std::thread;
 		using Semaphore = std::condition_variable;
+
 		EngineConfig mConfig;			// Config object provided at construction
-		HeapBuffer<Bank> mBanks;		// All the currently loaded banks
-		VoiceManger mVoiceManager;		// Stores and handle voices
-		SpatialManager mSpatialManager;	// Manages spatial emitters
+
+		VoiceManger mVoiceManager;		// Holds and handle voices
+		SpatialManager mSpatialManager;	// Holds and manages spatial emitters
+		BankManager mBankManager;		// Holds and manages banks
+
+		AudioBuffer mScratchBuffer;		// used to combine the signal from all banks and push it to the device
 		Device* mDevice = nullptr;		// Output device
 		SampleIndex mTime = 0;			// Global engine time in samples
 		Time mTimeFract = 0;			// Global engine time in seconds
-		AudioBuffer mScratchBuffer;		// used to combine the signal from all banks and push it to the device
 		Sample mLimiterLastPeak = 1.0;	// Master limiter last peak
+
 		Thread mAudioThread;			// Thread processing voices and mixers
 		Semaphore mAudioConsumed;		// Notifies the audio thread when more audio is needed
 		Mutex mMutex;					// Mutex to lock AudioThread and bank operations
@@ -84,18 +89,16 @@ namespace vae { namespace core {
 					remaining = std::min(remaining, Config::MaxBlock);
 
 					mScratchBuffer.setValidSize(remaining);
-					// TODO PERF VAE banks could be processed in parallel
-					for (auto& i : mBanks) {
-						if (i.id == InvalidBankHandle) { continue; } // skip unloaded banks
 
+					// TODO PERF VAE banks could be processed in parallel
+					mBankManager.forEach([&](Bank& i) {
 						Processor::mix(mVoiceManager, i, remaining, sampleRate);
 						SpatialProcessor::mix(mVoiceManager, i, mSpatialManager, remaining, sampleRate);
-
 						MixerProcessor::mix(mVoiceManager, i, remaining);
 						auto& bankMaster = i.mixers[Mixer::MasterMixerHandle].buffer;
 						mScratchBuffer.add(bankMaster);
 						bankMaster.set(0);
-					}
+					});
 
 					{
 						// Shitty limiter
@@ -210,9 +213,9 @@ namespace vae { namespace core {
 		 */
 		void update() {
 			// Handle finished voices and their events
-			for (auto& v : mVoiceManager.finishedVoiceQueue) {
+			for (auto& v : mVoiceManager.finished()) {
 				if (v.source == InvalidSourceHandle) { continue; }
-				for (auto& i : mBanks[v.bank].events[v.event].on_end) {
+				for (auto& i : mBankManager.get(v.bank).events[v.event].on_end) {
 					if (i == InvalidEventHandle) { continue; }
 					fireEvent(v.bank, i, v.emitter, v.mixer);
 				}
@@ -238,10 +241,8 @@ namespace vae { namespace core {
 			EmitterHandle emitterHandle = InvalidEmitterHandle,
 			MixerHandle mixerHandle = InvalidMixerHandle
 		) {
+			auto& bank = mBankManager.get(bankHandle);
 			VAE_ASSERT(eventHandle != InvalidEventHandle)
-			VAE_ASSERT(bankHandle < mBanks.size())
-
-			auto& bank = mBanks[bankHandle];
 			VAE_ASSERT(eventHandle < bank.events.size())
 			auto& event = bank.events[eventHandle];
 
@@ -352,14 +353,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result loadBank(const char* path) {
-			VAE_INFO("Loading bank from file %s%s", mConfig.rootPath, path)
-			Bank bank;
-			auto result = BankLoader::load(path, mConfig.rootPath, bank);
-			if (result != Result::Success) {
-				VAE_ERROR("Failed to load bank from file %s%s with error %i", mConfig.rootPath, path, result)
-				return result;
-			}
-			return loadBank(bank);
+			return mBankManager.load(path, mConfig.rootPath);
 		}
 
 		/**
@@ -369,28 +363,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result loadBank(Bank& bank) {
-			// TODO init mixer effects
-
-			if (bank.mixers.empty()) {
-				// Ensure there's a master channel per bank
-				bank.mixers.resize(1);
-				bank.mixers[0].id = 0;
-				bank.mixers[0].name = "Bank Master";
-			}
-
-			for (auto& m : bank.mixers) {
-				m.buffer.resize(Config::MaxBlock, Config::MaxChannels);
-			}
-
-			{
-				Lock l(mMutex);
-				if (mBanks.size() < bank.id + 1) {
-					mBanks.resize(bank.id + 1);
-				}
-				mBanks[bank.id] = std::move(bank);
-			}
-			VAE_INFO("Bank %s loaded.", mBanks[bank.id].name.c_str())
-			return Result::Success;
+			return mBankManager.load(bank);
 		}
 
 		/**
@@ -401,13 +374,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result addSource(BankHandle bankHandle, Source& source) {
-			auto& bank = mBanks[bankHandle];
-			Lock l(mMutex);
-			if (bank.sources.size() <= source.id) {
-				bank.sources.resize(source.id + 1);
-			}
-			bank.sources[source.id] = std::move(source);
-			return Result::Success;
+			return mBankManager.addSource(bankHandle, source);
 		}
 
 		/**
@@ -418,25 +385,11 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result addEvent(BankHandle bankHandle, Event& event) {
-			auto& bank = mBanks[bankHandle];
-			Lock l(mMutex);
-			if (bank.events.size() <= event.id) {
-				bank.events.resize(event.id + 1);
-			}
-			bank.events[event.id] = std::move(event);
-			return Result::Success;
+			return mBankManager.addEvent(bankHandle, event);
 		}
 
 		Result addMixer(BankHandle bankHandle, Mixer& mixer) {
-			// TODO init mixer effects
-			mixer.buffer.resize(Config::MaxBlock, Config::MaxChannels);
-			Lock l(mMutex);
-			auto& bank = mBanks[bankHandle];
-			if (bank.mixers.size() <= mixer.id) {
-				bank.mixers.resize(mixer.id + 1);
-			}
-			bank.mixers[mixer.id] = std::move(mixer);
-			return Result::Success;
+			return mBankManager.addMixer(bankHandle, mixer);
 		}
 
 		/**
@@ -446,14 +399,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result unloadBankFromPath(const char* path) {
-			Lock l(mMutex);
-			for (auto& i : mBanks) {
-				if (strcmp(path, i.path.c_str()) == 0) {
-					return unloadBankFromId(i.id);
-				}
-			}
-			VAE_WARN("Could not unload Bank %s", path)
-			return Result::ElementNotFound;
+			return mBankManager.unloadFromPath(path);
 		}
 
 		/**
@@ -463,27 +409,14 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result unloadBankFromId(BankHandle bankHandle) {
-			Lock l(mMutex);
-			if (mBanks.size() <= bankHandle) {
-				VAE_WARN("Could not unload bank with handle %i", bankHandle)
-				return Result::ElementNotFound;
-			}
-			auto& bank = mBanks[bankHandle];
-			VAE_ASSERT(bank.id == bankHandle)
-			VAE_INFO("Unloading bank %s", bank.name.c_str())
-			bank = { }; // should free all the memory
-			mSpatialManager.compact();
-			return Result::Success;
+			return mBankManager.unloadFromId(bankHandle);
 		}
 
 		/**
 		 * @brief Unload every bank and data associated with it
 		 */
 		void unloadAllBanks() {
-			for (auto& i : mBanks) {
-				if (i.id == InvalidBankHandle) { continue; }
-				unloadBankFromId(i.id);
-			}
+			mBankManager.unloadAll();
 		}
 #pragma endregion bank_handling
 

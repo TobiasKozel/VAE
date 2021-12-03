@@ -59,10 +59,6 @@ namespace vae { namespace core {
 			mEmitters.compact();
 		}
 
-		Listeners& getListeners() {
-			return mListeners;
-		}
-
 		Result setEmitter(
 			EmitterHandle emitter, const LocationDirection& locDir,
 			Sample spread
@@ -76,6 +72,18 @@ namespace vae { namespace core {
 			e.direction = { locDir.direction.x, locDir.direction.y, locDir.direction.z };
 			e.spread = spread;
 			return Result::Success;
+		}
+
+		Listeners& getListeners() {
+			return mListeners;
+		}
+
+		template <class Func>
+		void forEachListener(const Func&& func) {
+			for(auto& i : mListeners) {
+				if (i.id == InvalidListenerHandle) { continue; }
+				func(i);
+			}
 		}
 
 		Result setListener(

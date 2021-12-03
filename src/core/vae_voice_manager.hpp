@@ -24,15 +24,34 @@
 #include "./pod/vae_voice.hpp"
 
 namespace vae { namespace core {
-	struct VoiceManger {
-		HeapBuffer<Voice> voices;				// Currently playing voice are here
-		HeapBuffer<Voice> finishedVoiceQueue;	// voices that finished playing are queued here
-		EventHandle currentEventInstance = 0;
-		Size activeVoices = 0;
+	class VoiceManger {
+		HeapBuffer<Voice> mVoices;				// Currently playing voice are here
+		HeapBuffer<Voice> mFinishedVoiceQueue;	// voices that finished playing are queued here
+		EventHandle mCurrentEventInstance = 0;
+		Size mActiveVoices = 0;
 
+	public:
 		VoiceManger(Size voiceCount, Size virtualVoiceCount) {
-			voices.resize(voiceCount);
-			finishedVoiceQueue.resize(voiceCount);
+			mVoices.resize(voiceCount);
+			mFinishedVoiceQueue.resize(voiceCount);
+		}
+
+		HeapBuffer<Voice>& all() {
+			return mVoices;
+		}
+
+		HeapBuffer<Voice>& finished() {
+			return mFinishedVoiceQueue;
+		}
+
+		template <class Func>
+		void forEachVoice(const Func&& func) {
+			for (auto& i : mVoices) {
+				if (i.source == InvalidSourceHandle) { continue; }
+				if (!func(i)) {
+					stopVoice(i);
+				}
+			}
 		}
 
 		/**
@@ -50,7 +69,7 @@ namespace vae { namespace core {
 		) {
 			// Find a free voice
 			// TODO VAE PERF
-			for (auto& v : voices) {
+			for (auto& v : mVoices) {
 				if(v.source == InvalidSourceHandle) {
 					v = {}; // re init object resets time and so on
 					v.source = event.source;
@@ -73,10 +92,10 @@ namespace vae { namespace core {
 					v.emitter = emitter;
 					v.flags[Voice::Flags::spatialized] = emitter != InvalidEmitterHandle;
 					v.bank = bank;
-					v.eventInstance = currentEventInstance;
+					v.eventInstance = mCurrentEventInstance;
 					v.gain = event.gain;
-					currentEventInstance++;
-					activeVoices++;
+					mCurrentEventInstance++;
+					mActiveVoices++;
 					return Result::Success;
 				}
 			}
@@ -97,7 +116,7 @@ namespace vae { namespace core {
 
 			if (!v.flags[Voice::Flags::chainedEvents]) {
 				v.source = InvalidSourceHandle; // Mark voice as free
-				activeVoices--;
+				mActiveVoices--;
 				return Result::Success;
 			}
 			/**
@@ -109,7 +128,7 @@ namespace vae { namespace core {
 
 			// TODO VAE PERF
 			bool finished = false;
-			for (auto& f : finishedVoiceQueue) {
+			for (auto& f : mFinishedVoiceQueue) {
 				if (f.source == InvalidSourceHandle) {
 					finished = true;
 					f.event = v.event;
@@ -125,7 +144,7 @@ namespace vae { namespace core {
 				}
 			}
 			v.source = InvalidSourceHandle; // Mark voice as free
-			activeVoices--;
+			mActiveVoices--;
 
 			if (!finished) {
 				// Failed to find a free spot in finished voices array
@@ -144,7 +163,7 @@ namespace vae { namespace core {
 		 */
 		Result stopFromSource(SourceHandle source, EmitterHandle emitter) {
 			VAE_ASSERT(source != InvalidSourceHandle)
-			for (auto& v : voices) {
+			for (auto& v : mVoices) {
 				if(v.source == source) {
 					if (emitter == InvalidEmitterHandle) {
 						stopVoice(v);
@@ -165,7 +184,7 @@ namespace vae { namespace core {
 		 */
 		Result stopFromEvent(EventHandle event, EmitterHandle emitter) {
 			VAE_ASSERT(event != InvalidEventHandle)
-			for (auto& v : voices) {
+			for (auto& v : mVoices) {
 				if(v.event == event) {
 					if (emitter == InvalidEmitterHandle) {
 						stopVoice(v);
@@ -186,7 +205,7 @@ namespace vae { namespace core {
 		 */
 		Result stopFromMixer(MixerHandle mixer, EmitterHandle emitter) {
 			VAE_ASSERT(mixer != InvalidMixerHandle)
-			for (auto& v : voices) {
+			for (auto& v : mVoices) {
 				if(v.mixer == mixer) {
 					if (emitter == InvalidEmitterHandle) {
 						stopVoice(v);
@@ -206,7 +225,7 @@ namespace vae { namespace core {
 		 */
 		Result stopEmitter(EmitterHandle emitter) {
 			VAE_ASSERT(emitter != InvalidEmitterHandle)
-			for (auto& v : voices) {
+			for (auto& v : mVoices) {
 				if(v.emitter == emitter) {
 					stopVoice(v);
 				}

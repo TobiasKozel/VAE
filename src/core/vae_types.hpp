@@ -1,6 +1,6 @@
 /**
  * @file vae_types.hpp
- * @author your name (you@domain.com)
+ * @author Tobias Kozel (t.kozel@pm.me)
  * @brief Internal types used across VAE
  * @version 0.1
  * @date 2021-11-29
@@ -45,7 +45,7 @@ namespace vae { namespace core {
 
 	#ifdef VAE_RELEASE
 		/**
-		 * @brief Fake string class which does nothing
+		 * @brief Fake string class which does nothing and takes up no space
 		 */
 		struct NameString {
 			NameString() { }
