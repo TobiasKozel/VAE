@@ -127,6 +127,9 @@ namespace vae {
 		 */
 		unsigned int virtualVoices = 0;
 
+
+		static constexpr unsigned int _preAllocatedEmitters = 1 << 14;
+
 		/**
 		 * @brief How many emitters to allocate upfront.
 		 * Once this number is exceeded a reallocation will take place.
@@ -134,7 +137,7 @@ namespace vae {
 		 * ! internal map allocates power of 2 sizes !
 		 * This makes space for 16384 emitters.
 		 */
-		unsigned int preAllocatedEmitters = 1 << 14;
+		unsigned int preAllocatedEmitters = _preAllocatedEmitters;
 
 		/**
 		 * @brief Samplerate requested from device.

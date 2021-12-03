@@ -5,8 +5,8 @@
 
 namespace vae { namespace core {
 	struct Emitter {
-		Vec3 position;
-		Vec3 direction;
+		Vec3 position = { 0, 0, 0 };
+		Vec3 direction = { 0, 0, 0 };
 		Sample spread;
 		EventHandle event;
 		BankHandle bank;
