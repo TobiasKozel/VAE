@@ -35,7 +35,7 @@ namespace vae { namespace core {
 		VoiceManger(Size voiceCount, Size virtualVoiceCount) {
 			mVoices.resize(voiceCount);
 			mFinishedVoiceQueue.resize(voiceCount);
-			mVoicePIPs.reserve(voiceCount);
+			mVoicePIPs.resize(voiceCount);
 		}
 
 		HeapBuffer<Voice>& all() {

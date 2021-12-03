@@ -59,20 +59,27 @@ namespace vae { namespace core {
 
 				spatial.forEachListener([&](Listener& l, ListenerHandle li) {
 					// Each listener gets the sound mixed in from it's position
-					// ! this means mixing configurations doesn't work !
+					// ! this means using different configurations doesn't work !
 					switch (l.configuraion) {
 					case Listener::Configuration::Headphones:
 						auto& currentVolumes = currentPip.listeners[li].volumes;
 						auto& lastVolumes = lastPip.listeners[li].volumes;
 
-						Sample distance = glm::distance(l.postion, emitter.position);
-						distance = std::max(distance, Sample(1));
-						distance = std::min(distance, Sample(1000000));
-						distance = std::pow(distance / 1, -Sample(1));
-						distance *= gain;
+						Vec3 direction = emitter.position - l.postion;
+						Sample distanceAttenuated = glm::length(direction);
+						direction /= distanceAttenuated;
+						distanceAttenuated = std::max(distanceAttenuated, Sample(1));
+						distanceAttenuated = std::min(distanceAttenuated, Sample(1000000));
+						distanceAttenuated = std::pow(distanceAttenuated / 1.0, -Sample(1));
+						distanceAttenuated *= gain;
 
-						currentVolumes[0] = distance;
-						currentVolumes[1] = distance;
+						if (distanceAttenuated < 0.001) { return; } // ! inaudible
+
+						Sample left =  glm::dot(l.front, { -1.f, 0.f, 0.f });
+						Sample right = glm::dot(l.front, {  1.f, 0.f, 0.f });
+
+						currentVolumes[0] = distanceAttenuated * left;
+						currentVolumes[1] = distanceAttenuated * right;
 
 						if (v.time == 0) {
 							lastVolumes[0] = currentVolumes[0];
@@ -84,7 +91,7 @@ namespace vae { namespace core {
 							target[0][s] += sample * tklb::lerp(lastVolumes[0], currentVolumes[0], s * step);
 							target[1][s] += sample * tklb::lerp(lastVolumes[1], currentVolumes[1], s * step);
 						}
-						break;
+						return;
 					}
 				});
 

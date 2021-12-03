@@ -8,7 +8,7 @@
 			"path": "sound1.wav",
 			"format": "wav",
 			"type": "preload",
-			"gain": 0.6
+			"gain": 1.0
 		}
 	],
 	"mixers": [
@@ -22,7 +22,7 @@
 		{
 			"id": 1,
 			"name": "Mixer1",
-			"gain": 0.5,
+			"gain": 1.0,
 			"effects": [],
 			"parent": 0
 		}
