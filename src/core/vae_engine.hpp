@@ -54,15 +54,6 @@ namespace vae { namespace core {
 		bool mAudioThreadRunning = false;
 
 		/**
-		 * Don't allow any kind of move of copy of the object
-		 */
-		Engine(const Engine&) = delete;
-		Engine(const Engine*) = delete;
-		Engine(Engine&&) = delete;
-		Engine& operator= (const Engine&) = delete;
-		Engine& operator= (Engine&&) = delete;
-
-		/**
 		 * @brief Main processing function
 		 * Called either from onBufferSwap or threadedProcess
 		 */
@@ -153,7 +144,7 @@ namespace vae { namespace core {
 		}
 
 	public:
-		Engine(EngineConfig& config) :
+		Engine(const EngineConfig& config) :
 			mConfig(config),
 		 	mVoiceManager(config.voices, config.virtualVoices),
 			mSpatialManager(config.preAllocatedEmitters)
@@ -169,6 +160,16 @@ namespace vae { namespace core {
 			stop();
 			VAE_INFO("Engine destructed")
 		}
+
+
+		/**
+		 * Don't allow any kind of move of copy of the object
+		 */
+		Engine(const Engine&) = delete;
+		Engine(const Engine*) = delete;
+		Engine(Engine&&) = delete;
+		Engine& operator= (const Engine&) = delete;
+		Engine& operator= (Engine&&) = delete;
 
 		/**
 		 * @brief Tries to open default device and start audio thread.

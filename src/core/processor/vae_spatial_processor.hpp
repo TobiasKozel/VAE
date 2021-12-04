@@ -67,21 +67,32 @@ namespace vae { namespace core {
 
 						Vec3 direction = emitter.position - l.postion;
 						Sample distanceAttenuated = glm::length(direction);
-						direction /= distanceAttenuated;
-						distanceAttenuated = std::max(distanceAttenuated, Sample(1));
-						distanceAttenuated = std::min(distanceAttenuated, Sample(1000000));
-						distanceAttenuated = Sample(std::pow(distanceAttenuated / Sample(1.0), -Sample(1)));
-						distanceAttenuated *= gain;
 
-						if (distanceAttenuated < 0.001) { return; } // ! inaudible
+						if (0.2 < distanceAttenuated) {
+							direction /= distanceAttenuated;
+							distanceAttenuated = std::max(distanceAttenuated, Sample(1));
+							distanceAttenuated = std::min(distanceAttenuated, Sample(1000000));
+							distanceAttenuated = Sample(std::pow(distanceAttenuated / Sample(1.0), -Sample(1)));
+							distanceAttenuated *= gain;
 
-						Sample left =  glm::dot(l.front, { -1.f, 0.f, 0.f });
-						Sample right = glm::dot(l.front, {  1.f, 0.f, 0.f });
+							if (distanceAttenuated < 0.001) { return; } // ! inaudible
 
-						currentVolumes[0] = distanceAttenuated * left;
-						currentVolumes[1] = distanceAttenuated * right;
+							Sample left  = glm::dot(direction, { -1.f, 0.f, 0.f });
+							Sample right = glm::dot(direction, {  1.f, 0.f, 0.f });
+
+							left  = std::max(Sample(0), left);
+							right = std::max(Sample(0), right);
+
+							currentVolumes[0] = distanceAttenuated * left;
+							currentVolumes[1] = distanceAttenuated * right;
+						} else {
+							// Super close so don't pan at all
+							currentVolumes[0] = gain;
+							currentVolumes[1] = gain;
+						}
 
 						if (v.time == 0) {
+							// first time don't interpolate
 							lastVolumes[0] = currentVolumes[0];
 							lastVolumes[1] = currentVolumes[1];
 						}

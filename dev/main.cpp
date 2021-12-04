@@ -82,7 +82,7 @@ int main() {
 		for (int i = 0; i < 200; i++) {
 			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(1000 / float(60)));
 			engine.setEmitter(emitter, {{1.f, 0, 0}, {} }, 0);
-			engine.update();
+			// engine.update(); // needs to be ticked if EngineConfig::updateInAudioThread is false in
 		}
 	};
 

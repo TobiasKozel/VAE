@@ -168,7 +168,7 @@ namespace vae {
 		 * and if a lot of work is done in the EventCallback defined above,
 		 * the audio thread will be blocked and underruns occur.
 		 */
-		bool updateInAudioThread = false;
+		bool updateInAudioThread = true;
 
 		/**
 		 * @brief If enabled, all processing and mixing will happen in the audio callback.
