@@ -102,7 +102,7 @@ namespace vae { namespace core {
 
 					{
 						// Shitty limiter
-						mLimiterLastPeak *= 0.7; // return to normal slowly
+						mLimiterLastPeak *= Sample(0.7); // return to normal slowly
 						mLimiterLastPeak = std::max(Sample(1.0), mLimiterLastPeak);
 						Sample currentPeak = 0;
 						for (Uchar c = 0; c < mScratchBuffer.channels(); c++) {
@@ -111,7 +111,7 @@ namespace vae { namespace core {
 							}
 						}
 						mLimiterLastPeak = std::max(mLimiterLastPeak, currentPeak);
-						mScratchBuffer.multiply(1.0 / mLimiterLastPeak);
+						mScratchBuffer.multiply(Sample(1.0) / mLimiterLastPeak);
 					}
 
 					d.push(mScratchBuffer);
@@ -165,9 +165,9 @@ namespace vae { namespace core {
 		}
 
 		~Engine() {
-
 			unloadAllBanks();
 			stop();
+			VAE_INFO("Engine destructed")
 		}
 
 		/**
@@ -194,6 +194,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stop() {
+			Lock l(mMutex);
 			if (mAudioThreadRunning) {
 				mAudioThreadRunning = false;
 				if(mAudioThread.joinable()) {
@@ -204,7 +205,6 @@ namespace vae { namespace core {
 				}
 			}
 			delete mDevice;
-			VAE_INFO("Engine stopped")
 			return Result::Success;
 		}
 
@@ -307,14 +307,7 @@ namespace vae { namespace core {
 			return Result::Success;
 		}
 
-		/**
-		 * @brief Set the position of a listener
-		 * @param listener
-		 * @return Result
-		 */
-		Result setListener(ListenerHandle listener, const LocationOrientation& locOr) {
-			return mSpatialManager.setListener(listener, locOr);
-		}
+
 
 #pragma region emitter
 
@@ -327,6 +320,7 @@ namespace vae { namespace core {
 		}
 
 		Result removeEmitter(EmitterHandle h) {
+			mVoiceManager.stopEmitter(h);
 			return mSpatialManager.removeEmitter(h);
 		}
 
@@ -335,6 +329,27 @@ namespace vae { namespace core {
 			Sample spread
 		) {
 			return mSpatialManager.setEmitter(emitter, locDir, spread);
+		}
+
+		Result stopEmitter(EmitterHandle emitter) {
+			return mVoiceManager.stopEmitter(emitter);
+		}
+
+		ListenerHandle createListener() {
+			return mSpatialManager.createListener();
+		}
+
+		Result removeListener(ListenerHandle listener) {
+			return mSpatialManager.removeListener(listener);
+		}
+
+		/**
+		 * @brief Set the position of a listener
+		 * @param listener
+		 * @return Result
+		 */
+		Result setListener(ListenerHandle listener, const LocationOrientation& locOr) {
+			return mSpatialManager.setListener(listener, locOr);
 		}
 
 

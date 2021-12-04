@@ -70,7 +70,7 @@ namespace vae { namespace core {
 						direction /= distanceAttenuated;
 						distanceAttenuated = std::max(distanceAttenuated, Sample(1));
 						distanceAttenuated = std::min(distanceAttenuated, Sample(1000000));
-						distanceAttenuated = std::pow(distanceAttenuated / 1.0, -Sample(1));
+						distanceAttenuated = Sample(std::pow(distanceAttenuated / Sample(1.0), -Sample(1)));
 						distanceAttenuated *= gain;
 
 						if (distanceAttenuated < 0.001) { return; } // ! inaudible

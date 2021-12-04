@@ -88,6 +88,18 @@ namespace vae { namespace core {
 			}
 		}
 
+		ListenerHandle createListener() {
+			for (ListenerHandle index = 0; index < Config::MaxListeners; index++) {
+				auto& i = mListeners[index];
+				if (i.id == InvalidListenerHandle) {
+					i.id = index;
+					return index;
+				}
+			}
+			VAE_ERROR("Exeeded maxim amount of listeners define in Config::MaxListeners")
+			return InvalidListenerHandle;
+		}
+
 		Result setListener(
 			ListenerHandle listener,
 			const LocationOrientation& locOr
@@ -100,7 +112,6 @@ namespace vae { namespace core {
 			l.postion = { locOr.position.x, locOr.position.y, locOr.position.z };
 			l.front = { locOr.front.x, locOr.front.y, locOr.front.z };
 			l.up = { locOr.up.x, locOr.up.y, locOr.up.z };
-			l.id = listener;
 			return Result::Success;
 		}
 
