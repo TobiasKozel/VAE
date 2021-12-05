@@ -53,19 +53,18 @@ namespace vae { namespace core {
 				auto& target = mixer.buffer;
 				auto& emitter = spatial.getEmitter(v.emitter);
 
-				auto& lastPip = manager.getVoicePIP(vi);
-				VoicePIP currentPip;
-
 				target.setValidSize(frames); // mark mixer as active
 
 				const auto gain = v.gain * source.gain;
 				const Sample step = Sample(1) / Sample(frames);
 
+				auto& lastPip = manager.getVoicePIP(vi);
+				VoicePIP currentPip;
 				bool audible = false;
 
+				// Each listener gets the sound mixed in from it's position
+				// ! this means using different configurations doesn't work !
 				spatial.forEachListener([&](Listener& l, ListenerHandle li) {
-					// Each listener gets the sound mixed in from it's position
-					// ! this means using different configurations doesn't work !
 
 					// samething as graphices, make the world rotate round the listener
 					glm::mat4x3 lookAt = glm::lookAt(l.position, l.position + l.front, l.up);
@@ -92,25 +91,33 @@ namespace vae { namespace core {
 					audible = true;
 
 					switch (l.configuration) {
+					case Listener::Configuration::HRTF:
+						if (v.flags[Voice::Flags::HRTF]) {
+							// Only do hrtf when the voice also has it enabled
+
+							return;
+						}
 					case Listener::Configuration::Headphones:
-						auto& currentVolumes = currentPip.listeners[li].volumes;
-						auto& lastVolumes = lastPip.listeners[li].volumes;
+						{
+							auto& currentVolumes = currentPip.listeners[li].volumes;
+							auto& lastVolumes = lastPip.listeners[li].volumes;
 
-						SPCAP::HeadphoneSPCAP.pan(relativeDirection, currentVolumes, distanceAttenuated, 0.5);
+							SPCAP::HeadphoneSPCAP.pan(relativeDirection, currentVolumes, distanceAttenuated, 0.5);
 
-						if (v.time == 0) {
-							// first time don't interpolate
-							lastVolumes[0] = currentVolumes[0];
-							lastVolumes[1] = currentVolumes[1];
+							if (v.time == 0) {
+								// first time don't interpolate
+								lastVolumes[0] = currentVolumes[0];
+								lastVolumes[1] = currentVolumes[1];
+							}
+
+							// Copy audio and apply panning
+							for (SampleIndex s = 0; s < remaining; s++) {
+								const Sample sample = signal[0][v.time + s];
+								target[0][s] += sample * tklb::lerp(lastVolumes[0], currentVolumes[0], s * step);
+								target[1][s] += sample * tklb::lerp(lastVolumes[1], currentVolumes[1], s * step);
+							}
+							return;
 						}
-
-						// Copy audio and apply panning
-						for (SampleIndex s = 0; s < remaining; s++) {
-							const Sample sample = signal[0][v.time + s];
-							target[0][s] += sample * tklb::lerp(lastVolumes[0], currentVolumes[0], s * step);
-							target[1][s] += sample * tklb::lerp(lastVolumes[1], currentVolumes[1], s * step);
-						}
-						return;
 					}
 				});
 

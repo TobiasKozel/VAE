@@ -126,7 +126,7 @@ namespace vae { namespace core {
 					e.flags[size_t(Event::Flags::stop)]			= type == "stop";
 					e.flags[size_t(Event::Flags::emit)]			= type == "emit";
 					e.flags[size_t(Event::Flags::force_mixer)]	= bool(i["force_mixer"]);
-					e.flags[size_t(Event::Flags::hrtf)] 		= bool(i["hrtf"]);
+					e.flags[size_t(Event::Flags::HRTF)] 		= bool(i["hrtf"]);
 
 					if (i["source"].is_null()) {
 						e.source = InvalidSourceHandle;

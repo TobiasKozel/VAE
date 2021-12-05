@@ -47,8 +47,8 @@ namespace vae { namespace core {
 		}
 
 		Bank& get(BankHandle bank) {
-			VAE_ASSERT(mBanks[bank].id == bank)
 			VAE_ASSERT(bank < mBanks.size())
+			VAE_ASSERT(mBanks[bank].id == bank)
 			return mBanks[bank];
 		}
 

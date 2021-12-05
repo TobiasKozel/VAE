@@ -15,7 +15,7 @@ namespace vae { namespace core {
 				started,
 				audible,			// Whether the voice was heard by any listener
 				spatialized,		// If the voice has spatialization data
-				hrtf,				// If the voice should be rendered using hrtfs
+				HRTF,				// If the voice should be rendered using hrtfs
 				mixMatrix,			// If the voice has a mix matrix
 				filtered,			// If the voice is filtered
 				FLAG_COUNT

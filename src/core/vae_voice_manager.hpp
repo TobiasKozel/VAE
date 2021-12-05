@@ -101,7 +101,7 @@ namespace vae { namespace core {
 					v.emitter = emitter;
 					if (emitter != InvalidEmitterHandle) {
 						v.flags[Voice::Flags::spatialized] = true;
-						v.flags[Voice::Flags::hrtf] = event.flags[Voice::Flags::hrtf];
+						v.flags[Voice::Flags::HRTF] = event.flags[Voice::Flags::HRTF];
 						mVoicePIPs[i] = { };
 					}
 					v.bank = bank;
