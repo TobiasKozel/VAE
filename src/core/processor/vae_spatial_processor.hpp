@@ -67,12 +67,14 @@ namespace vae { namespace core {
 					// Each listener gets the sound mixed in from it's position
 					// ! this means using different configurations doesn't work !
 
-					// Vector pointing in the source direction
-					// Vec3 direction = emitter.position - l.position;
+					// samething as graphices, make the world rotate round the listener
 					glm::mat4x3 lookAt = glm::lookAt(l.position, l.position + l.front, l.up);
+					// listener is the world origin now
 					Vec3 relativeDirection = emitter.position * lookAt;
-					// First distance, then converted to volume
-					Sample distanceAttenuated = glm::length(relativeDirection);
+
+					const Sample distance = glm::length(relativeDirection);
+					relativeDirection /= distance;
+					Sample distanceAttenuated = distance;
 
 					if (distanceAttenuated < 0.05) {
 						// Source is really close
@@ -94,7 +96,7 @@ namespace vae { namespace core {
 						auto& currentVolumes = currentPip.listeners[li].volumes;
 						auto& lastVolumes = lastPip.listeners[li].volumes;
 
-						SPCAP::HeadphoneSPCAP.pan(relativeDirection, currentVolumes);
+						SPCAP::HeadphoneSPCAP.pan(relativeDirection, currentVolumes, distanceAttenuated, 0.5);
 
 						if (v.time == 0) {
 							// first time don't interpolate

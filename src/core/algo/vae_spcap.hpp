@@ -20,25 +20,32 @@ namespace vae { namespace core {
 			SPCAPConfig(const std::initializer_list<Vec3>& directions) {
 				int i = 0;
 				for (const auto& speaker : directions) {
-					mSpeakers[i] = { speaker, Sample(0) };
+					mSpeakers[i] = { glm::normalize(speaker), Sample(0) };
 					i++;
 				}
 				for (i = 0; i < N; i++) {
 					for (int j = 0; j < N; j++) {
 						mSpeakers[i].effective +=
-							0.5 * (1.0 + glm::dot(mSpeakers[i].dir, mSpeakers[j].dir));
+							Sample(0.5) * (Sample(1.0) + glm::dot(mSpeakers[i].dir, mSpeakers[j].dir));
 					}
 				}
 			}
 
 			constexpr int speakers() const { return N; }
 
-			void pan(const Vec3& source, Sample* result) const {
+			/**
+			 * @brief Calculate per channel volumes for a given direction
+			 *
+			 * @param direction The relative and normalized direction
+			 * @param result Result array of channel volumes
+			 * @param attenuation Distance attenuation multiplied on the result
+			 */
+			void pan(const Vec3& direction, Sample* result, Sample attenuation, Sample spread) const {
 				Sample sumSquaredGains = 0.0;
-				const Sample tightness = 4.0;
-				std::fill_n(result, N, 0);
+				const Sample tightness = (Sample(1) - spread) * Sample(10) + Sample(0.05);
+				std::fill_n(result, N, Sample(0));
 				for (int i = 0; i < N; i++) {
-					Sample gain = 0.5 * powf(1.0 + glm::dot(mSpeakers[i].dir, source), tightness);
+					Sample gain = Sample(0.5) * powf(Sample(1.0) + glm::dot(mSpeakers[i].dir, direction), tightness);
 					gain /= mSpeakers[i].effective;
 					gain = gain * gain;
 					result[i] = gain;
@@ -46,7 +53,7 @@ namespace vae { namespace core {
 				}
 
 				for (int i = 0; i < N; i++) {
-					result[i] = sqrtf(result[i] / sumSquaredGains);
+					result[i] = sqrtf(result[i] / sumSquaredGains) * attenuation;
 				}
 			}
 		};
