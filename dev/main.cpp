@@ -69,8 +69,8 @@ int main() {
 	auto emitter = engine.createEmitter();
 
 	auto alloced5 = tklb::memory::DefaultPoolDebug.getAllocated();
-
-	engine.setListener(0, {});
+	auto listener = engine.createListener();
+	engine.setListener(listener, {});
 
 	if (result == Result::Success) {
 		// for (int i = 0; i < 1050; i++)
@@ -81,7 +81,7 @@ int main() {
 
 		for (int i = 0; i < 200; i++) {
 			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(1000 / float(60)));
-			engine.setEmitter(emitter, {{1.f, 0, 0}, {} }, 0);
+			engine.setEmitter(emitter, {{-1.f, 0, 0}, {} }, 0);
 			// engine.update(); // needs to be ticked if EngineConfig::updateInAudioThread is false in
 		}
 	};

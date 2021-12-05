@@ -67,15 +67,22 @@ namespace vae {
 		unsigned char channelsIn = 0;
 		unsigned char channelsOut = 0;
 	};
+
+	/**
+	 * @brief Public vae Vector 3 type
+	 */
 	struct Vector3 {
 		float x, y, z;
 	};
 	struct LocationDirection {
-		Vector3 position, direction;
+		Vector3 position;
+		Vector3 direction;
 	};
 
 	struct LocationOrientation {
-		Vector3 position, front, up;
+		Vector3 position	= { 0.f, 0.f,  0.f };
+		Vector3 front		= { 0.f, 0.f, -1.f };
+		Vector3 up			= { 0.f, 1.f,  0.f };
 	};
 
 

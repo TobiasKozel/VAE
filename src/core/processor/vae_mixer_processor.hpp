@@ -5,6 +5,7 @@
 #include "../pod/vae_bank.hpp"
 #include "../pod/vae_mixer.hpp"
 #include "../vae_voice_manager.hpp"
+#include "./vae_effects_processor.hpp"
 
 namespace vae { namespace core {
 
@@ -31,7 +32,9 @@ namespace vae { namespace core {
 				// skip inactive mixers
 				if (sourceMixer.buffer.validSize() == 0) { continue; }
 
-				// TODO effects processing
+				for (auto& effect : sourceMixer.effects) {
+					EffectsProcessor::mix(effect, sourceMixer.buffer);
+				}
 
 				// Apply mixer volume
 				// TODO PERF VAE might be better to apply gain and mix in one go
@@ -47,9 +50,11 @@ namespace vae { namespace core {
 				sourceMixer.buffer.set(0);
 			}
 
-			// Apply gain on master as well
-			// TODO effects processing
 			auto& masterMixer = bank.mixers[Mixer::MasterMixerHandle];
+			for (auto& effect : masterMixer.effects) {
+				EffectsProcessor::mix(effect, masterMixer.buffer);
+			}
+			// Apply gain on master as well
 			masterMixer.buffer.multiply(masterMixer.gain);
 			// Master mixer will be mixed to the final output in the engine and then cleared
 		}

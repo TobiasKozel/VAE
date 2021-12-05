@@ -7,9 +7,13 @@
 #include "../pod/vae_voice.hpp"
 #include "../vae_voice_manager.hpp"
 #include "../vae_spatial_manager.hpp"
+#include "../algo/vae_spcap.hpp"
+
+#include "../../../external/glm/glm/gtc/matrix_transform.hpp"
 
 namespace vae { namespace core {
-	struct SpatialProcessor {
+	class SpatialProcessor {
+	public:
 		/**
 		 * @brief Process a single bank
 		 *
@@ -57,39 +61,40 @@ namespace vae { namespace core {
 				const auto gain = v.gain * source.gain;
 				const Sample step = Sample(1) / Sample(frames);
 
+				bool audible = false;
+
 				spatial.forEachListener([&](Listener& l, ListenerHandle li) {
 					// Each listener gets the sound mixed in from it's position
 					// ! this means using different configurations doesn't work !
-					switch (l.configuraion) {
+
+					// Vector pointing in the source direction
+					// Vec3 direction = emitter.position - l.position;
+					glm::mat4x3 lookAt = glm::lookAt(l.position, l.position + l.front, l.up);
+					Vec3 relativeDirection = emitter.position * lookAt;
+					// First distance, then converted to volume
+					Sample distanceAttenuated = glm::length(relativeDirection);
+
+					if (distanceAttenuated < 0.05) {
+						// Source is really close
+						distanceAttenuated = gain;
+						// no attenuation and technically no panning
+
+					} else {
+						distanceAttenuated = std::max(distanceAttenuated, Sample(1));
+						distanceAttenuated = std::min(distanceAttenuated, Sample(1000000));
+						distanceAttenuated = Sample(std::pow(distanceAttenuated / Sample(1.0), -Sample(1)));
+						distanceAttenuated *= gain;
+						if (distanceAttenuated < 0.001) { return; } // ! inaudible
+					}
+
+					audible = true;
+
+					switch (l.configuration) {
 					case Listener::Configuration::Headphones:
 						auto& currentVolumes = currentPip.listeners[li].volumes;
 						auto& lastVolumes = lastPip.listeners[li].volumes;
 
-						Vec3 direction = emitter.position - l.postion;
-						Sample distanceAttenuated = glm::length(direction);
-
-						if (0.2 < distanceAttenuated) {
-							direction /= distanceAttenuated;
-							distanceAttenuated = std::max(distanceAttenuated, Sample(1));
-							distanceAttenuated = std::min(distanceAttenuated, Sample(1000000));
-							distanceAttenuated = Sample(std::pow(distanceAttenuated / Sample(1.0), -Sample(1)));
-							distanceAttenuated *= gain;
-
-							if (distanceAttenuated < 0.001) { return; } // ! inaudible
-
-							Sample left  = glm::dot(direction, { -1.f, 0.f, 0.f });
-							Sample right = glm::dot(direction, {  1.f, 0.f, 0.f });
-
-							left  = std::max(Sample(0), left);
-							right = std::max(Sample(0), right);
-
-							currentVolumes[0] = distanceAttenuated * left;
-							currentVolumes[1] = distanceAttenuated * right;
-						} else {
-							// Super close so don't pan at all
-							currentVolumes[0] = gain;
-							currentVolumes[1] = gain;
-						}
+						SPCAP::HeadphoneSPCAP.pan(relativeDirection, currentVolumes);
 
 						if (v.time == 0) {
 							// first time don't interpolate
@@ -97,6 +102,7 @@ namespace vae { namespace core {
 							lastVolumes[1] = currentVolumes[1];
 						}
 
+						// Copy audio and apply panning
 						for (SampleIndex s = 0; s < remaining; s++) {
 							const Sample sample = signal[0][v.time + s];
 							target[0][s] += sample * tklb::lerp(lastVolumes[0], currentVolumes[0], s * step);
@@ -106,6 +112,7 @@ namespace vae { namespace core {
 					}
 				});
 
+				v.flags[Voice::Flags::audible] = audible;
 				lastPip = std::move(currentPip);
 
 				v.time += remaining; // progress time in voice
@@ -113,6 +120,8 @@ namespace vae { namespace core {
 			});
 		}
 	};
+
+	constexpr int _VAE_SPATIAL_PROCESSOR_SIZE = sizeof(SpatialProcessor);
 
 } } // core::vae
 

@@ -122,10 +122,11 @@ namespace vae { namespace core {
 					e.name	= i["name"];
 
 					std::string type = i["type"];
-					e.flags[size_t(Event::Flags::start)] = type == "start";
-					e.flags[size_t(Event::Flags::stop)]  = type == "stop";
-					e.flags[size_t(Event::Flags::emit)]  = type == "emit";
-					e.flags[size_t(Event::Flags::force_mixer)] = bool(i["force_mixer"]);
+					e.flags[size_t(Event::Flags::start)]		= type == "start";
+					e.flags[size_t(Event::Flags::stop)]			= type == "stop";
+					e.flags[size_t(Event::Flags::emit)]			= type == "emit";
+					e.flags[size_t(Event::Flags::force_mixer)]	= bool(i["force_mixer"]);
+					e.flags[size_t(Event::Flags::hrtf)] 		= bool(i["hrtf"]);
 
 					if (i["source"].is_null()) {
 						e.source = InvalidSourceHandle;

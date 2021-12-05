@@ -13,7 +13,9 @@ namespace vae { namespace core {
 			enum {
 				chainedEvents = 0,	// If this voice triggers events after it stopped playing
 				started,
+				audible,			// Whether the voice was heard by any listener
 				spatialized,		// If the voice has spatialization data
+				hrtf,				// If the voice should be rendered using hrtfs
 				mixMatrix,			// If the voice has a mix matrix
 				filtered,			// If the voice is filtered
 				FLAG_COUNT
@@ -52,6 +54,8 @@ namespace vae { namespace core {
 			}
 		}
 	};
+
+	constexpr int _VAE_VOICE_PIP_SIZE = sizeof(VoicePIP);
 
 } } // core::vae
 

@@ -93,6 +93,9 @@ namespace vae { namespace core {
 				auto& i = mListeners[index];
 				if (i.id == InvalidListenerHandle) {
 					i.id = index;
+					i.position	= { 0.f, 0.f,  0.f };
+					i.front		= { 0.f, 0.f, -1.f };
+					i.up		= { 0.f, 1.f,  0.f };
 					return index;
 				}
 			}
@@ -109,7 +112,10 @@ namespace vae { namespace core {
 				return Result::ValidHandleRequired;
 			}
 			auto& l = mListeners[listener];
-			l.postion = { locOr.position.x, locOr.position.y, locOr.position.z };
+			if (l.id == InvalidBankHandle) {
+				return Result::ValidHandleRequired;
+			}
+			l.position = { locOr.position.x, locOr.position.y, locOr.position.z };
 			l.front = { locOr.front.x, locOr.front.y, locOr.front.z };
 			l.up = { locOr.up.x, locOr.up.y, locOr.up.z };
 			return Result::Success;

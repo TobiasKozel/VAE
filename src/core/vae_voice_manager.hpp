@@ -84,6 +84,7 @@ namespace vae { namespace core {
 					v.event = event.id;
 
 					for (auto& i : event.on_end) {
+						// find out if voice should trigger events on end
 						v.flags[Voice::Flags::chainedEvents] =
 							v.flags[Voice::Flags::chainedEvents] || (i != InvalidEventHandle);
 					}
@@ -100,6 +101,7 @@ namespace vae { namespace core {
 					v.emitter = emitter;
 					if (emitter != InvalidEmitterHandle) {
 						v.flags[Voice::Flags::spatialized] = true;
+						v.flags[Voice::Flags::hrtf] = event.flags[Voice::Flags::hrtf];
 						mVoicePIPs[i] = { };
 					}
 					v.bank = bank;

@@ -84,7 +84,9 @@ namespace vae { namespace core {
 					// TODO PERF VAE banks could be processed in parallel
 					mBankManager.forEach([&](Bank& i) {
 						Processor::mix(mVoiceManager, i, remaining, sampleRate);
-						SpatialProcessor::mix(mVoiceManager, i, mSpatialManager, remaining, sampleRate);
+						SpatialProcessor::mix(
+							mVoiceManager, i, mSpatialManager, remaining, sampleRate
+						);
 						MixerProcessor::mix(mVoiceManager, i, remaining);
 						auto& bankMaster = i.mixers[Mixer::MasterMixerHandle].buffer;
 						mScratchBuffer.add(bankMaster);

@@ -7,6 +7,10 @@
 #include "./fs/vae_bank_loader.hpp"
 
 namespace vae { namespace core {
+	/**
+	 * @brief Holds all the banks
+	 *
+	 */
 	class BankManager {
 		using Mutex = tklb::SpinLock;
 		using Lock = tklb::LockGuard<Mutex>;
@@ -27,6 +31,12 @@ namespace vae { namespace core {
 			mMutex.unlock();
 		}
 
+		/**
+		 * @brief Iterate all loaded banks
+		 *
+		 * @tparam Func Callable type
+		 * @param func	Callable
+		 */
 		template <class Func>
 		void forEach(const Func&& func) {
 			Lock l(mMutex);

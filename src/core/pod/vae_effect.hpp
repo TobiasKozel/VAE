@@ -5,7 +5,7 @@
 
 namespace vae { namespace core {
 	struct Effect {
-
+		// TODO
 	};
 } } // vae::core
 

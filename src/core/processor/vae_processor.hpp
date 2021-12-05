@@ -52,6 +52,7 @@ namespace vae { namespace core {
 				}
 
 				v.flags[Voice::Flags::started] = true;
+				v.flags[Voice::Flags::audible] = true;
 
 				v.time += remaining; // progress time in voice
 				return remaining != frames;

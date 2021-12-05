@@ -16,6 +16,7 @@ namespace vae { namespace core {
 				stop,			// Stops a source
 				emit,			// Emits an event to the EventCallback defined in the engine config
 				force_mixer,	// Prevents overriding the mixer from chained events or fireEvent
+				hrtf,			// If the listener has hrtfs set up it will be rendered using it
 				FLAG_COUNT
 			};
 		};
