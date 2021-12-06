@@ -38,6 +38,7 @@ namespace vae { namespace core {
 			SpatialManager& spatial,
 			SampleIndex frames, Size sampleRate
 		) {
+			VAE_PROFILER_SCOPE
 			manager.forEachVoice([&](Voice& v, Size vi) {
 				if (v.bank != bank.id) { return true; }						// wrong bank
 				if (!v.flags[Voice::Flags::spatialized]) { return true; }	// not spatialized
@@ -79,9 +80,14 @@ namespace vae { namespace core {
 				// Each listener gets the sound mixed in from it's position
 				// ! this means using different configurations doesn't work !
 				spatial.forEachListener([&](Listener& l, ListenerHandle li) {
+					VAE_PROFILER_SCOPE
+					// // samething as graphices, make the world rotate round the listener
+					// glm::mat4x4 lookAt = glm::lookAt(l.position, l.front, l.up);
+					// // listener is the world origin now
+					// Vec3 relativeDirection = (lookAt * glm::vec4(emitter.position, 1.f));
 
 					// samething as graphices, make the world rotate round the listener
-					glm::mat4x3 lookAt = glm::lookAt(l.position, l.position + l.front, l.up);
+					glm::mat4x3 lookAt = glm::lookAt(l.position, l.front, l.up);
 					// listener is the world origin now
 					Vec3 relativeDirection = emitter.position * lookAt;
 
@@ -89,18 +95,11 @@ namespace vae { namespace core {
 					relativeDirection /= distance;
 					Sample distanceAttenuated = distance;
 
-					if (distanceAttenuated < 0.05) {
-						// Source is really close
-						distanceAttenuated = gain;
-						// no attenuation and technically no panning
-
-					} else {
-						distanceAttenuated = std::max(distanceAttenuated, Sample(1));
-						distanceAttenuated = std::min(distanceAttenuated, Sample(1000000));
-						distanceAttenuated = Sample(std::pow(distanceAttenuated / Sample(1.0), -Sample(1)));
-						distanceAttenuated *= gain;
-						if (distanceAttenuated < 0.001) { return; } // ! inaudible
-					}
+					distanceAttenuated = std::max(distanceAttenuated, Sample(1));
+					distanceAttenuated = std::min(distanceAttenuated, Sample(1000000));
+					distanceAttenuated = Sample(std::pow(distanceAttenuated / Sample(1.0), -Sample(1)));
+					distanceAttenuated *= gain;
+					if (distanceAttenuated < 0.001) { return; } // ! inaudible
 
 					audible = true;
 

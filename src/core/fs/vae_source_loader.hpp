@@ -18,6 +18,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		static Result load(Source& s, std::string path) {
+			VAE_PROFILER_SCOPE
 			// TODO handle path always relative to some predefined root path
 			path = path + s.path;
 			if (s.flags[Source::Flags::preload]) {

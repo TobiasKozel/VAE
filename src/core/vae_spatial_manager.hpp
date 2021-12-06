@@ -4,21 +4,25 @@
 #include "../../external/robin_hood.h"
 #include "./pod/vae_emitter.hpp"
 #include "./vae_bank_manager.hpp"
+#include "./vae_voice_manager.hpp"
 #include "./vae_util.hpp"
 #include "./vae_types.hpp"
 #include "./pod/vae_listener.hpp"
 
 namespace vae { namespace core {
 	class SpatialManager {
+		// TODO for power of 2 sizes other maps might be faster and need the same amount of ram
 		template <typename key, class T> using Map = robin_hood::unordered_flat_map<key, T>;
 		Map<EmitterHandle, Emitter> mEmitters;	// All emitters across banks
 		Listeners mListeners;					// All Listeners
 	public:
 		SpatialManager(Size emitterCount) {
+			VAE_PROFILER_SCOPE
 			mEmitters.reserve(emitterCount);
 		}
 
 		Result addEmitter(EmitterHandle e) {
+			VAE_PROFILER_SCOPE
 			VAE_ASSERT(e != InvalidEmitterHandle)
 
 			if (mEmitters.contains(e)) {
@@ -32,6 +36,7 @@ namespace vae { namespace core {
 		}
 
 		EmitterHandle createEmitter() {
+			VAE_PROFILER_SCOPE
 			EmitterHandle ret = rand();
 			while (hasEmitter(ret)) {
 				ret = rand();
@@ -40,16 +45,23 @@ namespace vae { namespace core {
 			return result == Result::Success ? ret : InvalidEmitterHandle;
 		}
 
-		EmitterHandle createAutoEmitter(BankHandle bank, EventHandle event, float maxDist) {
+		EmitterHandle createAutoEmitter(
+			BankHandle bank, EventHandle event, float maxDist,
+			const LocationDirection& locDir, Sample spread
+		) {
+			VAE_PROFILER_SCOPE
 			auto handle = createEmitter();
 			auto& e = mEmitters[handle];
+			e.position = { locDir.position.x, locDir.position.y, locDir.position.z };
+			e.spread = spread;
+			e.maxDist = maxDist;
 			e.bank = bank;
 			e.event = event;
-			e.maxDist = maxDist;
 			return handle;
 		}
 
 		Result removeEmitter(EmitterHandle e) {
+			VAE_PROFILER_SCOPE
 			auto res = mEmitters.erase(e);
 			if (res == 1) {
 				return Result::Success;
@@ -58,14 +70,17 @@ namespace vae { namespace core {
 		}
 
 		Emitter& getEmitter(EmitterHandle e) {
+			VAE_PROFILER_SCOPE
 			return mEmitters[e];
 		}
 
 		bool hasEmitter(EmitterHandle e) {
+			VAE_PROFILER_SCOPE
 			return mEmitters.contains(e);
 		}
 
 		void compact() {
+			VAE_PROFILER_SCOPE
 			mEmitters.compact();
 		}
 
@@ -73,6 +88,7 @@ namespace vae { namespace core {
 			EmitterHandle emitter, const LocationDirection& locDir,
 			Sample spread
 		) {
+			VAE_PROFILER_SCOPE
 			if (!hasEmitter(emitter)) {
 				VAE_DEBUG("Accessed invalid emitter %i", emitter)
 				return Result::ElementNotFound;
@@ -89,7 +105,7 @@ namespace vae { namespace core {
 
 		template <class Func>
 		void forEachListener(const Func&& func) {
-
+			VAE_PROFILER_SCOPE
 			for(ListenerHandle index = 0; index < Config::MaxListeners; index++) {
 				auto& i = mListeners[index];
 				if (i.id == InvalidListenerHandle) { continue; }
@@ -98,6 +114,7 @@ namespace vae { namespace core {
 		}
 
 		ListenerHandle createListener() {
+			VAE_PROFILER_SCOPE
 			for (ListenerHandle index = 0; index < Config::MaxListeners; index++) {
 				auto& i = mListeners[index];
 				if (i.id == InvalidListenerHandle) {
@@ -116,6 +133,7 @@ namespace vae { namespace core {
 			ListenerHandle listener,
 			const LocationOrientation& locOr
 		) {
+			VAE_PROFILER_SCOPE
 			if (Config::MaxListeners <= listener) {
 				VAE_WARN("Accessed invalid listener %i", listener)
 				return Result::ValidHandleRequired;
@@ -131,6 +149,7 @@ namespace vae { namespace core {
 		}
 
 		Result removeListener(ListenerHandle listener) {
+			VAE_PROFILER_SCOPE
 			if (Config::MaxListeners <= listener) {
 				VAE_WARN("Accessed invalid listener %i", listener)
 				return Result::ValidHandleRequired;
@@ -140,14 +159,15 @@ namespace vae { namespace core {
 		}
 
 		void update(VoiceManger& manager, BankManager& banks) {
+			VAE_PROFILER_SCOPE
 			manager.forEachVoice([&](Voice& v, Size vi) {
 				if (v.flags[Voice::Flags::audible]) { return true; }
 				if (!v.flags[Voice::Flags::started]) { return true; }
 				if (!v.flags[Voice::Flags::spatialized]) { return true; }
-				VAE_DEBUG("Killed out of range emitter")
-				mEmitters[v.emitter].flags[Emitter::Flags::autoplaying] = false;
 				return false; // kill the inaudible voice
 			});
+
+			// TODO perf maybe swap loops
 			forEachListener([&](Listener& l, ListenerHandle li) {
 				for (auto& emitter : mEmitters) {
 					auto& e = emitter.second;

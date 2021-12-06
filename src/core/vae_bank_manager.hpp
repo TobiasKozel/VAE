@@ -39,6 +39,7 @@ namespace vae { namespace core {
 		 */
 		template <class Func>
 		void forEach(const Func&& func) {
+			VAE_PROFILER_SCOPE
 			Lock l(mMutex);
 			for (auto& i : mBanks) {
 				if (i.id == InvalidBankHandle) { continue; }
@@ -47,12 +48,14 @@ namespace vae { namespace core {
 		}
 
 		Bank& get(BankHandle bank) {
+			VAE_PROFILER_SCOPE
 			VAE_ASSERT(bank < mBanks.size())
 			VAE_ASSERT(mBanks[bank].id == bank)
 			return mBanks[bank];
 		}
 
 		Result load(const char* path, const char* rootPath) {
+			VAE_PROFILER_SCOPE
 			VAE_INFO("Loading bank from file %s%s", rootPath, path)
 			Bank bank;
 			auto result = BankLoader::load(path, rootPath, bank);
@@ -64,6 +67,7 @@ namespace vae { namespace core {
 		}
 
 		Result load(Bank& bank) {
+			VAE_PROFILER_SCOPE
 			// TODO init mixer effects
 
 			if (bank.mixers.empty()) {
@@ -89,6 +93,7 @@ namespace vae { namespace core {
 		}
 
 		Result addSource(BankHandle bankHandle, Source& source) {
+			VAE_PROFILER_SCOPE
 			auto& bank = mBanks[bankHandle];
 			Lock l(mMutex);
 			if (bank.sources.size() <= source.id) {
@@ -99,6 +104,7 @@ namespace vae { namespace core {
 		}
 
 		Result addEvent(BankHandle bankHandle, Event& event) {
+			VAE_PROFILER_SCOPE
 			auto& bank = mBanks[bankHandle];
 			Lock l(mMutex);
 			if (bank.events.size() <= event.id) {
@@ -109,6 +115,7 @@ namespace vae { namespace core {
 		}
 
 		Result addMixer(BankHandle bankHandle, Mixer& mixer) {
+			VAE_PROFILER_SCOPE
 			// TODO init mixer effects
 			mixer.buffer.resize(Config::MaxBlock, Config::MaxChannels);
 			Lock l(mMutex);
@@ -121,6 +128,7 @@ namespace vae { namespace core {
 		}
 
 		Result unloadFromPath(const char* path) {
+			VAE_PROFILER_SCOPE
 			Lock l(mMutex);
 			for (auto& i : mBanks) {
 				if (strcmp(path, i.path.c_str()) == 0) {
@@ -132,6 +140,7 @@ namespace vae { namespace core {
 		}
 
 		Result unloadFromId(BankHandle bankHandle) {
+			VAE_PROFILER_SCOPE
 			Lock l(mMutex);
 			if (mBanks.size() <= bankHandle) {
 				VAE_WARN("Could not unload bank with handle %i", bankHandle)
@@ -145,6 +154,7 @@ namespace vae { namespace core {
 		}
 
 		void unloadAll() {
+			VAE_PROFILER_SCOPE
 			for (auto& i : mBanks) {
 				if (i.id == InvalidBankHandle) { continue; }
 				unloadFromId(i.id);

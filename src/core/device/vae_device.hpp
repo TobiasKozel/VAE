@@ -69,6 +69,7 @@ namespace vae { namespace core {
 			 */
 			template <typename T>
 			void swapBufferInterleaved(const T* from, T* to, Size frames) {
+				VAE_PROFILER_SCOPE
 				if (from != nullptr) {
 					convertBuffer.setFromInterleaved(from, frames, channelsIn);
 					if (resamplerFromDevice.isInitialized()) {
@@ -115,6 +116,7 @@ namespace vae { namespace core {
 		 * @param bufferSize The amount of frames a callback will provide/request
 		 */
 		void init(Size sampleRate, Uchar channelsIn, Uchar channelsOut, Size bufferSize) {
+			VAE_PROFILER_SCOPE
 			mWorker.channelsIn  = channelsIn;
 			mWorker.channelsOut = channelsOut;
 			mRealSampleRate  = sampleRate;
@@ -223,6 +225,7 @@ namespace vae { namespace core {
 		 * @param buffer Pushes the amount of valid samples
 		 */
 		Size push(const AudioBuffer& buffer) {
+			VAE_PROFILER_SCOPE
 			VAE_ASSERT(0 < mWorker.channelsOut)
 			const auto frames = buffer.validSize();
 			VAE_ASSERT(frames != 0) // need to have valid frames
@@ -246,6 +249,7 @@ namespace vae { namespace core {
 		 * @return Size
 		 */
 		Size canPush() const {
+			VAE_PROFILER_SCOPE
 			auto remaining = mWorker.queueToDevice.remaining();
 			if (mResamplerToDevice.isInitialized()) {
 				return mResamplerToDevice.estimateNeed(remaining);
@@ -258,6 +262,7 @@ namespace vae { namespace core {
 		 * @param buffer Gets the amount of valid samples, might actualy get less
 		 */
 		void pop(AudioBuffer& buffer) {
+			VAE_PROFILER_SCOPE
 			VAE_ASSERT(0 < mWorker.channelsIn)
 			auto frames = buffer.validSize();
 			VAE_ASSERT(frames != 0) // need to have valid frames

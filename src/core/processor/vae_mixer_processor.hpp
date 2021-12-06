@@ -20,6 +20,7 @@ namespace vae { namespace core {
 		static void mix(
 			VoiceManger& manager, Bank& bank, SampleIndex frames
 		) {
+			VAE_PROFILER_SCOPE
 			VAE_ASSERT(!bank.mixers.empty()) // can't happen
 
 			/**

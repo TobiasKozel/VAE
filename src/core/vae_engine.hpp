@@ -3,7 +3,6 @@
 
 #include "./vae_util.hpp"
 #include "./vae_types.hpp"
-#include "../wrapped/vae_profiler.hpp"
 
 #include "./device/vae_rtaudio.hpp"
 #include "./device/vae_portaudio.hpp"
@@ -60,6 +59,7 @@ namespace vae { namespace core {
 		 * Called either from onBufferSwap or threadedProcess
 		 */
 		void process() {
+			VAE_PROFILER_FRAME_MARK_START(_VAE_PROFILER_AUDIO)
 			auto& d = *mDevice;
 			auto sampleRate = d.getSampleRate();
 
@@ -96,7 +96,7 @@ namespace vae { namespace core {
 					});
 
 					{
-						// Shitty limiter
+						// Shitty peak limiter
 						mLimiterLastPeak *= Sample(0.7); // return to normal slowly
 						mLimiterLastPeak = std::max(Sample(1.0), mLimiterLastPeak);
 						Sample currentPeak = 0;
@@ -115,8 +115,8 @@ namespace vae { namespace core {
 					mTimeFract += step * remaining;
 				}
 			}
+			VAE_PROFILER_FRAME_MARK_END(_VAE_PROFILER_AUDIO)
 			if (mConfig.updateInAudioThread) { update(); }
-			VAE_PROFILER_FRAME_MARK
 		}
 
 		void threadedProcess() {
@@ -153,6 +153,7 @@ namespace vae { namespace core {
 		 	mVoiceManager(config.voices, config.virtualVoices),
 			mSpatialManager(config.preAllocatedEmitters)
 		{
+			VAE_PROFILER_SCOPE
 			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
 			mScratchBuffer.set(0);
 			mScratchBuffer.sampleRate = config.preferredSampleRate;
@@ -180,6 +181,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result start() {
+			VAE_PROFILER_SCOPE
 			Backend& backend = CurrentBackend::instance();
 			mDevice = backend.createDevice(mConfig);
 			if (mConfig.processInBufferSwitch) {
@@ -199,6 +201,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stop() {
+			VAE_PROFILER_SCOPE
 			Lock l(mMutex);
 			if (mAudioThreadRunning) {
 				mAudioThreadRunning = false;
@@ -218,16 +221,25 @@ namespace vae { namespace core {
 		 * If this isn't called regularly events might be lost.
 		 */
 		void update() {
+			VAE_PROFILER_FRAME_MARK_START(_VAE_PROFILER_UPDATE)
+			// Update emitters and start voices nearby
+			mSpatialManager.update(mVoiceManager, mBankManager);
+
 			// Handle finished voices and their events
 			mVoiceManager.forEachFinishedVoice([&](Voice& v) {
+				if (v.emitter != InvalidEmitterHandle) {
+					mSpatialManager.getEmitter(v.emitter).
+						flags[Emitter::Flags::autoplaying] = false;
+					// Make sure the event can be triggered again by that emitter
+				}
 				for (auto& i : mBankManager.get(v.bank).events[v.event].on_end) {
 					if (i == InvalidEventHandle) { continue; }
 					fireEvent(v.bank, i, v.emitter, v.mixer);
 				}
 				return true;
 			});
-			// Update emitters and start voices nearby
-			mSpatialManager.update(mVoiceManager, mBankManager);
+			VAE_PROFILER_FRAME_MARK_END(_VAE_PROFILER_UPDATE)
+
 		}
 
 		/**
@@ -261,8 +273,11 @@ namespace vae { namespace core {
 			return mSpatialManager.createEmitter();
 		}
 
-		EmitterHandle createAutoEmitter(BankHandle bank, EventHandle event, float maxDist) {
-			return mSpatialManager.createAutoEmitter(bank, event, maxDist);
+		EmitterHandle createAutoEmitter(
+			BankHandle bank, EventHandle event, float maxDist,
+			const LocationDirection& locDir, Sample spread
+		) {
+			return mSpatialManager.createAutoEmitter(bank, event, maxDist, locDir, spread);
 		}
 
 		Result addEmitter(EmitterHandle h) {

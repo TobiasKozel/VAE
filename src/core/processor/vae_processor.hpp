@@ -22,6 +22,7 @@ namespace vae { namespace core {
 			VoiceManger& manager, Bank& bank,
 			SampleIndex frames, Size sampleRate
 		) {
+			VAE_PROFILER_SCOPE
 			manager.forEachVoice([&](Voice& v, Size index) {
 				if (v.bank != bank.id) { return true; }
 				if (v.flags[Voice::Flags::spatialized]) { return true; }

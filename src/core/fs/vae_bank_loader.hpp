@@ -22,6 +22,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		static Result load(const char* path, const char* rootPath, Bank& bank) {
+			VAE_PROFILER_SCOPE
 			/**
 			 *					Open file and decode json
 			 */

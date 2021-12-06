@@ -1,6 +1,7 @@
 #ifndef _VAE_UTIL
 #define _VAE_UTIL
 
+#include "../wrapped/vae_profiler.hpp"
 #include "../../external/tklb/src/util/TAssert.h"
 #include "./vae_logger.hpp"
 

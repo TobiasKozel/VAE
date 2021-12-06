@@ -14,6 +14,7 @@ namespace vae { namespace core {
 			EmitterHandle emitterHandle, MixerHandle mixerHandle,
 			VoiceManger& voiceManger, EngineConfig& config
 		) {
+			VAE_PROFILER_SCOPE
 			auto bankHandle = bank.id;
 			VAE_ASSERT(eventHandle != InvalidEventHandle)
 			VAE_ASSERT(eventHandle < bank.events.size())

@@ -13,6 +13,7 @@
 namespace vae { namespace core {
 	struct HRTFLoader {
 		static Result load(const char* path, const char* rootPath, const Size sampleRate, HRTF& hrtf) {
+			VAE_PROFILER_SCOPE
 			std::string json = path;
 			json = rootPath + json;
 			std::ifstream file(json);
