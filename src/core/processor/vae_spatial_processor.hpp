@@ -147,8 +147,6 @@ namespace vae { namespace core {
 									target[c][i] += mTimeDomain[0][i];
 								}
 							}
-
-
 							return;
 						}
 					case Listener::Configuration::Headphones:

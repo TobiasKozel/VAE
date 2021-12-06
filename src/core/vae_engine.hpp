@@ -10,9 +10,9 @@
 
 #include "./pod/vae_listener.hpp"
 #include "./pod/vae_emitter.hpp"
-#include "./fs/vae_bank_loader.hpp"
 #include "./vae_voice_manager.hpp"
 #include "./vae_spatial_manager.hpp"
+#include "./vae_event_manager.hpp"
 #include "./processor/vae_processor.hpp"
 #include "./processor/vae_spatial_processor.hpp"
 #include "./processor/vae_mixer_processor.hpp"
@@ -226,10 +226,9 @@ namespace vae { namespace core {
 				}
 				return true;
 			});
-			// Update emitters
-			mSpatialManager.update();
+			// Update emitters and start voices nearby
+			mSpatialManager.update(mVoiceManager, mBankManager);
 		}
-
 
 		/**
 		 * @brief Main mechanism to start and stop sounds
@@ -241,81 +240,29 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result fireEvent(
-			BankHandle bankHandle, EventHandle eventHandle,
+			BankHandle bank, EventHandle eventHandle,
 			EmitterHandle emitterHandle = InvalidEmitterHandle,
 			MixerHandle mixerHandle = InvalidMixerHandle
 		) {
-			auto& bank = mBankManager.get(bankHandle);
-			VAE_ASSERT(eventHandle != InvalidEventHandle)
-			VAE_ASSERT(eventHandle < bank.events.size())
-			auto& event = bank.events[eventHandle];
-
 			if (emitterHandle != InvalidEmitterHandle && !mSpatialManager.hasEmitter(emitterHandle)) {
 				VAE_ERROR("No emitter %u registered, voice won't be audible.", emitterHandle)
 			}
-
-			Result result;
-
-			if (event.flags[Event::Flags::start]) {
-				if (event.source != InvalidSourceHandle) {
-					VAE_DEBUG_EVENT("Event %i:%i starts source %i", eventHandle, bankHandle, event.source)
-					// Has source attached
-					result = mVoiceManager.play(event, bankHandle, emitterHandle, mixerHandle);
-					if (result != Result::Success) {
-						// Failed to play for some reason
-						return result;
-					}
-				}
-
-				// Fire all other chained events
-				for (auto& i : event.on_start) {
-					if (i == InvalidEventHandle) { continue; }
-					VAE_DEBUG_EVENT("Event %i:%i starts chained event %i", eventHandle, bankHandle, i)
-					fireEvent(bankHandle, i, emitterHandle, mixerHandle);
-				}
-			}
-
-			if (event.flags[Event::Flags::stop]) {
-				// TODO test stopping
-				if (event.source != InvalidSourceHandle) {
-					VAE_DEBUG_EVENT("Event %i:%i stops source %i", eventHandle, bankHandle, event.source)
-					mVoiceManager.stopFromSource(event.source, emitterHandle);
-				}
-				for (auto& i : event.on_start) {
-					if (i == InvalidEventHandle) { continue; }
-					// kill every voice started from these events
-					VAE_DEBUG_EVENT("Event %i:%i stops voices from event %i", eventHandle, bankHandle, i)
-					mVoiceManager.stopFromEvent(i, emitterHandle);
-				}
-				if (event.mixer != Mixer::MasterMixerHandle) {
-					// kill every voice in a mixer channel
-					VAE_DEBUG_EVENT("Event %i:%i stops voices in mixer %i", eventHandle, bankHandle, event.mixer)
-					mVoiceManager.stopFromMixer(event.mixer, emitterHandle);
-				}
-			}
-
-			if (event.flags[Event::Flags::emit]) {
-				VAE_DEBUG_EVENT("Event %i:%i emits event", eventHandle, bankHandle)
-				if (mConfig.eventCallback != nullptr) {
-					EventCallbackData data;
-					constexpr int as = sizeof(data);
-					data.context = mConfig.eventCallbackContext;
-					data.bank = bankHandle;
-					data.event = eventHandle;
-					data.emitter = emitterHandle;
-					mConfig.eventCallback(&data);
-				}
-			}
-
-			return Result::Success;
+			return EventManager::fireEvent(
+				mBankManager.get(bank), eventHandle,
+				emitterHandle, mixerHandle,
+				mVoiceManager, mConfig
+			);
 		}
-
 
 
 #pragma region emitter
 
 		EmitterHandle createEmitter() {
 			return mSpatialManager.createEmitter();
+		}
+
+		EmitterHandle createAutoEmitter(BankHandle bank, EventHandle event, float maxDist) {
+			return mSpatialManager.createAutoEmitter(bank, event, maxDist);
 		}
 
 		Result addEmitter(EmitterHandle h) {

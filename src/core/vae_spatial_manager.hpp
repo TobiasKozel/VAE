@@ -3,6 +3,7 @@
 
 #include "../../external/robin_hood.h"
 #include "./pod/vae_emitter.hpp"
+#include "./vae_bank_manager.hpp"
 #include "./vae_util.hpp"
 #include "./vae_types.hpp"
 #include "./pod/vae_listener.hpp"
@@ -39,6 +40,15 @@ namespace vae { namespace core {
 			return result == Result::Success ? ret : InvalidEmitterHandle;
 		}
 
+		EmitterHandle createAutoEmitter(BankHandle bank, EventHandle event, float maxDist) {
+			auto handle = createEmitter();
+			auto& e = mEmitters[handle];
+			e.bank = bank;
+			e.event = event;
+			e.maxDist = maxDist;
+			return handle;
+		}
+
 		Result removeEmitter(EmitterHandle e) {
 			auto res = mEmitters.erase(e);
 			if (res == 1) {
@@ -69,7 +79,6 @@ namespace vae { namespace core {
 			}
 			auto& e = getEmitter(emitter);
 			e.position = { locDir.position.x, locDir.position.y, locDir.position.z };
-			e.direction = { locDir.direction.x, locDir.direction.y, locDir.direction.z };
 			e.spread = spread;
 			return Result::Success;
 		}
@@ -130,9 +139,30 @@ namespace vae { namespace core {
 			return Result::Success;
 		}
 
-		void update() {
-			// TODO virtualize voice no listener is nearby
-			// TODO reactive voice when getting close again
+		void update(VoiceManger& manager, BankManager& banks) {
+			manager.forEachVoice([&](Voice& v, Size vi) {
+				if (v.flags[Voice::Flags::audible]) { return true; }
+				if (!v.flags[Voice::Flags::started]) { return true; }
+				if (!v.flags[Voice::Flags::spatialized]) { return true; }
+				VAE_DEBUG("Killed out of range emitter")
+				mEmitters[v.emitter].flags[Emitter::Flags::autoplaying] = false;
+				return false; // kill the inaudible voice
+			});
+			forEachListener([&](Listener& l, ListenerHandle li) {
+				for (auto& emitter : mEmitters) {
+					auto& e = emitter.second;
+					if (e.flags[Emitter::Flags::autoplaying]) { continue; }
+					// only trigger sounds which haven't been auto triggered
+					const auto distance = glm::distance(l.position, e.position);
+					if (distance < e.maxDist) {
+						e.flags[Emitter::Flags::autoplaying] = true;
+						auto& bank = banks.get(e.bank);
+						manager.play(
+							bank.events[e.event], e.bank, emitter.first, InvalidMixerHandle
+						);
+					}
+				}
+			});
 		}
 	};
 } } // vae::core
