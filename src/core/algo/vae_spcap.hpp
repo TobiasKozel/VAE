@@ -39,8 +39,10 @@ namespace vae { namespace core {
 			 * @param direction The relative and normalized direction
 			 * @param result Result array of channel volumes
 			 * @param attenuation Distance attenuation multiplied on the result
+			 * @param spread Value from 0-1 controlling "wideness" of the sound
 			 */
 			void pan(const Vec3& direction, Sample* result, Sample attenuation, Sample spread) const {
+				// TODO make spread change based on distance and use something like radius instead
 				Sample sumSquaredGains = 0.0;
 				const Sample tightness = (Sample(1) - spread) * Sample(10) + Sample(0.05);
 				std::fill_n(result, N, Sample(0));

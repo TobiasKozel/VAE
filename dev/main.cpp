@@ -56,7 +56,7 @@ int main() {
 
 	core::Engine engine(config);
 
-	auto hrtf = engine.loadHRTF("hrtf.json");
+	// auto hrtf = engine.loadHRTF("hrtf.json");
 
 	auto alloced2 = tklb::memory::DefaultPoolDebug.getAllocated();
 
@@ -81,10 +81,10 @@ int main() {
 		}
 		auto alloced6 = tklb::memory::DefaultPoolDebug.getAllocated();
 
-		for (int i = 0; i < 200; i++) {
+		for (int i = 0; i < 2000; i++) {
 			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(1000 / float(60)));
 			float t = i * 0.1;
-			engine.setEmitter(emitter, {{ sin(t), 0, cos(t) }, {} }, 0);
+			engine.setEmitter(emitter, {{ float(sin(t)), float(0), float(cos(t)) }, {} }, 0);
 			// engine.update(); // needs to be ticked if EngineConfig::updateInAudioThread is false in
 		}
 	};

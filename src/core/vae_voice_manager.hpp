@@ -30,6 +30,8 @@ namespace vae { namespace core {
 		HeapBuffer<VoicePIP> mVoicePIPs;		// Interpolation data for the panning algorithm
 		EventHandle mCurrentEventInstance = 0;
 		Size mActiveVoices = 0;
+		Size mHighestVoice = 0;
+		Size mHighestFinishedVoice = 0;
 
 	public:
 		VoiceManger(Size voiceCount, Size virtualVoiceCount) {
@@ -46,14 +48,30 @@ namespace vae { namespace core {
 			return mFinishedVoiceQueue;
 		}
 
+		/**
+		 * @brief Callback provided to iterate voices, needs to return
+		 * a bool to indicate when a voice needs to be stopped.
+		 * @tparam Func
+		 * @param func
+		 */
 		template <class Func>
 		void forEachVoice(const Func&& func) {
-			for (Size index = 0; index < mVoices.size(); index++) {
+			for (Size index = 0; index <= mHighestVoice; index++) {
 				auto& i = mVoices[index];
 				if (i.source == InvalidSourceHandle) { continue; }
 				if (!func(i, index)) {
-					stopVoice(i);
+					stopVoice(i); // stop the voice if callback returns false
 				}
+			}
+		}
+
+		template <class Func>
+		void forEachFinishedVoice(const Func&& func) {
+			for (Size i = 0; i <= mHighestFinishedVoice; i++) {
+				auto& v = mFinishedVoiceQueue[i];
+				if (v.source == InvalidSourceHandle) { continue; }
+				if (!func(v)) { continue; };
+				v.source = InvalidSourceHandle; // now the finished voice is handled
 			}
 		}
 
@@ -109,9 +127,12 @@ namespace vae { namespace core {
 					v.gain = event.gain;
 					mCurrentEventInstance++;
 					mActiveVoices++;
+					mHighestVoice = std::max(i, mHighestVoice);
 					return Result::Success;
 				}
 			}
+
+			mHighestVoice = mVoices.size() - 1;
 
 			VAE_WARN("Voice starvation. Can't start voice from event %i:%i", event.id, bank)
 
@@ -141,8 +162,10 @@ namespace vae { namespace core {
 
 			// TODO VAE PERF
 			bool finished = false;
-			for (auto& f : mFinishedVoiceQueue) {
+			for (Size i = 0; i < mFinishedVoiceQueue.size(); i++) {
+				auto& f = mFinishedVoiceQueue[i];
 				if (f.source == InvalidSourceHandle) {
+					mHighestFinishedVoice = std::max(mHighestFinishedVoice, i);
 					finished = true;
 					f.event = v.event;
 					f.eventInstance = v.eventInstance;
@@ -160,6 +183,7 @@ namespace vae { namespace core {
 			mActiveVoices--;
 
 			if (!finished) {
+				mHighestFinishedVoice = mFinishedVoiceQueue.size() - 1;
 				// Failed to find a free spot in finished voices array
 				// Event will be discarded
 				VAE_WARN("finishedVoiceQueue is full. Stop Event %i in bank %i discarded", v.event, v.bank)

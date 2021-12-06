@@ -136,7 +136,10 @@ namespace vae { namespace core {
 							auto& currentVolumes = currentPip.listeners[li].volumes;
 							auto& lastVolumes = lastPip.listeners[li].volumes;
 
-							SPCAP::HeadphoneSPCAP.pan(relativeDirection, currentVolumes, distanceAttenuated, 0.5);
+							SPCAP::HeadphoneSPCAP.pan(
+								relativeDirection, currentVolumes,
+								distanceAttenuated, emitter.spread
+							);
 
 							if (v.time == 0) {
 								// first time don't interpolate

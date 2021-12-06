@@ -219,15 +219,13 @@ namespace vae { namespace core {
 		 */
 		void update() {
 			// Handle finished voices and their events
-			for (auto& v : mVoiceManager.finished()) {
-				if (v.source == InvalidSourceHandle) { continue; }
+			mVoiceManager.forEachFinishedVoice([&](Voice& v) {
 				for (auto& i : mBankManager.get(v.bank).events[v.event].on_end) {
 					if (i == InvalidEventHandle) { continue; }
 					fireEvent(v.bank, i, v.emitter, v.mixer);
 				}
-				v.source = InvalidSourceHandle; // now the finished voice is handled
-			}
-
+				return true;
+			});
 			// Update emitters
 			mSpatialManager.update();
 		}
