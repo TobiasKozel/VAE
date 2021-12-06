@@ -8,7 +8,7 @@ namespace vae { namespace core {
 	struct HRTF {
 		struct Position {
 			Vec3 pos;
-			AudioBuffer ir;
+			AudioBuffer ir[2];
 		};
 		HeapBuffer<Position> positions;
 		Size originalRate = 0;

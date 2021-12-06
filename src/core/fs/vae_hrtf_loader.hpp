@@ -8,6 +8,7 @@
 #include <fstream>
 #include "../../../external/json.hpp"
 #include "../../../external/tklb/src/types/audio/resampler/TResampler.hpp"
+#include "../../../external/tklb/src/types/audio/fft/TOouraFFT.hpp"
 
 namespace vae { namespace core {
 	struct HRTFLoader {
@@ -34,42 +35,52 @@ namespace vae { namespace core {
 			Size longestIr = 0;
 			const bool needsResample = hrtf.originalRate != sampleRate;
 
+			AudioBuffer timeDomain;				// temporary time domain signal
+			timeDomain.sampleRate = hrtf.originalRate;
+			AudioBuffer timeDomainResampled;	// temporary time domain signal
+			timeDomainResampled.sampleRate = sampleRate;
+			tklb::ResamplerTpl<Sample> resampler;
+			tklb::FFTOoura fft;
+
 			for (Size i = 0; i < positionCount; i++) {
 				HRTF::Position& p = hrtf.positions[i];
 				auto& pi = positions[i];
 				p.pos.x = pi["x"];
 				p.pos.y = pi["y"];
 				p.pos.z = pi["z"];
-				auto& left = pi["left"];
-				auto& right = pi["right"];
-				const Size irLength = left.size();
+				nlohmann::json irSamples[2] = { pi["left"], pi["right"]};
+				const Size irLength = irSamples[0].size();
 				longestIr = std::max(longestIr, irLength);
 
 				if (needsResample) {
-					// make sure the resampled ir fits later
-					p.ir.resize(double(sampleRate) / double(hrtf.originalRate) * irLength + 10, 2);
-				} else {
-					p.ir.resize(longestIr, 2);
+					Size needed = double(sampleRate) / double(hrtf.originalRate) * irLength + 10;
+					if (timeDomainResampled.size() < needed) {
+						timeDomainResampled.resize(needed);
+					}
+				}
+				timeDomain.resize(irLength);
+
+				for (int c = 0; c < 2; c++) {
+					timeDomain.set(0);
+					timeDomain[0][30] = 1.0;
+					// for (Size j = 0; j < irLength; j++) {
+					// 	timeDomain[0][j] = int(irSamples[c][j]) / Sample(1 << 23);
+					// }
+					timeDomain.setValidSize(irLength);
+
+					if (needsResample) {
+						resampler.init(hrtf.originalRate, sampleRate, longestIr);
+						resampler.process(timeDomain, timeDomainResampled);
+						fft.resize(timeDomainResampled.size());
+						p.ir[c].resize(timeDomainResampled.size() / 2, 2);
+						fft.forward(timeDomainResampled, p.ir[c]);
+					} else {
+						fft.resize(timeDomain.size());
+						p.ir[c].resize(timeDomain.size() / 2, 2);
+						fft.forward(timeDomain, p.ir[c]);
+					}
 				}
 
-				for (Size j = 0; j < irLength; j++) {
-					p.ir[0][j] = left[j] / Sample(1 << 23);
-					p.ir[1][j] = right[j] / Sample(1 << 23);
-				}
-				p.ir.setValidSize(irLength);
-			}
-
-			if (needsResample) {
-				tklb::ResamplerTpl<Sample> resampler;
-				AudioBuffer temp;
-				temp.resize(longestIr, 2);
-				for(auto& i : hrtf.positions) {
-					resampler.init(hrtf.originalRate, sampleRate, longestIr);
-					temp.set(i.ir);
-					temp.sampleRate = hrtf.originalRate;
-					i.ir.sampleRate = sampleRate;
-					resampler.process(temp, i.ir);
-				}
 			}
 
 			VAE_DEBUG("Finished loading HRTF %s", path)

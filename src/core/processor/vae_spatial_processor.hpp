@@ -10,13 +10,21 @@
 #include "../algo/vae_spcap.hpp"
 
 #include "../../../external/glm/glm/gtc/matrix_transform.hpp"
+#include "../../../external/tklb/src/types/audio/fft/TOouraFFT.hpp"
 #include "../fs/vae_hrtf_loader.hpp"
 
 namespace vae { namespace core {
 	class SpatialProcessor {
 		HRTF mHRTF;
-
+		AudioBuffer mFrequencyDomain;
+		AudioBuffer mTimeDomain;
+		tklb::FFTOoura mFFT;
 	public:
+		SpatialProcessor() {
+			mFrequencyDomain.resize(Config::MaxBlock / 2, 2);
+			mTimeDomain.resize(Config::MaxBlock);
+			mFFT.resize(128);
+		}
 		/**
 		 * @brief Process a single bank
 		 *
@@ -52,9 +60,12 @@ namespace vae { namespace core {
 					return remaining == frames;
 				}
 
+
 				auto& mixer = bank.mixers[v.mixer];
 				auto& target = mixer.buffer;
 				auto& emitter = spatial.getEmitter(v.emitter);
+
+				const Sample* in = signal[0] + v.time;
 
 				target.setValidSize(frames); // mark mixer as active
 
@@ -114,20 +125,29 @@ namespace vae { namespace core {
 							}
 							const auto& ir = mHRTF.positions[closestIndex].ir;
 
-							const Size nf = ir.size();
-							const Size ng = remaining;
+							for (int c = 0; c < 1; c++) {
+								mTimeDomain.set(0);
+								mTimeDomain.set(signal, remaining, v.time);
+								mTimeDomain.setValidSize(mTimeDomain.size());
+								mFFT.forward(mTimeDomain, mFrequencyDomain);
 
-							for (Size c = 0; c < 2; c++) {
-								for(Size i = 0; i < remaining; i++) {
-									Sample res = 0;
-									const Size jmn = (i >= ng - 1) ? (i - (ng - 1)) : 0;
-									const Size jmx = (i <  nf - 1) ?  i : (nf - 1);
-									for(Size j = jmn; j <= jmx; j++) {
-										res += ir[c][j] * signal[0][v.time + (i - j)];
-									}
-									target[c][i] = res;
+								auto re = mFrequencyDomain[0];
+								auto im = mFrequencyDomain[1];
+								const auto reA = ir[c][0];
+								const auto imA = ir[c][1];
+								for (Size i = 0; i < mFrequencyDomain.size(); i++) {
+									const auto _reB = re[i];
+									const auto _imB = im[i];
+									re[i] += reA[i] * _reB - imA[i] * _imB;
+									im[i] += reA[i] * _imB + imA[i] * _reB;
+								}
+
+								mFFT.back(mFrequencyDomain, mTimeDomain);
+								for (Size i = 0; i < remaining; i++) {
+									target[c][i] += mTimeDomain[0][i];
 								}
 							}
+
 
 							return;
 						}
@@ -148,10 +168,16 @@ namespace vae { namespace core {
 							}
 
 							// Copy audio and apply panning
+							Sample t = 0;
+							const Sample& lv1 = lastVolumes[0];
+							const Sample& rv1 = lastVolumes[1];
+							const Sample& lv2 = currentVolumes[0];
+							const Sample& rv2 = currentVolumes[1];
 							for (SampleIndex s = 0; s < remaining; s++) {
-								const Sample sample = signal[0][v.time + s];
-								target[0][s] += sample * tklb::lerp(lastVolumes[0], currentVolumes[0], s * step);
-								target[1][s] += sample * tklb::lerp(lastVolumes[1], currentVolumes[1], s * step);
+								const Sample sample = in[s];
+								target[0][s] += sample * (lv1 + t * (lv2 - lv1));
+								target[1][s] += sample * (rv1 + t * (rv2 - rv1));
+								t += step;
 							}
 							return;
 						}

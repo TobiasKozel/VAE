@@ -1,16 +1,12 @@
 from pysofaconventions import *
-import matplotlib.pyplot as plt
-import scipy.signal
-import soundfile as sf
 import numpy as np
-import math
 import json
 
-path = "VAE/scripts/MRT02.sofa" # cartesian
+path = "scripts/MRT01.sofa" # cartesian
 # path = "scripts/dtf_nh2.sofa" # spherical
 # path = "scripts/subject_003.sofa" # spherical
 sofa = SOFAFile(path,'r')
-outPath = "VAE/scripts/test.json"
+outPath = "scripts/hrtf.json"
 
 dimensions = sofa.getDimensionsAsDict()
 positions = dimensions["M"].size
@@ -56,7 +52,6 @@ for i in range(0, positions):
 	position["left"] = ir[:, 0].tolist()
 	position["right"] = ir[:, 1].tolist()
 	outJson["positions"].append(position)
-	# sf.write(outPath + fileName, ir, sampleRate)
 
 
 with open(outPath, "w") as outfile:
