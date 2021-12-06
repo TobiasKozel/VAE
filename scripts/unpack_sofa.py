@@ -4,12 +4,13 @@ import scipy.signal
 import soundfile as sf
 import numpy as np
 import math
+import json
 
-path = "scripts/MRT02.sofa" # cartesian
-path = "scripts/dtf_nh2.sofa" # spherical
-path = "scripts/subject_003.sofa" # spherical
+path = "VAE/scripts/MRT02.sofa" # cartesian
+# path = "scripts/dtf_nh2.sofa" # spherical
+# path = "scripts/subject_003.sofa" # spherical
 sofa = SOFAFile(path,'r')
-outPath = "scripts/out/"
+outPath = "VAE/scripts/test.json"
 
 dimensions = sofa.getDimensionsAsDict()
 positions = dimensions["M"].size
@@ -34,19 +35,29 @@ upVector = (sofa.getListenerUpValues()[0][0], sofa.getListenerUpValues()[0][1], 
 frontVector = (sofa.getListenerViewValues()[0][0], sofa.getListenerViewValues()[0][1], sofa.getListenerViewValues()[0][2])
 listenerPos =  sofa.getListenerPositionValues() # should be 0, 0, 0
 
+outJson = { }
+outJson["samplerate"] = sampleRate
+outJson["positions"] = []
 
 for i in range(0, positions):
-	form = "{:.2f}"
-	x = sourcePositions[i][0] # azimuth
-	y = sourcePositions[i][1] # elevation
-	z = sourcePositions[i][2] # radius/distance
+	position = {}
+	position["x"] = round(sourcePositions[i][0], 4) # azimuth
+	position["y"] = round(sourcePositions[i][1], 4) # elevation
+	position["z"] = round(sourcePositions[i][2], 4) # radius/distance
 	if coordinateType == "cartesian":
-		radius = math.sqrt(x * x + y * y + z * z)
+		# radius = math.sqrt(x * x + y * y + z * z)
 		# todo the rest
+		pass
 
-	fileName = form.format(x) + "_" + form.format(y) + "_" + form.format(z) + ".wav"
 	ir = irs[i, :, :]
 	ir = ir.swapaxes(-1,0)
-	sf.write(outPath + fileName, ir, sampleRate)
+	ir *= (1 << 23) # to 24 bit
+	ir = np.ma.round(ir).astype(int)
+	position["left"] = ir[:, 0].tolist()
+	position["right"] = ir[:, 1].tolist()
+	outJson["positions"].append(position)
+	# sf.write(outPath + fileName, ir, sampleRate)
 
 
+with open(outPath, "w") as outfile:
+	json.dump(outJson, outfile, separators=(',', ':'))

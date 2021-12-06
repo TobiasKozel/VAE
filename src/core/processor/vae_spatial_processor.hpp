@@ -10,9 +10,12 @@
 #include "../algo/vae_spcap.hpp"
 
 #include "../../../external/glm/glm/gtc/matrix_transform.hpp"
+#include "../fs/vae_hrtf_loader.hpp"
 
 namespace vae { namespace core {
 	class SpatialProcessor {
+		HRTF mHRTF;
+
 	public:
 		/**
 		 * @brief Process a single bank
@@ -22,7 +25,7 @@ namespace vae { namespace core {
 		 * @param frames
 		 * @param sampleRate
 		 */
-		static void mix(
+		void mix(
 			VoiceManger& manager, Bank& bank,
 			SpatialManager& spatial,
 			SampleIndex frames, Size sampleRate
@@ -94,6 +97,37 @@ namespace vae { namespace core {
 					case Listener::Configuration::HRTF:
 						if (v.flags[Voice::Flags::HRTF]) {
 							// Only do hrtf when the voice also has it enabled
+							Sample closest = std::numeric_limits<Sample>::max();
+							constexpr Size Invalid = ~0;
+							Size closestIndex = Invalid;
+							for (Size i = 0; i < mHRTF.positions.size(); i++) {
+								const auto& pos = mHRTF.positions[i];
+								// TODO find distance2
+								const Sample dist = glm::distance(pos.pos, relativeDirection);
+								if (dist < closest) {
+									closestIndex = i;
+									closest = dist;
+								}
+							}
+							if (closestIndex == Invalid) {
+								return;
+							}
+							const auto& ir = mHRTF.positions[closestIndex].ir;
+
+							const Size nf = ir.size();
+							const Size ng = remaining;
+
+							for (Size c = 0; c < 2; c++) {
+								for(Size i = 0; i < remaining; i++) {
+									Sample res = 0;
+									const Size jmn = (i >= ng - 1) ? (i - (ng - 1)) : 0;
+									const Size jmx = (i <  nf - 1) ?  i : (nf - 1);
+									for(Size j = jmn; j <= jmx; j++) {
+										res += ir[c][j] * signal[0][v.time + (i - j)];
+									}
+									target[c][i] = res;
+								}
+							}
 
 							return;
 						}
@@ -127,6 +161,12 @@ namespace vae { namespace core {
 				v.time += remaining; // progress time in voice
 				return remaining == frames;
 			});
+		}
+
+		Result loadHRTF(const char* path, const char* rootPath, Size sampleRate) {
+			return HRTFLoader::load(
+				path, rootPath, sampleRate, mHRTF
+			);
 		}
 	};
 

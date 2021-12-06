@@ -42,6 +42,8 @@ namespace vae { namespace core {
 		SpatialManager mSpatialManager;	// Holds and manages spatial emitters
 		BankManager mBankManager;		// Holds and manages banks
 
+		SpatialProcessor mSpatialProcessor;
+
 		AudioBuffer mScratchBuffer;		// used to combine the signal from all banks and push it to the device
 		Device* mDevice = nullptr;		// Output device
 		SampleIndex mTime = 0;			// Global engine time in samples
@@ -84,7 +86,7 @@ namespace vae { namespace core {
 					// TODO PERF VAE banks could be processed in parallel
 					mBankManager.forEach([&](Bank& i) {
 						Processor::mix(mVoiceManager, i, remaining, sampleRate);
-						SpatialProcessor::mix(
+						mSpatialProcessor.mix(
 							mVoiceManager, i, mSpatialManager, remaining, sampleRate
 						);
 						MixerProcessor::mix(mVoiceManager, i, remaining);
@@ -353,6 +355,13 @@ namespace vae { namespace core {
 		 */
 		Result setListener(ListenerHandle listener, const LocationOrientation& locOr) {
 			return mSpatialManager.setListener(listener, locOr);
+		}
+
+		Result loadHRTF(const char* path) {
+			return mSpatialProcessor.loadHRTF(
+				path, mConfig.rootPath,
+				mConfig.preferredSampleRate
+			);
 		}
 
 

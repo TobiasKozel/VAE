@@ -13,8 +13,8 @@ void eventTriggered(const EventCallbackData* data) {
 
 int main() {
 	constexpr int test = sizeof(core::Engine);
-	constexpr int rate = 48000;
-	// constexpr int rate = 44100;
+	// constexpr int rate = 48000;
+	constexpr int rate = 44100;
 	const double step = 1.0 / double(rate);
 
 	EngineConfig config;
@@ -56,6 +56,8 @@ int main() {
 
 	core::Engine engine(config);
 
+	auto hrtf = engine.loadHRTF("hrtf.json");
+
 	auto alloced2 = tklb::memory::DefaultPoolDebug.getAllocated();
 
 	engine.start();
@@ -81,7 +83,8 @@ int main() {
 
 		for (int i = 0; i < 200; i++) {
 			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(1000 / float(60)));
-			engine.setEmitter(emitter, {{-1.f, 0, 0}, {} }, 0);
+			float t = i * 0.1;
+			engine.setEmitter(emitter, {{ sin(t), 0, cos(t) }, {} }, 0);
 			// engine.update(); // needs to be ticked if EngineConfig::updateInAudioThread is false in
 		}
 	};
