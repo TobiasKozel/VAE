@@ -30,6 +30,8 @@ namespace vae { namespace core {
 				return Result::DuplicateEmitter;
 			}
 			Emitter emitter;
+			emitter.bank = InvalidBankHandle;
+			emitter.event = InvalidEventHandle;
 			// TODO VAE_DEBUG when allocation happens
 			mEmitters.insert({e, emitter});
 			return Result::Success;
@@ -171,6 +173,8 @@ namespace vae { namespace core {
 			forEachListener([&](Listener& l, ListenerHandle li) {
 				for (auto& emitter : mEmitters) {
 					auto& e = emitter.second;
+					// TODO seperate auto emitter somehow
+					if (e.bank == InvalidBankHandle) { continue; }
 					if (e.flags[Emitter::Flags::autoplaying]) { continue; }
 					// only trigger sounds which haven't been auto triggered
 					const auto distance = glm::distance(l.position, e.position);
