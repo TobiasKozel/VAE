@@ -123,7 +123,8 @@ namespace vae { namespace core {
 					e.name	= i["name"];
 
 					std::string type = i["type"];
-					e.flags[size_t(Event::Flags::start)]		= type == "start";
+					e.flags[size_t(Event::Flags::random)] 		= type == "start_rand";
+					e.flags[size_t(Event::Flags::start)]		= type == "start" || e.flags[size_t(Event::Flags::random)];
 					e.flags[size_t(Event::Flags::stop)]			= type == "stop";
 					e.flags[size_t(Event::Flags::emit)]			= type == "emit";
 					e.flags[size_t(Event::Flags::force_mixer)]	= bool(i["force_mixer"]);

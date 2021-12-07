@@ -18,6 +18,7 @@ namespace vae { namespace core {
 				force_mixer,	// Prevents overriding the mixer from chained events or fireEvent
 				loop,			// TODO sound should loop
 				HRTF,			// TODO If the listener has hrtfs set up it will be rendered using it
+				random,			// triggers one random on_start event
 				FLAG_COUNT
 			};
 		};

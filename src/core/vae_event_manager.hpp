@@ -32,12 +32,21 @@ namespace vae { namespace core {
 						return result;
 					}
 				}
-
-				// Fire all other chained events
-				for (auto& i : event.on_start) {
-					if (i == InvalidEventHandle) { continue; }
-					VAE_DEBUG_EVENT("Event %i:%i starts chained event %i", eventHandle, bankHandle, i)
-					fireEvent(bank, i, emitterHandle, mixerHandle, voiceManger, config);
+				if (event.flags[size_t(Event::Flags::random)]) {
+						for (int index = rand() % event.on_start.size(); 0 <= index; index--) {
+							auto& i = event.on_start[index];
+							if (i == InvalidEventHandle) { continue; }
+							VAE_DEBUG_EVENT("Event %i:%i starts random event %i", eventHandle, bankHandle, i)
+							fireEvent(bank, i, emitterHandle, mixerHandle, voiceManger, config);
+							break;
+						}
+				} else {
+					// Fire all other chained events
+					for (auto& i : event.on_start) {
+						if (i == InvalidEventHandle) { continue; }
+						VAE_DEBUG_EVENT("Event %i:%i starts chained event %i", eventHandle, bankHandle, i)
+						fireEvent(bank, i, emitterHandle, mixerHandle, voiceManger, config);
+					}
 				}
 			}
 
