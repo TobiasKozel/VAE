@@ -81,15 +81,12 @@ namespace vae { namespace core {
 				// ! this means using different configurations doesn't work !
 				spatial.forEachListener([&](Listener& l, ListenerHandle li) {
 					VAE_PROFILER_SCOPE
-					// // samething as graphices, make the world rotate round the listener
-					// glm::mat4x4 lookAt = glm::lookAt(l.position, l.front, l.up);
-					// // listener is the world origin now
-					// Vec3 relativeDirection = (lookAt * glm::vec4(emitter.position, 1.f));
-
-					// samething as graphices, make the world rotate round the listener
-					glm::mat4x3 lookAt = glm::lookAt(l.position, l.front, l.up);
+					// samething as graphics, make the world rotate round the listener
+					// TODO this should be possible without a 4x4 matrix?
+					glm::mat4x4 lookAt = glm::lookAt(l.position, l.position + l.front, l.up);
 					// listener is the world origin now
-					Vec3 relativeDirection = emitter.position * lookAt;
+					Vec3 relativeDirection = (lookAt * glm::vec4(emitter.position, 1.f));
+
 
 					const Sample distance = glm::length(relativeDirection);
 					relativeDirection /= distance;
