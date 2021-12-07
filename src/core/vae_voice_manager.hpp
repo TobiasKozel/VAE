@@ -151,9 +151,9 @@ namespace vae { namespace core {
 		 */
 		Result stopVoice(Voice& v) {
 			VAE_PROFILER_SCOPE
-			VAE_ASSERT(v.source != InvalidSourceHandle) // voice already stopped
+			if (v.source == InvalidSourceHandle) { return Result::Success; }
 
-			if (!v.flags[Voice::Flags::chainedEvents]) {
+			if (!v.flags[Voice::Flags::chainedEvents] && !v.flags[Voice::Flags::spatialized]) {
 				v.source = InvalidSourceHandle; // Mark voice as free
 				mActiveVoices--;
 				return Result::Success;
