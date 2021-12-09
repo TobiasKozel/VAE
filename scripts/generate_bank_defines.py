@@ -5,8 +5,10 @@ import json
 import os
 import re
 
-bankFolder = "VAE/dev/"
-hppFile = "./test.hpp"
+vaeFolder = os.path.dirname(os.path.realpath(__file__)) + os.sep + ".."
+bankFolder = vaeFolder + os.sep + "dev"
+hppFile = bankFolder + os.sep + "vae_def.hpp"
+
 if len(sys.argv) == 3:
 	bankFolder = sys.argv[1]
 	hppFile = sys.argv[2]
@@ -15,7 +17,6 @@ bankFiles = []
 
 for root, dirs, files in os.walk(bankFolder):
 	path = root.split(os.sep)
-	# print((len(path) - 1) * '---', os.path.basename(root))
 	for file in files:
 		if (file.find("bank.json") != -1):
 			bankFiles.append(root + os.sep + file)

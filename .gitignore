@@ -31,3 +31,4 @@ lib
 *.sofa
 *.wav
 **/doc/*
+**/vae_def.hpp
