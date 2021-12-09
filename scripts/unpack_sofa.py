@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from pysofaconventions import *
 import numpy as np
 import json

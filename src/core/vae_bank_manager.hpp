@@ -47,11 +47,11 @@ namespace vae { namespace core {
 			}
 		}
 
-		Bank& get(BankHandle bank) {
-			VAE_PROFILER_SCOPE
-			VAE_ASSERT(bank < mBanks.size())
-			VAE_ASSERT(mBanks[bank].id == bank)
-			return mBanks[bank];
+		Bank& get(BankHandle bank) { return mBanks[bank]; }
+
+		bool has(BankHandle bank) {
+			if (mBanks.size() <= bank) { false; }
+			return mBanks[bank].id != InvalidBankHandle;
 		}
 
 		Result load(const char* path, const char* rootPath) {

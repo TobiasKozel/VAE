@@ -260,10 +260,28 @@ namespace vae { namespace core {
 				VAE_ERROR("No emitter %u registered, voice won't be audible.", emitterHandle)
 			}
 			return EventManager::fireEvent(
-				mBankManager.get(bank), eventHandle,
+				bank, eventHandle,
 				emitterHandle, mixerHandle,
-				mVoiceManager, mConfig
+				mBankManager, mVoiceManager, mConfig
 			);
+		}
+
+		Result fireGlobalEvent(
+			GlobalEventHandle globalHandle,
+			EmitterHandle emitterHandle = InvalidEmitterHandle,
+			MixerHandle mixerHandle = InvalidMixerHandle
+		) {
+			BankHandle bankHandle;
+			EventHandle eventHandle;
+			splitGlobalEventHandle(globalHandle, bankHandle, eventHandle);
+			return fireEvent(
+				bankHandle, eventHandle, emitterHandle, mixerHandle
+			);
+		}
+
+
+		Result stopEmitter(EmitterHandle emitter) {
+			return mVoiceManager.stopEmitter(emitter);
 		}
 
 

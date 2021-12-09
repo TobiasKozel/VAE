@@ -8,16 +8,25 @@
 
 namespace vae { namespace core {
 	struct EventManager {
-
 		static Result fireEvent(
-			Bank& bank, EventHandle eventHandle,
-			EmitterHandle emitterHandle, MixerHandle mixerHandle,
-			VoiceManger& voiceManger, EngineConfig& config
+			const BankHandle& bankHandle, const EventHandle& eventHandle,
+			const EmitterHandle& emitterHandle, const MixerHandle& mixerHandle,
+			BankManager& banks, VoiceManger& voiceManger, const EngineConfig& config
 		) {
 			VAE_PROFILER_SCOPE
-			auto bankHandle = bank.id;
-			VAE_ASSERT(eventHandle != InvalidEventHandle)
-			VAE_ASSERT(eventHandle < bank.events.size())
+
+			if (!banks.has(bankHandle)) {
+				VAE_ERROR("Fired event %i on unloaded bank %i", eventHandle, bankHandle)
+				return Result::ValidHandleRequired;
+			}
+
+			auto& bank = banks.get(bankHandle);
+
+			if (bank.events.size() <= eventHandle) {
+				VAE_WARN("Fired missing event %i on bank %i", eventHandle, bankHandle)
+				return Result::ValidHandleRequired;
+			}
+
 			auto& event = bank.events[eventHandle];
 
 			Result result;
@@ -37,7 +46,10 @@ namespace vae { namespace core {
 							auto& i = event.on_start[index];
 							if (i == InvalidEventHandle) { continue; }
 							VAE_DEBUG_EVENT("Event %i:%i starts random event %i", eventHandle, bankHandle, i)
-							fireEvent(bank, i, emitterHandle, mixerHandle, voiceManger, config);
+							fireEvent(
+								bankHandle, i, emitterHandle, mixerHandle,
+								banks, voiceManger, config
+							);
 							break;
 						}
 				} else {
@@ -45,7 +57,10 @@ namespace vae { namespace core {
 					for (auto& i : event.on_start) {
 						if (i == InvalidEventHandle) { continue; }
 						VAE_DEBUG_EVENT("Event %i:%i starts chained event %i", eventHandle, bankHandle, i)
-						fireEvent(bank, i, emitterHandle, mixerHandle, voiceManger, config);
+						fireEvent(
+							bankHandle, i, emitterHandle, mixerHandle,
+							banks, voiceManger, config
+						);
 					}
 				}
 			}
