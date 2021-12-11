@@ -16,16 +16,6 @@ rm ./master.zip
 rm -rf ./rtaudio
 mv ./rtaudio-master ./rtaudio
 
-echo "Updating httplib"
-rm ./httplib.h
-curl -LO https://raw.githubusercontent.com/yhirose/cpp-httplib/master/httplib.h
-
-echo "Updating assetsys"
-rm ./assetsys.h
-rm ./strpool.h
-curl -LO https://raw.githubusercontent.com/mattiasgustavsson/libs/main/strpool.h
-curl -LO https://raw.githubusercontent.com/mattiasgustavsson/libs/main/assetsys.h
-
 echo "Updating glm"
 curl -LO https://github.com/g-truc/glm/archive/refs/heads/master.zip
 unzip ./master.zip > /dev/null 2>&1
@@ -40,6 +30,18 @@ rm ./v0.7.8.zip
 rm -rf ./tracy
 mv ./tracy-0.7.8 ./tracy
 
+cd headeronly
+
+echo "Updating httplib"
+rm ./httplib.h
+curl -LO https://raw.githubusercontent.com/yhirose/cpp-httplib/master/httplib.h
+
+echo "Updating assetsys"
+rm ./assetsys.h
+rm ./strpool.h
+curl -LO https://raw.githubusercontent.com/mattiasgustavsson/libs/main/strpool.h
+curl -LO https://raw.githubusercontent.com/mattiasgustavsson/libs/main/assetsys.h
+
 
 echo "Updating json"
 rm ./json.hpp
@@ -48,3 +50,6 @@ curl -LO https://raw.githubusercontent.com/nlohmann/json/develop/single_include/
 echo "Updating hash map"
 rm ./robin_hood.h
 curl -LO https://raw.githubusercontent.com/martinus/robin-hood-hashing/master/src/include/robin_hood.h
+
+cd ..
+

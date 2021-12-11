@@ -11,7 +11,7 @@
 #include "./vae_source_loader.hpp"
 
 #include <fstream>
-#include "../../../external/json.hpp"
+#include "../../../external/headeronly/json.hpp"
 
 namespace vae { namespace core {
 	struct BankLoader {

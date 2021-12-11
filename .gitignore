@@ -32,3 +32,5 @@ lib
 *.wav
 **/doc/*
 **/vae_def.hpp
+
+html

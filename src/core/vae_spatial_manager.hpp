@@ -1,7 +1,7 @@
 #ifndef _VAE_SPATIAL_MANAGER
 #define _VAE_SPATIAL_MANAGER
 
-#include "../../external/robin_hood.h"
+#include "../../external/headeronly/robin_hood.h"
 #include "./pod/vae_emitter.hpp"
 #include "./vae_bank_manager.hpp"
 #include "./vae_voice_manager.hpp"

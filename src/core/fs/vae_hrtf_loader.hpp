@@ -6,7 +6,7 @@
 #include "../pod/vae_hrtf.hpp"
 
 #include <fstream>
-#include "../../../external/json.hpp"
+#include "../../../external/headeronly/json.hpp"
 #include "../../../external/tklb/src/types/audio/resampler/TResampler.hpp"
 #include "../../../external/tklb/src/types/audio/fft/TOouraFFT.hpp"
 
