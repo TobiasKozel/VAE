@@ -16,7 +16,7 @@ namespace vae { namespace core {
 		/**
 		 * @brief Returns name of the api
 		 */
-		virtual const char* getName() = 0;
+		virtual const char* getName() const = 0;
 
 		/**
 		 * @brief Gets number of devices, needed to iterate them.
@@ -36,7 +36,7 @@ namespace vae { namespace core {
 		/**
 		 * Creates a device instance for this backend
 		 */
-		virtual Device* createDevice(EngineConfig&) = 0;
+		virtual Device* createDevice(const EngineConfig&) = 0;
 	}; // class Backend
 } } // vae::core
 

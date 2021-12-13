@@ -27,7 +27,7 @@ constexpr int rate = 44100;
 const double step = 1.0 / double(rate);
 
 void generateWav() {
-	constexpr auto length = Config::MaxBlock * 128;
+	constexpr auto length = core::Config::MaxBlock * 128;
 	tklb::AudioBuffer buffer;
 	buffer.resize(length , 1);
 	buffer.sampleRate = rate;
@@ -61,7 +61,7 @@ int main() {
 	#endif
 
 	config.eventCallback = &eventTriggered;
-	config.preferredSampleRate = rate;
+	config.internalSampleRate = rate;
 
 	core::Engine engine(config); logMem();
 

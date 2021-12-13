@@ -160,7 +160,7 @@ namespace vae {
 		 * If it doesn't support it, a resampler is used.
 		 * Most of the audio samples used should be in this rate.
 		 */
-		unsigned int preferredSampleRate = 48000;
+		unsigned int internalSampleRate = 48000;
 
 		/**
 		 * @brief Buffer size that will be requested from device.

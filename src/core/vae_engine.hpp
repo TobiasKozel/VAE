@@ -3,6 +3,7 @@
 
 #include "./vae_util.hpp"
 #include "./vae_types.hpp"
+#include "./vae_config.hpp"
 
 #include "./device/vae_rtaudio.hpp"
 #include "./device/vae_portaudio.hpp"
@@ -35,7 +36,7 @@ namespace vae { namespace core {
 		using Thread = std::thread;
 		using Semaphore = std::condition_variable;
 
-		EngineConfig mConfig;			// Config object provided at construction
+		const EngineConfig mConfig;		// Config object provided at construction
 
 		VoiceManger mVoiceManager;		// Holds and handle voices
 		SpatialManager mSpatialManager;	// Holds and manages spatial emitters
@@ -147,17 +148,29 @@ namespace vae { namespace core {
 			mAudioConsumed.notify_one();
 		}
 
-	public:
-		Engine(const EngineConfig& config) :
-			mConfig(config),
-		 	mVoiceManager(config.voices, config.virtualVoices),
-			mSpatialManager(config.preAllocatedEmitters)
-		{
+		void postContructor() {
 			VAE_PROFILER_SCOPE
 			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
 			mScratchBuffer.set(0);
-			mScratchBuffer.sampleRate = config.preferredSampleRate;
+			mScratchBuffer.sampleRate = mConfig.internalSampleRate;
 			VAE_DEBUG("Engine constructed")
+		}
+
+	public:
+		Engine(const EngineConfig& config) :
+			mConfig(config),
+		 	mVoiceManager(mConfig.voices, mConfig.virtualVoices),
+			mSpatialManager(mConfig.preAllocatedEmitters)
+		{
+			postContructor();
+		}
+
+		Engine() :
+			mConfig({}),
+		 	mVoiceManager(mConfig.voices, mConfig.virtualVoices),
+			mSpatialManager(mConfig.preAllocatedEmitters)
+		{
+			postContructor();
 		}
 
 		~Engine() {
@@ -314,9 +327,9 @@ namespace vae { namespace core {
 			return mSpatialManager.setEmitter(emitter, locDir, spread);
 		}
 
-		Result stopEmitter(EmitterHandle emitter) {
-			return mVoiceManager.stopEmitter(emitter);
-		}
+		// Result stopEmitter(EmitterHandle emitter) {
+		// 	return mVoiceManager.stopEmitter(emitter);
+		// }
 
 		ListenerHandle createListener() {
 			return mSpatialManager.createListener();
@@ -338,7 +351,7 @@ namespace vae { namespace core {
 		Result loadHRTF(const char* path) {
 			return mSpatialProcessor.loadHRTF(
 				path, mConfig.rootPath,
-				mConfig.preferredSampleRate
+				mConfig.internalSampleRate
 			);
 		}
 

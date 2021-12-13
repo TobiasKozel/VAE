@@ -1,7 +1,7 @@
 #ifndef _VAE_CONFIG
 #define _VAE_CONFIG
 
-namespace vae {
+namespace vae { namespace core {
 
 	/**
 	 * Contains some fundamental Configuration needed at compile time
@@ -41,6 +41,6 @@ namespace vae {
 		 */
 		constexpr size_t MaxChainedEvents = 4;
 	}
-}
+} }
 
 #endif // VAE_CONFIG

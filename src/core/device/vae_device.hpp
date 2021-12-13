@@ -27,8 +27,8 @@ namespace vae { namespace core {
 		using Lock = tklb::LockGuard<Mutex>;
 
 	protected:
-		Backend& mBackend;
-		EngineConfig& mConfig;
+		Backend& mBackend;			// Can't be const because rt audio isn't doing any const
+		const EngineConfig& mConfig;
 		using Callback = tklb::Delegate<void(Device*)>;
 		Size mSampleRate = 0;		// Samplerate after resampling
 		Size mRealSampleRate = 0;	// Device sample rate
@@ -121,34 +121,34 @@ namespace vae { namespace core {
 			mWorker.channelsOut = channelsOut;
 			mRealSampleRate  = sampleRate;
 
-			if (sampleRate != mConfig.preferredSampleRate) {
+			if (sampleRate != mConfig.internalSampleRate) {
 				if (0 < channelsIn) {
 					// we get full device buffersize for these buffers
 					mWorker.resamplerFromDevice.init(
-						sampleRate, mConfig.preferredSampleRate, bufferSize
+						sampleRate, mConfig.internalSampleRate, bufferSize
 					);
 					mWorker.resampleBufferFromdevice.resize(
 						mWorker.resamplerFromDevice.calculateBufferSize(bufferSize),
 						channelsIn
 					);
 					mWorker.resampleBufferFromdevice.sampleRate =
-						mConfig.preferredSampleRate;
-					mSampleRate = mConfig.preferredSampleRate;
+						mConfig.internalSampleRate;
+					mSampleRate = mConfig.internalSampleRate;
 				}
 				if (0 < channelsOut) {
 					// But only DSP max block size in this direction
 					mResamplerToDevice.init(
-						mConfig.preferredSampleRate, sampleRate, Config::MaxBlock
+						mConfig.internalSampleRate, sampleRate, Config::MaxBlock
 					);
 					mResamplerBufferToDevice.resize(
 						mResamplerToDevice.calculateBufferSize(Config::MaxBlock),
 						channelsOut
 					);
 					mResamplerBufferToDevice.sampleRate = sampleRate;
-					mSampleRate = mConfig.preferredSampleRate;
+					mSampleRate = mConfig.internalSampleRate;
 				}
 			} else {
-				mSampleRate = mConfig.preferredSampleRate;
+				mSampleRate = mConfig.internalSampleRate;
 			}
 
 			if (0 < channelsIn) {
@@ -181,7 +181,7 @@ namespace vae { namespace core {
 
 	public:
 		Device(
-			Backend& backend, EngineConfig& config
+			Backend& backend, const EngineConfig& config
 		) : mBackend(backend), mConfig(config) { }
 
 		virtual ~Device() {

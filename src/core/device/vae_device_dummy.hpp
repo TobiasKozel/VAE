@@ -10,11 +10,11 @@ namespace vae { namespace core {
 	class DeviceDummy final : public Device {
 	public:
 		DeviceDummy(
-			Backend& backend, EngineConfig& config
+			Backend& backend, const EngineConfig& config
 		) : Device(backend, config) { }
 
 		bool openDevice(bool input = false) override {
-			init(mConfig.preferredSampleRate, 0, 2, Config::MaxBlock);
+			init(mConfig.internalSampleRate, 0, 2, Config::MaxBlock);
 			return true;
 		}
 
@@ -50,7 +50,7 @@ namespace vae { namespace core {
 
 		uint getDeviceCount() override { return 1; }
 
-		DeviceInfo getDevice(uint id) override {
+		DeviceInfo getDevice(uint id) override{
 			TKLB_ASSERT(id == 0) // there's only one device
 			DeviceInfo info;
 			info.channelsIn = 2;
@@ -60,7 +60,7 @@ namespace vae { namespace core {
 			return info;
 		}
 
-		const char* getName() override  { return "dummy"; };
+		const char* getName() const override  { return "dummy"; };
 
 		DeviceInfo getDefaultInputDevice() override {
 			return getDevice(0);
@@ -70,7 +70,7 @@ namespace vae { namespace core {
 			return getDevice(0);
 		};
 
-		Device* createDevice(EngineConfig& config) override {
+		Device* createDevice(const EngineConfig& config) override {
 			return new DeviceDummy(*this, config);
 		}
 	};

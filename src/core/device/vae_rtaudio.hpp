@@ -45,7 +45,7 @@ namespace vae { namespace core {
 
 	public:
 		DeviceRtaudio(
-			Backend& backend, EngineConfig& config
+			Backend& backend, const EngineConfig& config
 		) : Device(backend, config) { };
 
 		~DeviceRtaudio() {
@@ -119,7 +119,7 @@ namespace vae { namespace core {
 		}
 
 		DeviceInfo getDevice(unsigned int index) override {
-			auto rtInfo = mAudio.getDeviceInfo(index);
+			const auto rtInfo = mAudio.getDeviceInfo(index);
 			TKLB_ASSERT(rtInfo.probed) // device needs to be probed
 
 			DeviceInfo info;
@@ -132,7 +132,7 @@ namespace vae { namespace core {
 			return info;
 		};
 
-		const char* getName() override  { return "rtaudio"; };
+		const char* getName() const override  { return "rtaudio"; };
 
 		DeviceInfo getDefaultInputDevice() override {
 			return getDevice(mAudio.getDefaultInputDevice());
@@ -142,7 +142,7 @@ namespace vae { namespace core {
 			return getDevice(mAudio.getDefaultOutputDevice());
 		};
 
-		Device* createDevice(EngineConfig& config) override {
+		Device* createDevice(const EngineConfig& config) override {
 			return new DeviceRtaudio(*this, config);
 		}
 	};

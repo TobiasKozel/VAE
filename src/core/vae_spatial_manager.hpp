@@ -32,7 +32,7 @@ namespace vae { namespace core {
 			Emitter emitter;
 			emitter.bank = InvalidBankHandle;
 			emitter.event = InvalidEventHandle;
-			// TODO VAE_DEBUG when allocation happens
+			// TODO VAE_DEBUG when allocation happens and also lock audio thread
 			mEmitters.insert({e, emitter});
 			return Result::Success;
 		}

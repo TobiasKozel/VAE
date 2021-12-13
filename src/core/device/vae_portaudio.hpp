@@ -52,7 +52,7 @@ namespace vae { namespace core {
 	public:
 
 		DevicePortaudio(
-			Backend& backend, EngineConfig& config
+			Backend& backend, const EngineConfig& config
 		) : Device(backend, config) { }
 
 		~DevicePortaudio() { cleanUp(); }
@@ -89,7 +89,7 @@ namespace vae { namespace core {
 				&mStream,
 				0 < inputParameters.channelCount ? &inputParameters : NULL,
 				0 < outputParameters.channelCount ? &outputParameters : NULL,
-				mConfig.preferredSampleRate, // try getting internal samplerate
+				mConfig.internalSampleRate, // try getting internal samplerate
 				device.bufferSize,
 				paClipOff, // no clipping, device will do that
 				AudioCallback,
@@ -175,7 +175,7 @@ namespace vae { namespace core {
 			return info;
 		};
 
-		const char* getName() override  { return "portaudio"; };
+		const char* getName() const override  { return "portaudio"; };
 
 		DeviceInfo getDefaultOutputDevice() override {
 			return getDevice(Pa_GetDefaultOutputDevice());
@@ -185,7 +185,7 @@ namespace vae { namespace core {
 			return getDevice(Pa_GetDefaultInputDevice());
 		};
 
-		Device* createDevice(EngineConfig& config) override {
+		Device* createDevice(const EngineConfig& config) override {
 			return new DevicePortaudio(*this, config);
 		}
 	};
