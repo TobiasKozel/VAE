@@ -36,7 +36,7 @@
 // see https://semver.org/
 #define ROBIN_HOOD_VERSION_MAJOR 3  // for incompatible API changes
 #define ROBIN_HOOD_VERSION_MINOR 11 // for adding functionality in a backwards-compatible manner
-#define ROBIN_HOOD_VERSION_PATCH 3  // for backwards-compatible bug fixes
+#define ROBIN_HOOD_VERSION_PATCH 4  // for backwards-compatible bug fixes
 
 #include <algorithm>
 #include <cstdlib>
@@ -404,8 +404,8 @@ public:
     void reset() noexcept {
         while (mListForFree) {
             T* tmp = *mListForFree;
-            ROBIN_HOOD_LOG("free")
-            free(mListForFree);
+            ROBIN_HOOD_LOG("std::free")
+            std::free(mListForFree);
             mListForFree = reinterpret_cast_no_cast_align_warning<T**>(tmp);
         }
         mHead = nullptr;
@@ -440,8 +440,8 @@ public:
         // calculate number of available elements in ptr
         if (numBytes < ALIGNMENT + ALIGNED_SIZE) {
             // not enough data for at least one element. Free and return.
-            ROBIN_HOOD_LOG("free")
-            free(ptr);
+            ROBIN_HOOD_LOG("std::free")
+            std::free(ptr);
         } else {
             ROBIN_HOOD_LOG("add to buffer")
             add(ptr, numBytes);
@@ -508,9 +508,9 @@ private:
 
         // alloc new memory: [prev |T, T, ... T]
         size_t const bytes = ALIGNMENT + ALIGNED_SIZE * numElementsToAlloc;
-        ROBIN_HOOD_LOG("malloc " << bytes << " = " << ALIGNMENT << " + " << ALIGNED_SIZE
+        ROBIN_HOOD_LOG("std::malloc " << bytes << " = " << ALIGNMENT << " + " << ALIGNED_SIZE
                                       << " * " << numElementsToAlloc)
-        add(assertNotNull<std::bad_alloc>(malloc(bytes)), bytes);
+        add(assertNotNull<std::bad_alloc>(std::malloc(bytes)), bytes);
         return mHead;
     }
 
@@ -546,8 +546,8 @@ struct NodeAllocator<T, MinSize, MaxSize, true> {
 
     // we are not using the data, so just free it.
     void addOrFree(void* ptr, size_t ROBIN_HOOD_UNUSED(numBytes) /*unused*/) noexcept {
-        ROBIN_HOOD_LOG("free")
-        free(ptr);
+        ROBIN_HOOD_LOG("std::free")
+        std::free(ptr);
     }
 };
 
@@ -1590,11 +1590,11 @@ public:
             auto const numElementsWithBuffer = calcNumElementsWithBuffer(o.mMask + 1);
             auto const numBytesTotal = calcNumBytesTotal(numElementsWithBuffer);
 
-            ROBIN_HOOD_LOG("malloc " << numBytesTotal << " = calcNumBytesTotal("
+            ROBIN_HOOD_LOG("std::malloc " << numBytesTotal << " = calcNumBytesTotal("
                                           << numElementsWithBuffer << ")")
             mHashMultiplier = o.mHashMultiplier;
             mKeyVals = static_cast<Node*>(
-                detail::assertNotNull<std::bad_alloc>(malloc(numBytesTotal)));
+                detail::assertNotNull<std::bad_alloc>(std::malloc(numBytesTotal)));
             // no need for calloc because clonData does memcpy
             mInfo = reinterpret_cast<uint8_t*>(mKeyVals + numElementsWithBuffer);
             mNumElements = o.mNumElements;
@@ -1642,16 +1642,16 @@ public:
             // no luck: we don't have the same array size allocated, so we need to realloc.
             if (0 != mMask) {
                 // only deallocate if we actually have data!
-                ROBIN_HOOD_LOG("free")
-                free(mKeyVals);
+                ROBIN_HOOD_LOG("std::free")
+                std::free(mKeyVals);
             }
 
             auto const numElementsWithBuffer = calcNumElementsWithBuffer(o.mMask + 1);
             auto const numBytesTotal = calcNumBytesTotal(numElementsWithBuffer);
-            ROBIN_HOOD_LOG("malloc " << numBytesTotal << " = calcNumBytesTotal("
+            ROBIN_HOOD_LOG("std::malloc " << numBytesTotal << " = calcNumBytesTotal("
                                           << numElementsWithBuffer << ")")
             mKeyVals = static_cast<Node*>(
-                detail::assertNotNull<std::bad_alloc>(malloc(numBytesTotal)));
+                detail::assertNotNull<std::bad_alloc>(std::malloc(numBytesTotal)));
 
             // no need for calloc here because cloneData performs a memcpy.
             mInfo = reinterpret_cast<uint8_t*>(mKeyVals + numElementsWithBuffer);
@@ -1821,6 +1821,12 @@ public:
     }
 
     template <typename... Args>
+    iterator emplace_hint(const_iterator position, Args&&... args) {
+        (void)position;
+        return emplace(std::forward<Args>(args)...).first;
+    }
+
+    template <typename... Args>
     std::pair<iterator, bool> try_emplace(const key_type& key, Args&&... args) {
         return try_emplace_impl(key, std::forward<Args>(args)...);
     }
@@ -1831,16 +1837,16 @@ public:
     }
 
     template <typename... Args>
-    std::pair<iterator, bool> try_emplace(const_iterator hint, const key_type& key,
+    iterator try_emplace(const_iterator hint, const key_type& key,
                                           Args&&... args) {
         (void)hint;
-        return try_emplace_impl(key, std::forward<Args>(args)...);
+        return try_emplace_impl(key, std::forward<Args>(args)...).first;
     }
 
     template <typename... Args>
-    std::pair<iterator, bool> try_emplace(const_iterator hint, key_type&& key, Args&&... args) {
+    iterator try_emplace(const_iterator hint, key_type&& key, Args&&... args) {
         (void)hint;
-        return try_emplace_impl(std::move(key), std::forward<Args>(args)...);
+        return try_emplace_impl(std::move(key), std::forward<Args>(args)...).first;
     }
 
     template <typename Mapped>
@@ -1854,16 +1860,16 @@ public:
     }
 
     template <typename Mapped>
-    std::pair<iterator, bool> insert_or_assign(const_iterator hint, const key_type& key,
+    iterator insert_or_assign(const_iterator hint, const key_type& key,
                                                Mapped&& obj) {
         (void)hint;
-        return insertOrAssignImpl(key, std::forward<Mapped>(obj));
+        return insertOrAssignImpl(key, std::forward<Mapped>(obj)).first;
     }
 
     template <typename Mapped>
-    std::pair<iterator, bool> insert_or_assign(const_iterator hint, key_type&& key, Mapped&& obj) {
+    iterator insert_or_assign(const_iterator hint, key_type&& key, Mapped&& obj) {
         (void)hint;
-        return insertOrAssignImpl(std::move(key), std::forward<Mapped>(obj));
+        return insertOrAssignImpl(std::move(key), std::forward<Mapped>(obj)).first;
     }
 
     std::pair<iterator, bool> insert(const value_type& keyval) {
@@ -1871,8 +1877,18 @@ public:
         return emplace(keyval);
     }
 
+    iterator insert(const_iterator hint, const value_type& keyval) {
+        (void)hint;
+        return emplace(keyval).first;
+    }
+
     std::pair<iterator, bool> insert(value_type&& keyval) {
         return emplace(std::move(keyval));
+    }
+
+    iterator insert(const_iterator hint, value_type&& keyval) {
+        (void)hint;
+        return emplace(std::move(keyval)).first;
     }
 
     // Returns 1 if key is found, 0 otherwise.
@@ -2226,7 +2242,7 @@ private:
             if (oldKeyVals != reinterpret_cast_no_cast_align_warning<Node*>(&mMask)) {
                 // don't destroy old data: put it into the pool instead
                 if (forceFree) {
-                    free(oldKeyVals);
+                    std::free(oldKeyVals);
                 } else {
                     DataPool::addOrFree(oldKeyVals, calcNumBytesTotal(oldMaxElementsWithBuffer));
                 }
@@ -2310,10 +2326,10 @@ private:
 
         // calloc also zeroes everything
         auto const numBytesTotal = calcNumBytesTotal(numElementsWithBuffer);
-        ROBIN_HOOD_LOG("calloc " << numBytesTotal << " = calcNumBytesTotal("
+        ROBIN_HOOD_LOG("std::calloc " << numBytesTotal << " = calcNumBytesTotal("
                                       << numElementsWithBuffer << ")")
         mKeyVals = reinterpret_cast<Node*>(
-            detail::assertNotNull<std::bad_alloc>(calloc(1, numBytesTotal)));
+            detail::assertNotNull<std::bad_alloc>(std::calloc(1, numBytesTotal)));
         mInfo = reinterpret_cast<uint8_t*>(mKeyVals + numElementsWithBuffer);
 
         // set sentinel
@@ -2460,8 +2476,8 @@ private:
         // reports a compile error: attempt to free a non-heap object 'fm'
         // [-Werror=free-nonheap-object]
         if (mKeyVals != reinterpret_cast_no_cast_align_warning<Node*>(&mMask)) {
-            ROBIN_HOOD_LOG("free")
-            free(mKeyVals);
+            ROBIN_HOOD_LOG("std::free")
+            std::free(mKeyVals);
         }
     }
 

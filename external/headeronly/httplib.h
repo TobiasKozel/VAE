@@ -505,7 +505,7 @@ public:
   virtual void enqueue(std::function<void()> fn) = 0;
   virtual void shutdown() = 0;
 
-  virtual void on_idle(){}
+  virtual void on_idle() {}
 };
 
 class ThreadPool : public TaskQueue {
@@ -1663,14 +1663,12 @@ bool process_client_socket(socket_t sock, time_t read_timeout_sec,
                            time_t write_timeout_usec,
                            std::function<bool(Stream &)> callback);
 
-socket_t create_client_socket(const char *host, const char *ip, int port, int address_family,
-                              bool tcp_nodelay, SocketOptions socket_options,
-                              time_t connection_timeout_sec,
-                              time_t connection_timeout_usec,
-                              time_t read_timeout_sec, time_t read_timeout_usec,
-                              time_t write_timeout_sec,
-                              time_t write_timeout_usec,
-                              const std::string &intf, Error &error);
+socket_t create_client_socket(
+    const char *host, const char *ip, int port, int address_family,
+    bool tcp_nodelay, SocketOptions socket_options,
+    time_t connection_timeout_sec, time_t connection_timeout_usec,
+    time_t read_timeout_sec, time_t read_timeout_usec, time_t write_timeout_sec,
+    time_t write_timeout_usec, const std::string &intf, Error &error);
 
 const char *get_header_value(const Headers &headers, const char *key,
                              size_t id = 0, const char *def = nullptr);
@@ -2209,25 +2207,22 @@ inline ssize_t read_socket(socket_t sock, void *ptr, size_t size, int flags) {
   return handle_EINTR([&]() {
     return recv(sock,
 #ifdef _WIN32
-                static_cast<char *>(ptr),
-                static_cast<int>(size),
+                static_cast<char *>(ptr), static_cast<int>(size),
 #else
-                ptr,
-                size,
+                ptr, size,
 #endif
                 flags);
   });
 }
 
-inline ssize_t send_socket(socket_t sock, const void *ptr, size_t size, int flags) {
+inline ssize_t send_socket(socket_t sock, const void *ptr, size_t size,
+                           int flags) {
   return handle_EINTR([&]() {
     return send(sock,
 #ifdef _WIN32
-                static_cast<const char *>(ptr),
-                static_cast<int>(size),
+                static_cast<const char *>(ptr), static_cast<int>(size),
 #else
-                ptr,
-                size,
+                ptr, size,
 #endif
                 flags);
   });
@@ -2411,12 +2406,14 @@ inline bool keep_alive(socket_t sock, time_t keep_alive_timeout_sec) {
 
 template <typename T>
 inline bool
-process_server_socket_core(socket_t sock, size_t keep_alive_max_count,
+process_server_socket_core(const std::atomic<socket_t> &svr_sock, socket_t sock,
+                           size_t keep_alive_max_count,
                            time_t keep_alive_timeout_sec, T callback) {
   assert(keep_alive_max_count > 0);
   auto ret = false;
   auto count = keep_alive_max_count;
-  while (count > 0 && keep_alive(sock, keep_alive_timeout_sec)) {
+  while (svr_sock != INVALID_SOCKET && count > 0 &&
+         keep_alive(sock, keep_alive_timeout_sec)) {
     auto close_connection = count == 1;
     auto connection_closed = false;
     ret = callback(close_connection, connection_closed);
@@ -2428,12 +2425,13 @@ process_server_socket_core(socket_t sock, size_t keep_alive_max_count,
 
 template <typename T>
 inline bool
-process_server_socket(socket_t sock, size_t keep_alive_max_count,
+process_server_socket(const std::atomic<socket_t> &svr_sock, socket_t sock,
+                      size_t keep_alive_max_count,
                       time_t keep_alive_timeout_sec, time_t read_timeout_sec,
                       time_t read_timeout_usec, time_t write_timeout_sec,
                       time_t write_timeout_usec, T callback) {
   return process_server_socket_core(
-      sock, keep_alive_max_count, keep_alive_timeout_sec,
+      svr_sock, sock, keep_alive_max_count, keep_alive_timeout_sec,
       [&](bool close_connection, bool &connection_closed) {
         SocketStream strm(sock, read_timeout_sec, read_timeout_usec,
                           write_timeout_sec, write_timeout_usec);
@@ -2460,8 +2458,8 @@ inline int shutdown_socket(socket_t sock) {
 }
 
 template <typename BindOrConnect>
-socket_t create_socket(const char *host, const char *ip, int port, int address_family,
-                       int socket_flags, bool tcp_nodelay,
+socket_t create_socket(const char *host, const char *ip, int port,
+                       int address_family, int socket_flags, bool tcp_nodelay,
                        SocketOptions socket_options,
                        BindOrConnect bind_or_connect) {
   // Get address info
@@ -2475,16 +2473,15 @@ socket_t create_socket(const char *host, const char *ip, int port, int address_f
   hints.ai_protocol = 0;
 
   // Ask getaddrinfo to convert IP in c-string to address
-  if(ip[0] != '\0') {
+  if (ip[0] != '\0') {
     hints.ai_family = AF_UNSPEC;
     hints.ai_flags = AI_NUMERICHOST;
   }
 
   auto service = std::to_string(port);
 
-  if (ip[0] != '\0' ?
-      getaddrinfo(ip, service.c_str(), &hints, &result) :
-      getaddrinfo(host, service.c_str(), &hints, &result)) {
+  if (ip[0] != '\0' ? getaddrinfo(ip, service.c_str(), &hints, &result)
+                    : getaddrinfo(host, service.c_str(), &hints, &result)) {
 #if defined __linux__ && !defined __ANDROID__
     res_init();
 #endif
@@ -2619,10 +2616,10 @@ inline std::string if2ip(const std::string &ifn) {
 #endif
 
 inline socket_t create_client_socket(
-    const char *host, const char *ip, int port, int address_family, bool tcp_nodelay,
-    SocketOptions socket_options, time_t connection_timeout_sec,
-    time_t connection_timeout_usec, time_t read_timeout_sec,
-    time_t read_timeout_usec, time_t write_timeout_sec,
+    const char *host, const char *ip, int port, int address_family,
+    bool tcp_nodelay, SocketOptions socket_options,
+    time_t connection_timeout_sec, time_t connection_timeout_usec,
+    time_t read_timeout_sec, time_t read_timeout_usec, time_t write_timeout_sec,
     time_t write_timeout_usec, const std::string &intf, Error &error) {
   auto sock = create_socket(
       host, ip, port, address_family, 0, tcp_nodelay, std::move(socket_options),
@@ -2996,9 +2993,7 @@ inline bool gzip_decompressor::decompress(const char *data, size_t data_length,
 
       ret = inflate(&strm_, Z_NO_FLUSH);
 
-      if (prev_avail_in - strm_.avail_in == 0) {
-        return false;
-      }
+      if (prev_avail_in - strm_.avail_in == 0) { return false; }
 
       assert(ret != Z_STREAM_ERROR);
       switch (ret) {
@@ -3611,7 +3606,11 @@ inline bool parse_multipart_boundary(const std::string &content_type,
   return !boundary.empty();
 }
 
+#ifdef CPPHTTPLIB_NO_EXCEPTIONS
+inline bool parse_range_header(const std::string &s, Ranges &ranges) {
+#else
 inline bool parse_range_header(const std::string &s, Ranges &ranges) try {
+#endif
   static auto re_first_range = std::regex(R"(bytes=(\d*-\d*(?:,\s*\d*-\d*)*))");
   std::smatch m;
   if (std::regex_match(s, m, re_first_range)) {
@@ -3643,7 +3642,11 @@ inline bool parse_range_header(const std::string &s, Ranges &ranges) try {
     return all_valid_ranges;
   }
   return false;
+#ifdef CPPHTTPLIB_NO_EXCEPTIONS
+}
+#else
 } catch (...) { return false; }
+#endif
 
 class MultipartFormDataParser {
 public:
@@ -4434,8 +4437,7 @@ inline SocketStream::SocketStream(socket_t sock, time_t read_timeout_sec,
     : sock_(sock), read_timeout_sec_(read_timeout_sec),
       read_timeout_usec_(read_timeout_usec),
       write_timeout_sec_(write_timeout_sec),
-      write_timeout_usec_(write_timeout_usec),
-      read_buff_(read_buff_size_, 0) {}
+      write_timeout_usec_(write_timeout_usec), read_buff_(read_buff_size_, 0) {}
 
 inline SocketStream::~SocketStream() {}
 
@@ -4449,9 +4451,11 @@ inline bool SocketStream::is_writable() const {
 
 inline ssize_t SocketStream::read(char *ptr, size_t size) {
 #ifdef _WIN32
-  size = (std::min)(size, static_cast<size_t>((std::numeric_limits<int>::max)()));
+  size =
+      (std::min)(size, static_cast<size_t>((std::numeric_limits<int>::max)()));
 #else
-  size = (std::min)(size, static_cast<size_t>((std::numeric_limits<ssize_t>::max)()));
+  size = (std::min)(size,
+                    static_cast<size_t>((std::numeric_limits<ssize_t>::max)()));
 #endif
 
   if (read_buff_off_ < read_buff_content_size_) {
@@ -4473,7 +4477,8 @@ inline ssize_t SocketStream::read(char *ptr, size_t size) {
   read_buff_content_size_ = 0;
 
   if (size < read_buff_size_) {
-    auto n = read_socket(sock_, read_buff_.data(), read_buff_size_, CPPHTTPLIB_RECV_FLAGS);
+    auto n = read_socket(sock_, read_buff_.data(), read_buff_size_,
+                         CPPHTTPLIB_RECV_FLAGS);
     if (n <= 0) {
       return n;
     } else if (n <= static_cast<ssize_t>(size)) {
@@ -4494,7 +4499,8 @@ inline ssize_t SocketStream::write(const char *ptr, size_t size) {
   if (!is_writable()) { return -1; }
 
 #ifdef _WIN32
-  size = (std::min)(size, static_cast<size_t>((std::numeric_limits<int>::max)()));
+  size =
+      (std::min)(size, static_cast<size_t>((std::numeric_limits<int>::max)()));
 #endif
 
   return send_socket(sock_, ptr, size, CPPHTTPLIB_SEND_FLAGS);
@@ -5505,6 +5511,9 @@ Server::process_request(Stream &strm, bool close_connection,
 
   // Rounting
   bool routed = false;
+#ifdef CPPHTTPLIB_NO_EXCEPTIONS
+  routed = routing(req, res, strm);
+#else
   try {
     routed = routing(req, res, strm);
   } catch (std::exception &e) {
@@ -5519,6 +5528,7 @@ Server::process_request(Stream &strm, bool close_connection,
     res.status = 500;
     res.set_header("EXCEPTION_WHAT", "UNKNOWN");
   }
+#endif
 
   if (routed) {
     if (res.status == -1) { res.status = req.ranges.empty() ? 200 : 206; }
@@ -5533,8 +5543,9 @@ inline bool Server::is_valid() const { return true; }
 
 inline bool Server::process_and_close_socket(socket_t sock) {
   auto ret = detail::process_server_socket(
-      sock, keep_alive_max_count_, keep_alive_timeout_sec_, read_timeout_sec_,
-      read_timeout_usec_, write_timeout_sec_, write_timeout_usec_,
+      svr_sock_, sock, keep_alive_max_count_, keep_alive_timeout_sec_,
+      read_timeout_sec_, read_timeout_usec_, write_timeout_sec_,
+      write_timeout_usec_,
       [this](Stream &strm, bool close_connection, bool &connection_closed) {
         return process_request(strm, close_connection, connection_closed,
                                nullptr);
@@ -5622,14 +5633,13 @@ inline socket_t ClientImpl::create_client_socket(Error &error) const {
   // Check is custom IP specified for host_
   std::string ip;
   auto it = addr_map_.find(host_);
-  if(it != addr_map_.end())
-    ip = it->second;
+  if (it != addr_map_.end()) ip = it->second;
 
   return detail::create_client_socket(
-      host_.c_str(), ip.c_str(), port_, address_family_, tcp_nodelay_, socket_options_,
-      connection_timeout_sec_, connection_timeout_usec_, read_timeout_sec_,
-      read_timeout_usec_, write_timeout_sec_, write_timeout_usec_, interface_,
-      error);
+      host_.c_str(), ip.c_str(), port_, address_family_, tcp_nodelay_,
+      socket_options_, connection_timeout_sec_, connection_timeout_usec_,
+      read_timeout_sec_, read_timeout_usec_, write_timeout_sec_,
+      write_timeout_usec_, interface_, error);
 }
 
 inline bool ClientImpl::create_and_connect_socket(Socket &socket,
@@ -5972,7 +5982,7 @@ inline bool ClientImpl::write_request(Stream &strm, Request &req,
   if (!req.has_header("Accept")) { req.headers.emplace("Accept", "*/*"); }
 
   if (!req.has_header("User-Agent")) {
-    req.headers.emplace("User-Agent", "cpp-httplib/0.9");
+    req.headers.emplace("User-Agent", "cpp-httplib/0.9.10");
   }
 
   if (req.body.empty()) {
@@ -6754,7 +6764,8 @@ inline void ClientImpl::set_follow_location(bool on) { follow_location_ = on; }
 
 inline void ClientImpl::set_url_encode(bool on) { url_encode_ = on; }
 
-inline void ClientImpl::set_hostname_addr_map(const std::map<std::string, std::string> addr_map) {
+inline void ClientImpl::set_hostname_addr_map(
+    const std::map<std::string, std::string> addr_map) {
   addr_map_ = std::move(addr_map);
 }
 
@@ -6897,14 +6908,13 @@ bool ssl_connect_or_accept_nonblocking(socket_t sock, SSL *ssl,
 }
 
 template <typename T>
-inline bool
-process_server_socket_ssl(SSL *ssl, socket_t sock, size_t keep_alive_max_count,
-                          time_t keep_alive_timeout_sec,
-                          time_t read_timeout_sec, time_t read_timeout_usec,
-                          time_t write_timeout_sec, time_t write_timeout_usec,
-                          T callback) {
+inline bool process_server_socket_ssl(
+    const std::atomic<socket_t> &svr_sock, SSL *ssl, socket_t sock,
+    size_t keep_alive_max_count, time_t keep_alive_timeout_sec,
+    time_t read_timeout_sec, time_t read_timeout_usec, time_t write_timeout_sec,
+    time_t write_timeout_usec, T callback) {
   return process_server_socket_core(
-      sock, keep_alive_max_count, keep_alive_timeout_sec,
+      svr_sock, sock, keep_alive_max_count, keep_alive_timeout_sec,
       [&](bool close_connection, bool &connection_closed) {
         SSLSocketStream strm(sock, ssl, read_timeout_sec, read_timeout_usec,
                              write_timeout_sec, write_timeout_usec);
@@ -7163,7 +7173,7 @@ inline bool SSLServer::process_and_close_socket(socket_t sock) {
   bool ret = false;
   if (ssl) {
     ret = detail::process_server_socket_ssl(
-        ssl, sock, keep_alive_max_count_, keep_alive_timeout_sec_,
+        svr_sock_, ssl, sock, keep_alive_max_count_, keep_alive_timeout_sec_,
         read_timeout_sec_, read_timeout_usec_, write_timeout_sec_,
         write_timeout_usec_,
         [this, ssl](Stream &strm, bool close_connection,
@@ -7579,8 +7589,10 @@ inline Client::Client(const std::string &scheme_host_port,
 #else
     if (!scheme.empty() && scheme != "http") {
 #endif
+#ifndef CPPHTTPLIB_NO_EXCEPTIONS
       std::string msg = "'" + scheme + "' scheme is not supported.";
       throw std::invalid_argument(msg);
+#endif
       return;
     }
 
@@ -7881,7 +7893,8 @@ inline size_t Client::is_socket_open() const { return cli_->is_socket_open(); }
 
 inline void Client::stop() { cli_->stop(); }
 
-inline void Client::set_hostname_addr_map(const std::map<std::string, std::string> addr_map) {
+inline void Client::set_hostname_addr_map(
+    const std::map<std::string, std::string> addr_map) {
   cli_->set_hostname_addr_map(std::move(addr_map));
 }
 
