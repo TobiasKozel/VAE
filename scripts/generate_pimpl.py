@@ -70,8 +70,11 @@ file = open(pimplHeader, "w")
 file.write("#ifndef _VAE_GEN_PIMPL\n")
 file.write("#define _VAE_GEN_PIMPL\n")
 file.write("#include \"./vae.hpp\"\n\n")
-file.write("namespace vae { \n")
-file.write("class %s { \n"%className)
+file.write("namespace vae {\n")
+file.write("class %s {\n"%className)
+
+file.write(f"\tstatic {className}* create();\n")
+file.write(f"\tstatic {className}* create(const EngineConfig& config);\n\n")
 
 for func in functions:
 	text = ""
@@ -99,6 +102,19 @@ file = open(pimplSource, "w")
 file.write("#include \"./vae_pimpl.hpp\"\n")
 file.write("#include \"../../src/core/vae_engine.hpp\"\n\n")
 file.write("using namespace vae;\n\n")
+
+file.write("""EnginePimpl* EnginePimpl::create() {
+	auto e = new core::Engine();
+	return reinterpret_cast<EnginePimpl*>(e);
+}
+
+EnginePimpl* EnginePimpl::create(const EngineConfig& config) {
+	auto e = new core::Engine(config);
+	return reinterpret_cast<EnginePimpl*>(e);
+}
+
+""")
+
 for func in functions:
 	text = ""
 	text += f"{func.returns} {className}::{func.name} ("
