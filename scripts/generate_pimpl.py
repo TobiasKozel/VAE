@@ -21,6 +21,11 @@ class Func:
 
 functions = []
 
+
+#####
+##### Parse core::Engine
+#####
+
 file = open(engineFile, "r")
 
 lines = file.readlines()
@@ -66,6 +71,10 @@ for i in range(len(lines)):
 
 file.close()
 
+#####
+##### Generate header file
+#####
+
 file = open(pimplHeader, "w")
 file.write("#ifndef _VAE_GEN_PIMPL\n")
 file.write("#define _VAE_GEN_PIMPL\n")
@@ -75,6 +84,7 @@ file.write("class %s {\n"%className)
 
 file.write(f"\tstatic {className}* create();\n")
 file.write(f"\tstatic {className}* create(const EngineConfig& config);\n\n")
+file.write(f"\tvoid destroy();\n\n")
 
 for func in functions:
 	text = ""
@@ -98,22 +108,32 @@ file.write("} // namespace vae\n")
 file.write("#endif // _VAE_GEN_PIMPL\n")
 file.close()
 
+#####
+##### Generate source file
+#####
+
 file = open(pimplSource, "w")
 file.write("#include \"./vae_pimpl.hpp\"\n")
 file.write("#include \"../../src/core/vae_engine.hpp\"\n\n")
-file.write("using namespace vae;\n\n")
+file.write("using namespace vae;\n")
 
-file.write("""EnginePimpl* EnginePimpl::create() {
+file.write("""
+%s* %s::create() {
 	auto e = new core::Engine();
-	return reinterpret_cast<EnginePimpl*>(e);
+	return reinterpret_cast<%s*>(e);
 }
 
-EnginePimpl* EnginePimpl::create(const EngineConfig& config) {
+%s* %s::create(const EngineConfig& config) {
 	auto e = new core::Engine(config);
-	return reinterpret_cast<EnginePimpl*>(e);
+	return reinterpret_cast<%s*>(e);
 }
 
-""")
+void %s::destroy() {
+	auto e = reinterpret_cast<core::Engine*>(this);
+	delete e;
+}
+
+"""%((className,) * 7))
 
 for func in functions:
 	text = ""
