@@ -189,6 +189,9 @@ namespace vae { namespace core {
 			});
 		}
 	};
+
+	constexpr int _VAE_SIZE_SPATIAL_MANAGER = sizeof(SpatialManager);
+
 } } // vae::core
 
 #endif // _VAE_SPATIAL_MANAGER

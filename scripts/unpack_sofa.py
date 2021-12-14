@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# Small script to decode sofa files and write them into a json
+
 from pysofaconventions import *
 import numpy as np
 import json

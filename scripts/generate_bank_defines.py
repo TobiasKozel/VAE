@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# Small script to read all bank files and create a
+# header file with all the events by name
+
 import sys
 import json
 import os

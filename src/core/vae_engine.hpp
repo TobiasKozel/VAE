@@ -25,6 +25,8 @@
 #include <thread>				// mAudioThread
 #include <condition_variable>	// mAudioConsumed
 
+#define _VAE_PUBLIC_API
+
 
 namespace vae { namespace core {
 
@@ -50,8 +52,8 @@ namespace vae { namespace core {
 		Time mTimeFract = 0;			// Global engine time in seconds
 		Sample mLimiterLastPeak = 1.0;	// Master limiter last peak
 
-		Thread mAudioThread;			// Thread processing voices and mixers
-		Semaphore mAudioConsumed;		// Notifies the audio thread when more audio is needed
+		Thread* mAudioThread;			// Thread processing voices and mixers
+		Semaphore* mAudioConsumed;		// Notifies the audio thread when more audio is needed
 		Mutex mMutex;					// Mutex to lock AudioThread and bank operations
 		bool mAudioThreadRunning = false;
 
@@ -145,7 +147,7 @@ namespace vae { namespace core {
 		 * @param device
 		 */
 		void onThreadedBufferSwap(Device* device) {
-			mAudioConsumed.notify_one();
+			mAudioConsumed->notify_one();
 		}
 
 		void postContructor() {
@@ -157,7 +159,7 @@ namespace vae { namespace core {
 		}
 
 	public:
-		Engine(const EngineConfig& config) :
+		_VAE_PUBLIC_API Engine(const EngineConfig& config) :
 			mConfig(config),
 		 	mVoiceManager(mConfig.voices, mConfig.virtualVoices),
 			mSpatialManager(mConfig.preAllocatedEmitters)
@@ -165,7 +167,7 @@ namespace vae { namespace core {
 			postContructor();
 		}
 
-		Engine() :
+		_VAE_PUBLIC_API Engine() :
 			mConfig({}),
 		 	mVoiceManager(mConfig.voices, mConfig.virtualVoices),
 			mSpatialManager(mConfig.preAllocatedEmitters)
@@ -193,7 +195,7 @@ namespace vae { namespace core {
 		 * @brief Tries to open default device and start audio thread.
 		 * @return Result
 		 */
-		Result start() {
+		_VAE_PUBLIC_API Result start() {
 			VAE_PROFILER_SCOPE
 			Backend& backend = CurrentBackend::instance();
 			mDevice = backend.createDevice(mConfig);
@@ -203,7 +205,7 @@ namespace vae { namespace core {
 			} else {
 				mDevice->setCallback(TKLB_DELEGATE(&Engine::onThreadedBufferSwap, *this));
 				mAudioThreadRunning = true;
-				mAudioThread = Thread(&Engine::threadedProcess, this);
+				mAudioThread = new Thread(&Engine::threadedProcess, this);
 				VAE_DEBUG("Mixing in seperate thread")
 			}
 			return mDevice->openDevice() ? Result::Success : Result::DeviceError;
@@ -213,13 +215,14 @@ namespace vae { namespace core {
 		 * @brief Stops processing and waits for audio thead to clean up
 		 * @return Result
 		 */
-		Result stop() {
+		_VAE_PUBLIC_API Result stop() {
 			VAE_PROFILER_SCOPE
 			Lock l(mMutex);
 			if (mAudioThreadRunning) {
 				mAudioThreadRunning = false;
-				if(mAudioThread.joinable()) {
-					mAudioThread.join();
+				if(mAudioThread->joinable()) {
+					mAudioThread->join();
+					delete mAudioThread;
 					VAE_DEBUG("Audio thread stopped")
 				} else {
 					VAE_ERROR("Can't join audio thread")
@@ -233,7 +236,7 @@ namespace vae { namespace core {
 		 * @brief Update function needs to be called regularly to handle outbound events.
 		 * If this isn't called regularly events might be lost.
 		 */
-		void update() {
+		_VAE_PUBLIC_API void update() {
 			VAE_PROFILER_FRAME_MARK_START(_VAE_PROFILER_UPDATE)
 			// Update emitters and start voices nearby
 			mSpatialManager.update(mVoiceManager, mBankManager);
@@ -263,7 +266,7 @@ namespace vae { namespace core {
 		 * @param mixerHandle id of mixer channel sound will be routed to, this will override the one set in the event
 		 * @return Result
 		 */
-		Result fireEvent(
+		_VAE_PUBLIC_API Result fireEvent(
 			BankHandle bank, EventHandle eventHandle,
 			EmitterHandle emitterHandle = InvalidEmitterHandle,
 			MixerHandle mixerHandle = InvalidMixerHandle
@@ -278,7 +281,7 @@ namespace vae { namespace core {
 			);
 		}
 
-		Result fireGlobalEvent(
+		_VAE_PUBLIC_API Result fireGlobalEvent(
 			GlobalEventHandle globalHandle,
 			EmitterHandle emitterHandle = InvalidEmitterHandle,
 			MixerHandle mixerHandle = InvalidMixerHandle
@@ -292,36 +295,43 @@ namespace vae { namespace core {
 		}
 
 
-		Result stopEmitter(EmitterHandle emitter) {
+		_VAE_PUBLIC_API Result stopEmitter(EmitterHandle emitter) {
 			return mVoiceManager.stopEmitter(emitter);
+		}
+
+		/**
+		 * @brief Get the number of currently playing Voices
+		 */
+		int getActiveVoiceCount() const {
+			return mVoiceManager.getActiveVoiceCount();
 		}
 
 
 #pragma region emitter
 
-		EmitterHandle createEmitter() {
+		_VAE_PUBLIC_API EmitterHandle createEmitter() {
 			return mSpatialManager.createEmitter();
 		}
 
-		EmitterHandle createAutoEmitter(
+		_VAE_PUBLIC_API EmitterHandle createAutoEmitter(
 			BankHandle bank, EventHandle event, float maxDist,
-			const LocationDirection& locDir, Sample spread
+			const LocationDirection& locDir, float spread
 		) {
 			return mSpatialManager.createAutoEmitter(bank, event, maxDist, locDir, spread);
 		}
 
-		Result addEmitter(EmitterHandle h) {
+		_VAE_PUBLIC_API Result addEmitter(EmitterHandle h) {
 			return mSpatialManager.addEmitter(h);
 		}
 
-		Result removeEmitter(EmitterHandle h) {
+		_VAE_PUBLIC_API Result removeEmitter(EmitterHandle h) {
 			mVoiceManager.stopEmitter(h);
 			return mSpatialManager.removeEmitter(h);
 		}
 
-		Result setEmitter(
+		_VAE_PUBLIC_API Result setEmitter(
 			EmitterHandle emitter, const LocationDirection& locDir,
-			Sample spread
+			float spread
 		) {
 			return mSpatialManager.setEmitter(emitter, locDir, spread);
 		}
@@ -330,11 +340,11 @@ namespace vae { namespace core {
 		// 	return mVoiceManager.stopEmitter(emitter);
 		// }
 
-		ListenerHandle createListener() {
+		_VAE_PUBLIC_API ListenerHandle createListener() {
 			return mSpatialManager.createListener();
 		}
 
-		Result removeListener(ListenerHandle listener) {
+		_VAE_PUBLIC_API Result removeListener(ListenerHandle listener) {
 			return mSpatialManager.removeListener(listener);
 		}
 
@@ -343,11 +353,11 @@ namespace vae { namespace core {
 		 * @param listener
 		 * @return Result
 		 */
-		Result setListener(ListenerHandle listener, const LocationOrientation& locOr) {
+		_VAE_PUBLIC_API Result setListener(ListenerHandle listener, const LocationOrientation& locOr) {
 			return mSpatialManager.setListener(listener, locOr);
 		}
 
-		Result loadHRTF(const char* path) {
+		_VAE_PUBLIC_API Result loadHRTF(const char* path) {
 			return mSpatialProcessor.loadHRTF(
 				path, mConfig.rootPath,
 				mConfig.internalSampleRate
@@ -358,11 +368,6 @@ namespace vae { namespace core {
 
 #pragma endregion emitter
 
-		Result loadWorld() {
-			// TODO load static emitters
-			return Result::GenericFailure;
-		}
-
 #pragma region bank_handling
 		/**
 		 * @brief Load bank from filesystem
@@ -370,7 +375,7 @@ namespace vae { namespace core {
 		 * @param path
 		 * @return Result
 		 */
-		Result loadBank(const char* path) {
+		_VAE_PUBLIC_API Result loadBank(const char* path) {
 			return mBankManager.load(path, mConfig.rootPath);
 		}
 
@@ -416,7 +421,7 @@ namespace vae { namespace core {
 		 * @param path
 		 * @return Result
 		 */
-		Result unloadBankFromPath(const char* path) {
+		_VAE_PUBLIC_API Result unloadBankFromPath(const char* path) {
 			return mBankManager.unloadFromPath(path);
 		}
 
@@ -426,17 +431,27 @@ namespace vae { namespace core {
 		 * @param bankHandle
 		 * @return Result
 		 */
-		Result unloadBankFromId(BankHandle bankHandle) {
+		_VAE_PUBLIC_API Result unloadBankFromId(BankHandle bankHandle) {
 			return mBankManager.unloadFromId(bankHandle);
 		}
 
 		/**
 		 * @brief Unload every bank and data associated with it
 		 */
-		void unloadAllBanks() {
+		_VAE_PUBLIC_API void unloadAllBanks() {
 			mBankManager.unloadAll();
 		}
 #pragma endregion bank_handling
+
+		/**
+		 * @brief Check if the compiled version matches
+		 */
+		_VAE_PUBLIC_API bool checkVersion(int major, int minor, int patch) {
+			return
+				VAE_VERSION_MAJOR == major &&
+				VAE_VERSION_MINOR == minor &&
+				VAE_VERSION_PATCH == patch;
+		}
 
 	}; // Engine class
 	constexpr int _VAE_ENGINE_SIZE = sizeof(Engine);

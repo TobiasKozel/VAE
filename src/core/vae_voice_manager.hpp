@@ -49,6 +49,10 @@ namespace vae { namespace core {
 			return mFinishedVoiceQueue;
 		}
 
+		Size getActiveVoiceCount() const {
+			return mActiveVoices;
+		}
+
 		/**
 		 * @brief Callback provided to iterate voices, needs to return
 		 * a bool to indicate when a voice needs to be stopped.
@@ -278,6 +282,8 @@ namespace vae { namespace core {
 			return Result::Success;
 		}
 	};
+
+	constexpr int _VAE_SIZE_VOICE_MANAGER = sizeof(VoiceManger);
 } } // vae::core
 
 #endif // _VAE_VOICE_MANAGER

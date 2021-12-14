@@ -161,6 +161,8 @@ namespace vae { namespace core {
 			}
 		}
 	};
+
+	constexpr int _VAE_SIZE_BANK_MANAGER = sizeof(BankManager);
 } } // namespace vae::core
 
 #endif // _VAE_BANK_MANAGER
