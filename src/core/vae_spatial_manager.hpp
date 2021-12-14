@@ -1,7 +1,7 @@
 #ifndef _VAE_SPATIAL_MANAGER
 #define _VAE_SPATIAL_MANAGER
 
-#include "../../external/headeronly/robin_hood.h"
+#include "../../external/headeronly/robin_map.h"
 #include "./pod/vae_emitter.hpp"
 #include "./vae_bank_manager.hpp"
 #include "./vae_voice_manager.hpp"
@@ -12,7 +12,7 @@
 namespace vae { namespace core {
 	class SpatialManager {
 		// TODO for power of 2 sizes other maps might be faster and need the same amount of ram
-		template <typename key, class T> using Map = robin_hood::unordered_flat_map<key, T>;
+		template <typename key, class T> using Map = tsl::robin_map<key, T>;
 		Map<EmitterHandle, Emitter> mEmitters;	// All emitters across banks
 		Listeners mListeners;					// All Listeners
 	public:
@@ -83,7 +83,7 @@ namespace vae { namespace core {
 
 		void compact() {
 			VAE_PROFILER_SCOPE
-			mEmitters.compact();
+			// mEmitters.compact();
 		}
 
 		Result setEmitter(
@@ -179,7 +179,7 @@ namespace vae { namespace core {
 					// only trigger sounds which haven't been auto triggered
 					const auto distance = glm::distance(l.position, e.position);
 					if (distance < e.maxDist) {
-						e.flags[Emitter::Flags::autoplaying] = true;
+						mEmitters[emitter.first].flags[Emitter::Flags::autoplaying] = true;
 						auto& bank = banks.get(e.bank);
 						manager.play(
 							bank.events[e.event], e.bank, emitter.first, InvalidMixerHandle

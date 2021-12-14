@@ -51,5 +51,12 @@ echo "Updating hash map"
 rm ./robin_hood.h
 curl -LO https://raw.githubusercontent.com/martinus/robin-hood-hashing/master/src/include/robin_hood.h
 
+rm ./robin_growth_policy.h
+rm ./robin_hash.h
+rm ./robin_map.h
+curl -LO https://raw.githubusercontent.com/Tessil/robin-map/master/include/tsl/robin_hash.h
+curl -LO https://raw.githubusercontent.com/Tessil/robin-map/master/include/tsl/robin_map.h
+curl -LO https://raw.githubusercontent.com/Tessil/robin-map/master/include/tsl/robin_growth_policy.h
+
 cd ..
 
