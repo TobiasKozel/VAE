@@ -76,19 +76,40 @@ file.close()
 #####
 
 file = open(pimplHeader, "w")
-file.write("#ifndef _VAE_GEN_PIMPL\n")
-file.write("#define _VAE_GEN_PIMPL\n")
-file.write("#include \"./vae.hpp\"\n\n")
-file.write("namespace vae {\n")
-file.write("class %s {\n"%className)
+file.write("""
+#ifndef _VAE_GEN_PIMPL
+#define _VAE_GEN_PIMPL
+#include "./vae.hpp"
 
-file.write(f"\tstatic {className}* create();\n")
-file.write(f"\tstatic {className}* create(const EngineConfig& config);\n\n")
-file.write(f"\tvoid destroy();\n\n")
+/**
+ * Prefix public API functions
+ */
+#if defined(_WIN32) || defined(__CYGWIN__)
+	#ifdef VAE_DLL_EXPORT
+		#define _VAE_API_EXPORT __declspec(dllexport) __stdcall
+	#else
+		#define _VAE_API_EXPORT __stdcall
+	#endif
+#else
+	#ifdef VAE_DLL_EXPORT
+		#define _VAE_API_EXPORT __attribute__((visibility("default")))
+	#else
+		#define _VAE_API_EXPORT
+	#endif
+#endif
+
+namespace vae {
+class %s {
+	static %s* create();
+	static %s* create(const EngineConfig& config);
+
+	void destroy();
+
+"""%((className,) * 3))
 
 for func in functions:
 	text = ""
-	text += f"\t{func.returns} {func.name} ("
+	text += f"\t_VAE_API_EXPORT {func.returns} {func.name} ("
 	for i in range(len(func.parameters)):
 		param = func.parameters[i]
 		text += f"\n\t\t{param.typename} {param.name}"
@@ -101,11 +122,12 @@ for func in functions:
 	text += ");\n\n"
 	file.write(text)
 
+file.write(
+"""}; // class %s
 
-
-file.write("}; // class %s\n"%className)
-file.write("} // namespace vae\n")
-file.write("#endif // _VAE_GEN_PIMPL\n")
+} // namespace vae
+#endif // _VAE_GEN_PIMPL
+"""%(className,))
 file.close()
 
 #####
@@ -140,7 +162,7 @@ for func in functions:
 	text += f"{func.returns} {className}::{func.name} ("
 	for i in range(len(func.parameters)):
 		param = func.parameters[i]
-		text += f"\n\t\t{param.typename} {param.name}"
+		text += f"\n\t{param.typename} {param.name}"
 		if (i < len(func.parameters) - 1):
 			text += ","
 		else:
