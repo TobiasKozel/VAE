@@ -4,23 +4,16 @@
 #include "../vae_types.hpp"
 
 #include <stddef.h>
-#include <string>
-#include <bitset>
 
 namespace vae { namespace core {
 	struct Source {
-		struct Flags {
-			enum {
-				preload,	// Entire signal will be loaded into ram
-				stream,		// TODO Signal will be streamed
-				generator,	// TODO Signal will be generated
-				wav,		// Format is wav
-				vorbis,		// TODO Formatis ogg
-				FLAG_COUNT
-			};
-		};
 		SourceHandle id = InvalidSourceHandle;
-		std::bitset<Flags::FLAG_COUNT> flags;
+		bool stream : 1;		// If false entire sample will be loaded in ram
+		enum class Format {
+			wav,
+			ogg,
+			generator
+		} format : 2;
 		Sample gain = 1.0;		// Gain applied to every voice creatd frin this source
 		AudioBuffer signal;		// Signal or scratch buffer for generated types
 		PathString path;		// Filesystem path

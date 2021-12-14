@@ -25,7 +25,7 @@ namespace vae { namespace core {
 			VAE_PROFILER_SCOPE
 			manager.forEachVoice([&](Voice& v, Size index) {
 				if (v.bank != bank.id) { return true; }
-				if (v.flags[Voice::Flags::spatialized]) { return true; }
+				if (v.spatialized) { return true; }
 
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
@@ -52,8 +52,8 @@ namespace vae { namespace core {
 					}
 				}
 
-				v.flags[Voice::Flags::started] = true;
-				v.flags[Voice::Flags::audible] = true;
+				v.started = true;
+				v.audible = true;
 
 				v.time += remaining; // progress time in voice
 				return remaining != frames;

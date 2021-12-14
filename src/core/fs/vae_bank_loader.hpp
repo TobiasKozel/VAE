@@ -55,14 +55,12 @@ namespace vae { namespace core {
 					s.name		= i["name"];
 					s.path		= i["path"];
 					s.gain		= i["gain"];
+					s.stream	= i["stream"];
 
 					std::string format	= i["format"];
-					std::string	type	= i["type"];
-					s.flags[Source::Flags::generator]	= type == "generator";
-					s.flags[Source::Flags::preload]		= type == "preload";
-					s.flags[Source::Flags::stream]		= type == "stream";
-					s.flags[Source::Flags::vorbis]	= format == "vorbis";
-					s.flags[Source::Flags::wav]		= format == "wav";
+					if (format == "wav")	{ s.format = Source::Format::wav; }
+					if (format == "ogg")		{ s.format = Source::Format::ogg; }
+					if (format == "generator")	{ s.format = Source::Format::generator; }
 
 					auto result = SourceLoader::load(s, folder);
 					if (result != Result::Success) {
@@ -123,12 +121,12 @@ namespace vae { namespace core {
 					e.name	= i["name"];
 
 					std::string type = i["type"];
-					e.flags[size_t(Event::Flags::random)] 		= type == "start_rand";
-					e.flags[size_t(Event::Flags::start)]		= type == "start" || e.flags[size_t(Event::Flags::random)];
-					e.flags[size_t(Event::Flags::stop)]			= type == "stop";
-					e.flags[size_t(Event::Flags::emit)]			= type == "emit";
-					e.flags[size_t(Event::Flags::force_mixer)]	= bool(i["force_mixer"]);
-					e.flags[size_t(Event::Flags::HRTF)] 		= bool(i["hrtf"]);
+					e.random 		= type == "start_rand";
+					e.start			= type == "start" || e.random;
+					e.stop			= type == "stop";
+					e.emit			= type == "emit";
+					e.force_mixer	= i["force_mixer"];
+					e.HRTF 			= i["hrtf"];
 
 					if (i["source"].is_null()) {
 						e.source = InvalidSourceHandle;

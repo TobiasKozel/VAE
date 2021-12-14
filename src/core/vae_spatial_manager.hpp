@@ -163,9 +163,9 @@ namespace vae { namespace core {
 		void update(VoiceManger& manager, BankManager& banks) {
 			VAE_PROFILER_SCOPE
 			manager.forEachVoice([&](Voice& v, Size vi) {
-				if (v.flags[Voice::Flags::audible]) { return true; }
-				if (!v.flags[Voice::Flags::started]) { return true; }
-				if (!v.flags[Voice::Flags::spatialized]) { return true; }
+				if (v.audible) { return true; }
+				if (!v.started) { return true; }
+				if (!v.spatialized) { return true; }
 				return false; // kill the inaudible voice
 			});
 
@@ -175,11 +175,11 @@ namespace vae { namespace core {
 					auto& e = emitter.second;
 					// TODO seperate auto emitter somehow
 					if (e.bank == InvalidBankHandle) { continue; }
-					if (e.flags[Emitter::Flags::autoplaying]) { continue; }
+					if (e.autoplaying) { continue; }
 					// only trigger sounds which haven't been auto triggered
 					const auto distance = glm::distance(l.position, e.position);
 					if (distance < e.maxDist) {
-						mEmitters[emitter.first].flags[Emitter::Flags::autoplaying] = true;
+						mEmitters[emitter.first].autoplaying = true;
 						auto& bank = banks.get(e.bank);
 						manager.play(
 							bank.events[e.event], e.bank, emitter.first, InvalidMixerHandle

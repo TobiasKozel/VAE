@@ -107,11 +107,10 @@ namespace vae { namespace core {
 
 					for (auto& i : event.on_end) {
 						// find out if voice should trigger events on end
-						v.flags[Voice::Flags::chainedEvents] =
-							v.flags[Voice::Flags::chainedEvents] || (i != InvalidEventHandle);
+						v.chainedEvents = v.chainedEvents || (i != InvalidEventHandle);
 					}
 
-					if (mixer != InvalidMixerHandle && !event.flags[Event::Flags::force_mixer]) {
+					if (mixer != InvalidMixerHandle && !event.force_mixer) {
 						// Only use the mixer provided if it's valid
 						// and the event allows overriding it
 						v.mixer = mixer;
@@ -122,8 +121,8 @@ namespace vae { namespace core {
 
 					v.emitter = emitter;
 					if (emitter != InvalidEmitterHandle) {
-						v.flags[Voice::Flags::spatialized] = true;
-						v.flags[Voice::Flags::HRTF] = event.flags[Voice::Flags::HRTF];
+						v.spatialized = true;
+						v.HRTF = event.HRTF;
 						mVoicePIPs[i] = { };
 					}
 					v.bank = bank;
@@ -153,7 +152,7 @@ namespace vae { namespace core {
 			VAE_PROFILER_SCOPE
 			if (v.source == InvalidSourceHandle) { return Result::Success; }
 
-			if (!v.flags[Voice::Flags::chainedEvents] && !v.flags[Voice::Flags::spatialized]) {
+			if (!v.chainedEvents && !v.spatialized) {
 				v.source = InvalidSourceHandle; // Mark voice as free
 				mActiveVoices--;
 				return Result::Success;

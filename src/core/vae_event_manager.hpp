@@ -31,7 +31,7 @@ namespace vae { namespace core {
 
 			Result result;
 
-			if (event.flags[Event::Flags::start]) {
+			if (event.start) {
 				if (event.source != InvalidSourceHandle) {
 					VAE_DEBUG_EVENT("Event %i:%i starts source %i", eventHandle, bankHandle, event.source)
 					// Has source attached
@@ -41,7 +41,7 @@ namespace vae { namespace core {
 						return result;
 					}
 				}
-				if (event.flags[size_t(Event::Flags::random)]) {
+				if (event.random) {
 						for (int index = rand() % event.on_start.size(); 0 <= index; index--) {
 							auto& i = event.on_start[index];
 							if (i == InvalidEventHandle) { continue; }
@@ -65,7 +65,7 @@ namespace vae { namespace core {
 				}
 			}
 
-			if (event.flags[Event::Flags::stop]) {
+			if (event.stop) {
 				// TODO test stopping
 				if (event.source != InvalidSourceHandle) {
 					VAE_DEBUG_EVENT("Event %i:%i stops source %i", eventHandle, bankHandle, event.source)
@@ -84,7 +84,7 @@ namespace vae { namespace core {
 				}
 			}
 
-			if (event.flags[Event::Flags::emit]) {
+			if (event.emit) {
 				VAE_DEBUG_EVENT("Event %i:%i emits event", eventHandle, bankHandle)
 				if (config.eventCallback != nullptr) {
 					EventCallbackData data;

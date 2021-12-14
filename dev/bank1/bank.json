@@ -7,7 +7,7 @@
 			"name": "Sound1",
 			"path": "sound1.wav",
 			"format": "wav",
-			"type": "preload",
+			"stream": false,
 			"gain": 1.0
 		}
 	],

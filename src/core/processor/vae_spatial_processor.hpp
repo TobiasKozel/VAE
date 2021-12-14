@@ -41,7 +41,7 @@ namespace vae { namespace core {
 			VAE_PROFILER_SCOPE
 			manager.forEachVoice([&](Voice& v, Size vi) {
 				if (v.bank != bank.id) { return true; }						// wrong bank
-				if (!v.flags[Voice::Flags::spatialized]) { return true; }	// not spatialized
+				if (!v.spatialized) { return true; }	// not spatialized
 
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
@@ -54,7 +54,7 @@ namespace vae { namespace core {
 					frames, SampleIndex(signal.size() - v.time
 				));
 
-				v.flags[Voice::Flags::started] = true;
+				v.started = true;
 
 				if (!spatial.hasEmitter(v.emitter)) { // emitter missing
 					v.time += remaining; // progress time in voice
@@ -102,7 +102,7 @@ namespace vae { namespace core {
 
 					switch (l.configuration) {
 					case Listener::Configuration::HRTF:
-						if (v.flags[Voice::Flags::HRTF]) {
+						if (v.HRTF) {
 							// Only do hrtf when the voice also has it enabled
 							Sample closest = std::numeric_limits<Sample>::max();
 							constexpr Size Invalid = ~0;
@@ -178,7 +178,7 @@ namespace vae { namespace core {
 					}
 				});
 
-				v.flags[Voice::Flags::audible] = audible;
+				v.audible = audible;
 				lastPip = std::move(currentPip);
 
 				v.time += remaining; // progress time in voice

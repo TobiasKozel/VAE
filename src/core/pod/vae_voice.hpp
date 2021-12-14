@@ -2,34 +2,28 @@
 #define _VAE_VOICE
 
 #include "../vae_types.hpp"
-#include <bitset>
 #include <limits>
 namespace vae { namespace core {
 	/**
 	 * @brief Barebones voice.
 	 */
 	struct Voice {
-		struct Flags {
-			enum {
-				chainedEvents = 0,	// If this voice triggers events after it stopped playing
-				started,
-				audible,			// Whether the voice was heard by any listener
-				spatialized,		// If the voice has spatialization data
-				HRTF,				// If the voice should be rendered using hrtfs
-				mixMatrix,			// If the voice has a mix matrix
-				filtered,			// If the voice is filtered
-				FLAG_COUNT
-			};
-		};
+		bool spatialized : 1;	// If the voice has spatialization data
+		bool chainedEvents : 1;	// If this voice triggers events after it stopped playing
+		bool started : 1;
+		bool audible : 1;		// Whether the voice was heard by any listener
+		bool HRTF : 1;			// If the voice should be rendered using hrtfs
+		bool mixMatrix : 1;		// If the voice has a mix matrix
+		bool filtered : 1;		// If the voice is filtered
+		bool _placeholder : 1;
+		BankHandle bank;							// Which bank it belongs to
 		SourceHandle source = InvalidSourceHandle;	// If invalid, means voice is not playing.
 		EventHandle event;							// Which event triggered the voice to be played
 		EventHandle eventInstance;					// Not needed?
 		EmitterHandle emitter;						//
 		MixerHandle mixer;							// Where the voice should mix to
-		BankHandle bank;							// Which bank it belongs to
 		Sample gain = 1.0;							// Volume of the voice
 		SampleIndex time = 0;						// Current time in samples
-		std::bitset<Flags::FLAG_COUNT> flags;
 	};
 
 	constexpr int _VAE_VOICE_SIZE = sizeof(Voice);

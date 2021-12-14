@@ -241,8 +241,7 @@ namespace vae { namespace core {
 			// Handle finished voices and their events
 			mVoiceManager.forEachFinishedVoice([&](Voice& v) {
 				if (v.emitter != InvalidEmitterHandle) {
-					mSpatialManager.getEmitter(v.emitter).
-						flags[Emitter::Flags::autoplaying] = false;
+					mSpatialManager.getEmitter(v.emitter).autoplaying = false;
 					// Make sure the event can be triggered again by that emitter
 				}
 				for (auto& i : mBankManager.get(v.bank).events[v.event].on_end) {
