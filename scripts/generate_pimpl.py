@@ -4,7 +4,7 @@ token = "_VAE_PUBLIC_API"
 className = "EnginePimpl"
 engineFile = os.path.dirname(os.path.realpath(__file__)) + "/../src/core/vae_engine.hpp"
 pimplHeader = os.path.dirname(os.path.realpath(__file__)) + "/../include/vae/vae_pimpl.hpp"
-pimplSource = os.path.dirname(os.path.realpath(__file__)) + "/../include/vae/vae_pimpl.cpp"
+pimplSource = os.path.dirname(os.path.realpath(__file__)) + "/../src/api/vae_pimpl.cpp"
 
 class Param:
 	def __init__(self):
@@ -100,6 +100,7 @@ file.write("""
 
 namespace vae {
 class %s {
+public:
 	static %s* create();
 	static %s* create(const EngineConfig& config);
 
@@ -135,11 +136,11 @@ file.close()
 #####
 
 file = open(pimplSource, "w")
-file.write("#include \"./vae_pimpl.hpp\"\n")
-file.write("#include \"../../src/core/vae_engine.hpp\"\n\n")
-file.write("using namespace vae;\n")
 
 file.write("""
+#include "../../include/vae/vae_pimpl.hpp"
+#include "../core/vae_engine.hpp"
+using namespace vae;
 %s* %s::create() {
 	auto e = new core::Engine();
 	return reinterpret_cast<%s*>(e);

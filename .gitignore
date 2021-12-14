@@ -11,7 +11,7 @@
 *.sln
 *.vcxproj
 *.vcxproj.*
-
+.cache
 
 # cmake bullshit
 build

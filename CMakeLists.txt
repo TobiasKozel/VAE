@@ -10,7 +10,7 @@ project(
 	LANGUAGES CXX
 )
 
-option(BUILD_SHARED_LIBS "Build shared lib" OFF) # TODO broken
+option(BUILD_SHARED_LIBS "Build shared lib" ON) # TODO broken
 option(VAE_PROFILER "Use profiler" OFF)
 option(VAE_BACKEND_PORTAUDIO "Compile with port audio" OFF)
 option(VAE_BACKEND_RTAUDIO "Compile with RtAudio" ON)
@@ -38,6 +38,11 @@ if (BUILD_SHARED_LIBS)
 			${SRC_WRAPPED}
 			${SRC_DEVICE}
 			${PUBLIC_API}
+	)
+	target_compile_definitions(
+		vae
+		PUBLIC
+			VAE_DLL_EXPORT
 	)
 else()
 	message("VAE: static build")
