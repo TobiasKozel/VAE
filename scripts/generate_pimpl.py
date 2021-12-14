@@ -100,13 +100,15 @@ file.write("""
 
 namespace vae {
 class %s {
+	%s();
+	%s(const %s&);
 public:
 	static %s* create();
 	static %s* create(const EngineConfig& config);
 
-	void destroy();
+	_VAE_API_EXPORT void destroy();
 
-"""%((className,) * 3))
+"""%((className,) * 6))
 
 for func in functions:
 	text = ""
@@ -180,5 +182,11 @@ for func in functions:
 			text += "\n\t"
 	text += ");\n}\n\n"
 	file.write(text)
+
+file.write("""
+extern "C" %s* create() {
+	return %s::create();
+}
+"""%((className,) * 2))
 
 file.close()

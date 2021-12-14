@@ -10,7 +10,7 @@ project(
 	LANGUAGES CXX
 )
 
-option(BUILD_SHARED_LIBS "Build shared lib" ON) # TODO broken
+option(BUILD_SHARED_LIBS "Build shared lib" OFF) # broken in subproject but works with pimpl
 option(VAE_PROFILER "Use profiler" OFF)
 option(VAE_BACKEND_PORTAUDIO "Compile with port audio" OFF)
 option(VAE_BACKEND_RTAUDIO "Compile with RtAudio" ON)

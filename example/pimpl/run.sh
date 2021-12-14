@@ -1,3 +1,5 @@
 #!/bin/sh
-g++ -g ./main.cpp -lvae -L../../build/ -Wl,-rpath,../../build/
+g++ -g ./runtime.cpp
+./a.out
+g++ -g ./compiletime.cpp -lvae -L../../build/ -Wl,-rpath,../../build/
 ./a.out

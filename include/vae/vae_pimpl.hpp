@@ -22,11 +22,13 @@
 
 namespace vae {
 class EnginePimpl {
+	EnginePimpl();
+	EnginePimpl(const EnginePimpl&);
 public:
 	static EnginePimpl* create();
 	static EnginePimpl* create(const EngineConfig& config);
 
-	void destroy();
+	_VAE_API_EXPORT void destroy();
 
 	_VAE_API_EXPORT Result start ();
 

@@ -1,11 +1,10 @@
 #include <stdio.h>
-#include "vae/vae_engine.hpp"
-#include "vae/vae_listener.hpp"
+#include "vae/vae_pimpl.hpp"
 
 int main() {
-	auto engine = VAE::Engine();
-	auto asd = engine.createListener();
-	asd.openDevice();
+	auto engine = vae::EnginePimpl::create();
+	engine->start();
 	getchar();
+	engine->stop();
 	return 0;
 }

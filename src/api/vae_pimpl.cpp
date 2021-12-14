@@ -201,3 +201,7 @@ bool EnginePimpl::checkVersion (
 	);
 }
 
+
+extern "C" EnginePimpl* create() {
+	return EnginePimpl::create();
+}
