@@ -33,4 +33,7 @@ lib
 **/doc/*
 **/vae_def.hpp
 
-html
+docs/doxygen
+docs/_build
+docs/_static
+docs/_template

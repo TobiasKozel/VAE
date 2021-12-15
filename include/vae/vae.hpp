@@ -44,7 +44,10 @@ namespace vae {
 	constexpr GlobalEventHandle InvalidGlobalEventHandle
 		= InvalidEventHandle | (InvalidBankHandle << (sizeof(EventHandle) * 8));
 
-	static_assert((sizeof(BankHandle) + sizeof(EventHandle)) <= sizeof(GlobalEventHandle));
+	static_assert(
+		(sizeof(BankHandle) + sizeof(EventHandle)) <= sizeof(GlobalEventHandle),
+		"BankHandle combined with EventHandle needs to fit in GlobalEventHandle"
+	);
 
 	/**
 	 * @brief Return Types for most engine functions

@@ -180,6 +180,9 @@ namespace vae { namespace core {
 		}
 
 	public:
+		/**
+		 * @brief Only a Backend can construct a Device
+		 */
 		Device(
 			Backend& backend, const EngineConfig& config
 		) : mBackend(backend), mConfig(config) { }
