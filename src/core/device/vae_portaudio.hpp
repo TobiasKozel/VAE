@@ -7,7 +7,6 @@
 
 #include "../../../external/portaudio/include/portaudio.h"
 #include "../../../external/portaudio/src/common/pa_debugprint.h"
-#include "util/TMath.hpp"
 
 namespace vae { namespace core {
 	/**

@@ -10,7 +10,8 @@ project(
 	LANGUAGES CXX
 )
 
-option(BUILD_SHARED_LIBS "Build shared lib" OFF) # broken in subproject but works with pimpl
+option(BUILD_SHARED_LIBS "Build shared lib" OFF)
+option(VAE_BUILD_PIMPL "Build PIMPL API" OFF)
 option(VAE_PROFILER "Use profiler" OFF)
 option(VAE_BACKEND_PORTAUDIO "Compile with port audio" OFF)
 option(VAE_BACKEND_RTAUDIO "Compile with RtAudio" ON)
@@ -25,7 +26,9 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 #################            add main lib             #################
 
-file(GLOB PUBLIC_API "src/api/*.cpp")
+if (VAE_BUILD_PIMPL)
+	file(GLOB PIMPL_API "src/api/*.cpp")
+endif()
 file(GLOB SRC_CORE "src/core/*.hpp")
 file(GLOB SRC_WRAPPED "src/wrapped/*.cpp")
 file(GLOB SRC_DEVICE "src/core/device/*.hpp")
@@ -37,7 +40,7 @@ if (BUILD_SHARED_LIBS)
 			${SRC_CORE}
 			${SRC_WRAPPED}
 			${SRC_DEVICE}
-			${PUBLIC_API}
+			${PIMPL_API}
 	)
 	target_compile_definitions(
 		vae
@@ -51,11 +54,10 @@ else()
 			${SRC_CORE}
 			${SRC_WRAPPED}
 			${SRC_DEVICE}
-			${PUBLIC_API}
+			${PIMPL_API}
 	)
 endif()
 
-source_group("api" FILES ${PUBLIC_API})
 source_group("core" FILES ${SRC_CORE})
 
 #Add an alias so that library can be used inside the build tree, e.g. when testing
