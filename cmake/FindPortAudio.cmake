@@ -1,12 +1,8 @@
 enable_language(C)
 
-# if (VAE_BUILD_STATIC_LIBS)
-# 	set(PA_BUILD_SHARED OFF)
-# 	set(PA_BUILD_STATIC ON)
-# else()
-# 	set(PA_BUILD_SHARED ON)
-# 	set(PA_BUILD_STATIC OFF)
-# endif()
+if (BUILD_SHARED_LIBS)
+	set(LINK_PRIVATE_SYMBOLS ON)
+endif()
 
 set(PA_USE_ASIO OFF)
 add_subdirectory(external/portaudio)

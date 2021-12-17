@@ -6,6 +6,7 @@
 #include "../vae_util.hpp"
 
 #include "../../../external/portaudio/include/portaudio.h"
+#include "util/TMath.hpp"
 
 namespace vae { namespace core {
 	/**
@@ -64,6 +65,9 @@ namespace vae { namespace core {
 				VAE_ASSERT(false)
 				return false;
 			}
+
+			device.channelsIn = tklb::clamp<int>(device.channelsIn, 0, Config::MaxChannels);
+			device.channelsOut = tklb::clamp<int>(device.channelsOut, 0, Config::MaxChannels);
 
 			PaStreamParameters inputParameters;
 			inputParameters.device = device.id;

@@ -86,11 +86,18 @@ namespace vae {
 	struct Vector3 {
 		float x, y, z;
 	};
+
+	/**
+	 * @brief Emitters have a position and direction vector
+	 */
 	struct LocationDirection {
 		Vector3 position;
 		Vector3 direction;
 	};
 
+	/**
+	 * @brief Listener uses additional up vector
+	 */
 	struct LocationOrientation {
 		Vector3 position	= { 0.f, 0.f,  0.f };
 		Vector3 front		= { 0.f, 0.f, -1.f };

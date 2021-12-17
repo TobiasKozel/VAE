@@ -81,9 +81,6 @@ file.write("""
 #define _VAE_GEN_PIMPL
 #include "./vae.hpp"
 
-/**
- * Prefix public API functions
- */
 #if defined(_WIN32) || defined(__CYGWIN__)
 	#ifdef VAE_DLL_EXPORT
 		#define _VAE_API_EXPORT __declspec(dllexport) __stdcall
@@ -102,13 +99,14 @@ namespace vae {
 class %s {
 	%s();
 	%s(const %s&);
+	~%s() { };
 public:
 	static %s* create();
 	static %s* create(const EngineConfig& config);
 
 	_VAE_API_EXPORT void destroy();
 
-"""%((className,) * 6))
+"""%((className,) * 7))
 
 for func in functions:
 	text = ""
