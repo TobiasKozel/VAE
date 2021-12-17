@@ -15,6 +15,7 @@ namespace vae { namespace core {
 
 		bool openDevice(bool input = false) override {
 			init(mConfig.internalSampleRate, 0, 2, Config::MaxBlock);
+			postInit();
 			return true;
 		}
 
@@ -36,7 +37,7 @@ namespace vae { namespace core {
 		 */
 		template <typename T>
 		void swapBufferInterleaved(const T* from, T* to, Size frames) {
-			mWorker.swapBuffer<T>(from, to, frames);
+			mWorker.swapBufferInterleaved<T>(from, to, frames);
 		}
 	};
 

@@ -173,7 +173,7 @@ namespace vae { namespace core {
 		}
 
 		void postInit() {
-			VAE_DEBUG("Opened Audio Device with samplerate %i", mRealSampleRate)
+			VAE_DEBUG("Opened Audio Device on %s with samplerate %i", mBackend.getName(), mRealSampleRate)
 			if (mRealSampleRate != mSampleRate) {
 				VAE_DEBUG("Audio Device resamples to %i", mSampleRate)
 			}

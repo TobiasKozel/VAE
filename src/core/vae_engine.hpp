@@ -7,6 +7,7 @@
 
 #include "./device/vae_rtaudio.hpp"
 #include "./device/vae_portaudio.hpp"
+#include "./device/vae_device_dummy.hpp"
 
 #include "./pod/vae_listener.hpp"
 #include "./pod/vae_emitter.hpp"
@@ -228,7 +229,10 @@ namespace vae { namespace core {
 					VAE_ERROR("Can't join audio thread")
 				}
 			}
-			delete mDevice;
+			if (mDevice != nullptr) {
+				delete mDevice;
+				mDevice = nullptr;
+			}
 			return Result::Success;
 		}
 

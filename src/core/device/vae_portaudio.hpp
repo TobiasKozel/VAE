@@ -6,6 +6,7 @@
 #include "../vae_util.hpp"
 
 #include "../../../external/portaudio/include/portaudio.h"
+#include "../../../external/portaudio/src/common/pa_debugprint.h"
 #include "util/TMath.hpp"
 
 namespace vae { namespace core {
@@ -142,7 +143,16 @@ namespace vae { namespace core {
 	};
 
 	class BackendPortAudio final : public Backend {
+		static void debugLog(const char* message) {
+			VAE_DEBUG("PortAudio: %s", message)
+		}
+
 		BackendPortAudio() {
+			/**
+			 * Should set up logging, but most of PortAudios underlying
+			 * APIs don't care about this and print to stdout
+			 */
+			PaUtil_SetDebugPrintFunction(&debugLog);
 			PaError err = Pa_Initialize();
 			if (err != paNoError) {
 				VAE_ASSERT(false)
