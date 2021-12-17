@@ -31,7 +31,6 @@ lib
 *.sofa
 *.wav
 **/doc/*
-**/vae_def.hpp
 
 docs/doxygen
 docs/_build

@@ -1,16 +1,20 @@
 #!/usr/bin/python
 
-# Small script to decode sofa files and write them into a json
+# Small script to decode sofa files and write them into a simpler format
 
 from pysofaconventions import *
+import os
 import numpy as np
-import json
+import msgpack
 
-path = "scripts/MRT01.sofa" # cartesian
-# path = "scripts/dtf_nh2.sofa" # spherical
-# path = "scripts/subject_003.sofa" # spherical
-sofa = SOFAFile(path,'r')
-outPath = "scripts/hrtf.json"
+vaeFolder = os.path.dirname(os.path.realpath(__file__)) + "/.."
+
+path = vaeFolder + "/scripts/MRT01.sofa" # cartesian
+# path = vaeFolder + "/scripts/dtf_nh2.sofa" # spherical
+# path = vaeFolder + "/scripts/subject_003.sofa" # spherical
+
+sofa = SOFAFile(path, "r")
+outPath = vaeFolder + "/dev/hrtf.msgpack"
 
 dimensions = sofa.getDimensionsAsDict()
 positions = dimensions["M"].size
@@ -35,9 +39,9 @@ upVector = (sofa.getListenerUpValues()[0][0], sofa.getListenerUpValues()[0][1], 
 frontVector = (sofa.getListenerViewValues()[0][0], sofa.getListenerViewValues()[0][1], sofa.getListenerViewValues()[0][2])
 listenerPos =  sofa.getListenerPositionValues() # should be 0, 0, 0
 
-outJson = { }
-outJson["samplerate"] = sampleRate
-outJson["positions"] = []
+outData = { }
+outData["samplerate"] = sampleRate
+outData["positions"] = []
 
 for i in range(0, positions):
 	position = {}
@@ -55,8 +59,9 @@ for i in range(0, positions):
 	ir = np.ma.round(ir).astype(int)
 	position["left"] = ir[:, 0].tolist()
 	position["right"] = ir[:, 1].tolist()
-	outJson["positions"].append(position)
+	outData["positions"].append(position)
 
 
-with open(outPath, "w") as outfile:
-	json.dump(outJson, outfile, separators=(',', ':'))
+with open(outPath, "wb") as outfile:
+	packed = msgpack.packb(outData)
+	outfile.write(packed)

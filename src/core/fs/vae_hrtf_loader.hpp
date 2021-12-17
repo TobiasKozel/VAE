@@ -2,6 +2,7 @@
 #define _VAE_HRTF_LOADER
 
 #include "../vae_types.hpp"
+#include "../vae_util.hpp"
 #include "../vae_config.hpp"
 #include "../pod/vae_hrtf.hpp"
 
@@ -24,7 +25,7 @@ namespace vae { namespace core {
 			}
 
 			VAE_DEBUG("Started loading HRTF %s", path)
-			auto data = nlohmann::json::parse(file);
+			auto data = nlohmann::json::from_msgpack(file);
 
 			hrtf.originalRate = data["samplerate"];
 			hrtf.rate = sampleRate;

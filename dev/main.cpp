@@ -4,11 +4,12 @@
 #include <stdio.h>
 #include <thread>
 #include "../src/core/vae_engine.hpp"
+#include "./vae_def.hpp"
 
 using namespace vae;
 
 void eventTriggered(const EventCallbackData* data) {
-	printf("callback event %ifrom bank %i\n", (int) data->event, (int) data->bank);
+	// printf("callback event %ifrom bank %i\n", (int) data->event, (int) data->bank);
 }
 
 void logMem() {
@@ -27,7 +28,7 @@ constexpr int rate = 44100;
 const double step = 1.0 / double(rate);
 
 void generateWav() {
-	constexpr auto length = core::Config::MaxBlock * 128;
+	constexpr auto length = core::Config::MaxBlock * 256;
 	tklb::AudioBuffer buffer;
 	buffer.resize(length , 1);
 	buffer.sampleRate = rate;
@@ -65,7 +66,7 @@ int main() {
 
 	core::Engine engine(config); logMem();
 
-	// auto hrtf = engine.loadHRTF("hrtf.json"); logMem();
+	auto hrtf = engine.loadHRTF("hrtf.msgpack"); logMem();
 
 	engine.start(); logMem();
 
@@ -80,10 +81,10 @@ int main() {
 	if (result == Result::Success) {
 		// for (int i = 0; i < 1050; i++)
 		{
-			engine.fireEvent(0, 0, emitter);
+			engine.fireGlobalEvent(vaeb::Bank1::Event1, emitter);
 		}
 
-		for (int i = 0; i < 2000; i++) {
+		for (int i = 0; i < 500; i++) {
 			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(1000 / float(60)));
 			float t = i * 0.1;
 			engine.setEmitter(emitter, {{ float(sin(t)), float(0), float(cos(t)) }, {} }, 0);
