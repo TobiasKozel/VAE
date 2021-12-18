@@ -129,6 +129,13 @@ namespace vae {
 		const char* rootPath = "./";
 
 		/**
+		 * @brief Samplerate requested from device.
+		 * If it doesn't support it, a resampler is used.
+		 * Most of the audio samples used should be in this rate.
+		 */
+		unsigned int internalSampleRate = 48000;
+
+		/**
 		 * @brief Each time a event of the type emit gets triggered
 		 * Used to get information about ending sounds and similar
 		 */
@@ -164,13 +171,6 @@ namespace vae {
 		 * This makes space for 16384 emitters.
 		 */
 		unsigned int preAllocatedEmitters = _preAllocatedEmitters;
-
-		/**
-		 * @brief Samplerate requested from device.
-		 * If it doesn't support it, a resampler is used.
-		 * Most of the audio samples used should be in this rate.
-		 */
-		unsigned int internalSampleRate = 48000;
 
 		/**
 		 * @brief Buffer size that will be requested from device.

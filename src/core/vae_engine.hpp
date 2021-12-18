@@ -380,7 +380,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		_VAE_PUBLIC_API Result loadBank(const char* path) {
-			return mBankManager.load(path, mConfig.rootPath);
+			return mBankManager.load(path, mConfig.rootPath, mConfig.internalSampleRate);
 		}
 
 		/**
@@ -390,7 +390,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result loadBank(Bank& bank) {
-			return mBankManager.load(bank);
+			return mBankManager.load(bank, mConfig.internalSampleRate);
 		}
 
 		/**
@@ -401,7 +401,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result addSource(BankHandle bankHandle, Source& source) {
-			return mBankManager.addSource(bankHandle, source);
+			return mBankManager.addSource(bankHandle, source, mConfig.internalSampleRate);
 		}
 
 		/**

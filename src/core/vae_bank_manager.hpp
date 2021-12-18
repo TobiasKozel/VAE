@@ -54,7 +54,7 @@ namespace vae { namespace core {
 			return mBanks[bank].id != InvalidBankHandle;
 		}
 
-		Result load(const char* path, const char* rootPath) {
+		Result load(const char* path, const char* rootPath, int sampleRate) {
 			VAE_PROFILER_SCOPE
 			VAE_INFO("Loading bank from file %s%s", rootPath, path)
 			Bank bank;
@@ -63,10 +63,10 @@ namespace vae { namespace core {
 				VAE_ERROR("Failed to load bank from file %s%s with error %i", rootPath, path, result)
 				return result;
 			}
-			return load(bank);
+			return load(bank, sampleRate);
 		}
 
-		Result load(Bank& bank) {
+		Result load(Bank& bank, int sampleRate) {
 			VAE_PROFILER_SCOPE
 			// TODO init mixer effects
 
@@ -81,6 +81,12 @@ namespace vae { namespace core {
 				m.buffer.resize(Config::MaxBlock, Config::MaxChannels);
 			}
 
+			for (auto& s : bank.sources) {
+				if (s.signal.sampleRate && s.signal.sampleRate != sampleRate) {
+					tklb::ResamplerTpl<Sample>::resample(s.signal, sampleRate);
+				}
+			}
+
 			{
 				Lock l(mMutex);
 				if (mBanks.size() < bank.id + 1) {
@@ -92,8 +98,11 @@ namespace vae { namespace core {
 			return Result::Success;
 		}
 
-		Result addSource(BankHandle bankHandle, Source& source) {
+		Result addSource(BankHandle bankHandle, Source& source, int sampleRate) {
 			VAE_PROFILER_SCOPE
+			if (source.signal.sampleRate && source.signal.sampleRate != sampleRate) {
+				tklb::ResamplerTpl<Sample>::resample(source.signal, sampleRate);
+			}
 			auto& bank = mBanks[bankHandle];
 			Lock l(mMutex);
 			if (bank.sources.size() <= source.id) {

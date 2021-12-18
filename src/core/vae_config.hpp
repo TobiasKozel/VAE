@@ -1,6 +1,8 @@
 #ifndef _VAE_CONFIG
 #define _VAE_CONFIG
 
+#include "./vae_types.hpp"
+
 namespace vae { namespace core {
 
 	/**
@@ -29,17 +31,17 @@ namespace vae { namespace core {
 		/**
 		 * @brief How many listeners can observe 3D voices
 		 */
-		constexpr size_t MaxListeners = 4;
+		constexpr Size MaxListeners = 4;
 
 		/**
 		 * @brief How many effects a mixer channel can process
 		 */
-		constexpr size_t MaxMixerEffects = 4;
+		constexpr Size MaxMixerEffects = 4;
 
 		/**
 		 * @brief How many chained events can fit in on_start and on_end
 		 */
-		constexpr size_t MaxChainedEvents = 4;
+		constexpr Size MaxChainedEvents = 4;
 	}
 } }
 

@@ -8,8 +8,9 @@
 
 #include <fstream>
 #include "../../../external/headeronly/json.hpp"
-#include "../../../external/tklb/src/types/audio/resampler/TResampler.hpp"
-#include "../../../external/tklb/src/types/audio/fft/TOouraFFT.hpp"
+#include "../../../external/glm/glm/gtc/matrix_transform.hpp"
+// #include "../../../external/tklb/src/types/audio/resampler/TResampler.hpp"
+// #include "../../../external/tklb/src/types/audio/fft/TOouraFFT.hpp"
 
 namespace vae { namespace core {
 	struct HRTFLoader {
@@ -26,7 +27,6 @@ namespace vae { namespace core {
 
 			VAE_DEBUG("Started loading HRTF %s", path)
 			auto data = nlohmann::json::from_msgpack(file);
-
 			hrtf.originalRate = data["samplerate"];
 			hrtf.rate = sampleRate;
 
@@ -34,55 +34,52 @@ namespace vae { namespace core {
 			const Size positionCount = positions.size();
 			hrtf.positions.resize(positionCount);
 
-			Size longestIr = 0;
-			const bool needsResample = hrtf.originalRate != sampleRate;
+			Vec3 up = {
+				float(data["up"][0]),
+				float(data["up"][1]),
+				float(data["up"][2]),
+			};
 
-			AudioBuffer timeDomain;				// temporary time domain signal
-			timeDomain.sampleRate = hrtf.originalRate;
-			AudioBuffer timeDomainResampled;	// temporary time domain signal
-			timeDomainResampled.sampleRate = sampleRate;
-			tklb::ResamplerTpl<Sample> resampler;
-			tklb::FFTOoura fft;
+			Vec3 front = {
+				float(data["front"][0]),
+				float(data["front"][1]),
+				float(data["front"][2]),
+			};
+
+			LocationOrientation ref;
+			Vec3 frontNeed = Vec3(ref.front.x, ref.front.y, ref.front.z);
+			Vec3 upNeed = Vec3(ref.up.x, ref.up.y, ref.up.z);
+
+			glm::mat4x4 matchCoord = glm::lookAt(
+				Vec3(0.f, 0.f, 0.f),
+				front,
+				up
+			);
+
+			Vec3 up1 = (matchCoord * glm::vec4(up, 1.f));
+			Vec3 front1 = (matchCoord * glm::vec4(front, 1.f));
+			// These should match upNeed
+
+			const bool needsResample = hrtf.originalRate != sampleRate;
+			if (needsResample) {
+				// TODO
+				VAE_ERROR("Can't open HRTF, resampling needed!")
+				return Result::GenericFailure;
+			}
 
 			for (Size i = 0; i < positionCount; i++) {
 				HRTF::Position& p = hrtf.positions[i];
 				auto& pi = positions[i];
-				p.pos.x = pi["x"];
-				p.pos.y = pi["y"];
-				p.pos.z = pi["z"];
+				p.pos = (matchCoord * glm::vec4(pi["x"], pi["y"], pi["z"], 1.f));
 				nlohmann::json irSamples[2] = { pi["left"], pi["right"]};
 				const Size irLength = irSamples[0].size();
-				longestIr = std::max(longestIr, irLength);
-
-				if (needsResample) {
-					Size needed = double(sampleRate) / double(hrtf.originalRate) * irLength + 10;
-					if (timeDomainResampled.size() < needed) {
-						timeDomainResampled.resize(needed);
-					}
-				}
-				timeDomain.resize(irLength);
 
 				for (int c = 0; c < 2; c++) {
-					timeDomain.set(0);
-					timeDomain[0][30] = 1.0;
-					// for (Size j = 0; j < irLength; j++) {
-					// 	timeDomain[0][j] = int(irSamples[c][j]) / Sample(1 << 23);
-					// }
-					timeDomain.setValidSize(irLength);
-
-					if (needsResample) {
-						resampler.init(hrtf.originalRate, sampleRate, longestIr);
-						resampler.process(timeDomain, timeDomainResampled);
-						fft.resize(timeDomainResampled.size());
-						p.ir[c].resize(timeDomainResampled.size() / 2, 2);
-						fft.forward(timeDomainResampled, p.ir[c]);
-					} else {
-						fft.resize(timeDomain.size());
-						p.ir[c].resize(timeDomain.size() / 2, 2);
-						fft.forward(timeDomain, p.ir[c]);
+					p.ir[c].resize(irLength, 1);
+					for (Size j = 0; j < irLength; j++) {
+						p.ir[c][0][j] = irSamples[c][j];
 					}
 				}
-
 			}
 
 			VAE_DEBUG("Finished loading HRTF %s", path)

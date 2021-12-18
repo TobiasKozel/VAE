@@ -16,14 +16,11 @@
 namespace vae { namespace core {
 	class SpatialProcessor {
 		HRTF mHRTF;
-		AudioBuffer mFrequencyDomain;
 		AudioBuffer mTimeDomain;
-		tklb::FFTOoura mFFT;
+		Size mBufferPin = 0;
 	public:
 		SpatialProcessor() {
-			mFrequencyDomain.resize(Config::MaxBlock / 2, 2);
 			mTimeDomain.resize(Config::MaxBlock);
-			mFFT.resize(128);
 		}
 		/**
 		 * @brief Process a single bank
@@ -66,7 +63,7 @@ namespace vae { namespace core {
 				auto& target = mixer.buffer;
 				auto& emitter = spatial.getEmitter(v.emitter);
 
-				const Sample* in = signal[0] + v.time;
+				const Sample* const in = signal[0] + v.time;
 
 				target.setValidSize(frames); // mark mixer as active
 
@@ -102,7 +99,7 @@ namespace vae { namespace core {
 
 					switch (l.configuration) {
 					case Listener::Configuration::HRTF:
-						if (v.HRTF) {
+						if (v.HRTF && mHRTF.rate) {
 							// Only do hrtf when the voice also has it enabled
 							Sample closest = std::numeric_limits<Sample>::max();
 							constexpr Size Invalid = ~0;
@@ -119,30 +116,50 @@ namespace vae { namespace core {
 							if (closestIndex == Invalid) {
 								return;
 							}
-							const auto& ir = mHRTF.positions[closestIndex].ir;
+							const auto& hrtf    = mHRTF.positions[closestIndex];
+							const auto& irLeft  = hrtf.ir[0][0];
+							const auto& irRight = hrtf.ir[1][0];
+							const auto irLen    = hrtf.ir[0].size();
 
-							for (int c = 0; c < 1; c++) {
-								mTimeDomain.set(0);
-								mTimeDomain.set(signal, remaining, v.time);
-								mTimeDomain.setValidSize(mTimeDomain.size());
-								mFFT.forward(mTimeDomain, mFrequencyDomain);
+							for (int i = 0; i < remaining; i++) {
+								Sample leftSum = 0;
+								Sample rightSum = 0;
+								mTimeDomain[0][mBufferPin] = in[i];
 
-								auto re = mFrequencyDomain[0];
-								auto im = mFrequencyDomain[1];
-								const auto reA = ir[c][0];
-								const auto imA = ir[c][1];
-								for (Size i = 0; i < mFrequencyDomain.size(); i++) {
-									const auto _reB = re[i];
-									const auto _imB = im[i];
-									re[i] += reA[i] * _reB - imA[i] * _imB;
-									im[i] += reA[i] * _imB + imA[i] * _reB;
+								for (int n = 0; n < irLen; n++) {
+									const auto conv = mTimeDomain[0][(irLen + mBufferPin - n) % irLen];
+									leftSum  += irLeft[n]  * conv;
+									rightSum += irRight[n] * conv;
 								}
+								target[0][i] += leftSum  * distanceAttenuated;
+								target[1][i] += rightSum * distanceAttenuated;
 
-								mFFT.back(mFrequencyDomain, mTimeDomain);
-								for (Size i = 0; i < remaining; i++) {
-									target[c][i] += mTimeDomain[0][i];
-								}
+								mBufferPin = (mBufferPin + 1) % irLen;
 							}
+
+							// TODO make the frequency domainversion wirk
+							// for (int c = 0; c < 1; c++) {
+							// 	mTimeDomain.set(0);
+							// 	mTimeDomain.set(signal, remaining, v.time);
+							// 	mTimeDomain.setValidSize(mTimeDomain.size());
+							// 	mFFT.forward(mTimeDomain, mFrequencyDomain);
+
+							// 	auto re = mFrequencyDomain[0];
+							// 	auto im = mFrequencyDomain[1];
+							// 	const auto reA = ir[c][0];
+							// 	const auto imA = ir[c][1];
+							// 	for (Size i = 0; i < mFrequencyDomain.size(); i++) {
+							// 		const auto _reB = re[i];
+							// 		const auto _imB = im[i];
+							// 		re[i] += reA[i] * _reB - imA[i] * _imB;
+							// 		im[i] += reA[i] * _imB + imA[i] * _reB;
+							// 	}
+
+							// 	mFFT.back(mFrequencyDomain, mTimeDomain);
+							// 	for (Size i = 0; i < remaining; i++) {
+							// 		target[c][i] += mTimeDomain[0][i];
+							// 	}
+							// }
 							return;
 						}
 					case Listener::Configuration::Headphones:
@@ -190,6 +207,7 @@ namespace vae { namespace core {
 			return HRTFLoader::load(
 				path, rootPath, sampleRate, mHRTF
 			);
+			return Result::GenericFailure;
 		}
 	};
 

@@ -1,13 +1,14 @@
 #ifndef _VAE_SOURCE_LOADER
 #define _VAE_SOURCE_LOADER
 
-#include "../vae_config.hpp"
 #include "../vae_types.hpp"
+#include "../vae_config.hpp"
 #include "../vae_util.hpp"
 #include "../pod/vae_source.hpp"
 
 #include <string>
 #include "../../../external/tklb/src/types/audio/TWaveFile.hpp"
+#include "../../../external/tklb/src/types/audio/resampler/TResampler.hpp"
 
 namespace vae { namespace core {
 	struct SourceLoader {

@@ -13,6 +13,7 @@ void eventTriggered(const EventCallbackData* data) {
 }
 
 void logMem() {
+	return;
 	static int point = 0;
 	using lu = unsigned long;
 	printf("Memory at %i \t %lu bytes\n",
@@ -61,6 +62,8 @@ int main() {
 		config.rootPath = "../../dev/";
 	#endif
 
+	generateWav();
+
 	config.eventCallback = &eventTriggered;
 	config.internalSampleRate = rate;
 
@@ -72,7 +75,7 @@ int main() {
 
 	auto result = engine.loadBank("bank1"); logMem();
 
-	auto emitter = engine.createAutoEmitter(0, 0, 40, {{0.f, 0.f, 100.f}, {}}, 0.5); logMem();
+	auto emitter = engine.createEmitter(); logMem();
 
 	auto listener = engine.createListener(); logMem();
 
@@ -84,10 +87,11 @@ int main() {
 			engine.fireGlobalEvent(vaeb::Bank1::Event1, emitter);
 		}
 
-		for (int i = 0; i < 500; i++) {
+		for (int i = 0; i < 5000; i++) {
 			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(1000 / float(60)));
 			float t = i * 0.1;
-			engine.setEmitter(emitter, {{ float(sin(t)), float(0), float(cos(t)) }, {} }, 0);
+			// engine.setEmitter(emitter, {{ float(sin(t)), float(0), float(cos(t)) }, {} }, 0);
+			engine.setEmitter(emitter, {{ float(-1), float(0), float(0.0) }, {} }, 0);
 			// engine.update(); // needs to be ticked if EngineConfig::updateInAudioThread is false in
 		}
 	};
@@ -95,7 +99,9 @@ int main() {
 	engine.unloadBankFromId(0);
 	logMem();
 
-	int i = 0;
+	engine.stop();
+
+	logMem();
 
 	return 0;
 }

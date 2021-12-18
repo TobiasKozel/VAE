@@ -35,19 +35,28 @@ if sampleRate != int(sofa.getSamplingRate().max()):
 
 sampleRateUnit = sofa.getSamplingRateUnits() # should be hertz
 
-upVector = (sofa.getListenerUpValues()[0][0], sofa.getListenerUpValues()[0][1], sofa.getListenerUpValues()[0][2])
-frontVector = (sofa.getListenerViewValues()[0][0], sofa.getListenerViewValues()[0][1], sofa.getListenerViewValues()[0][2])
 listenerPos =  sofa.getListenerPositionValues() # should be 0, 0, 0
 
 outData = { }
 outData["samplerate"] = sampleRate
 outData["positions"] = []
 
+outData["up"] = [
+	sofa.getListenerUpValues()[0][0],
+	sofa.getListenerUpValues()[0][1],
+	sofa.getListenerUpValues()[0][2]
+]
+outData["front"] = [
+	sofa.getListenerViewValues()[0][0],
+	sofa.getListenerViewValues()[0][1],
+	sofa.getListenerViewValues()[0][2]
+]
+
 for i in range(0, positions):
 	position = {}
-	position["x"] = round(sourcePositions[i][0], 4) # azimuth
-	position["y"] = round(sourcePositions[i][1], 4) # elevation
-	position["z"] = round(sourcePositions[i][2], 4) # radius/distance
+	position["x"] = sourcePositions[i][0]
+	position["y"] = sourcePositions[i][1]
+	position["z"] = sourcePositions[i][2]
 	if coordinateType == "cartesian":
 		# radius = math.sqrt(x * x + y * y + z * z)
 		# todo the rest
@@ -55,8 +64,6 @@ for i in range(0, positions):
 
 	ir = irs[i, :, :]
 	ir = ir.swapaxes(-1,0)
-	ir *= (1 << 23) # to 24 bit
-	ir = np.ma.round(ir).astype(int)
 	position["left"] = ir[:, 0].tolist()
 	position["right"] = ir[:, 1].tolist()
 	outData["positions"].append(position)
