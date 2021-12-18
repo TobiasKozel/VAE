@@ -5,7 +5,7 @@
 #include "../vae_config.hpp"
 #include "./vae_mixer.hpp"
 
-#include <array>
+
 
 namespace vae { namespace core {
 	struct Event {
@@ -22,8 +22,8 @@ namespace vae { namespace core {
 		EventHandle id = InvalidEventHandle;						// Own id
 		SourceHandle source = InvalidSourceHandle;					// Handle to a source
 		Sample gain = 1.0;											// Volume applied to triggered voice
-		std::array<EventHandle, Config::MaxChainedEvents> on_start;	// Events called when the source starts playing
-		std::array<EventHandle, Config::MaxChainedEvents> on_end;	// Events fired once the source is finished, not called when there's no source
+		StackBuffer<EventHandle, Config::MaxChainedEvents> on_start;// Events called when the source starts playing
+		StackBuffer<EventHandle, Config::MaxChainedEvents> on_end;	// Events fired once the source is finished, not called when there's no source
 		NameString name;											// Name for debugging
 
 		/**

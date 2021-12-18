@@ -461,4 +461,4 @@ namespace vae { namespace core {
 	constexpr int _VAE_ENGINE_SIZE = sizeof(Engine);
 } } // namespace vae::core
 
-#endif // VAE_ENGINE
+#endif // _VAE_ENGINE

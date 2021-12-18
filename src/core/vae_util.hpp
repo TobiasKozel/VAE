@@ -7,7 +7,12 @@
 #include "./vae_logger.hpp"
 #include "../../include/vae/vae.hpp"
 
-#define VAE_ASSERT(condition) TKLB_ASSERT(condition)
+#ifndef VAE_RELEASE
+	#define VAE_ASSERT(condition) TKLB_ASSERT(condition)
+#else
+	VAE_ASSERT(condition)
+#endif // VAE_RELEASE
+
 namespace vae { namespace core {
 	inline void splitGlobalEventHandle(
 		const GlobalEventHandle& handle,

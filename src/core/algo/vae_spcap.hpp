@@ -13,7 +13,7 @@ namespace vae { namespace core {
 		 * @brief Class handling SPCAP for arbitrary speaker setups
 		 * @tparam N Amount of speakers. Does not include LFE.
 		 */
-		template <int N>
+		template <Size N>
 		class SPCAPConfig {
 			struct Speaker {
 				Vec3 dir;			// Position of the speaker on a unit sphere
@@ -28,13 +28,13 @@ namespace vae { namespace core {
 			 * @param positions Speaker positions, will be normalized.
 			 */
 			SPCAPConfig(const std::initializer_list<Vec3>& positions) {
-				int i = 0;
+				Size i = 0;
 				for (const auto& speaker : positions) {
 					mSpeakers[i] = { glm::normalize(speaker), Sample(0) };
 					i++;
 				}
 				for (i = 0; i < N; i++) {
-					for (int j = 0; j < N; j++) {
+					for (Size j = 0; j < N; j++) {
 						// Calculate the effective number of speakers according to (2)
 						// Can be done in adavnce and ideally at compiletime
 						// since the positions of the speakers will not change
@@ -44,7 +44,7 @@ namespace vae { namespace core {
 				}
 			}
 
-			constexpr int speakers() const { return N; }
+			constexpr Size speakers() const { return N; }
 
 			/**
 			 * @brief Calculate per channel volumes for a given direction
@@ -54,14 +54,14 @@ namespace vae { namespace core {
 			 * @param attenuation Distance attenuation multiplied on the result
 			 * @param spread Value from 0-1 controlling "wideness" of the sound
 			 */
-			void pan(const Vec3& direction, Sample result[N], Sample attenuation, Sample spread) const {
+			inline void pan(const Vec3& direction, Sample result[N], Sample attenuation, Sample spread) const {
 				VAE_PROFILER_SCOPE
 				// TODO make spread change based on distance and use something like radius instead
 				Sample sumGains = 0.0;
 				// const Sample tightness = (Sample(1) - spread) * Sample(10) + Sample(0.05);
 				const Sample tightness = 1.0;
 				std::fill_n(result, N, Sample(0));
-				for (int i = 0; i < N; i++) {
+				for (Size i = 0; i < N; i++) {
 					Sample gain = glm::dot(mSpeakers[i].dir, direction) + Sample(1.0); // (1)
 					gain  = powf(gain, tightness);	// (9)
 					gain *= Sample(0.5);			// (1)
@@ -71,12 +71,14 @@ namespace vae { namespace core {
 					sumGains += gain;				// (4)
 				}
 
-				for (int i = 0; i < N; i++) {
+				for (Size i = 0; i < N; i++) {
 					result[i] = sqrtf(result[i] / sumGains) * attenuation; // (8)
 				}
 			}
 		};
+
 		// Initialized below because c++ 14
+		static const SPCAPConfig<1> MonoSPCAP;
 		static const SPCAPConfig<2> HeadphoneSPCAP;
 		static const SPCAPConfig<2> StereroSPCAP;
 		static const SPCAPConfig<4> QuadSPCAP;
@@ -86,6 +88,10 @@ namespace vae { namespace core {
 	/**
 	 * TODO there's probably a smart  way to make this all constexpr
 	 */
+
+	const SPCAP::SPCAPConfig<1> SPCAP::MonoSPCAP = {
+		{  0, +1, 0}					// Center
+	};
 	const SPCAP::SPCAPConfig<2> SPCAP::HeadphoneSPCAP = {
 		{ -1, 0, 0}, { +1, 0, 0}		// LR Side
 	};

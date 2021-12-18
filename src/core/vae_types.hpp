@@ -18,22 +18,22 @@
 #include "../../include/vae/vae.hpp"
 #include <string>
 #include <vector>
+#include <array>
 
 namespace vae { namespace core {
-	//
-	template <class T> using HeapBuffer = std::vector<T>;
-	// template <class T> using HeapBuffer = tklb::HeapBuffer<T>;
-
-
-	constexpr int _VAE_SIZE_TKLB = sizeof(tklb::HeapBuffer<int>);
-	constexpr int _VAE_SIZE_STD = sizeof(std::vector<int>);
-
 	using Sample = float;					// Default sample types used whereever possible
 	using Size = unsigned int;				// How the elements are addressed in the heapbuffer
 	using Time = double;					// Time sotred in seconds
 	using Uchar = unsigned char;
 	using Uint = unsigned int;
 	using Vec3 = glm::vec3;
+
+	template <class T, Size N> using StackBuffer = std::array<T, N>;
+	template <class T> using HeapBuffer = std::vector<T>;
+
+	// use this once it's viable
+	constexpr int _VAE_SIZE_TKLB = sizeof(tklb::HeapBuffer<int>);
+	constexpr int _VAE_SIZE_STD = sizeof(std::vector<int>);
 
 	using AudioBuffer = tklb::AudioBufferTpl<Sample>;
 	template <class T> using AudioBufferTpl = tklb::AudioBufferTpl<T>;

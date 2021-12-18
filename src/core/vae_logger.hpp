@@ -33,10 +33,11 @@
 		#define VAE_DEBUG_EVENT(msg, ...) ;
 	#endif // VAE_LOG_EVENTS
 #else
+	// TODO dont use print f
 	#define VAE_DEBUG(msg, ...) ;
 	#define VAE_INFO(msg, ...)  ;
 	#define VAE_WARN(msg, ...)  ;
-	#define VAE_ERROR(msg, ...) ;
+	#define VAE_ERROR(msg, ...) printf("ERROR\t| %s:%i \t| " msg "\n", __FILE__, __LINE__, ## __VA_ARGS__);
 	#define VAE_DEBUG_EVENT(msg, ...) ;
 #endif // _NDEBUG
 

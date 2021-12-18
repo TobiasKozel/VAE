@@ -3,6 +3,8 @@
 
 #include "../vae_types.hpp"
 #include <limits>
+#include "../vae_config.hpp"
+
 namespace vae { namespace core {
 	/**
 	 * @brief Barebones voice.
@@ -10,11 +12,11 @@ namespace vae { namespace core {
 	struct Voice {
 		bool spatialized : 1;	// If the voice has spatialization data
 		bool chainedEvents : 1;	// If this voice triggers events after it stopped playing
-		bool started : 1;
+		bool started : 1;		// Whether the voice has started playing
 		bool audible : 1;		// Whether the voice was heard by any listener
 		bool HRTF : 1;			// If the voice should be rendered using hrtfs
-		bool mixMatrix : 1;		// If the voice has a mix matrix
-		bool filtered : 1;		// If the voice is filtered
+		bool mixMatrix : 1;		// TODO If the voice has a mix matrix
+		bool filtered : 1;		// TODO If the voice is filtered
 		bool _placeholder : 1;
 		BankHandle bank;							// Which bank it belongs to
 		SourceHandle source = InvalidSourceHandle;	// If invalid, means voice is not playing.
