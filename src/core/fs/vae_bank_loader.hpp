@@ -14,14 +14,16 @@
 #include "../../../external/headeronly/json.hpp"
 
 namespace vae { namespace core {
-	struct BankLoader {
+	class BankLoader {
+		SourceLoader mSourceLoader;
+	public:
 		/**
 		 * @brief Load a bank.json and all wav files referenced in it.
 		 * @param path The path to the bank folder. Folder must contain a bank.json. Wav files are relative to this path
 		 * @param bank The bank object to populae
 		 * @return Result
 		 */
-		static Result load(const char* path, const char* rootPath, Bank& bank) {
+		Result load(const char* path, const char* rootPath, Bank& bank) {
 			VAE_PROFILER_SCOPE
 			/**
 			 *					Open file and decode json
@@ -62,7 +64,7 @@ namespace vae { namespace core {
 					if (format == "ogg")		{ s.format = Source::Format::ogg; }
 					if (format == "generator")	{ s.format = Source::Format::generator; }
 
-					auto result = SourceLoader::load(s, folder);
+					auto result = mSourceLoader.load(s, folder);
 					if (result != Result::Success) {
 						VAE_ERROR("Failed to load source %s", s.path.c_str())
 					}

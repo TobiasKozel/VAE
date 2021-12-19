@@ -9,7 +9,9 @@
 
 namespace vae { namespace core {
 
-	struct MixerProcessor {
+	class MixerProcessor {
+		EffectsProcessor mEffectsProcessor;
+	public:
 		/**
 		 * @brief Process the mixers for a single bank
 		 *
@@ -17,7 +19,7 @@ namespace vae { namespace core {
 		 * @param banks
 		 * @param frames
 		 */
-		static void mix(
+		void mix(
 			VoiceManger& manager, Bank& bank, SampleIndex frames
 		) {
 			VAE_PROFILER_SCOPE
@@ -34,7 +36,7 @@ namespace vae { namespace core {
 				if (sourceMixer.buffer.validSize() == 0) { continue; }
 
 				for (auto& effect : sourceMixer.effects) {
-					EffectsProcessor::mix(effect, sourceMixer.buffer);
+					mEffectsProcessor.mix(effect, sourceMixer.buffer);
 				}
 
 				// Apply mixer volume
@@ -53,7 +55,7 @@ namespace vae { namespace core {
 
 			auto& masterMixer = bank.mixers[Mixer::MasterMixerHandle];
 			for (auto& effect : masterMixer.effects) {
-				EffectsProcessor::mix(effect, masterMixer.buffer);
+				mEffectsProcessor.mix(effect, masterMixer.buffer);
 			}
 			// Apply gain on master as well
 			masterMixer.buffer.multiply(masterMixer.gain);

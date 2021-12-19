@@ -5,10 +5,11 @@
 #include "./vae_util.hpp"
 #include "./pod/vae_bank.hpp"
 #include "./vae_voice_manager.hpp"
+#include "./vae_bank_manager.hpp"
 
 namespace vae { namespace core {
 	struct EventManager {
-		static Result fireEvent(
+		Result fireEvent(
 			const BankHandle& bankHandle, const EventHandle& eventHandle,
 			const EmitterHandle& emitterHandle, const MixerHandle& mixerHandle,
 			BankManager& banks, VoiceManger& voiceManger, const EngineConfig& config

@@ -6,7 +6,7 @@
 
 namespace vae { namespace core {
 	struct EffectsProcessor {
-		static void mix(Effect& effect, AudioBuffer& buffer) {
+		void mix(Effect& effect, AudioBuffer& buffer) {
 			// TODO processing
 		}
 	}; // EffectsProcessor

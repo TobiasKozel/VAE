@@ -18,7 +18,7 @@ namespace vae { namespace core {
 		 * @param frames
 		 * @param sampleRate
 		 */
-		static void mix(
+		void mix(
 			VoiceManger& manager, Bank& bank,
 			SampleIndex frames, Size sampleRate
 		) {

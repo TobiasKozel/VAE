@@ -19,6 +19,7 @@ namespace vae { namespace core {
 		HRTF mHRTF;
 		AudioBuffer mTimeDomain;
 		Size mBufferPin = 0;
+		HRTFLoader mHRTFLoader;
 	public:
 		SpatialProcessor() {
 			mTimeDomain.resize(Config::MaxBlock);
@@ -185,7 +186,7 @@ namespace vae { namespace core {
 		}
 
 		Result loadHRTF(const char* path, const char* rootPath, Size sampleRate) {
-			return HRTFLoader::load(path, rootPath, sampleRate, mHRTF);
+			return mHRTFLoader.load(path, rootPath, sampleRate, mHRTF);
 		}
 	};
 

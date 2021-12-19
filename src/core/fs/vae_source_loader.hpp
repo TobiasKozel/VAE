@@ -18,7 +18,7 @@ namespace vae { namespace core {
 		 * @param path
 		 * @return Result
 		 */
-		static Result load(Source& s, std::string path) {
+		Result load(Source& s, std::string path) {
 			VAE_PROFILER_SCOPE
 			// TODO handle path always relative to some predefined root path
 			path = path + s.path;

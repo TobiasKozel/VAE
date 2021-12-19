@@ -17,6 +17,16 @@
 #define VAE_VERSION_MINOR 0		// for adding functionality in a backwards-compatible manner
 #define VAE_VERSION_PATCH 1		// for backwards-compatible bug fixes
 
+/**
+ * @brief Contains generated Event ids using generate_bank_defines.py
+ * @details Header can be included and used for autocompletion when calling
+ * vae::EnginePimpl::fireGlobalEvent or vae::core::Engine::fireGlobalEvent
+ */
+namespace vaeb { }
+
+/**
+ * @brief Contains everything related to vae
+ */
 namespace vae {
 	using SmallHandle		= unsigned char;
 	using GenericHandle 	= unsigned short;

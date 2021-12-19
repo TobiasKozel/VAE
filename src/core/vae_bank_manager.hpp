@@ -17,7 +17,7 @@ namespace vae { namespace core {
 
 		HeapBuffer<Bank> mBanks;		// All the currently loaded banks
 		Mutex mMutex;					// Lock the bank for changes
-
+		BankLoader mBankLoader;
 	public:
 		HeapBuffer<Bank>& all() {
 			return mBanks;
@@ -58,7 +58,7 @@ namespace vae { namespace core {
 			VAE_PROFILER_SCOPE
 			VAE_INFO("Loading bank from file %s%s", rootPath, path)
 			Bank bank;
-			auto result = BankLoader::load(path, rootPath, bank);
+			auto result = mBankLoader.load(path, rootPath, bank);
 			if (result != Result::Success) {
 				VAE_ERROR("Failed to load bank from file %s%s with error %i", rootPath, path, result)
 				return result;

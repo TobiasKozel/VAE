@@ -23,37 +23,67 @@ class EnginePimpl {
 	EnginePimpl(const EnginePimpl&);
 	~EnginePimpl() { };
 public:
-	static EnginePimpl* create();
-	static EnginePimpl* create(const EngineConfig& config);
+	static EnginePimpl* _VAE_API_EXPORT create();
+	static EnginePimpl* _VAE_API_EXPORT create(const EngineConfig& config);
 
-	_VAE_API_EXPORT void destroy();
+	void _VAE_API_EXPORT destroy();
 
-	_VAE_API_EXPORT Result start ();
+	/**
+	 * @brief Tries to open default device and start audio thread.
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT start ();
 
-	_VAE_API_EXPORT Result stop ();
+	/**
+	 * @brief Stops processing and waits for audio thead to clean up
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT stop ();
 
-	_VAE_API_EXPORT void update ();
+	/**
+	 * @brief Update function needs to be called regularly to handle outbound events.
+	 * If this isn't called regularly events might be lost.
+	 */
+	void _VAE_API_EXPORT update ();
 
-	_VAE_API_EXPORT Result fireEvent (
+	/**
+	 * @brief Main mechanism to start and stop sounds
+	 *
+	 * @param bankHandle bank id where the event is provided
+	 * @param eventHandle id of the event
+	 * @param emitterHandle optional handle of the emitter, needed for spatial audio
+	 * @param mixerHandle id of mixer channel sound will be routed to, this will override the one set in the event
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT fireEvent (
 		BankHandle bank,
 		EventHandle eventHandle,
 		EmitterHandle emitterHandle = InvalidEmitterHandle,
 		MixerHandle mixerHandle = InvalidMixerHandle
 	);
 
-	_VAE_API_EXPORT Result fireGlobalEvent (
+	/**
+	 * @brief Works like fireEvent but with a global Event identifier
+	 *
+	 * @param globalHandle The GlobalEventHandle combines both bank and event id
+	 * @param emitterHandle optional handle of the emitter, needed for spatial audio
+	 * @param mixerHandle id of mixer channel sound will be routed to, this will override the one set in the event
+	 * @see fireEvent
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT fireGlobalEvent (
 		GlobalEventHandle globalHandle,
 		EmitterHandle emitterHandle = InvalidEmitterHandle,
 		MixerHandle mixerHandle = InvalidMixerHandle
 	);
 
-	_VAE_API_EXPORT Result stopEmitter (
+	Result _VAE_API_EXPORT stopEmitter (
 		EmitterHandle emitter
 	);
 
-	_VAE_API_EXPORT EmitterHandle createEmitter ();
+	EmitterHandle _VAE_API_EXPORT createEmitter ();
 
-	_VAE_API_EXPORT EmitterHandle createAutoEmitter (
+	EmitterHandle _VAE_API_EXPORT createAutoEmitter (
 		BankHandle bank,
 		EventHandle event,
 		float maxDist,
@@ -61,50 +91,79 @@ public:
 		float spread
 	);
 
-	_VAE_API_EXPORT Result addEmitter (
+	Result _VAE_API_EXPORT addEmitter (
 		EmitterHandle h
 	);
 
-	_VAE_API_EXPORT Result removeEmitter (
+	Result _VAE_API_EXPORT removeEmitter (
 		EmitterHandle h
 	);
 
-	_VAE_API_EXPORT Result setEmitter (
+	Result _VAE_API_EXPORT setEmitter (
 		EmitterHandle emitter,
 		const LocationDirection& locDir,
 		float spread
 	);
 
-	_VAE_API_EXPORT ListenerHandle createListener ();
+	ListenerHandle _VAE_API_EXPORT createListener ();
 
-	_VAE_API_EXPORT Result removeListener (
+	Result _VAE_API_EXPORT removeListener (
 		ListenerHandle listener
 	);
 
-	_VAE_API_EXPORT Result setListener (
+	/**
+	 * @brief Set the position of a listener
+	 * @param listener
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT setListener (
 		ListenerHandle listener,
 		const LocationOrientation& locOr
 	);
 
-	_VAE_API_EXPORT Result loadHRTF (
+	Result _VAE_API_EXPORT loadHRTF (
 		const char* path
 	);
 
-	_VAE_API_EXPORT Result loadBank (
+	/**
+	 * @brief Load bank from filesystem
+	 * Locks audio thread
+	 * @param path
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT loadBank (
 		const char* path
 	);
 
-	_VAE_API_EXPORT Result unloadBankFromPath (
+	/**
+	 * @brief Unload bank from path
+	 * Locks audio thread
+	 * @param path
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT unloadBankFromPath (
 		const char* path
 	);
 
-	_VAE_API_EXPORT Result unloadBankFromId (
+	/**
+	 * @brief Unload bank from handle
+	 * Locks audio thread
+	 * @param bankHandle
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT unloadBankFromId (
 		BankHandle bankHandle
 	);
 
-	_VAE_API_EXPORT void unloadAllBanks ();
+	/**
+	 * @brief Unload every bank and data associated with it
+	 */
+	void _VAE_API_EXPORT unloadAllBanks ();
 
-	_VAE_API_EXPORT bool checkVersion (
+	/**
+	 * @brief Check if the compiled version matches
+	 */
+	bool _VAE_API_EXPORT checkVersion (
 		int major,
 		int minor,
 		int patch

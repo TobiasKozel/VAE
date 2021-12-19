@@ -18,6 +18,7 @@ class Func:
 		self.returns = ""
 		self.text = ""
 		self.parameters = []
+		self.docblock = []
 
 functions = []
 
@@ -44,8 +45,22 @@ for i in range(len(lines)):
 			if line.find(")") != -1:
 				# function head end found
 				break
+
+	if (lines[i - 1].find("*/") != -1):
+		# has docblock
+		commentStartLine = i - 1
+		# search the previous 20 line for block start
+		while ((i - 20) < commentStartLine):
+			l = lines[commentStartLine].replace("\t", "")
+			func.docblock.append(l)
+			if (l.find("/**") != -1):
+				func.docblock.reverse()
+				# found the start
+				break
+			commentStartLine -= 1
+
 	parts = func.text.split()
-	func.returns = parts[1]
+	func.returns = parts[0]
 	nameParts = parts[2].split("(")
 	func.name = nameParts[0]
 	if (nameParts[1] == ")"):
@@ -101,16 +116,19 @@ class %s {
 	%s(const %s&);
 	~%s() { };
 public:
-	static %s* create();
-	static %s* create(const EngineConfig& config);
+	static %s* _VAE_API_EXPORT create();
+	static %s* _VAE_API_EXPORT create(const EngineConfig& config);
 
-	_VAE_API_EXPORT void destroy();
+	void _VAE_API_EXPORT destroy();
 
 """%((className,) * 7))
 
 for func in functions:
 	text = ""
-	text += f"\t_VAE_API_EXPORT {func.returns} {func.name} ("
+	for doc in func.docblock:
+		text += f"\t{doc}"
+
+	text += f"\t{func.returns} _VAE_API_EXPORT {func.name} ("
 	for i in range(len(func.parameters)):
 		param = func.parameters[i]
 		text += f"\n\t\t{param.typename} {param.name}"

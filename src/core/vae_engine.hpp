@@ -26,6 +26,9 @@
 #include <thread>				// mAudioThread
 #include <condition_variable>	// mAudioConsumed
 
+/**
+ * @brief Marks a function for export to the generated EnginePimpl class
+ */
 #define _VAE_PUBLIC_API
 
 
@@ -44,11 +47,15 @@ namespace vae { namespace core {
 		VoiceManger mVoiceManager;		// Holds and handle voices
 		SpatialManager mSpatialManager;	// Holds and manages spatial emitters
 		BankManager mBankManager;		// Holds and manages banks
+		EventManager mEventManager;
 
+		Processor mProcessor;
+		MixerProcessor mMixerProcessor;
 		SpatialProcessor mSpatialProcessor;
 
-		AudioBuffer mScratchBuffer;		// used to combine the signal from all banks and push it to the device
+
 		Device* mDevice = nullptr;		// Output device
+		AudioBuffer mScratchBuffer;		// used to combine the signal from all banks and push it to the device
 		SampleIndex mTime = 0;			// Global engine time in samples
 		Time mTimeFract = 0;			// Global engine time in seconds
 		Sample mLimiterLastPeak = 1.0;	// Master limiter last peak
@@ -89,11 +96,11 @@ namespace vae { namespace core {
 
 					// TODO PERF VAE banks could be processed in parallel
 					mBankManager.forEach([&](Bank& i) {
-						Processor::mix(mVoiceManager, i, remaining, sampleRate);
+						mProcessor.mix(mVoiceManager, i, remaining, sampleRate);
 						mSpatialProcessor.mix(
 							mVoiceManager, i, mSpatialManager, remaining, sampleRate
 						);
-						MixerProcessor::mix(mVoiceManager, i, remaining);
+						mMixerProcessor.mix(mVoiceManager, i, remaining);
 						auto& bankMaster = i.mixers[Mixer::MasterMixerHandle].buffer;
 						mScratchBuffer.add(bankMaster);
 						bankMaster.set(0);
@@ -196,7 +203,7 @@ namespace vae { namespace core {
 		 * @brief Tries to open default device and start audio thread.
 		 * @return Result
 		 */
-		_VAE_PUBLIC_API Result start() {
+		Result _VAE_PUBLIC_API start() {
 			VAE_PROFILER_SCOPE
 			Backend& backend = CurrentBackend::instance();
 			mDevice = backend.createDevice(mConfig);
@@ -216,7 +223,7 @@ namespace vae { namespace core {
 		 * @brief Stops processing and waits for audio thead to clean up
 		 * @return Result
 		 */
-		_VAE_PUBLIC_API Result stop() {
+		Result _VAE_PUBLIC_API stop() {
 			VAE_PROFILER_SCOPE
 			Lock l(mMutex);
 			if (mAudioThreadRunning) {
@@ -240,7 +247,7 @@ namespace vae { namespace core {
 		 * @brief Update function needs to be called regularly to handle outbound events.
 		 * If this isn't called regularly events might be lost.
 		 */
-		_VAE_PUBLIC_API void update() {
+		void _VAE_PUBLIC_API update() {
 			VAE_PROFILER_FRAME_MARK_START(_VAE_PROFILER_UPDATE)
 			// Update emitters and start voices nearby
 			mSpatialManager.update(mVoiceManager, mBankManager);
@@ -270,7 +277,7 @@ namespace vae { namespace core {
 		 * @param mixerHandle id of mixer channel sound will be routed to, this will override the one set in the event
 		 * @return Result
 		 */
-		_VAE_PUBLIC_API Result fireEvent(
+		Result _VAE_PUBLIC_API fireEvent(
 			BankHandle bank, EventHandle eventHandle,
 			EmitterHandle emitterHandle = InvalidEmitterHandle,
 			MixerHandle mixerHandle = InvalidMixerHandle
@@ -278,14 +285,23 @@ namespace vae { namespace core {
 			if (emitterHandle != InvalidEmitterHandle && !mSpatialManager.hasEmitter(emitterHandle)) {
 				VAE_ERROR("No emitter %u registered, voice won't be audible.", emitterHandle)
 			}
-			return EventManager::fireEvent(
+			return mEventManager.fireEvent(
 				bank, eventHandle,
 				emitterHandle, mixerHandle,
 				mBankManager, mVoiceManager, mConfig
 			);
 		}
 
-		_VAE_PUBLIC_API Result fireGlobalEvent(
+		/**
+		 * @brief Works like fireEvent but with a global Event identifier
+		 *
+		 * @param globalHandle The GlobalEventHandle combines both bank and event id
+		 * @param emitterHandle optional handle of the emitter, needed for spatial audio
+		 * @param mixerHandle id of mixer channel sound will be routed to, this will override the one set in the event
+		 * @see fireEvent
+		 * @return Result
+		 */
+		Result _VAE_PUBLIC_API fireGlobalEvent(
 			GlobalEventHandle globalHandle,
 			EmitterHandle emitterHandle = InvalidEmitterHandle,
 			MixerHandle mixerHandle = InvalidMixerHandle
@@ -299,7 +315,7 @@ namespace vae { namespace core {
 		}
 
 
-		_VAE_PUBLIC_API Result stopEmitter(EmitterHandle emitter) {
+		Result _VAE_PUBLIC_API stopEmitter(EmitterHandle emitter) {
 			return mVoiceManager.stopEmitter(emitter);
 		}
 
@@ -313,27 +329,27 @@ namespace vae { namespace core {
 
 #pragma region emitter
 
-		_VAE_PUBLIC_API EmitterHandle createEmitter() {
+		EmitterHandle _VAE_PUBLIC_API createEmitter() {
 			return mSpatialManager.createEmitter();
 		}
 
-		_VAE_PUBLIC_API EmitterHandle createAutoEmitter(
+		EmitterHandle _VAE_PUBLIC_API createAutoEmitter(
 			BankHandle bank, EventHandle event, float maxDist,
 			const LocationDirection& locDir, float spread
 		) {
 			return mSpatialManager.createAutoEmitter(bank, event, maxDist, locDir, spread);
 		}
 
-		_VAE_PUBLIC_API Result addEmitter(EmitterHandle h) {
+		Result _VAE_PUBLIC_API addEmitter(EmitterHandle h) {
 			return mSpatialManager.addEmitter(h);
 		}
 
-		_VAE_PUBLIC_API Result removeEmitter(EmitterHandle h) {
+		Result _VAE_PUBLIC_API removeEmitter(EmitterHandle h) {
 			mVoiceManager.stopEmitter(h);
 			return mSpatialManager.removeEmitter(h);
 		}
 
-		_VAE_PUBLIC_API Result setEmitter(
+		Result _VAE_PUBLIC_API setEmitter(
 			EmitterHandle emitter, const LocationDirection& locDir,
 			float spread
 		) {
@@ -344,11 +360,11 @@ namespace vae { namespace core {
 		// 	return mVoiceManager.stopEmitter(emitter);
 		// }
 
-		_VAE_PUBLIC_API ListenerHandle createListener() {
+		ListenerHandle _VAE_PUBLIC_API createListener() {
 			return mSpatialManager.createListener();
 		}
 
-		_VAE_PUBLIC_API Result removeListener(ListenerHandle listener) {
+		Result _VAE_PUBLIC_API removeListener(ListenerHandle listener) {
 			return mSpatialManager.removeListener(listener);
 		}
 
@@ -357,11 +373,11 @@ namespace vae { namespace core {
 		 * @param listener
 		 * @return Result
 		 */
-		_VAE_PUBLIC_API Result setListener(ListenerHandle listener, const LocationOrientation& locOr) {
+		Result _VAE_PUBLIC_API setListener(ListenerHandle listener, const LocationOrientation& locOr) {
 			return mSpatialManager.setListener(listener, locOr);
 		}
 
-		_VAE_PUBLIC_API Result loadHRTF(const char* path) {
+		Result _VAE_PUBLIC_API loadHRTF(const char* path) {
 			return mSpatialProcessor.loadHRTF(
 				path, mConfig.rootPath,
 				mConfig.internalSampleRate
@@ -379,7 +395,7 @@ namespace vae { namespace core {
 		 * @param path
 		 * @return Result
 		 */
-		_VAE_PUBLIC_API Result loadBank(const char* path) {
+		Result _VAE_PUBLIC_API loadBank(const char* path) {
 			return mBankManager.load(path, mConfig.rootPath, mConfig.internalSampleRate);
 		}
 
@@ -425,7 +441,7 @@ namespace vae { namespace core {
 		 * @param path
 		 * @return Result
 		 */
-		_VAE_PUBLIC_API Result unloadBankFromPath(const char* path) {
+		Result _VAE_PUBLIC_API unloadBankFromPath(const char* path) {
 			return mBankManager.unloadFromPath(path);
 		}
 
@@ -435,14 +451,14 @@ namespace vae { namespace core {
 		 * @param bankHandle
 		 * @return Result
 		 */
-		_VAE_PUBLIC_API Result unloadBankFromId(BankHandle bankHandle) {
+		Result _VAE_PUBLIC_API unloadBankFromId(BankHandle bankHandle) {
 			return mBankManager.unloadFromId(bankHandle);
 		}
 
 		/**
 		 * @brief Unload every bank and data associated with it
 		 */
-		_VAE_PUBLIC_API void unloadAllBanks() {
+		void _VAE_PUBLIC_API unloadAllBanks() {
 			mBankManager.unloadAll();
 		}
 #pragma endregion bank_handling
@@ -450,7 +466,7 @@ namespace vae { namespace core {
 		/**
 		 * @brief Check if the compiled version matches
 		 */
-		_VAE_PUBLIC_API bool checkVersion(int major, int minor, int patch) {
+		bool _VAE_PUBLIC_API checkVersion(int major, int minor, int patch) {
 			return
 				VAE_VERSION_MAJOR == major &&
 				VAE_VERSION_MINOR == minor &&
