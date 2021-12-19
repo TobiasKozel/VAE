@@ -1,4 +1,4 @@
-# Public API
+# VAE /include/vae/
 Here are the public includes for the Engine
 
 ## vae_pimpl.hpp

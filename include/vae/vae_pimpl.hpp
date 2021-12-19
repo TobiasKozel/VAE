@@ -18,6 +18,13 @@
 #endif
 
 namespace vae {
+/**
+ * @brief Sealed of version of vae::core::Engine
+ * @details There are a few function, which aren't exported
+ * due to the fact that they would pull all the dependencies like
+ * tklb::AudioBuffer back in.
+ * @see vae::core::Engine
+ */
 class EnginePimpl {
 	EnginePimpl();
 	EnginePimpl(const EnginePimpl&);

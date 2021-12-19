@@ -31,7 +31,10 @@ lib
 *.sofa
 *.wav
 **/doc/*
-
+**/*_gen.hpp
+**/*_gen.cpp
+**/*_gen.h
+**/*_gen.c
 docs/doxygen
 docs/_build
 docs/_static

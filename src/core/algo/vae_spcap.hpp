@@ -16,7 +16,7 @@ namespace vae { namespace core {
 		template <Size N>
 		class SPCAPConfig {
 			struct Speaker {
-				Vec3 dir;			// Position of the speaker on a unit sphere
+				Vec3 dir;			///< Position of the speaker on a unit sphere
 				Sample effective;	//
 			};
 			Speaker mSpeakers[N];

@@ -12,9 +12,9 @@ const char* const _VAE_PROFILER_UPDATE = "Update Frame";
 	#define VAE_PROFILER_FRAME_MARK_END(name)	FrameMarkEnd(name)
 	#define VAE_PROFILER_SCOPE		ZoneScoped
 #else
-	#define VAE_PROFILER_FRAME_MARK_START(name)
-	#define VAE_PROFILER_FRAME_MARK_END(name)
-	#define VAE_PROFILER_SCOPE
+	#define VAE_PROFILER_FRAME_MARK_START(name)		///< Starts a named frame, uses const defined above to maintain the same pointer
+	#define VAE_PROFILER_FRAME_MARK_END(name)		///< Stops a named frame
+	#define VAE_PROFILER_SCOPE						///< Profiles a scope
 #endif // VAE_USE_PROFILER
 
 #endif // _VAE_PROFILER

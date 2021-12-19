@@ -27,7 +27,9 @@
 #include <condition_variable>	// mAudioConsumed
 
 /**
- * @brief Marks a function for export to the generated EnginePimpl class
+ * @brief Marks a function for export to the generated vae::EnginePimpl class
+ * [generated from generate_pimpl.py](../../scripts/README.md)
+ * @see vae::EnginePimpl
  */
 #define _VAE_PUBLIC_API
 

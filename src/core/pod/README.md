@@ -1,4 +1,4 @@
-# POD
+# VAE /src/core/pod/
 Plain Old Data Structs which are used drive the sound engine
 
 ## Bank

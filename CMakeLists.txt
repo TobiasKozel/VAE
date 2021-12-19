@@ -10,7 +10,7 @@ project(
 	LANGUAGES CXX
 )
 
-option(BUILD_SHARED_LIBS "Build shared lib" OFF)
+option(BUILD_SHARED_LIBS "Build shared lib" OFF) # TODO always build this and make it work in dev
 option(VAE_BUILD_PIMPL "Build PIMPL API" OFF)
 option(VAE_PROFILER "Use profiler" OFF)
 option(VAE_BACKEND_PORTAUDIO "Compile with port audio" OFF)
