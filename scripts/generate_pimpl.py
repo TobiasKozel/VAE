@@ -1,3 +1,5 @@
+# @addtogroup vae_scripts
+
 import os
 import sys
 token = "_VAE_PUBLIC_API"

@@ -4,6 +4,9 @@
 #include "../vae_types.hpp"
 
 namespace vae { namespace core {
+	/**
+	 * @brief Unused for now
+	 */
 	struct VoiceFiltered {
 		Time timeFract = 0.0;					// Current time in seconds
 	};

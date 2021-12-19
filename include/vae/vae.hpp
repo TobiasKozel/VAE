@@ -13,9 +13,9 @@
 #define _VAE_API
 
 // see https://semver.org/
-#define VAE_VERSION_MAJOR 0		// for incompatible API changes
-#define VAE_VERSION_MINOR 0		// for adding functionality in a backwards-compatible manner
-#define VAE_VERSION_PATCH 1		// for backwards-compatible bug fixes
+#define VAE_VERSION_MAJOR 0		//< for incompatible API changes
+#define VAE_VERSION_MINOR 0		//< for adding functionality in a backwards-compatible manner
+#define VAE_VERSION_PATCH 1		//< for backwards-compatible bug fixes
 
 /**
  * @brief Contains generated Event ids using generate_bank_defines.py
@@ -33,8 +33,8 @@ namespace vae {
 	using LargeHandle		= unsigned int;
 
 	using BankHandle 		= SmallHandle;
-	using EventHandle 		= GenericHandle;	// The handle used to address events within a bank
-	using GlobalEventHandle	= LargeHandle;		// Used to globally address events, holds space for BankHandle and EventHandle
+	using EventHandle 		= GenericHandle;	///< The handle used to address events within a bank
+	using GlobalEventHandle	= LargeHandle;		///< Used to globally address events, holds space for BankHandle and EventHandle
 	using SourceHandle 		= GenericHandle;
 	using EmitterHandle 	= LargeHandle;
 	using MixerHandle		= SmallHandle;
@@ -63,29 +63,29 @@ namespace vae {
 	 * @brief Return Types for most engine functions
 	 */
 	enum class Result {
-		Success = 0,				// :)
-		GenericFailure,				// :(
-		BankFormatError,			// Generic bank loading error
-		BankFormatIndexError,		// A index is out of bounds
-		FileOpenError,				// File system could not load file
-		VoiceStarvation,			// Could not play sound because of voice limit
-		BankFormatBadMixHirarchy,	// A mixer can only write to mixers with lower ids than themselves (no recursion)
-		ElementNotFound,			// Referenced data not found
-		ValidHandleRequired,		// Handle provided wasn't valid but needs to be
-		TooManyRecords,				// Can't fit all data in fixed size array
-		DeviceError,				// Can't open audio device
-		DuplicateEmitter
+		Success = 0,				///< :)
+		GenericFailure,				///< :(
+		BankFormatError,			///< Generic bank loading error
+		BankFormatIndexError,		///< A index is out of bounds
+		FileOpenError,				///< File system could not load file
+		VoiceStarvation,			///< Could not play sound because of voice limit
+		BankFormatBadMixHirarchy,	///< A mixer can only write to mixers with lower ids than themselves (no recursion)
+		ElementNotFound,			///< Referenced data not found
+		ValidHandleRequired,		///< Handle provided wasn't valid but needs to be
+		TooManyRecords,				///< Can't fit all data in fixed size array
+		DeviceError,				///< Can't open audio device
+		DuplicateEmitter			///< Trying to register emitter twice
 	};
 
 	/**
 	 * @brief Basic struct describing a audio device
 	 */
 	struct DeviceInfo {
-		int id;							// Negative values for invalid device.
-		unsigned int sampleRate = 0;	// TODO not used?
-		char name[255];					// Device name reported from backend
-		char api[4];					// API abbreviation
-		unsigned int bufferSize = 0;
+		int id;							///< Negative values for invalid device.
+		unsigned int sampleRate = 0;	///< TODO not used?
+		char name[255];					///< Device name reported from backend
+		char api[4];					///< API abbreviation
+		unsigned int bufferSize = 0;	///< desired bufferSize
 		unsigned char channelsIn = 0;
 		unsigned char channelsOut = 0;
 	};
@@ -120,10 +120,10 @@ namespace vae {
 	 * to EventCallback provided in the EngineConfig.
 	 */
 	struct EventCallbackData {
-		void* context;			// Can point to custom context data also provided when setting the callback, ! not context based on event!
-		BankHandle bank;		// Which bank the event is from
-		EventHandle event;		// Which event
-		EmitterHandle emitter;	// Which emitter if any
+		void* context;			///< Can point to custom context data also provided when setting the callback, ! not context based on event!
+		BankHandle bank;		///< Which bank the event is from
+		EventHandle event;		///< Which event
+		EmitterHandle emitter;	///< Which emitter if any
 	};
 
 	using EventCallback = void(*)(const EventCallbackData*);

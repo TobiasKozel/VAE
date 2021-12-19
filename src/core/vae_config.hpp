@@ -6,7 +6,7 @@
 namespace vae { namespace core {
 
 	/**
-	 * Contains some fundamental Configuration needed at compile time
+	 * @brief Contains some fundamental Configuration needed at compile time
 	 * Dynamic settings are contained in the EngineSettings struct
 	 */
 	namespace Config {
