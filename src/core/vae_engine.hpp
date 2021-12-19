@@ -33,6 +33,10 @@
 
 
 namespace vae { namespace core {
+	/**
+	 * @brief Central class handling all outside communication.
+	 * @details Can be sealed off by using EnginePimpl instead
+	 */
 
 	class Engine {
 		using Mutex = tklb::SpinLock;
