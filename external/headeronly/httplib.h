@@ -95,6 +95,10 @@
 #define CPPHTTPLIB_SEND_FLAGS 0
 #endif
 
+#ifndef CPPHTTPLIB_LISTEN_BACKLOG
+#define CPPHTTPLIB_LISTEN_BACKLOG 5
+#endif
+
 /*
  * Headers
  */
@@ -1378,6 +1382,8 @@ public:
 
   bool is_valid() const override;
 
+  SSL_CTX *ssl_context() const;
+
 private:
   bool process_and_close_socket(socket_t sock) override;
 
@@ -2333,6 +2339,17 @@ inline bool wait_until_socket_is_ready(socket_t sock, time_t sec, time_t usec) {
 #endif
 }
 
+inline bool is_socket_alive(socket_t sock) {
+  const auto val = detail::select_read(sock, 0, 0);
+  if (val == 0) {
+    return true;
+  } else if (val < 0 && errno == EBADF) {
+    return false;
+  }
+  char buf[1];
+  return detail::read_socket(sock, &buf[0], sizeof(buf), MSG_PEEK) > 0;
+}
+
 class SocketStream : public Stream {
 public:
   SocketStream(socket_t sock, time_t read_timeout_sec, time_t read_timeout_usec,
@@ -2859,7 +2876,8 @@ inline const char *status_message(int status) {
 }
 
 inline bool can_compress_content_type(const std::string &content_type) {
-  return (!content_type.find("text/") && content_type != "text/event-stream") ||
+  return (!content_type.rfind("text/", 0) &&
+          content_type != "text/event-stream") ||
          content_type == "image/svg+xml" ||
          content_type == "application/javascript" ||
          content_type == "application/json" ||
@@ -3666,17 +3684,15 @@ public:
     static const std::string dash_ = "--";
     static const std::string crlf_ = "\r\n";
 
-    buf_.append(buf, n); // TODO: performance improvement
+    buf_append(buf, n);
 
-    while (!buf_.empty()) {
+    while (buf_size() > 0) {
       switch (state_) {
       case 0: { // Initial boundary
         auto pattern = dash_ + boundary_ + crlf_;
-        if (pattern.size() > buf_.size()) { return true; }
-        auto pos = buf_.find(pattern);
-        if (pos != 0) { return false; }
-        buf_.erase(0, pattern.size());
-        off_ += pattern.size();
+        if (pattern.size() > buf_size()) { return true; }
+        if (!buf_start_with(pattern)) { return false; }
+        buf_erase(pattern.size());
         state_ = 1;
         break;
       }
@@ -3686,22 +3702,21 @@ public:
         break;
       }
       case 2: { // Headers
-        auto pos = buf_.find(crlf_);
-        while (pos != std::string::npos) {
+        auto pos = buf_find(crlf_);
+        while (pos < buf_size()) {
           // Empty line
           if (pos == 0) {
             if (!header_callback(file_)) {
               is_valid_ = false;
               return false;
             }
-            buf_.erase(0, crlf_.size());
-            off_ += crlf_.size();
+            buf_erase(crlf_.size());
             state_ = 3;
             break;
           }
 
           static const std::string header_name = "content-type:";
-          const auto header = buf_.substr(0, pos);
+          const auto header = buf_head(pos);
           if (start_with_case_ignore(header, header_name)) {
             file_.content_type = trim_copy(header.substr(header_name.size()));
           } else {
@@ -3712,9 +3727,8 @@ public:
             }
           }
 
-          buf_.erase(0, pos + crlf_.size());
-          off_ += pos + crlf_.size();
-          pos = buf_.find(crlf_);
+          buf_erase(pos + crlf_.size());
+          pos = buf_find(crlf_);
         }
         if (state_ != 3) { return true; }
         break;
@@ -3722,56 +3736,51 @@ public:
       case 3: { // Body
         {
           auto pattern = crlf_ + dash_;
-          if (pattern.size() > buf_.size()) { return true; }
+          if (pattern.size() > buf_size()) { return true; }
 
-          auto pos = find_string(buf_, pattern);
+          auto pos = buf_find(pattern);
 
-          if (!content_callback(buf_.data(), pos)) {
+          if (!content_callback(buf_data(), pos)) {
             is_valid_ = false;
             return false;
           }
 
-          off_ += pos;
-          buf_.erase(0, pos);
+          buf_erase(pos);
         }
         {
           auto pattern = crlf_ + dash_ + boundary_;
-          if (pattern.size() > buf_.size()) { return true; }
+          if (pattern.size() > buf_size()) { return true; }
 
-          auto pos = buf_.find(pattern);
-          if (pos != std::string::npos) {
-            if (!content_callback(buf_.data(), pos)) {
+          auto pos = buf_find(pattern);
+          if (pos < buf_size()) {
+            if (!content_callback(buf_data(), pos)) {
               is_valid_ = false;
               return false;
             }
 
-            off_ += pos + pattern.size();
-            buf_.erase(0, pos + pattern.size());
+            buf_erase(pos + pattern.size());
             state_ = 4;
           } else {
-            if (!content_callback(buf_.data(), pattern.size())) {
+            if (!content_callback(buf_data(), pattern.size())) {
               is_valid_ = false;
               return false;
             }
 
-            off_ += pattern.size();
-            buf_.erase(0, pattern.size());
+            buf_erase(pattern.size());
           }
         }
         break;
       }
       case 4: { // Boundary
-        if (crlf_.size() > buf_.size()) { return true; }
-        if (buf_.compare(0, crlf_.size(), crlf_) == 0) {
-          buf_.erase(0, crlf_.size());
-          off_ += crlf_.size();
+        if (crlf_.size() > buf_size()) { return true; }
+        if (buf_start_with(crlf_)) {
+          buf_erase(crlf_.size());
           state_ = 1;
         } else {
           auto pattern = dash_ + crlf_;
-          if (pattern.size() > buf_.size()) { return true; }
-          if (buf_.compare(0, pattern.size(), pattern) == 0) {
-            buf_.erase(0, pattern.size());
-            off_ += pattern.size();
+          if (pattern.size() > buf_size()) { return true; }
+          if (buf_start_with(pattern)) {
+            buf_erase(pattern.size());
             is_valid_ = true;
             state_ = 5;
           } else {
@@ -3806,41 +3815,80 @@ private:
     return true;
   }
 
-  bool start_with(const std::string &a, size_t off,
+  std::string boundary_;
+
+  size_t state_ = 0;
+  bool is_valid_ = false;
+  MultipartFormData file_;
+
+  // Buffer
+  bool start_with(const std::string &a, size_t spos, size_t epos,
                   const std::string &b) const {
-    if (a.size() - off < b.size()) { return false; }
+    if (epos - spos < b.size()) { return false; }
     for (size_t i = 0; i < b.size(); i++) {
-      if (a[i + off] != b[i]) { return false; }
+      if (a[i + spos] != b[i]) { return false; }
     }
     return true;
   }
 
-  size_t find_string(const std::string &s, const std::string &pattern) const {
-    auto c = pattern.front();
+  size_t buf_size() const { return buf_epos_ - buf_spos_; }
 
-    size_t off = 0;
-    while (off < s.size()) {
-      auto pos = s.find(c, off);
-      if (pos == std::string::npos) { return s.size(); }
+  const char *buf_data() const { return &buf_[buf_spos_]; }
 
-      auto rem = s.size() - pos;
-      if (pattern.size() > rem) { return pos; }
+  std::string buf_head(size_t l) const { return buf_.substr(buf_spos_, l); }
 
-      if (start_with(s, pos, pattern)) { return pos; }
+  bool buf_start_with(const std::string &s) const {
+    return start_with(buf_, buf_spos_, buf_epos_, s);
+  }
+
+  size_t buf_find(const std::string &s) const {
+    auto c = s.front();
+
+    size_t off = buf_spos_;
+    while (off < buf_epos_) {
+      auto pos = off;
+      while (true) {
+        if (pos == buf_epos_) { return buf_size(); }
+        if (buf_[pos] == c) { break; }
+        pos++;
+      }
+
+      auto remaining_size = buf_epos_ - pos;
+      if (s.size() > remaining_size) { return buf_size(); }
+
+      if (start_with(buf_, pos, buf_epos_, s)) { return pos - buf_spos_; }
 
       off = pos + 1;
     }
 
-    return s.size();
+    return buf_size();
   }
 
-  std::string boundary_;
+  void buf_append(const char *data, size_t n) {
+    auto remaining_size = buf_size();
+    if (remaining_size > 0) {
+      for (size_t i = 0; i < remaining_size; i++) {
+        buf_[i] = buf_[buf_spos_ + i];
+      }
+    }
+    buf_spos_ = 0;
+    buf_epos_ = remaining_size;
+
+    if (remaining_size + n > buf_.size()) {
+      buf_.resize(remaining_size + n);
+    }
+
+    for (size_t i = 0; i < n; i++) {
+      buf_[buf_epos_ + i] = data[i];
+    }
+    buf_epos_ += n;
+  }
+
+  void buf_erase(size_t size) { buf_spos_ += size; }
 
   std::string buf_;
-  size_t state_ = 0;
-  bool is_valid_ = false;
-  size_t off_ = 0;
-  MultipartFormData file_;
+  size_t buf_spos_ = 0;
+  size_t buf_epos_ = 0;
 };
 
 inline std::string to_lower(const char *beg, const char *end) {
@@ -4303,7 +4351,7 @@ inline size_t Request::get_param_value_count(const char *key) const {
 
 inline bool Request::is_multipart_form_data() const {
   const auto &content_type = get_header_value("Content-Type");
-  return !content_type.find("multipart/form-data");
+  return !content_type.rfind("multipart/form-data", 0);
 }
 
 inline bool Request::has_file(const char *key) const {
@@ -5107,9 +5155,7 @@ Server::create_server_socket(const char *host, int port, int socket_flags,
         if (::bind(sock, ai.ai_addr, static_cast<socklen_t>(ai.ai_addrlen))) {
           return false;
         }
-        if (::listen(sock, 5)) { // Listen through 5 channels
-          return false;
-        }
+        if (::listen(sock, CPPHTTPLIB_LISTEN_BACKLOG)) { return false; }
         return true;
       });
 }
@@ -5719,13 +5765,14 @@ inline bool ClientImpl::send(Request &req, Response &res, Error &error) {
 
   {
     std::lock_guard<std::mutex> guard(socket_mutex_);
+
     // Set this to false immediately - if it ever gets set to true by the end of
     // the request, we know another thread instructed us to close the socket.
     socket_should_be_closed_when_request_is_done_ = false;
 
     auto is_alive = false;
     if (socket_.is_open()) {
-      is_alive = detail::select_write(socket_.sock, 0, 0) > 0;
+      is_alive = detail::is_socket_alive(socket_.sock);
       if (!is_alive) {
         // Attempt to avoid sigpipe by shutting down nongracefully if it seems
         // like the other side has already closed the connection Also, there
@@ -7082,17 +7129,14 @@ static SSLInit sslinit_;
 inline SSLServer::SSLServer(const char *cert_path, const char *private_key_path,
                             const char *client_ca_cert_file_path,
                             const char *client_ca_cert_dir_path) {
-  ctx_ = SSL_CTX_new(TLS_method());
+  ctx_ = SSL_CTX_new(TLS_server_method());
 
   if (ctx_) {
     SSL_CTX_set_options(ctx_,
-                        SSL_OP_ALL | SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 |
-                            SSL_OP_NO_COMPRESSION |
+                        SSL_OP_NO_COMPRESSION |
                             SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
 
-    // auto ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
-    // SSL_CTX_set_tmp_ecdh(ctx_, ecdh);
-    // EC_KEY_free(ecdh);
+    SSL_CTX_set_min_proto_version(ctx_, TLS1_1_VERSION);
 
     if (SSL_CTX_use_certificate_chain_file(ctx_, cert_path) != 1 ||
         SSL_CTX_use_PrivateKey_file(ctx_, private_key_path, SSL_FILETYPE_PEM) !=
@@ -7100,46 +7144,35 @@ inline SSLServer::SSLServer(const char *cert_path, const char *private_key_path,
       SSL_CTX_free(ctx_);
       ctx_ = nullptr;
     } else if (client_ca_cert_file_path || client_ca_cert_dir_path) {
-      // if (client_ca_cert_file_path) {
-      //   auto list = SSL_load_client_CA_file(client_ca_cert_file_path);
-      //   SSL_CTX_set_client_CA_list(ctx_, list);
-      // }
-
       SSL_CTX_load_verify_locations(ctx_, client_ca_cert_file_path,
                                     client_ca_cert_dir_path);
 
       SSL_CTX_set_verify(
-          ctx_,
-          SSL_VERIFY_PEER |
-              SSL_VERIFY_FAIL_IF_NO_PEER_CERT, // SSL_VERIFY_CLIENT_ONCE,
-          nullptr);
+          ctx_, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, nullptr);
     }
   }
 }
 
 inline SSLServer::SSLServer(X509 *cert, EVP_PKEY *private_key,
                             X509_STORE *client_ca_cert_store) {
-  ctx_ = SSL_CTX_new(SSLv23_server_method());
+  ctx_ = SSL_CTX_new(TLS_server_method());
 
   if (ctx_) {
     SSL_CTX_set_options(ctx_,
-                        SSL_OP_ALL | SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 |
-                            SSL_OP_NO_COMPRESSION |
+                        SSL_OP_NO_COMPRESSION |
                             SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
+
+    SSL_CTX_set_min_proto_version(ctx_, TLS1_1_VERSION);
 
     if (SSL_CTX_use_certificate(ctx_, cert) != 1 ||
         SSL_CTX_use_PrivateKey(ctx_, private_key) != 1) {
       SSL_CTX_free(ctx_);
       ctx_ = nullptr;
     } else if (client_ca_cert_store) {
-
       SSL_CTX_set_cert_store(ctx_, client_ca_cert_store);
 
       SSL_CTX_set_verify(
-          ctx_,
-          SSL_VERIFY_PEER |
-              SSL_VERIFY_FAIL_IF_NO_PEER_CERT, // SSL_VERIFY_CLIENT_ONCE,
-          nullptr);
+          ctx_, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, nullptr);
     }
   }
 }
@@ -7160,6 +7193,8 @@ inline SSLServer::~SSLServer() {
 }
 
 inline bool SSLServer::is_valid() const { return ctx_; }
+
+inline SSL_CTX *SSLServer::ssl_context() const { return ctx_; }
 
 inline bool SSLServer::process_and_close_socket(socket_t sock) {
   auto ssl = detail::ssl_new(
@@ -7204,12 +7239,13 @@ inline SSLClient::SSLClient(const std::string &host, int port,
                             const std::string &client_cert_path,
                             const std::string &client_key_path)
     : ClientImpl(host, port, client_cert_path, client_key_path) {
-  ctx_ = SSL_CTX_new(SSLv23_client_method());
+  ctx_ = SSL_CTX_new(TLS_client_method());
 
   detail::split(&host_[0], &host_[host_.size()], '.',
                 [&](const char *b, const char *e) {
                   host_components_.emplace_back(std::string(b, e));
                 });
+
   if (!client_cert_path.empty() && !client_key_path.empty()) {
     if (SSL_CTX_use_certificate_file(ctx_, client_cert_path.c_str(),
                                      SSL_FILETYPE_PEM) != 1 ||
@@ -7224,12 +7260,13 @@ inline SSLClient::SSLClient(const std::string &host, int port,
 inline SSLClient::SSLClient(const std::string &host, int port,
                             X509 *client_cert, EVP_PKEY *client_key)
     : ClientImpl(host, port) {
-  ctx_ = SSL_CTX_new(SSLv23_client_method());
+  ctx_ = SSL_CTX_new(TLS_client_method());
 
   detail::split(&host_[0], &host_[host_.size()], '.',
                 [&](const char *b, const char *e) {
                   host_components_.emplace_back(std::string(b, e));
                 });
+
   if (client_cert != nullptr && client_key != nullptr) {
     if (SSL_CTX_use_certificate(ctx_, client_cert) != 1 ||
         SSL_CTX_use_PrivateKey(ctx_, client_key) != 1) {
