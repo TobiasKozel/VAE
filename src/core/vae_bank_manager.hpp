@@ -5,6 +5,7 @@
 #include "./vae_types.hpp"
 #include "./pod/vae_bank.hpp"
 #include "./fs/vae_bank_loader.hpp"
+#include "../../external/tklb/src/types/audio/resampler/TResampler.hpp"
 
 namespace vae { namespace core {
 	/**

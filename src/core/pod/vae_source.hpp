@@ -11,8 +11,8 @@ namespace vae { namespace core {
 		bool stream : 1;		///< If false entire sample will be loaded in ram
 		enum class Format {
 			wav,		///< Uses dr_wav to decode wavs
-			ogg,		//! Not implemented
-			generator	//! Not implemented
+			ogg,		///< Uses stb_vorbis to decode oggs
+			generator	///< Not implemented
 		} format : 2;
 		Sample gain = 1.0;		///< Gain applied to every voice creatd frin this source
 		AudioBuffer signal;		///< Signal or scratch buffer for generated types

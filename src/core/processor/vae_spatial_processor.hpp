@@ -169,6 +169,7 @@ namespace vae { namespace core {
 					};
 
 					switch (l.configuration) {
+						case Listener::Configuration::HRTF:
 						case Listener::Configuration::Headphones:	pan(SPCAP::HeadphoneSPCAP);	break;
 						case Listener::Configuration::Stereo:		pan(SPCAP::StereroSPCAP);	break;
 						case Listener::Configuration::Suround:		pan(SPCAP::SuroundSPCAP);	break;

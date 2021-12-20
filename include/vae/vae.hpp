@@ -67,6 +67,7 @@ namespace vae {
 		GenericFailure,				///< :(
 		BankFormatError,			///< Generic bank loading error
 		BankFormatIndexError,		///< A index is out of bounds
+		BankFormatDuplicateIndex,	///< A index is used muktiple times
 		FileOpenError,				///< File system could not load file
 		VoiceStarvation,			///< Could not play sound because of voice limit
 		BankFormatBadMixHirarchy,	///< A mixer can only write to mixers with lower ids than themselves (no recursion)

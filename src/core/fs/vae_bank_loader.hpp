@@ -53,6 +53,10 @@ namespace vae { namespace core {
 					if (sources.size() <= id) { return Result::BankFormatIndexError; }
 
 					Source& s = bank.sources[id];
+					if (s.id != InvalidSourceHandle) {
+						VAE_ERROR("Duplicate Source id %i in bank %i", s.id, bank.id)
+						return Result::BankFormatDuplicateIndex;
+					}
 					s.id		= id;
 					s.name		= i["name"];
 					s.path		= i["path"];
@@ -87,6 +91,11 @@ namespace vae { namespace core {
 					}
 
 					auto& m = bank.mixers[id];
+
+					if (m.id != InvalidMixerHandle) {
+						VAE_ERROR("Duplicate Mixer id %i in bank %i", m.id, bank.id)
+						return Result::BankFormatDuplicateIndex;
+					}
 					m.parent = i["parent"];
 
 					if (m.id != Mixer::MasterMixerHandle && m.id <= m.parent) {
@@ -118,6 +127,11 @@ namespace vae { namespace core {
 					}
 
 					Event& e = bank.events[id];
+
+					if (e.id != InvalidEventHandle) {
+						VAE_ERROR("Duplicate Event id %i in bank %i", e.id, bank.id)
+						return Result::BankFormatDuplicateIndex;
+					}
 
 					e.id	= id;
 					e.name	= i["name"];

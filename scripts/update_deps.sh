@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cd ../external
+cd "$(dirname "$0")/../external"
 
 echo "Updating portaudio"
 curl -LO https://github.com/PortAudio/portaudio/archive/refs/heads/master.zip
@@ -41,7 +41,6 @@ rm ./assetsys.h
 rm ./strpool.h
 curl -LO https://raw.githubusercontent.com/mattiasgustavsson/libs/main/strpool.h
 curl -LO https://raw.githubusercontent.com/mattiasgustavsson/libs/main/assetsys.h
-
 
 echo "Updating json"
 rm ./json.hpp

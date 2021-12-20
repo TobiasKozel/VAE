@@ -8,7 +8,8 @@
 
 #include <string>
 #include "../../../external/tklb/src/types/audio/TWaveFile.hpp"
-#include "../../../external/tklb/src/types/audio/resampler/TResampler.hpp"
+#include "../../../external/tklb/src/types/audio/TOggFile.hpp"
+
 
 namespace vae { namespace core {
 	struct SourceLoader {
@@ -27,7 +28,8 @@ namespace vae { namespace core {
 					auto result = tklb::wave::load(path.c_str(), s.signal);
 					return result ? Result::Success : Result::GenericFailure;
 				} else {
-					// TODO vorbis
+					auto result = tklb::ogg::load(path.c_str(), s.signal);
+					return result ? Result::Success : Result::GenericFailure;
 				}
 			}
 			// TODO STREAM

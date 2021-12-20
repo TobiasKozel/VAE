@@ -9,6 +9,14 @@
 			"format": "wav",
 			"stream": false,
 			"gain": 1.0
+		},
+		{
+			"id": 1,
+			"name": "Sound2",
+			"path": "sound2.ogg",
+			"format": "ogg",
+			"stream": false,
+			"gain": 1.0
 		}
 	],
 	"mixers": [
@@ -33,7 +41,7 @@
 			"id": 0,
 			"name": "Event1",
 			"type": "start",
-			"source": 0,
+			"source": 1,
 			"on_start": [2],
 			"on_end": [1, 4],
 			"mixer": 1,
