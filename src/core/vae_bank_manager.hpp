@@ -51,7 +51,8 @@ namespace vae { namespace core {
 		Bank& get(BankHandle bank) { return mBanks[bank]; }
 
 		bool has(BankHandle bank) {
-			if (mBanks.size() <= bank) { false; }
+			const auto size = mBanks.size();
+			if (size <= bank) { return false; }
 			return mBanks[bank].id != InvalidBankHandle;
 		}
 
