@@ -124,17 +124,21 @@ namespace vae { namespace core {
 					}
 
 					v.emitter = emitter;
-					if (emitter != InvalidEmitterHandle) {
-						v.spatialized = true;
-						v.HRTF = event.HRTF;
+					v.spatialized = event.spatial;
+					if (v.spatialized) {
 						mVoicePIPs[i] = { };
 					}
+					v.HRTF = event.HRTF;
 					v.bank = bank;
+
 					v.eventInstance = mCurrentEventInstance;
 					v.gain = event.gain;
 					mCurrentEventInstance++;
 					mActiveVoices++;
-					mHighestVoice = std::max(i, mHighestVoice);
+					mHighestVoice = std::max(i + 1, mHighestVoice);
+					VAE_DEBUG_VOICES("Started voice %i\t from event %i:%i\tactive: %i",
+						v.eventInstance, event.id, bank, mActiveVoices
+					)
 					return Result::Success;
 				}
 			}
@@ -184,6 +188,9 @@ namespace vae { namespace core {
 					// This is set last since it marks the
 					// finished voice for other threads
 					f.source = v.source;
+					VAE_DEBUG_VOICES("Stopped voice %i\t from event %i:%i\tactive: %i",
+						v.eventInstance, f.event, f.bank, mActiveVoices
+					)
 					break;
 				}
 			}

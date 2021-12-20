@@ -12,14 +12,14 @@ namespace vae { namespace core {
 	 * @brief An Event is used to control most of the eingines behavior.
 	 */
 	struct Event {
-		bool start 	: 1;		//< Starts a source
-		bool stop : 1;			//< Stops a source
-		bool emit : 1;			//< Emits an event to the EventCallback defined in the engine config
-		bool force_mixer : 1;	//< Prevents overriding the mixer from chained events or fireEvent
+		bool start 	: 1;		///< Starts a source
+		bool stop : 1;			///< Stops a source
+		bool emit : 1;			///< Emits an event to the EventCallback defined in the engine config
+		bool force_mixer : 1;	///< Prevents overriding the mixer from chained events or fireEvent
 		bool loop : 1;			//! TODO sound should loop
-		bool HRTF : 1;			//! TODO If the listener has hrtfs set up it will be rendered using it
-		bool random : 1;		//< triggers one random on_start event
-		bool _placholder : 1;
+		bool HRTF : 1;			///< Listener and event has to have hrtf set
+		bool random : 1;		///< triggers one random on_start event
+		bool spatial : 1;		///< no spatial rendering at all
 
 		MixerHandle mixer = Mixer::MasterMixerHandle;				///< Mixer the source gets written to
 		EventHandle id = InvalidEventHandle;						///< Own id

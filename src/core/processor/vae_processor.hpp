@@ -56,7 +56,7 @@ namespace vae { namespace core {
 				v.audible = true;
 
 				v.time += remaining; // progress time in voice
-				return remaining != frames;
+				return remaining == frames;
 			});
 		}
 	};

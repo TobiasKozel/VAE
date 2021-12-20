@@ -143,6 +143,7 @@ namespace vae { namespace core {
 					e.emit			= type == "emit";
 					e.force_mixer	= i["force_mixer"];
 					e.HRTF 			= i["hrtf"];
+					e.spatial 		= i["spatial"];
 
 					if (i["source"].is_null()) {
 						e.source = InvalidSourceHandle;

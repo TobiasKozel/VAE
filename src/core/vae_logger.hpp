@@ -27,6 +27,13 @@
 	#define VAE_INFO(msg, ...)  printf ("INFO\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
 	#define VAE_WARN(msg, ...)  printf ("WARN\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
 	#define VAE_ERROR(msg, ...) printf("ERROR\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
+
+	#ifdef VAE_LOG_VOICES
+		#define VAE_DEBUG_VOICES(msg, ...) printf("VOICE\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
+	#else
+		#define VAE_DEBUG_VOICES(msg, ...) ;
+	#endif // VAE_LOG_VOICES
+
 	#ifdef VAE_LOG_EVENTS
 		#define VAE_DEBUG_EVENT(msg, ...) printf("EVENT\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
 	#else
@@ -39,6 +46,7 @@
 	#define VAE_WARN(msg, ...)  ;
 	#define VAE_ERROR(msg, ...) printf("ERROR\t| %s:%i \t| " msg "\n", __FILE__, __LINE__, ## __VA_ARGS__);
 	#define VAE_DEBUG_EVENT(msg, ...) ;
+	#define VAE_DEBUG_VOICES(msg, ...) ;
 #endif // _NDEBUG
 
 #endif // _VAE_LOGGER
