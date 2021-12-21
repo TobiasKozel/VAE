@@ -12,7 +12,8 @@ namespace vae { namespace core {
 		Result fireEvent(
 			const BankHandle& bankHandle, const EventHandle& eventHandle,
 			const EmitterHandle& emitterHandle, const MixerHandle& mixerHandle,
-			BankManager& banks, VoiceManger& voiceManger, const EngineConfig& config
+			const Sample& gain, BankManager& banks, VoiceManger& voiceManger,
+			const EngineConfig& config
 		) {
 			VAE_PROFILER_SCOPE
 
@@ -36,7 +37,7 @@ namespace vae { namespace core {
 				if (event.source != InvalidSourceHandle) {
 					VAE_DEBUG_EVENT("Event %i:%i starts source %i", eventHandle, bankHandle, event.source)
 					// Has source attached
-					result = voiceManger.play(event, bankHandle, emitterHandle, mixerHandle);
+					result = voiceManger.play(event, bankHandle, gain, emitterHandle, mixerHandle);
 					if (result != Result::Success) {
 						// Failed to play for some reason
 						return result;
@@ -48,7 +49,7 @@ namespace vae { namespace core {
 							if (i == InvalidEventHandle) { continue; }
 							VAE_DEBUG_EVENT("Event %i:%i starts random event %i", eventHandle, bankHandle, i)
 							fireEvent(
-								bankHandle, i, emitterHandle, mixerHandle,
+								bankHandle, i, emitterHandle, mixerHandle, gain,
 								banks, voiceManger, config
 							);
 							break;
@@ -59,7 +60,7 @@ namespace vae { namespace core {
 						if (i == InvalidEventHandle) { continue; }
 						VAE_DEBUG_EVENT("Event %i:%i starts chained event %i", eventHandle, bankHandle, i)
 						fireEvent(
-							bankHandle, i, emitterHandle, mixerHandle,
+							bankHandle, i, emitterHandle, mixerHandle, gain,
 							banks, voiceManger, config
 						);
 					}

@@ -135,6 +135,7 @@ namespace vae { namespace core {
 
 					e.id	= id;
 					e.name	= i["name"];
+					e.gain	= i["gain"];
 
 					std::string type = i["type"];
 					e.random 		= type == "start_rand";

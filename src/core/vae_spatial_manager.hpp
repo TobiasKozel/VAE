@@ -182,7 +182,7 @@ namespace vae { namespace core {
 						mEmitters[emitter.first].autoplaying = true;
 						auto& bank = banks.get(e.bank);
 						manager.play(
-							bank.events[e.event], e.bank, emitter.first, InvalidMixerHandle
+							bank.events[e.event], e.bank, 1.0, emitter.first, InvalidMixerHandle
 						);
 					}
 				}

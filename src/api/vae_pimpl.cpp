@@ -36,6 +36,7 @@ Result EnginePimpl::fireEvent (
 	BankHandle bank,
 	EventHandle eventHandle,
 	EmitterHandle emitterHandle,
+	Sample gain,
 	MixerHandle mixerHandle
 ) {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
@@ -43,6 +44,7 @@ Result EnginePimpl::fireEvent (
 		bank,
 		eventHandle,
 		emitterHandle,
+		gain,
 		mixerHandle
 	);
 }
@@ -50,12 +52,14 @@ Result EnginePimpl::fireEvent (
 Result EnginePimpl::fireGlobalEvent (
 	GlobalEventHandle globalHandle,
 	EmitterHandle emitterHandle,
+	Sample gain,
 	MixerHandle mixerHandle
 ) {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.fireGlobalEvent(
 		globalHandle,
 		emitterHandle,
+		gain,
 		mixerHandle
 	);
 }

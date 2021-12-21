@@ -97,7 +97,7 @@ namespace vae { namespace core {
 		 */
 		Result play(
 			Event& event, BankHandle bank,
-			EmitterHandle emitter, MixerHandle mixer
+			Sample gain, EmitterHandle emitter, MixerHandle mixer
 		) {
 			VAE_PROFILER_SCOPE
 			// Find a free voice
@@ -123,6 +123,8 @@ namespace vae { namespace core {
 						v.mixer = event.mixer;
 					}
 
+					v.gain = event.gain * gain;
+
 					v.emitter = emitter;
 					v.spatialized = event.spatial;
 					if (v.spatialized) {
@@ -132,7 +134,7 @@ namespace vae { namespace core {
 					v.bank = bank;
 
 					v.eventInstance = mCurrentEventInstance;
-					v.gain = event.gain;
+
 					mCurrentEventInstance++;
 					mActiveVoices++;
 					mHighestVoice = std::max(i + 1, mHighestVoice);

@@ -48,11 +48,11 @@ namespace vae { namespace core {
 		using Thread = std::thread;
 		using Semaphore = std::condition_variable;
 
-		const EngineConfig mConfig;		// Config object provided at construction
+		const EngineConfig mConfig;		//< Config object provided at construction
 
-		VoiceManger mVoiceManager;		// Holds and handle voices
-		SpatialManager mSpatialManager;	// Holds and manages spatial emitters
-		BankManager mBankManager;		// Holds and manages banks
+		VoiceManger mVoiceManager;		//< Holds and handle voices
+		SpatialManager mSpatialManager;	//< Holds and manages spatial emitters
+		BankManager mBankManager;		//< Holds and manages banks
 		EventManager mEventManager;
 
 		Processor mProcessor;
@@ -60,15 +60,15 @@ namespace vae { namespace core {
 		SpatialProcessor mSpatialProcessor;
 
 
-		Device* mDevice = nullptr;		// Output device
-		AudioBuffer mScratchBuffer;		// used to combine the signal from all banks and push it to the device
-		SampleIndex mTime = 0;			// Global engine time in samples
-		Time mTimeFract = 0;			// Global engine time in seconds
-		Sample mLimiterLastPeak = 1.0;	// Master limiter last peak
+		Device* mDevice = nullptr;		//< Output device
+		AudioBuffer mScratchBuffer;		//< used to combine the signal from all banks and push it to the device
+		SampleIndex mTime = 0;			//< Global engine time in samples
+		Time mTimeFract = 0;			//< Global engine time in seconds
+		Sample mLimiterLastPeak = 1.0;	//< Master limiter last peak
 
-		Thread* mAudioThread;			// Thread processing voices and mixers
-		Semaphore* mAudioConsumed;		// Notifies the audio thread when more audio is needed
-		Mutex mMutex;					// Mutex to lock AudioThread and bank operations
+		Thread* mAudioThread;			//< Thread processing voices and mixers
+		Semaphore* mAudioConsumed;		//< Notifies the audio thread when more audio is needed
+		Mutex mMutex;					//< Mutex to lock AudioThread and bank operations
 		bool mAudioThreadRunning = false;
 
 		/**
@@ -101,6 +101,8 @@ namespace vae { namespace core {
 					mScratchBuffer.setValidSize(remaining);
 
 					// TODO PERF VAE banks could be processed in parallel
+					// however each bank needs to get a temporary own copy of the voice
+					// or else this will be false sharing city
 					mBankManager.forEach([&](Bank& i) {
 						mProcessor.mix(mVoiceManager, i, remaining, sampleRate);
 						mSpatialProcessor.mix(
@@ -282,12 +284,14 @@ namespace vae { namespace core {
 		 * @param bankHandle bank id where the event is provided
 		 * @param eventHandle id of the event
 		 * @param emitterHandle handle of the emitter, needed for spatial audio or controlling the voice
+		 * @param gain optional volume factor
 		 * @param mixerHandle optional id of mixer channel sound will be routed to, this will override the one set in the event
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API fireEvent(
 			BankHandle bank, EventHandle eventHandle,
 			EmitterHandle emitterHandle,
+			Sample gain = 1.0,
 			MixerHandle mixerHandle = InvalidMixerHandle
 		) {
 			if (emitterHandle != InvalidEmitterHandle && !mSpatialManager.hasEmitter(emitterHandle)) {
@@ -295,7 +299,7 @@ namespace vae { namespace core {
 			}
 			return mEventManager.fireEvent(
 				bank, eventHandle,
-				emitterHandle, mixerHandle,
+				emitterHandle, mixerHandle, gain,
 				mBankManager, mVoiceManager, mConfig
 			);
 		}
@@ -305,6 +309,7 @@ namespace vae { namespace core {
 		 *
 		 * @param globalHandle The GlobalEventHandle combines both bank and event id
 		 * @param emitterHandle optional handle of the emitter, needed for spatial audio
+		 * @param gain optional volume factor
 		 * @param mixerHandle id of mixer channel sound will be routed to, this will override the one set in the event
 		 * @see fireEvent
 		 * @return Result
@@ -312,6 +317,7 @@ namespace vae { namespace core {
 		Result _VAE_PUBLIC_API fireGlobalEvent(
 			GlobalEventHandle globalHandle,
 			EmitterHandle emitterHandle,
+			Sample gain = 1.0,
 			MixerHandle mixerHandle = InvalidMixerHandle
 		) {
 			BankHandle bankHandle;

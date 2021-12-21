@@ -59,6 +59,7 @@ public:
 	 * @param bankHandle bank id where the event is provided
 	 * @param eventHandle id of the event
 	 * @param emitterHandle handle of the emitter, needed for spatial audio or controlling the voice
+	 * @param gain optional volume factor
 	 * @param mixerHandle optional id of mixer channel sound will be routed to, this will override the one set in the event
 	 * @return Result
 	 */
@@ -66,6 +67,7 @@ public:
 		BankHandle bank,
 		EventHandle eventHandle,
 		EmitterHandle emitterHandle,
+		Sample gain = 1.0,
 		MixerHandle mixerHandle = InvalidMixerHandle
 	);
 
@@ -74,6 +76,7 @@ public:
 	 *
 	 * @param globalHandle The GlobalEventHandle combines both bank and event id
 	 * @param emitterHandle optional handle of the emitter, needed for spatial audio
+	 * @param gain optional volume factor
 	 * @param mixerHandle id of mixer channel sound will be routed to, this will override the one set in the event
 	 * @see fireEvent
 	 * @return Result
@@ -81,6 +84,7 @@ public:
 	Result _VAE_API_EXPORT fireGlobalEvent (
 		GlobalEventHandle globalHandle,
 		EmitterHandle emitterHandle,
+		Sample gain = 1.0,
 		MixerHandle mixerHandle = InvalidMixerHandle
 	);
 

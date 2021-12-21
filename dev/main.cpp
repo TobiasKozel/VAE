@@ -28,32 +28,6 @@ constexpr int test = sizeof(core::Engine);
 constexpr int rate = 44100;
 const double step = 1.0 / double(rate);
 
-void generateWav() {
-	constexpr auto length = core::Config::MaxBlock * 256;
-	tklb::AudioBuffer buffer;
-	buffer.resize(length , 1);
-	buffer.sampleRate = rate;
-	constexpr unsigned int rampLength = 100;
-	constexpr unsigned int rampStart = rampLength;
-	const unsigned int rampEnd = buffer.size() - rampLength;
-	for (unsigned int i = 0; i < buffer.size(); i++) {
-		float gain = 0;
-		if (i < rampStart) {
-			gain = float(i) / float(rampLength);
-		} else if (rampEnd < i) {
-			gain = 1.f - (float(i - rampEnd) / float(rampLength));
-		} else {
-			gain = 1.0;
-		}
-		buffer[0][i] = sin(i * step * 440 * 3.141 * 2) * 0.7 * gain;
-	}
-	#ifdef _MSC_VER
-		tklb::wave::write(buffer, "../../../dev/bank1/sound1.wav");
-	#else
-		tklb::wave::write(buffer, "../../dev/bank1/sound1.wav");
-	#endif
-}
-
 int main() {
 	EngineConfig config;
 	#ifdef _MSC_VER
@@ -61,8 +35,6 @@ int main() {
 	#else
 		config.rootPath = "../../dev/";
 	#endif
-
-	generateWav();
 
 	config.eventCallback = &eventTriggered;
 	config.internalSampleRate = rate;
@@ -90,8 +62,8 @@ int main() {
 		for (int i = 0; i < 5000; i++) {
 			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(1000 / float(60)));
 			float t = i * 0.1;
-			// engine.setEmitter(emitter, {{ float(sin(t)), float(0), float(cos(t)) }, {} }, 0);
-			engine.setEmitter(emitter, {{ float(-1), float(0), float(0.0) }, {} }, 0);
+			engine.setEmitter(emitter, {{ float(sin(t)), float(0), float(cos(t)) }, {} }, 0);
+			// engine.setEmitter(emitter, {{ float(-1), float(0), float(0.0) }, {} }, 0);
 			// engine.update(); // needs to be ticked if EngineConfig::updateInAudioThread is false in
 		}
 	};
