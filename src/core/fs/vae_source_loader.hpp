@@ -21,16 +21,16 @@ namespace vae { namespace core {
 		 */
 		Result load(Source& s, std::string path) {
 			VAE_PROFILER_SCOPE
-			// TODO handle path always relative to some predefined root path
 			path = path + s.path;
 			if (!s.stream) {
 				if (s.format == Source::Format::wav) {
 					auto result = tklb::wave::load(path.c_str(), s.signal);
 					return result ? Result::Success : Result::GenericFailure;
-				} else {
+				} else if (s.format == Source::Format::ogg) {
 					auto result = tklb::ogg::load(path.c_str(), s.signal);
 					return result ? Result::Success : Result::GenericFailure;
 				}
+				return Result::GenericFailure; // what format is this?
 			}
 			// TODO STREAM
 			return Result::GenericFailure;

@@ -24,7 +24,6 @@ Using the pimpl api is optional but the better option since it won't pull in all
 - Variable speed playback
 - Filtered voices
 - Faster HRTF
-- vorbis decoder
 - streaming
 - signal generators
 - some sort of baisc authoring tool
@@ -35,12 +34,14 @@ Using the pimpl api is optional but the better option since it won't pull in all
 - Seperate Mixing hirarchies for each listener
 - Seperate Audio device per listener
 - Inject audio stream at runtime (e.g. for VoiP)
+- Seperate voice pools for streaming and and HRTF
+
 
 ## Features
 - Simple json bank format
-- 3D SPCAP or HRTF panning
+- 3D SPCAP or (slow) HRTF panning
 - Events drive the sound
-- upfront .wav loading, no streaming
+- upfront .wav and .ogg loading, no streaming
 - Simple mixer hirachry
 - Multiple Listeners, no individual output devices however
 

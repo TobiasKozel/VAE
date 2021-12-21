@@ -124,7 +124,7 @@ namespace vae {
 		void* context;			///< Can point to custom context data also provided when setting the callback, ! not context based on event!
 		BankHandle bank;		///< Which bank the event is from
 		EventHandle event;		///< Which event
-		EmitterHandle emitter;	///< Which emitter if any
+		EmitterHandle emitter;	///< Which emitter
 	};
 
 	using EventCallback = void(*)(const EventCallbackData*);

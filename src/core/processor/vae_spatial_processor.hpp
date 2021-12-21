@@ -40,15 +40,15 @@ namespace vae { namespace core {
 		) {
 			VAE_PROFILER_SCOPE
 			manager.forEachVoice([&](Voice& v, Size vi) {
-				if (v.bank != bank.id) { return true; }						// wrong bank
-				if (!v.spatialized) { return true; }	// not spatialized
+				if (v.bank != bank.id) { return true; }		// wrong bank
+				if (!v.spatialized) { return true; }		// not spatialized
 
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
 
 				if (signal.size() == 0) { return false; }
 
-				VAE_ASSERT(signal.sampleRate == sampleRate)					// needs resampling
+				VAE_ASSERT(signal.sampleRate == sampleRate)	// needs resampling
 
 				const SampleIndex remaining = std::min(
 					frames, SampleIndex(signal.size() - v.time
@@ -60,10 +60,14 @@ namespace vae { namespace core {
 					return false; // emitter missing, stop voice
 				}
 
-				auto& emitter = spatial.getEmitter(v.emitter);
+				const auto& emitter = spatial.getEmitter(v.emitter);
 				auto& mixer = bank.mixers[v.mixer];
 				auto& target = mixer.buffer;
 
+				/**
+				 * @brief Start of the relevant signal
+				 * Spatialized voices only use about the first channel
+				 */
 				const Sample* const in = signal[0] + v.time;
 
 				target.setValidSize(frames); // mark mixer as active
