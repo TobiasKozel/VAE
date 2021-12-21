@@ -122,12 +122,12 @@ namespace vae { namespace core {
 
 						auto convolutionIndex = (v.time == 0) ? 0 : mConvolutionIndex[vi];
 
-						for (int i = 0; i < remaining; i++) {
+						for (SampleIndex i = 0; i < remaining; i++) {
 							Sample leftSum = 0;
 							Sample rightSum = 0;
 							mTimeDomain[0][convolutionIndex] = in[i];
 
-							for (int n = 0; n < irLen; n++) {
+							for (SampleIndex n = 0; n < irLen; n++) {
 								const auto conv = mTimeDomain[0][(irLen + convolutionIndex - n) % irLen];
 								leftSum  += irLeft[n]  * conv;
 								rightSum += irRight[n] * conv;

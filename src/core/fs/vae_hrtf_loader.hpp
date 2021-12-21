@@ -26,7 +26,7 @@ namespace vae { namespace core {
 			}
 
 			VAE_DEBUG("Started loading HRTF %s", path)
-			auto data = nlohmann::json::from_msgpack(file);
+			auto data = nlohmann::json::parse(file);
 			hrtf.originalRate = data["samplerate"];
 			hrtf.rate = sampleRate;
 

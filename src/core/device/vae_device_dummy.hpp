@@ -49,9 +49,9 @@ namespace vae { namespace core {
 			return backend;
 		}
 
-		uint getDeviceCount() override { return 1; }
+		unsigned int getDeviceCount() override { return 1; }
 
-		DeviceInfo getDevice(uint id) override{
+		DeviceInfo getDevice(unsigned int id) override {
 			TKLB_ASSERT(id == 0) // there's only one device
 			DeviceInfo info;
 			info.channelsIn = 2;

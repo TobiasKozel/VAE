@@ -6,6 +6,7 @@ from pysofaconventions import *
 import os
 import numpy as np
 import msgpack
+import json
 
 vaeFolder = os.path.dirname(os.path.realpath(__file__)) + "/.."
 
@@ -14,7 +15,7 @@ path = vaeFolder + "/scripts/MRT01.sofa" # cartesian
 # path = vaeFolder + "/scripts/subject_003.sofa" # spherical
 
 sofa = SOFAFile(path, "r")
-outPath = vaeFolder + "/dev/hrtf.msgpack"
+outPath = vaeFolder + "/../demo/banks/hrtf.json"
 
 dimensions = sofa.getDimensionsAsDict()
 positions = dimensions["M"].size
@@ -69,6 +70,8 @@ for i in range(0, positions):
 	outData["positions"].append(position)
 
 
-with open(outPath, "wb") as outfile:
-	packed = msgpack.packb(outData)
-	outfile.write(packed)
+with open(outPath, "w") as outfile:
+	json.dump(outData, outfile)
+	# msgpack.pack(outData, outfile)
+	# packed = msgpack.packb(outData)
+	# outfile.write(packed)

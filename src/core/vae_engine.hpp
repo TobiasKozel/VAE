@@ -236,6 +236,7 @@ namespace vae { namespace core {
 		Result _VAE_PUBLIC_API stop() {
 			VAE_PROFILER_SCOPE
 			Lock l(mMutex);
+			mBankManager.lock();
 			if (mAudioThreadRunning) {
 				mAudioThreadRunning = false;
 				if(mAudioThread->joinable()) {
@@ -250,6 +251,7 @@ namespace vae { namespace core {
 				delete mDevice;
 				mDevice = nullptr;
 			}
+			mBankManager.unlock();
 			return Result::Success;
 		}
 
@@ -260,6 +262,7 @@ namespace vae { namespace core {
 		void _VAE_PUBLIC_API update() {
 			VAE_PROFILER_FRAME_MARK_START(_VAE_PROFILER_UPDATE)
 			// Update emitters and start voices nearby
+			mBankManager.lock();
 			mSpatialManager.update(mVoiceManager, mBankManager);
 
 			// Handle finished voices and their events
@@ -274,6 +277,7 @@ namespace vae { namespace core {
 				}
 				return true;
 			});
+			mBankManager.unlock();
 			VAE_PROFILER_FRAME_MARK_END(_VAE_PROFILER_UPDATE)
 
 		}

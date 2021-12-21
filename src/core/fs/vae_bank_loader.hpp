@@ -61,7 +61,7 @@ namespace vae { namespace core {
 					s.name		= i["name"];
 					s.path		= i["path"];
 					s.gain		= i["gain"];
-					s.stream	= i["stream"];
+					s.stream	= (bool) i["stream"];
 
 					std::string format	= i["format"];
 					if (format == "wav")	{ s.format = Source::Format::wav; }
@@ -142,9 +142,9 @@ namespace vae { namespace core {
 					e.start			= type == "start" || e.random;
 					e.stop			= type == "stop";
 					e.emit			= type == "emit";
-					e.force_mixer	= i["force_mixer"];
-					e.HRTF 			= i["hrtf"];
-					e.spatial 		= i["spatial"];
+					e.force_mixer	= (bool) i["force_mixer"];
+					e.HRTF 			= (bool) i["hrtf"];
+					e.spatial 		= (bool) i["spatial"];
 
 					if (i["source"].is_null()) {
 						e.source = InvalidSourceHandle;
