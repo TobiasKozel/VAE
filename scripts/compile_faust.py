@@ -1,17 +1,16 @@
-# @defgroup vae_scripts
-
-
+#!/bin/python
 import sys
 import os
 from pathlib import Path
 
 
 faustExtension = ".dsp"
-targetExtension = ".h"
+targetExtension = ".hpp"
 vaeFolder = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + os.sep + "..")
 dspFolder = os.path.join(vaeFolder, "src", "core", "dsp")
 outFolder = os.path.join(dspFolder, "generated")
-baseCommand = "faust -lang c -i -single -exp10 -cm -vec -mapp"
+archFile = os.path.join(dspFolder, "vae_faust_arch.hpp")
+baseCommand = f"faust -lang cpp -i -single -exp10 -cm -vec -mapp -a {archFile} -scn FaustBase"
 
 faustSources = []
 
@@ -25,7 +24,7 @@ for root, dirs, files in os.walk(dspFolder):
 for source in faustSources:
 	name = Path(source).stem
 	outFile = os.path.join(outFolder, f"{name}_gen{targetExtension}")
-	command = f"{baseCommand} -o {outFile} -cn vae_{name} {source}"
+	command = f"{baseCommand} -o {outFile} -cn VAE{name.title()} {source}"
 	print(command)
 	if os.system(command) == 0:
 		pass #  success

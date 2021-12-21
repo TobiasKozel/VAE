@@ -1,4 +1,4 @@
-# @addtogroup vae_scripts
+#!/bin/python
 
 import os
 import sys
