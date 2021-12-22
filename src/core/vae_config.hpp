@@ -42,6 +42,11 @@ namespace vae { namespace core {
 		 * @brief How many chained events can fit in on_start and on_end
 		 */
 		constexpr Size MaxChainedEvents = 4;
+
+		/**
+		 * @brief Minimum volume before sounds will skip rendering
+		 */
+		constexpr Sample MinVolume  = 0.01;
 	}
 } }
 

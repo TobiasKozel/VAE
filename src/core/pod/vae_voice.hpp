@@ -7,7 +7,7 @@
 
 namespace vae { namespace core {
 	/**
-	 * @brief Barebones voice. Enough to play back a non spatialized sound.
+	 * @brief Barebones voice. Enough to play back a non spatialized and non filtered sound.
 	 */
 	struct Voice {
 		bool spatialized : 1;	///< If the voice has spatialization data
@@ -33,9 +33,10 @@ namespace vae { namespace core {
 	struct VoiceFilered {
 		Sample lowpassScratch[Config::MaxChannels];
 		Sample highpassScratch[Config::MaxChannels];
-		Sample lowpass = 0.0;	//< Lowpasses the signal as the value approaches 1
-		Sample highpass = 0.0;	//< Highpasses the signal as the value approaches 1
-		Sample speed = 1.0;		//< Playback speed, will alter pitch
+		Sample lowpass = 0.0;	///< Lowpasses the signal as the value approaches 1
+		Sample highpass = 0.0;	///< Highpasses the signal as the value approaches 1
+		Sample speed = 1.0;		///< Playback speed, will alter pitch
+		Sample timeFract = 0.0;	///< Fractional time component for interpolation
 	};
 
 	constexpr int _VAE_VOICE_FILTERED_SIZE = sizeof(VoiceFilered);

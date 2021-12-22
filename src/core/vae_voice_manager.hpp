@@ -130,7 +130,11 @@ namespace vae { namespace core {
 					}
 
 					v.gain = event.gain * gain;
-					v.filtered = true;
+
+					// v.filtered = true; // todo
+					if (v.filtered) {
+						mVoiceFiltered[i] = { };
+					}
 
 					v.emitter = emitter;
 					v.spatialized = event.spatial;

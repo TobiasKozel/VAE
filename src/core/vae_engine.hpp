@@ -163,7 +163,7 @@ namespace vae { namespace core {
 		 * @param device
 		 */
 		void onThreadedBufferSwap(Device* device) {
-			mAudioConsumed->notify_one();
+			// mAudioConsumed->notify_one();
 		}
 
 		void postContructor() {
