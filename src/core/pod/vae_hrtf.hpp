@@ -13,6 +13,7 @@ namespace vae { namespace core {
 		HeapBuffer<Position> positions;
 		Size originalRate = 0;
 		Size rate = 0;
+		Size irLength = 0;
 	};
 } } // namespace vae::vore
 

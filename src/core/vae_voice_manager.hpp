@@ -137,9 +137,9 @@ namespace vae { namespace core {
 
 					mCurrentEventInstance++;
 					mActiveVoices++;
-					mHighestVoice = std::max(i + 1, mHighestVoice);
-					VAE_DEBUG_VOICES("Started voice %i\t from event %i:%i\tactive: %i",
-						v.eventInstance, event.id, bank, mActiveVoices
+					mHighestVoice = std::max(i, mHighestVoice);
+					VAE_DEBUG_VOICES("Started voice %i\t slot %i from event %i:%i\tactive: %i",
+						v.eventInstance, i, event.id, bank, mActiveVoices
 					)
 					return Result::Success;
 				}

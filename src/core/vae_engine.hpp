@@ -273,7 +273,7 @@ namespace vae { namespace core {
 				}
 				for (auto& i : mBankManager.get(v.bank).events[v.event].on_end) {
 					if (i == InvalidEventHandle) { continue; }
-					fireEvent(v.bank, i, v.emitter, v.mixer);
+					fireEvent(v.bank, i, v.emitter, 1.0, v.mixer);
 				}
 				return true;
 			});

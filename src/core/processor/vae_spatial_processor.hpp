@@ -16,13 +16,13 @@
 
 namespace vae { namespace core {
 	class SpatialProcessor {
-		HRTF mHRTF;
 		AudioBuffer mTimeDomain;
+		HRTF mHRTF;
 		HRTFLoader mHRTFLoader;
 		HeapBuffer<Size> mConvolutionIndex;
 	public:
 		SpatialProcessor(const Size voices) {
-			mTimeDomain.resize(Config::MaxBlock);
+			mTimeDomain.resize(Config::MaxBlock * voices);
 			mConvolutionIndex.resize(voices, 0);
 		}
 		/**
@@ -125,10 +125,10 @@ namespace vae { namespace core {
 						for (SampleIndex i = 0; i < remaining; i++) {
 							Sample leftSum = 0;
 							Sample rightSum = 0;
-							mTimeDomain[0][convolutionIndex] = in[i];
+							mTimeDomain[0][Config::MaxBlock * vi + convolutionIndex] = in[i];
 
 							for (SampleIndex n = 0; n < irLen; n++) {
-								const auto conv = mTimeDomain[0][(irLen + convolutionIndex - n) % irLen];
+								const auto conv = mTimeDomain[0][Config::MaxBlock * vi + ((irLen + convolutionIndex - n) % irLen)];
 								leftSum  += irLeft[n]  * conv;
 								rightSum += irRight[n] * conv;
 							}

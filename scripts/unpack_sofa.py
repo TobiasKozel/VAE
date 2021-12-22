@@ -53,11 +53,13 @@ outData["front"] = [
 	sofa.getListenerViewValues()[0][2]
 ]
 
+longestIr = 0
+
 for i in range(0, positions):
 	position = {}
-	position["x"] = sourcePositions[i][0]
-	position["y"] = sourcePositions[i][1]
-	position["z"] = sourcePositions[i][2]
+	position["x"] = round(sourcePositions[i][0], 4)
+	position["y"] = round(sourcePositions[i][1], 4)
+	position["z"] = round(sourcePositions[i][2], 4)
 	if coordinateType == "cartesian":
 		# radius = math.sqrt(x * x + y * y + z * z)
 		# todo the rest
@@ -65,10 +67,13 @@ for i in range(0, positions):
 
 	ir = irs[i, :, :]
 	ir = ir.swapaxes(-1,0)
+	ir = ir.round(4)
 	position["left"] = ir[:, 0].tolist()
 	position["right"] = ir[:, 1].tolist()
+	longestIr = max(len(position["right"]), longestIr)
 	outData["positions"].append(position)
 
+outData["longestIr"] = longestIr
 
 with open(outPath, "w") as outfile:
 	json.dump(outData, outfile)
