@@ -9,7 +9,9 @@
 #include <cmath>
 
 namespace vae { namespace core {
-
+	/**
+	 * @brief Non spatial voice processor
+	 */
 	struct Processor {
 		/**
 		 * @brief Process a single bank
@@ -78,13 +80,12 @@ namespace vae { namespace core {
 
 				// max samples we can read
 				const Size countIn = signal.size();
-				// we need the value after the loop, so it's defined outside
+				// fractional time, we need the value after the loop, so it's defined outside
 				Sample position;
 
 				for (int c = 0; c < target.channels(); c++) {
 					const int channel = c % signal.channels();
 					for (SampleIndex s = 0; s < frames; s++) {
-						// current fractional time
 						position = v.time + (s * fd.speed) + fd.timeFract;
 						const Sample lastPosition = std::floor(position);
 						const Size lastIndex = (Size) lastPosition;
@@ -99,10 +100,12 @@ namespace vae { namespace core {
 						// mix = 0.5 * (1.0 - cos((mix) * 3.1416)); // cosine interpolation, introduces new harmonics somehow
 						const Sample last = signal[channel][lastIndex] * gain;
 						const Sample next = signal[channel][nextIndex] * gain;
+						// linear resampling, sounds alright enough
 						const Sample in = last + mix * (next - last);
 
-						//	* one pole highpass and lowpass filter
 
+						//	* super simple lowpass and highpass filter
+						// just lerps with a previous value
 						const Sample lpd = in + fd.lowpass * (fd.lowpassScratch[c] - in);
 						fd.lowpassScratch[c] = lpd;
 
@@ -113,8 +116,8 @@ namespace vae { namespace core {
 						target[c][s] += (lpd - hpd);
 					}
 				}
-				position += fd.speed; // step on further
-				v.time = std::floor(position);
+				position += fd.speed; // step to next sample
+				v.time = std::floor(position); // split up in sample and fractional time
 				fd.timeFract = position - v.time;
 				return !finished;
 			});

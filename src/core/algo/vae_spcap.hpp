@@ -44,7 +44,8 @@ namespace vae { namespace core {
 				}
 			}
 
-			constexpr Size speakers() const { return N; }
+			static constexpr Size speakers = N;
+
 
 			/**
 			 * @brief Calculate per channel volumes for a given direction

@@ -101,7 +101,7 @@ namespace vae { namespace core {
 					distanceAttenuated = Sample(std::pow(distanceAttenuated / Sample(1.0), -Sample(1)));
 					distanceAttenuated *= gain;
 
-					if (distanceAttenuated < 0.001) { return; } // ! inaudible
+					if (distanceAttenuated < Config::MinVolume) { return; } // ! inaudible
 
 					audible = true;
 
@@ -160,7 +160,7 @@ namespace vae { namespace core {
 
 						if (v.time == 0) {
 							// first time don't interpolate
-							for (Size c = 0; c < panner.speakers(); c++) {
+							for (Size c = 0; c < panner.speakers; c++) {
 								lastVolumes[c] = currentVolumes[c];
 							}
 						}
@@ -170,7 +170,7 @@ namespace vae { namespace core {
 							const Sample sample = in[s];
 							// lerp between last and current channel volumes
 							// Not correct in terms of power convservation, but easy and efficient
-							for (Size c = 0; c < panner.speakers(); c++) {
+							for (Size c = 0; c < panner.speakers; c++) {
 								target[c][s] += sample * (lastVolumes[c] + t * (currentVolumes[c] - lastVolumes[c]));
 							}
 							t += Sample(1) / Sample(frames);

@@ -30,6 +30,12 @@ namespace vae { namespace core {
 
 	constexpr int _VAE_VOICE_SIZE = sizeof(Voice);
 
+
+	/**
+	 * @brief Additional data needed for filtered voices.
+	 * Allows lowpass and highpass filtering as well as variable
+	 * playback speeds.
+	 */
 	struct VoiceFilered {
 		Sample lowpassScratch[Config::MaxChannels];
 		Sample highpassScratch[Config::MaxChannels];
