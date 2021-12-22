@@ -194,8 +194,8 @@ namespace vae { namespace core {
 		}
 
 		~Engine() {
-			unloadAllBanks();
 			stop();
+			unloadAllBanks();
 			VAE_INFO("Engine destructed")
 		}
 

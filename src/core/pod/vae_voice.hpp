@@ -30,6 +30,16 @@ namespace vae { namespace core {
 
 	constexpr int _VAE_VOICE_SIZE = sizeof(Voice);
 
+	struct VoiceFilered {
+		Sample lowpassScratch[Config::MaxChannels];
+		Sample highpassScratch[Config::MaxChannels];
+		Sample lowpass = 0.0;	//< Lowpasses the signal as the value approaches 1
+		Sample highpass = 0.0;	//< Highpasses the signal as the value approaches 1
+		Sample speed = 1.0;		//< Playback speed, will alter pitch
+	};
+
+	constexpr int _VAE_VOICE_FILTERED_SIZE = sizeof(VoiceFilered);
+
 	/**
 	 * @brief VoicePanningInterpolation data.
 	 * @details Extends Voice with channel volumes for interpolation.

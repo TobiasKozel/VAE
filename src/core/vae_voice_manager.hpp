@@ -25,9 +25,10 @@
 
 namespace vae { namespace core {
 	class VoiceManger {
-		HeapBuffer<Voice> mVoices;				// Currently playing voice are here
-		HeapBuffer<Voice> mFinishedVoiceQueue;	// voices that finished playing are queued here
-		HeapBuffer<VoicePIP> mVoicePIPs;		// Interpolation data for the panning algorithm
+		HeapBuffer<Voice> mFinishedVoiceQueue;	//< voices that finished playing are queued here
+		HeapBuffer<Voice> mVoices;				//< Currently playing voice are here
+		HeapBuffer<VoicePIP> mVoicePIPs;		//< Interpolation data for the panning algorithm
+		HeapBuffer<VoiceFilered> mVoiceFiltered;
 		EventHandle mCurrentEventInstance = 0;
 		Size mActiveVoices = 0;
 		Size mHighestVoice = 0;
@@ -39,6 +40,7 @@ namespace vae { namespace core {
 			mVoices.resize(voiceCount);
 			mFinishedVoiceQueue.resize(voiceCount);
 			mVoicePIPs.resize(voiceCount);
+			mVoiceFiltered.resize(voiceCount);
 		}
 
 		HeapBuffer<Voice>& all() {
@@ -86,6 +88,10 @@ namespace vae { namespace core {
 			return mVoicePIPs[index];
 		}
 
+		VoiceFilered& getVoiceFilter(Size index) {
+			return mVoiceFiltered[index];
+		}
+
 		/**
 		 * @brief
 		 *
@@ -124,6 +130,7 @@ namespace vae { namespace core {
 					}
 
 					v.gain = event.gain * gain;
+					v.filtered = true;
 
 					v.emitter = emitter;
 					v.spatialized = event.spatial;

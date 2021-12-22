@@ -39,24 +39,75 @@ namespace vae { namespace core {
 
 				target.setValidSize(frames); // mark mixer as active
 
-				const SampleIndex remaining = std::min(
-					frames, SampleIndex(signal.size() - v.time
-				));
 
 				const auto gain = v.gain * source.gain;
 
-				for (int c = 0; c < target.channels(); c++) {
-					const int channel = c % signal.channels();
-					for (SampleIndex s = 0; s < remaining; s++) {
-						target[c][s] += signal[channel][v.time + s] * gain;
+				bool finished = false;
+
+				if (v.filtered) {
+					auto& fd = manager.getVoiceFilter(index);
+
+					if (v.time == 0) {
+						for (int c = 0; c < Config::MaxChannels; c++) {
+							fd.highpassScratch[c]	= 0;
+							fd.lowpassScratch[c]	= signal[c % signal.channels()][0];
+						}
 					}
+
+					const Size countIn = signal.size() - (v.time * fd.speed); // max samples we can read
+
+					for (int c = 0; c < target.channels(); c++) {
+						const int channel = c % signal.channels();
+						for (SampleIndex s = 0; s < frames; s++) {
+							//					* LERP
+							const Sample position = (v.time + s) * fd.speed;
+							const Sample lastPosition = std::floor(position);
+							const Size lastIndex = (Size) lastPosition;
+							const Size nextIndex = (Size) lastPosition + 1;
+
+							if (countIn <= nextIndex) {
+								finished = true;
+								break;
+							}
+
+							Sample mix = position - lastPosition;
+							// mix = 0.5 * (1.0 - cos((mix) * 3.1416)); // cosine interpolation, introduces new harmonics somehow
+							const Sample last = signal[channel][lastIndex] * gain;
+							const Sample next = signal[channel][nextIndex] * gain;
+							const Sample in = last + mix * (next - last);
+
+							//	* one pole highpass and lowpass filter
+
+							const Sample lpd = in + fd.lowpass * (fd.lowpassScratch[c] - in);
+							fd.lowpassScratch[c] = lpd;
+
+							const Sample hps = fd.highpassScratch[c];
+							const Sample hpd = hps + fd.highpass * (in - hps);
+							fd.highpassScratch[c] = hpd;
+
+							target[c][s] += (lpd - hpd);
+						}
+					}
+					v.time += frames;
+				} else {
+					const SampleIndex remaining = std::min(
+						frames, SampleIndex(signal.size() - v.time
+					));
+					for (int c = 0; c < target.channels(); c++) {
+						const int channel = c % signal.channels();
+						for (SampleIndex s = 0; s < remaining; s++) {
+							target[c][s] += signal[channel][v.time + s] * gain;
+						}
+					}
+					v.time += remaining; // progress time in voice
+					finished = remaining == frames;
 				}
+
 
 				v.started = true;
 				v.audible = true;
 
-				v.time += remaining; // progress time in voice
-				return remaining == frames;
+				return !finished;
 			});
 		}
 	};
