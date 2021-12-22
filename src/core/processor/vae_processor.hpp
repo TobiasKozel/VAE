@@ -4,7 +4,9 @@
 #include "../vae_types.hpp"
 #include "../vae_util.hpp"
 #include "../pod/vae_bank.hpp"
-#include "../pod/vae_voice.hpp"
+#include "../voices/vae_voice.hpp"
+#include "../voices/vae_voice_filter.hpp"
+#include "../voices/vae_voice_pan.hpp"
 #include "../vae_voice_manager.hpp"
 #include <cmath>
 

@@ -9,7 +9,7 @@ namespace vae { namespace core {
 	struct SearchHRTF {
 		/**
 		 * @brief Looks for the best matching IR in a HRTF
-		 *
+		 * Does bad brute force search, should use kd tree or the mysodalib
 		 * @param hrtf
 		 * @param direction
 		 * @return Size

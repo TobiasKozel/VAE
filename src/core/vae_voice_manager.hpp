@@ -12,35 +12,47 @@
 #ifndef _VAE_VOICE_MANAGER
 #define _VAE_VOICE_MANAGER
 
-#include <vector>
-
 #include "./vae_util.hpp"
 
 #include "./vae_types.hpp"
+
 #include "./pod/vae_source.hpp"
 #include "./pod/vae_event.hpp"
 
 #include "./../../include/vae/vae.hpp"
-#include "./pod/vae_voice.hpp"
+#include "./voices/vae_voice.hpp"
+#include "./voices/vae_voice_filter.hpp"
+#include "./voices/vae_voice_pan.hpp"
+#include "./voices/vae_voice_hrtf.hpp"
+
 
 namespace vae { namespace core {
+	/**
+	 * @brief There is only one voice pool and VAE and it's managed here.
+	 * @details This class handles starting and stopping voices as well as virtualization
+	 */
 	class VoiceManger {
-		HeapBuffer<Voice> mFinishedVoiceQueue;	//< voices that finished playing are queued here
-		HeapBuffer<Voice> mVoices;				//< Currently playing voice are here
-		HeapBuffer<VoicePIP> mVoicePIPs;		//< Interpolation data for the panning algorithm
-		HeapBuffer<VoiceFilered> mVoiceFiltered;
-		EventHandle mCurrentEventInstance = 0;
+		HeapBuffer<Voice> mFinishedVoiceQueue;	///< voices that finished playing are queued here
+		HeapBuffer<Voice> mVoices;				///< Currently playing voice are here
+		HeapBuffer<Voice> mVirtualVoices;		///< voices that finished playing are queued here
+		HeapBuffer<VoicePan> mVoicePans;		///< Interpolation data for the panning algorithm
+		HeapBuffer<VoiceFilter> mVoiceFiltered;	///< Data needed for filtering is here
+		HeapBuffer<VoiceHRTF> mVoiceHRTFs;		///< Working data for convolution
+
 		Size mActiveVoices = 0;
 		Size mHighestVoice = 0;
 		Size mHighestFinishedVoice = 0;
+		Size mInactiveVoices = 0;				///< Number of virtualized voices
 
 	public:
-		VoiceManger(Size voiceCount, Size virtualVoiceCount) {
+		VoiceManger(const EngineConfig& config) {
 			VAE_PROFILER_SCOPE
-			mVoices.resize(voiceCount);
-			mFinishedVoiceQueue.resize(voiceCount);
-			mVoicePIPs.resize(voiceCount);
-			mVoiceFiltered.resize(voiceCount);
+			mVoices.resize(config.voices);
+			mFinishedVoiceQueue.resize(config.finishedVoiceQueueSize);
+			mVoicePans.resize(config.voices);
+			mVoiceFiltered.resize(config.voices);
+			mVirtualVoices.resize(config.virtualVoices);
+			mVoiceHRTFs.resize(config.hrtfVoices);
 		}
 
 		HeapBuffer<Voice>& all() {
@@ -84,11 +96,11 @@ namespace vae { namespace core {
 			}
 		}
 
-		VoicePIP& getVoicePIP(Size index) {
-			return mVoicePIPs[index];
+		VoicePan& getVoicePan(Size index) {
+			return mVoicePans[index];
 		}
 
-		VoiceFilered& getVoiceFilter(Size index) {
+		VoiceFilter& getVoiceFilter(Size index) {
 			return mVoiceFiltered[index];
 		}
 
@@ -106,12 +118,50 @@ namespace vae { namespace core {
 			Sample gain, EmitterHandle emitter, MixerHandle mixer
 		) {
 			VAE_PROFILER_SCOPE
+
+			Size searchStartIndex;
+			Size searchEndIndex;
+
+			if (event.HRTF) {
+				searchStartIndex = 0;
+				searchEndIndex = mVoiceHRTFs.size();
+			} else {
+				searchStartIndex = mVoiceHRTFs.size();
+				searchEndIndex = mVoices.size();
+			}
+
+			// No voices left, find one to kill
+			if(mActiveVoices == searchEndIndex) {
+				Size potentialVirtual = ~0;
+				Sample lowestGain = 1;
+				for (Size i = searchStartIndex; i < searchEndIndex; i++) {
+					auto& v = mVoices[i];
+					if (v.critical) { continue; } // Don't kill important voices
+
+					if (!v.audible) {
+						if (makeVirtual(v) == Result::Success) {
+							searchStartIndex = i;
+							break;
+						}
+					}
+
+					if (v.gain < lowestGain) {
+						lowestGain = v.gain;
+						potentialVirtual = i;
+					}
+				}
+
+				if (potentialVirtual < searchEndIndex) {
+					makeVirtual(mVoices[potentialVirtual]);
+					searchStartIndex = potentialVirtual;
+				}
+			}
+
 			// Find a free voice
-			// TODO VAE PERF
-			for (Size i = 0; i < mVoices.size(); i++) {
+			for (Size i = searchStartIndex; i < searchStartIndex; i++) {
 				auto& v = mVoices[i];
 				if(v.source == InvalidSourceHandle) {
-					v = {}; // re init object resets time and so on
+					v = { }; // re init object resets time and so on
 					v.source = event.source;
 					v.event = event.id;
 
@@ -139,14 +189,11 @@ namespace vae { namespace core {
 					v.emitter = emitter;
 					v.spatialized = event.spatial;
 					if (v.spatialized) {
-						mVoicePIPs[i] = { };
+						mVoicePans[i] = { };
 					}
 					v.HRTF = event.HRTF;
 					v.bank = bank;
 
-					v.eventInstance = mCurrentEventInstance;
-
-					mCurrentEventInstance++;
 					mActiveVoices++;
 					mHighestVoice = std::max(i, mHighestVoice);
 					VAE_DEBUG_VOICES("Started voice %i\t slot %i from event %i:%i\tactive: %i",
@@ -163,6 +210,17 @@ namespace vae { namespace core {
 			return Result::VoiceStarvation;
 		}
 
+		Result makeVirtual(Voice& v) {
+			for (Size i = 0; i < mVirtualVoices.size(); i++) {
+				auto& slot = mVirtualVoices[i];
+				if (slot.source != InvalidSourceHandle) { continue; }
+				slot = v;
+				mInactiveVoices++;
+				return Result::Success;
+			}
+			return Result::GenericFailure;
+		}
+
 		/**
 		 * @brief Stops a voice. Mostly used internally since
 		 * other stop function provide better usage
@@ -176,6 +234,9 @@ namespace vae { namespace core {
 			if (!v.chainedEvents && !v.spatialized) {
 				v.source = InvalidSourceHandle; // Mark voice as free
 				mActiveVoices--;
+				if (0 < mInactiveVoices) {
+					// TODO turn virtual voices real again
+				}
 				return Result::Success;
 			}
 			/**
@@ -193,7 +254,6 @@ namespace vae { namespace core {
 					mHighestFinishedVoice = std::max(mHighestFinishedVoice, i);
 					finished = true;
 					f.event = v.event;
-					f.eventInstance = v.eventInstance;
 					f.mixer = v.mixer;
 					f.emitter = v.emitter;
 					f.bank = v.bank;

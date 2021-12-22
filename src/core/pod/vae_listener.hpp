@@ -27,7 +27,7 @@ namespace vae { namespace core {
 		 * This might change, so that's why it's stored here
 		 * Only the configuration for the first listeners is used
 		 */
-		Uchar configuration = Configuration::HRTF;
+		Uchar configuration = Configuration::Headphones;
 	};
 
 	using Listeners = StackBuffer<Listener, Config::MaxListeners>;

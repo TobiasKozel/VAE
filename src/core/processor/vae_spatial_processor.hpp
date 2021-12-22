@@ -74,12 +74,14 @@ namespace vae { namespace core {
 
 				const auto gain = v.gain * source.gain;
 
-				auto& lastPip = manager.getVoicePIP(vi);
-				VoicePIP currentPip;
+				auto& lastPip = manager.getVoicePan(vi);
+				VoicePan currentPip;
 				bool audible = false;
 
 				// Each listener gets the sound mixed in from it's position
 				// ! this means using different configurations doesn't work !
+				// TODO probably smarter to use a voice per listener
+				// TODO so the filters can be applied per listener for things like obstuction
 				spatial.forEachListener([&](Listener& l, ListenerHandle li) {
 					VAE_PROFILER_SCOPE
 

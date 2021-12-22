@@ -158,20 +158,6 @@ namespace vae {
 		 */
 		void* eventCallbackContext = nullptr;
 
-		/**
-		 * @brief Hard limit on concurrent voices, can't be 0
-		 */
-		unsigned int voices = 1024;
-
-		/**
-		 * @brief Hard limit on virtal voices
-		 * TODO no virtual voice system for now
-		 * Can be zero for no limit but will cause allocations on fireEvent
-		 * If non zero value fireEvent might not return a handle
-		 */
-		unsigned int virtualVoices = 0;
-
-
 		static constexpr unsigned int _preAllocatedEmitters = 1 << 14;
 
 		/**
@@ -180,8 +166,37 @@ namespace vae {
 		 * This might cause a short audio dropout depending on the size.
 		 * ! internal map allocates power of 2 sizes !
 		 * This makes space for 16384 emitters.
+		 * Having less emitters than amount of voices does't make too much sense
+		 * since each voice will have one assigned.
+		 * Unless one emitter triggers a lot of sounds.
 		 */
 		unsigned int preAllocatedEmitters = _preAllocatedEmitters;
+
+		/**
+		 * @brief Hard limit on concurrent voices, can't be 0
+		 */
+		unsigned int voices = 1024;
+
+		/**
+		 * @brief Amount of HRTF panned voices audible at any given time.
+		 * Does not add to total amounts of voices defined above
+		 */
+		unsigned int hrtfVoices = 16;
+
+		/**
+		 * @brief Hard limit on virtal voices
+		 * TODO no virtual voice system for now
+		 * Can be zero for no limit but will cause allocations on fireEvent
+		 */
+		unsigned int virtualVoices = _preAllocatedEmitters;
+
+		/**
+		 * @brief Size of the voice queue for finished voices which
+		 * need to trigger other events on_end when updating the engine.
+		 * Too low of a value can cause these events to be discarded.
+		 */
+		unsigned int finishedVoiceQueueSize = 1024;
+
 
 		/**
 		 * @brief Buffer size that will be requested from device.

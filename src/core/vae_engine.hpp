@@ -177,7 +177,7 @@ namespace vae { namespace core {
 	public:
 		_VAE_PUBLIC_API Engine(const EngineConfig& config) :
 			mConfig(config),
-		 	mVoiceManager(mConfig.voices, mConfig.virtualVoices),
+		 	mVoiceManager(mConfig),
 			mSpatialManager(mConfig.preAllocatedEmitters),
 			mSpatialProcessor(mConfig.voices)
 		{
@@ -186,7 +186,7 @@ namespace vae { namespace core {
 
 		_VAE_PUBLIC_API Engine() :
 			mConfig({}),
-		 	mVoiceManager(mConfig.voices, mConfig.virtualVoices),
+		 	mVoiceManager(mConfig),
 			mSpatialManager(mConfig.preAllocatedEmitters),
 			mSpatialProcessor(mConfig.voices)
 		{
