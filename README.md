@@ -24,27 +24,28 @@ Using the pimpl api is optional but the better option since it won't pull in the
 - Automation
 - Faster HRTF and interpolation
 - streaming
-- signal generators
 - some sort of basic authoring tool
-- Obstruction
-- Geometry and material system
-- Voice priority system (got unkillable voice)
+- Geometry and material system for obstruction and reverb zones
+
+## Nice to haves
+- signal generators
+- Inject audio stream at runtime (e.g. for VoiP)
+- Voice priority system (got unkillable voice at least)
 - Seperate Mixing hirarchies for each listener
 - Seperate Audio device per listener
-- Inject audio stream at runtime (e.g. for VoiP)
 
 
 ## Features
-- Simple json bank format
 - 3D SPCAP or HRTF panning (slow implementation)
-- Events drive the sound
+- Event driven sound system
+- Simple json bank format
 - upfront .wav and .ogg loading, no streaming
 - Simple mixer hirachry
-- Multiple Listeners, no individual output devices however
 - Fixed mixrate with high quality resampler for deviceoutput (speex)
 - High quality resampling when loading audio
 - Realtime linear resampling otherwither
 - Per voice variable speed playback and high/lowpass filters
+- Multiple Listeners, no individual output devices however and not tested at all
 
 ## Defines
 
