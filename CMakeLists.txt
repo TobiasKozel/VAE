@@ -10,8 +10,8 @@ project(
 	LANGUAGES CXX
 )
 
-option(BUILD_SHARED_LIBS "Build shared lib" OFF) # TODO always build this and make it work in dev
-option(VAE_BUILD_PIMPL "Build PIMPL API" OFF)
+option(VAE_BUILD_SHARED_LIBS "Build shared lib" OFF)
+option(VAE_BUILD_PIMPL "Build PIMPL API" OFF)			# On if shared libs are built, otherwise vae isn't useable beacuse it has no compile units
 option(VAE_PROFILER "Use profiler" OFF)
 option(VAE_BACKEND_PORTAUDIO "Compile with port audio" OFF)
 option(VAE_BACKEND_RTAUDIO "Compile with RtAudio" ON)
@@ -26,14 +26,12 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 #################            add main lib             #################
 
-if (VAE_BUILD_PIMPL)
-	file(GLOB PIMPL_API "src/api/*.cpp")
-endif()
+file(GLOB PIMPL_API "src/api/*.cpp")
 file(GLOB SRC_CORE "src/core/*.hpp")
 file(GLOB SRC_WRAPPED "src/wrapped/*.cpp")
 file(GLOB SRC_DEVICE "src/core/device/*.hpp")
 
-if (BUILD_SHARED_LIBS)
+function(VAE_ADD_SHARED)
 	message("VAE: shared build")
 	add_library(vae
 		SHARED
@@ -47,8 +45,13 @@ if (BUILD_SHARED_LIBS)
 		PUBLIC
 			VAE_DLL_EXPORT
 	)
-else()
+endfunction()
+
+function(VAE_ADD_STATIC)
 	message("VAE: static build")
+	if(NOT VAE_BUILD_PIMPL)
+		UNSET(PIMPL_API)
+	endif()
 	add_library(vae
 		STATIC
 			${SRC_CORE}
@@ -56,12 +59,28 @@ else()
 			${SRC_DEVICE}
 			${PIMPL_API}
 	)
+endfunction()
+
+if(DEFINED VAE_BUILD_SHARED_LIBS)
+	if (VAE_BUILD_SHARED_LIBS)
+		VAE_ADD_SHARED()
+	else()
+		VAE_ADD_STATIC()
+	endif()
+else()
+	# standart cmake behavior
+	if (BUILD_SHARED_LIBS)
+		VAE_ADD_SHARED()
+	else()
+		VAE_ADD_STATIC()
+	endif()
 endif()
+
 
 source_group("core" FILES ${SRC_CORE})
 
 #Add an alias so that library can be used inside the build tree, e.g. when testing
-add_library(VAE::vae ALIAS vae)
+# add_library(VAE::vae ALIAS vae)
 
 #################            find third party libs             #################
 
@@ -102,4 +121,4 @@ if(VAE_PROFILER)
 endif()
 
 # for deveoloping
-add_subdirectory(dev)
+# add_subdirectory(dev)

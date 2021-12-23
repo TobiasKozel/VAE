@@ -9,8 +9,15 @@ Most of it one single compilation unit so the compilercangoon it's way and inlin
 whatever it wants to.
 This also means extending it is done directly in source and not via interfaces or other common mechanisms.
 
-The easiest way to get started is to compile a shared library with ```cmake -DBUILD_SHARED_LIBS=ON .```
-And then use the vae::EnginePimpl class in include/vae/vae_pimpl.hpp while linking against the shared library.
+The easiest way to get started is to compile a shared library with
+```
+mkdir build
+cd build
+cmake -DVAE_BUILD_SHARED_LIBS=ON ..
+make
+```
+And then use the vae::EnginePimpl class in include/vae/vae_pimpl.hpp while linking against the shared libvae.so/dll library.
+
 
 Alternatively you can add the whole thing as a subproject and static link against it.
 Using the pimpl api is optional but the better option since it won't pull in the whole thing.
