@@ -61,6 +61,7 @@ namespace vae { namespace core {
 					s.name		= i["name"];
 					s.path		= i["path"];
 					s.gain		= i["gain"];
+					s.resample	= (bool) i["resample"];
 					s.stream	= (bool) i["stream"];
 
 					std::string format	= i["format"];

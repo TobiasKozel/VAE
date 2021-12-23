@@ -99,7 +99,7 @@ namespace vae { namespace core {
 			}
 
 			for (auto& s : bank.sources) {
-				if (s.signal.sampleRate && s.signal.sampleRate != sampleRate) {
+				if (s.resample && s.signal.sampleRate && s.signal.sampleRate != sampleRate) {
 					tklb::ResamplerTpl<Sample>::resample(s.signal, sampleRate);
 				}
 			}

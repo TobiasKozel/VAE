@@ -18,6 +18,13 @@ namespace vae { namespace core {
 		Sample timeFract = 0.0;	///< Fractional time component for interpolation
 		Sample lowpassScratch[Config::MaxChannels];		///< Last sample per channel for IIR filter
 		Sample highpassScratch[Config::MaxChannels];	///< Last sample per channel for IIR filter
+
+		VoiceFilter() {
+			for (Size i = 0; i < Config::MaxChannels; i++) {
+				lowpassScratch[i]  = 0;
+				highpassScratch[i] = 0;
+			}
+		}
 	};
 
 	constexpr int _VAE_VOICE_FILTER_FILTERED_SIZE = sizeof(VoiceFilter);

@@ -417,13 +417,15 @@ namespace vae { namespace core {
 			GlobalEventHandle globalHandle,
 			EmitterHandle emitterHandle,
 			Sample gain = 1.0,
-			MixerHandle mixerHandle = InvalidMixerHandle
+			MixerHandle mixerHandle = InvalidMixerHandle,
+			ListenerHandle listenerHandle = AllListeners
 		) {
 			BankHandle bankHandle;
 			EventHandle eventHandle;
 			splitGlobalEventHandle(globalHandle, bankHandle, eventHandle);
 			return fireEvent(
-				bankHandle, eventHandle, emitterHandle, mixerHandle
+				bankHandle, eventHandle, emitterHandle,
+				gain, mixerHandle, listenerHandle
 			);
 		}
 
