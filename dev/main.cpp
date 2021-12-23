@@ -34,14 +34,17 @@ int main() {
 		config.rootPath = "../../../dev/";
 	#else
 		config.rootPath = "../../dev/";
+		// config.rootPath = "../../../demo/banks/";
 	#endif
 
 	config.eventCallback = &eventTriggered;
 	config.internalSampleRate = rate;
 
-	core::Engine engine(config); logMem();
+	core::Engine engine; logMem();
 
-	auto hrtf = engine.loadHRTF("hrtf.msgpack"); logMem();
+	engine.init(config); logMem();
+
+	// auto hrtf = engine.loadHRTF("hrtf.msgpack"); logMem();
 
 	engine.start(); logMem();
 
@@ -56,13 +59,14 @@ int main() {
 	if (result == Result::Success) {
 		// for (int i = 0; i < 1050; i++)
 		{
-			engine.fireGlobalEvent(vaeb::Bank1::Event1, emitter);
+			// engine.fireGlobalEvent(vaeb::Bank1::Event1, emitter);
+			engine.fireEvent(0, 0, emitter);
 		}
 
 		for (int i = 0; i < 5000; i++) {
 			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(1000 / float(60)));
 			float t = i * 0.1;
-			engine.setEmitter(emitter, {{ float(sin(t)), float(0), float(cos(t)) }, {} }, 0);
+			// engine.setEmitter(emitter, {{ float(sin(t)), float(0), float(cos(t)) }, {} }, 0);
 			// engine.setEmitter(emitter, {{ float(-1), float(0), float(0.0) }, {} }, 0);
 			// engine.update(); // needs to be ticked if EngineConfig::updateInAudioThread is false in
 		}

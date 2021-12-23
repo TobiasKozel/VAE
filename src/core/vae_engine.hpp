@@ -49,26 +49,27 @@ namespace vae { namespace core {
 		using Thread = std::thread;
 		using Semaphore = std::condition_variable;
 
-		EngineConfig mConfig;			//< Config object provided at initlalization
+		EngineConfig mConfig;			///< Config object provided at initlalization
 
-		VoiceManger mVoiceManager;		//< Holds and handle voices
-		SpatialManager mSpatialManager;	//< Holds and manages spatial emitters
-		BankManager mBankManager;		//< Holds and manages banks
+		VoiceManger mVoiceManager;		///< Holds and handle voices
+		SpatialManager mSpatialManager;	///< Holds and manages spatial emitters
+		BankManager mBankManager;		///< Holds and manages banks
 
 		Processor mProcessor;
 		MixerProcessor mMixerProcessor;
 		SpatialProcessor mSpatialProcessor;
 
 
-		Device* mDevice = nullptr;		//< Output device
-		AudioBuffer mScratchBuffer;		//< used to combine the signal from all banks and push it to the device
-		SampleIndex mTime = 0;			//< Global engine time in samples
-		Time mTimeFract = 0;			//< Global engine time in seconds
-		Sample mLimiterLastPeak = 1.0;	//< Master limiter last peak
+		Device* mDevice = nullptr;		///< Output device
+		AudioBuffer mScratchBuffer;		///< used to combine the signal from all banks and push it to the device
+		SampleIndex mTime = 0;			///< Global engine time in samples
+		Time mTimeFract = 0;			///< Global engine time in seconds
+		Sample mLimiterLastPeak = 1.0;	///< Master limiter last peak
+		Sample mMasterVolume = 1.0;		///< Master Colume applied after limiting
 
-		Thread* mAudioThread;			//< Thread processing voices and mixers
-		Semaphore* mAudioConsumed;		//< Notifies the audio thread when more audio is needed
-		Mutex mMutex;					//< Mutex to lock AudioThread and bank operations
+		Thread* mAudioThread;			///< Thread processing voices and mixers
+		Semaphore* mAudioConsumed;		///< Notifies the audio thread when more audio is needed
+		Mutex mMutex;					///< Mutex to lock AudioThread and bank operations
 		bool mAudioThreadRunning = false;
 
 		/**
@@ -127,7 +128,7 @@ namespace vae { namespace core {
 						mLimiterLastPeak = std::max(mLimiterLastPeak, currentPeak);
 						mScratchBuffer.multiply(Sample(1.0) / mLimiterLastPeak);
 					}
-
+					mScratchBuffer.multiply(mMasterVolume);
 					d.push(mScratchBuffer);
 					mScratchBuffer.set(0);
 					mTime += remaining;
@@ -437,8 +438,12 @@ namespace vae { namespace core {
 		/**
 		 * @brief Get the number of currently playing Voices
 		 */
-		int getActiveVoiceCount() const {
+		int _VAE_PUBLIC_API getActiveVoiceCount() const {
 			return mVoiceManager.getActiveVoiceCount();
+		}
+
+		void _VAE_PUBLIC_API setMasterVolume(float volume) {
+			mMasterVolume = volume;
 		}
 
 

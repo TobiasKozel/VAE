@@ -16,7 +16,7 @@ Alternatively you can add the whole thing as a subproject and static link agains
 Using the pimpl api is optional but the better option since it won't pull in all the headers.
 
 ## TODOs
-- Fix click at end of sounds
+- Fix click at end of sounds for speex reampled sounds
 - Mixer effects
 - Split up pod data and internal data structures so they can be exposed to the public API as well.
 - Parameter controls
@@ -39,11 +39,15 @@ Using the pimpl api is optional but the better option since it won't pull in all
 
 ## Features
 - Simple json bank format
-- 3D SPCAP or (slow) HRTF panning
+- 3D SPCAP or HRTF panning (slow implementation)
 - Events drive the sound
 - upfront .wav and .ogg loading, no streaming
 - Simple mixer hirachry
 - Multiple Listeners, no individual output devices however
+- Fixed mixrate with high quality resampler for deviceoutput (speex)
+- High quality resampling when loading audio
+- Realtime linear resampling otherwither
+- Per voice variable speed playback and high/lowpass filters
 
 ## Defines
 

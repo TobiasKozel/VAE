@@ -188,7 +188,7 @@ namespace vae { namespace core {
 
 					v.gain = event.gain * gain;
 
-					// v.filtered = true; // todo provide way to init the filter settings
+					v.filtered = true; // todo provide way to init the filter settings
 					if (v.filtered) {
 						mVoiceFiltered[i] = { };
 					}

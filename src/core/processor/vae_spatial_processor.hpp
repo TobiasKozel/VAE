@@ -16,17 +16,18 @@
 #include "../fs/vae_hrtf_loader.hpp"
 #include "../../../external/glm/glm/gtc/matrix_transform.hpp"
 #include "../../../external/tklb/src/types/audio/fft/TOouraFFT.hpp"
-#include "vae/vae.hpp"
 
 namespace vae { namespace core {
 	class SpatialProcessor {
 		HRTF mHRTF;								///< Currently loaded HRTF, there can only be one
 		HRTFLoader mHRTFLoader;					///< Struct to decode the hrtf
 		HeapBuffer<VoiceHRTF> mVoiceHRTFs;		///< Working data for convolution
+		AudioBuffer mFilteredSignal;			///< Temporary filtered signal TODO this will not work with parallel bank processing
 	public:
 		Result init(Size hrtfVoices) {
 			VAE_PROFILER_SCOPE
 			mVoiceHRTFs.resize(hrtfVoices);
+			mFilteredSignal.resize(Config::MaxBlock);
 			return Result::Success;
 		}
 
@@ -52,7 +53,7 @@ namespace vae { namespace core {
 				auto& signal = source.signal;
 
 				if (signal.size() == 0) { return false; }	// ! no signal
-				VAE_ASSERT(signal.sampleRate == sampleRate)	// ! needs resampling
+				VAE_ASSERT(signal.sampleRate == sampleRate || v.filtered)	// ! needs resampling
 				if (!spatial.hasEmitter(v.emitter)) { return false; } // ! needs emitter
 
 				const auto& emitter = spatial.getEmitter(v.emitter);
@@ -73,7 +74,7 @@ namespace vae { namespace core {
 				Vec3 relativeDirection = (lookAt * glm::vec4(emitter.position, 1.f));
 
 
-				const Sample distance = glm::length(relativeDirection);
+				const Sample distance = std::max(glm::length(relativeDirection), 0.1f);
 				relativeDirection /= distance;
 				Sample distanceAttenuated = distance;
 
@@ -89,14 +90,70 @@ namespace vae { namespace core {
 				 * @brief Start of the relevant signal
 				 * Spatialized voices only use about the first channel
 				 */
-				const Sample* const in = signal[0] + v.time;
-				const SampleIndex remaining = std::min(
+				const Sample* in;
+				SampleIndex remaining = std::min(
 					frames, SampleIndex(signal.size() - v.time
 				));
-				if (v.filtered) {
-					// TODO filter
-				}
 
+				bool finished = false;
+				if (v.filtered) {
+					VAE_PROFILER_SCOPE
+					remaining = frames; // playback speed affects this later on
+					auto& fd = manager.getVoiceFilter(vi);
+
+					if (!v.started) {
+						// Initialize filter variables when first playing the voice
+						fd.highpassScratch[0]	= 0;
+						fd.lowpassScratch[0]	= signal[0][0];
+					}
+
+					const Size countIn = signal.size(); // max samples we can read
+					// fractional time, we need the value after the loop, so it's defined outside
+					Sample position;
+					// Playback speed taking samplerate into account
+					const Sample speed = fd.speed * (Sample(signal.sampleRate) / Sample(sampleRate));
+					mFilteredSignal.set(); // clear shared buffer
+					for (SampleIndex s = 0; s < frames; s++) {
+						// Linear interpolation between two samples
+						position = v.time + (s * speed) + fd.timeFract;
+						const Sample lastPosition = std::floor(position);
+						const Size lastIndex = (Size) lastPosition;
+						const Size nextIndex = (Size) lastPosition + 1;
+
+						if (countIn <= nextIndex) {
+							remaining = s;
+							finished = true;
+							break;
+						}
+
+						Sample mix = position - lastPosition;
+						// mix = 0.5 * (1.0 - cos((mix) * 3.1416)); // cosine interpolation, introduces new harmonics somehow
+						const Sample last = signal[0][lastIndex] * gain;
+						const Sample next = signal[0][nextIndex] * gain;
+						// linear resampling, sounds alright enough
+						const Sample in = last + mix * (next - last);
+
+
+						//	* super simple lowpass and highpass filter
+						// just lerps with a previous value
+						const Sample lpd = in + fd.lowpass * (fd.lowpassScratch[0] - in);
+						fd.lowpassScratch[0] = lpd;
+
+						const Sample hps = fd.highpassScratch[0];
+						const Sample hpd = hps + fd.highpass * (in - hps);
+						fd.highpassScratch[0] = hpd;
+
+						mFilteredSignal[0][s] = (lpd - hpd);
+					}
+					position += speed; // step to next sample
+					v.time = std::floor(position); // split up in sample and fractional time
+					fd.timeFract = position - v.time;
+					in = mFilteredSignal[0];
+				} else {
+					in = signal[0] + v.time;
+					finished = remaining != frames;
+					v.time += remaining; // progress time in voice
+				}
 
 
 				if (l.configuration == Listener::Configuration::HRTF &&v.HRTF && mHRTF.rate) {
@@ -171,8 +228,8 @@ namespace vae { namespace core {
 					lastPan = std::move(currentPan);
 
 				}
-				v.time += remaining; // progress time in voice
-				return remaining == frames;
+				v.started = true;
+				return !finished;
 			});
 		}
 

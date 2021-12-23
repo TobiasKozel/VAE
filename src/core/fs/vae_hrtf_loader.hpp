@@ -67,13 +67,15 @@ namespace vae { namespace core {
 				return Result::GenericFailure;
 			}
 
+			Size maxIrLength = 0;
+
 			for (Size i = 0; i < positionCount; i++) {
 				HRTF::Position& p = hrtf.positions[i];
 				auto& pi = positions[i];
 				p.pos = (matchCoord * glm::vec4(pi["x"], pi["y"], pi["z"], 1.f));
 				nlohmann::json irSamples[2] = { pi["left"], pi["right"]};
 				const Size irLength = irSamples[0].size();
-
+				maxIrLength = std::max(maxIrLength, irLength);
 				for (int c = 0; c < 2; c++) {
 					p.ir[c].resize(irLength, 1);
 					for (Size j = 0; j < irLength; j++) {
@@ -81,6 +83,8 @@ namespace vae { namespace core {
 					}
 				}
 			}
+
+			hrtf.irLength = maxIrLength;
 
 			VAE_DEBUG("Finished loading HRTF %s", path)
 
