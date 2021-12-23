@@ -10,7 +10,7 @@ project(
 	LANGUAGES CXX
 )
 
-option(VAE_BUILD_SHARED_LIBS "Build shared lib" OFF)
+option(VAE_BUILD_SHARED_LIBS "Build shared lib" OFF)	# if this is on vae_dev doesn't compile :/
 option(VAE_BUILD_PIMPL "Build PIMPL API" OFF)			# On if shared libs are built, otherwise vae isn't useable beacuse it has no compile units
 option(VAE_PROFILER "Use profiler" OFF)
 option(VAE_BACKEND_PORTAUDIO "Compile with port audio" OFF)
@@ -88,6 +88,10 @@ find_package(tklb REQUIRED)
 
 set(VAE_DEPS tklb)
 
+# set(THREADS_PREFER_PTHREAD_FLAG ON)
+# find_package(Threads REQUIRED)
+# list(APPEND VAE_DEPS Threads::Threads)
+
 if(VAE_BACKEND_RTAUDIO)
 	find_package(RtAudio REQUIRED)
 	list(APPEND VAE_DEPS rtaudio) # lower case smh
@@ -121,4 +125,4 @@ if(VAE_PROFILER)
 endif()
 
 # for deveoloping
-# add_subdirectory(dev)
+add_subdirectory(dev)

@@ -29,7 +29,6 @@ lib
 *.blend1
 
 *.sofa
-*.wav
 **/doc/*
 **/*_gen.hpp
 **/*_gen.cpp
