@@ -139,7 +139,7 @@ namespace vae { namespace core {
 			// No voices left, find one to virtualize
 			if(starved) {
 				Size potentialVirtual = ~0;
-				Sample lowestGain = 1;
+				Sample lowestGain = 10;
 				for (Size i = searchStartIndex; i < searchEndIndex; i++) {
 					auto& v = mVoices[i];
 					if (v.critical) { continue; } // Don't kill important voices
@@ -151,7 +151,7 @@ namespace vae { namespace core {
 						}
 					}
 
-					if (v.gain < lowestGain) {
+					if (v.gain <= lowestGain) {
 						lowestGain = v.gain;
 						potentialVirtual = i;
 					}
@@ -232,6 +232,11 @@ namespace vae { namespace core {
 				slot = v;
 				v.source = InvalidSourceHandle;
 				mInactiveVoices++;
+				if (slot.HRTF) {
+					mActiveHRTFVoices--;
+				} else {
+					mActiveVoices--;
+				}
 				VAE_DEBUG_VOICES("Virtualized voice from event %i:%i\tactive: %i\tincative: %i",
 					v.event, v.bank, mActiveVoices, mInactiveVoices
 				)
@@ -256,12 +261,12 @@ namespace vae { namespace core {
 					// If we have inactive voices, revive one
 					for (Size i = 0; i < mVirtualVoices.size(); i++) {
 						auto virt = mVirtualVoices[i];
-						if (virt.source != InvalidSourceHandle) { continue; }
+						if (virt.source == InvalidSourceHandle) { continue; }
 						if (virt.HRTF == v.HRTF) {
-							mInactiveVoices--;
 							virt.started = false;	// marks filter buffers for clearing
 							v = virt;
 							virt.source = InvalidSourceHandle;
+							mInactiveVoices--;
 							VAE_DEBUG_VOICES("Revived voice from event %i:%i\tactive: %i\tincative: %i",
 								v.event, v.bank, mActiveVoices, mInactiveVoices
 							)

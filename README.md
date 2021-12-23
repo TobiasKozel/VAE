@@ -16,6 +16,7 @@ Alternatively you can add the whole thing as a subproject and static link agains
 Using the pimpl api is optional but the better option since it won't pull in all the headers.
 
 ## TODOs
+- Fix click at end of sounds
 - Mixer effects
 - Split up pod data and internal data structures so they can be exposed to the public API as well.
 - Parameter controls
@@ -30,12 +31,10 @@ Using the pimpl api is optional but the better option since it won't pull in all
 - some sort of baisc authoring tool
 - Obstruction
 - Geometry and material system
-- Virtual voices
-- Voice priority system
+- Voice priority system (got unkillable voice)
 - Seperate Mixing hirarchies for each listener
 - Seperate Audio device per listener
 - Inject audio stream at runtime (e.g. for VoiP)
-- Seperate voice pools for streaming and and HRTF
 
 
 ## Features
