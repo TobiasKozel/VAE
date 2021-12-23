@@ -38,11 +38,8 @@ for i in range(len(lines)):
 	func = Func()
 	if line.find(token) == -1 or line.find("#define") != -1:
 		continue
-	if line.find("Engine") != -1:
-		func.returns = "Engine"
-		continue #ignore constructor for now
 
-	for j in range(i, i + 5):
+	for j in range(i, i + 20):
 			func.text += lines[j]
 			if line.find(")") != -1:
 				# function head end found
@@ -126,11 +123,10 @@ class %s {
 	~%s() { };
 public:
 	static %s* _VAE_API_EXPORT create();
-	static %s* _VAE_API_EXPORT create(const EngineConfig& config);
 
 	void _VAE_API_EXPORT destroy();
 
-"""%((className,) * 7))
+"""%((className,) * 6))
 
 for func in functions:
 	text = ""
@@ -173,17 +169,12 @@ using namespace vae;
 	return reinterpret_cast<%s*>(e);
 }
 
-%s* %s::create(const EngineConfig& config) {
-	auto e = new core::Engine(config);
-	return reinterpret_cast<%s*>(e);
-}
-
 void %s::destroy() {
 	auto e = reinterpret_cast<core::Engine*>(this);
 	delete e;
 }
 
-"""%((className,) * 7))
+"""%((className,) * 4))
 
 for func in functions:
 	text = ""

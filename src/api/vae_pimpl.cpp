@@ -7,14 +7,18 @@ EnginePimpl* EnginePimpl::create() {
 	return reinterpret_cast<EnginePimpl*>(e);
 }
 
-EnginePimpl* EnginePimpl::create(const EngineConfig& config) {
-	auto e = new core::Engine(config);
-	return reinterpret_cast<EnginePimpl*>(e);
-}
-
 void EnginePimpl::destroy() {
 	auto e = reinterpret_cast<core::Engine*>(this);
 	delete e;
+}
+
+Result EnginePimpl::init (
+	const EngineConfig& config
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.init(
+		config
+	);
 }
 
 Result EnginePimpl::start () {
@@ -33,34 +37,38 @@ void EnginePimpl::update () {
 }
 
 Result EnginePimpl::fireEvent (
-	BankHandle bank,
+	BankHandle bankHandle,
 	EventHandle eventHandle,
 	EmitterHandle emitterHandle,
-	Sample gain,
-	MixerHandle mixerHandle
+	float gain,
+	MixerHandle mixerHandle,
+	ListenerHandle listenerHandle
 ) {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.fireEvent(
-		bank,
+		bankHandle,
 		eventHandle,
 		emitterHandle,
 		gain,
-		mixerHandle
+		mixerHandle,
+		listenerHandle
 	);
 }
 
 Result EnginePimpl::fireGlobalEvent (
 	GlobalEventHandle globalHandle,
 	EmitterHandle emitterHandle,
-	Sample gain,
-	MixerHandle mixerHandle
+	float gain,
+	MixerHandle mixerHandle,
+	ListenerHandle listenerHandle
 ) {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.fireGlobalEvent(
 		globalHandle,
 		emitterHandle,
 		gain,
-		mixerHandle
+		mixerHandle,
+		listenerHandle
 	);
 }
 
@@ -70,6 +78,20 @@ Result EnginePimpl::stopEmitter (
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.stopEmitter(
 		emitter
+	);
+}
+
+int EnginePimpl::getActiveVoiceCount () {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.getActiveVoiceCount();
+}
+
+void EnginePimpl::setMasterVolume (
+	float volume
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.setMasterVolume(
+		volume
 	);
 }
 

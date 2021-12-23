@@ -296,7 +296,7 @@ namespace vae { namespace core {
 		Result _VAE_PUBLIC_API fireEvent(
 			BankHandle bankHandle, EventHandle eventHandle,
 			EmitterHandle emitterHandle,
-			Sample gain = 1.0,
+			float gain = 1.0,
 			MixerHandle mixerHandle = InvalidMixerHandle,
 			ListenerHandle listenerHandle = AllListeners
 		) {
@@ -417,7 +417,7 @@ namespace vae { namespace core {
 		Result _VAE_PUBLIC_API fireGlobalEvent(
 			GlobalEventHandle globalHandle,
 			EmitterHandle emitterHandle,
-			Sample gain = 1.0,
+			float gain = 1.0,
 			MixerHandle mixerHandle = InvalidMixerHandle,
 			ListenerHandle listenerHandle = AllListeners
 		) {

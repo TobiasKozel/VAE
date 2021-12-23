@@ -31,9 +31,20 @@ class EnginePimpl {
 	~EnginePimpl() { };
 public:
 	static EnginePimpl* _VAE_API_EXPORT create();
-	static EnginePimpl* _VAE_API_EXPORT create(const EngineConfig& config);
 
 	void _VAE_API_EXPORT destroy();
+
+	/**
+	 * @brief Initialized the engine and does most of the upfront allocations.
+	 * @details Everything will be allocated according to the provided config.
+	 * Loading a Bank will still cause an allocation.
+	 * If there are already banks loaded, they will be reloaded to have the correct samplerate.
+	 * @param config Optional config to setup the internals.
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT init (
+		const EngineConfig& config = {}
+	);
 
 	/**
 	 * @brief Tries to open default device and start audio thread.
@@ -61,14 +72,16 @@ public:
 	 * @param emitterHandle handle of the emitter, needed for spatial audio or controlling the voice
 	 * @param gain optional volume factor
 	 * @param mixerHandle optional id of mixer channel sound will be routed to, this will override the one set in the event
+	 * @param listenerHandle For which listener this event will be adible for, default to all
 	 * @return Result
 	 */
 	Result _VAE_API_EXPORT fireEvent (
-		BankHandle bank,
+		BankHandle bankHandle,
 		EventHandle eventHandle,
 		EmitterHandle emitterHandle,
-		Sample gain = 1.0,
-		MixerHandle mixerHandle = InvalidMixerHandle
+		float gain = 1.0,
+		MixerHandle mixerHandle = InvalidMixerHandle,
+		ListenerHandle listenerHandle = AllListeners
 	);
 
 	/**
@@ -84,12 +97,22 @@ public:
 	Result _VAE_API_EXPORT fireGlobalEvent (
 		GlobalEventHandle globalHandle,
 		EmitterHandle emitterHandle,
-		Sample gain = 1.0,
-		MixerHandle mixerHandle = InvalidMixerHandle
+		float gain = 1.0,
+		MixerHandle mixerHandle = InvalidMixerHandle,
+		ListenerHandle listenerHandle = AllListeners
 	);
 
 	Result _VAE_API_EXPORT stopEmitter (
 		EmitterHandle emitter
+	);
+
+	/**
+	 * @brief Get the number of currently playing Voices
+	 */
+	int _VAE_API_EXPORT getActiveVoiceCount ();
+
+	void _VAE_API_EXPORT setMasterVolume (
+		float volume
 	);
 
 	EmitterHandle _VAE_API_EXPORT createEmitter ();
@@ -137,8 +160,9 @@ public:
 	);
 
 	/**
-	 * @brief Load bank from filesystem
-	 * Locks audio thread
+	 * @brief Load bank from filesystem.
+	 * @details This operation might take a little time but won't lock the audio thread
+	 * until the bank is inserted. This should be safe to do at any time.
 	 * @param path
 	 * @return Result
 	 */
