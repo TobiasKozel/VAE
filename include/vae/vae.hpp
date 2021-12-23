@@ -138,7 +138,7 @@ namespace vae {
 	 */
 	struct EngineConfig {
 		/**
-		 * @brief Path where the bank files are located
+		 * @brief Path where the bank files are located, needs to end with a trailing /
 		 */
 		const char* rootPath = "./";
 
