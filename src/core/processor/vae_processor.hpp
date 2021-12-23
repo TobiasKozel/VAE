@@ -78,7 +78,7 @@ namespace vae { namespace core {
 						// Initialize filter variables when first playing the voice
 						for (int c = 0; c < Config::MaxChannels; c++) {
 							fd.highpassScratch[c]	= 0;
-							fd.lowpassScratch[c]	= signal[c % signal.channels()][0];
+							fd.lowpassScratch[c]	= signal[c % signal.channels()][v.time];
 						}
 						v.started = true;
 					}

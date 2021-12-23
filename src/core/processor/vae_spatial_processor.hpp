@@ -104,7 +104,7 @@ namespace vae { namespace core {
 					if (!v.started) {
 						// Initialize filter variables when first playing the voice
 						fd.highpassScratch[0]	= 0;
-						fd.lowpassScratch[0]	= signal[0][0];
+						fd.lowpassScratch[0]	= signal[0][v.time];
 					}
 
 					const Size countIn = signal.size(); // max samples we can read

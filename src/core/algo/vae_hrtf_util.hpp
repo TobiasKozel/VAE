@@ -47,11 +47,11 @@ namespace vae { namespace core {
 			HRTF::Position& hrtf, VoiceHRTF& hrtfVoice, SampleIndex frames,
 			AudioBuffer& target, const Sample* in, Sample distanceAttenuated
 		) {
-			const auto& irLeft  = hrtf.ir[0][0];
-			const auto& irRight = hrtf.ir[1][0];
-			const auto irLen    = hrtf.ir[0].size();
-			auto convolutionBuffer = hrtfVoice.convolutionBuffer[0];
-			auto convolutionIndex = hrtfVoice.convolutionIndex;
+			const Sample* irLeft   = hrtf.ir[0][0];
+			const Sample* irRight  = hrtf.ir[1][0];
+			const Size irLen    = hrtf.ir[0].size();
+			Sample* convolutionBuffer = hrtfVoice.convolutionBuffer[0];
+			Size convolutionIndex = hrtfVoice.convolutionIndex;
 			// TODO bad brute force convolution in time domain
 			for (SampleIndex i = 0; i < frames; i++) {
 				Sample leftSum = 0;
@@ -59,14 +59,15 @@ namespace vae { namespace core {
 				convolutionBuffer[convolutionIndex] = in[i];
 
 				for (SampleIndex n = 0; n < irLen; n++) {
-					const auto conv = convolutionBuffer[(irLen + convolutionIndex - n) % irLen];
+					const Sample conv = convolutionBuffer[(irLen + convolutionIndex - n) % irLen];
 					leftSum  += irLeft[n]  * conv;
 					rightSum += irRight[n] * conv;
 				}
 				target[0][i] += leftSum  * distanceAttenuated;
 				target[1][i] += rightSum * distanceAttenuated;
-				hrtfVoice.convolutionIndex = (convolutionIndex + 1) % irLen;
+				convolutionIndex = (convolutionIndex + 1) % irLen;
 			}
+			hrtfVoice.convolutionIndex = convolutionIndex;
 		}
 	}; // HRTFUtil
 } } // core::vae
