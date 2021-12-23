@@ -22,12 +22,15 @@ namespace vae { namespace core {
 		HRTF mHRTF;								///< Currently loaded HRTF, there can only be one
 		HRTFLoader mHRTFLoader;					///< Struct to decode the hrtf
 		HeapBuffer<VoiceHRTF> mVoiceHRTFs;		///< Working data for convolution
-		AudioBuffer mFilteredSignal;			///< Temporary filtered signal TODO this will not work with parallel bank processing
+		/**
+		 * @brief Temporary filtered/looped signal TODO this will not work with parallel bank processing
+		 */
+		AudioBuffer mScratchBuffer;
 	public:
 		Result init(Size hrtfVoices) {
 			VAE_PROFILER_SCOPE
 			mVoiceHRTFs.resize(hrtfVoices);
-			mFilteredSignal.resize(Config::MaxBlock);
+			mScratchBuffer.resize(Config::MaxBlock);
 			return Result::Success;
 		}
 
@@ -48,21 +51,20 @@ namespace vae { namespace core {
 			manager.forEachVoice([&](Voice& v, Size vi) {
 				if (v.bank != bank.id) { return true; }		// wrong bank
 				if (!v.spatialized) { return true; }		// not spatialized
+				if (!spatial.hasEmitter(v.emitter)) { return false; } // ! needs emitter
 
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
 
 				if (signal.size() == 0) { return false; }	// ! no signal
-				VAE_ASSERT(signal.sampleRate == sampleRate || v.filtered)	// ! needs resampling
-				if (!spatial.hasEmitter(v.emitter)) { return false; } // ! needs emitter
+
+				if (signal.sampleRate == sampleRate) {
+					v.filtered = true; // implicitly filter to resample
+				}
 
 				const auto& emitter = spatial.getEmitter(v.emitter);
-
 				auto& target = bank.mixers[v.mixer].buffer;
-				target.setValidSize(frames); // mark mixer as active
-
-				const auto gain = v.gain * source.gain;
-
+				const Sample gain = v.gain * source.gain;
 				auto& l = spatial.getListeners()[v.listener];
 
 				// * Attenuation calculation
@@ -84,21 +86,20 @@ namespace vae { namespace core {
 				distanceAttenuated *= gain;
 
 				if (distanceAttenuated < Config::MinVolume) { return true; } // ! inaudible
+				target.setValidSize(frames); // mark mtarget ixer as active
 				v.audible = true;
 
-				/**
-				 * @brief Start of the relevant signal
-				 * Spatialized voices only use about the first channel
-				 */
-				const Sample* in;
-				SampleIndex remaining = std::min(
-					frames, SampleIndex(signal.size() - v.time
-				));
+				// * Filtering and looping logic
 
-				bool finished = false;
+				// TODO This thing is littered with branches, maybe needs some cleanup
+
+				const auto signalLength = signal.size();
+				const Sample* in;				// The filtered, looped original signal used for panning later. We only do mono signals
+				SampleIndex remaining = frames;	// playback speed and looping affects this
+				bool finished = false; 			// the return value of this function stops the voice
+
 				if (v.filtered) {
 					VAE_PROFILER_SCOPE
-					remaining = frames; // playback speed affects this later on
 					auto& fd = manager.getVoiceFilter(vi);
 
 					if (!v.started) {
@@ -107,12 +108,10 @@ namespace vae { namespace core {
 						fd.lowpassScratch[0]	= signal[0][v.time];
 					}
 
-					const Size countIn = signal.size(); // max samples we can read
 					// fractional time, we need the value after the loop, so it's defined outside
 					Sample position;
 					// Playback speed taking samplerate into account
 					const Sample speed = fd.speed * (Sample(signal.sampleRate) / Sample(sampleRate));
-					mFilteredSignal.set(); // clear shared buffer
 					for (SampleIndex s = 0; s < frames; s++) {
 						// Linear interpolation between two samples
 						position = v.time + (s * speed) + fd.timeFract;
@@ -120,7 +119,7 @@ namespace vae { namespace core {
 						const Size lastIndex = (Size) lastPosition;
 						const Size nextIndex = (Size) lastPosition + 1;
 
-						if (countIn <= nextIndex) {
+						if (signalLength <= nextIndex && !v.loop) {
 							remaining = s;
 							finished = true;
 							break;
@@ -128,11 +127,10 @@ namespace vae { namespace core {
 
 						Sample mix = position - lastPosition;
 						// mix = 0.5 * (1.0 - cos((mix) * 3.1416)); // cosine interpolation, introduces new harmonics somehow
-						const Sample last = signal[0][lastIndex] * gain;
-						const Sample next = signal[0][nextIndex] * gain;
+						const Sample last = signal[0][lastIndex % signalLength] * gain;
+						const Sample next = signal[0][nextIndex % signalLength] * gain;
 						// linear resampling, sounds alright enough
 						const Sample in = last + mix * (next - last);
-
 
 						//	* super simple lowpass and highpass filter
 						// just lerps with a previous value
@@ -143,20 +141,38 @@ namespace vae { namespace core {
 						const Sample hpd = hps + fd.highpass * (in - hps);
 						fd.highpassScratch[0] = hpd;
 
-						mFilteredSignal[0][s] = (lpd - hpd);
+						mScratchBuffer[0][s] = (lpd - hpd);
 					}
-					position += speed; // step to next sample
-					v.time = std::floor(position); // split up in sample and fractional time
-					fd.timeFract = position - v.time;
-					in = mFilteredSignal[0];
+					position += speed; 					// step to next sample
+					v.time = std::floor(position);		// split the signal in normal sample position
+					fd.timeFract = position - v.time;	// and fractional time for the next block
+					v.time = v.time % signalLength;		// set index back into bounds if we're looping
+					in = mScratchBuffer[0];				// set the buffer to use for panning
 				} else {
-					in = signal[0] + v.time;
-					finished = remaining != frames;
-					v.time += remaining; // progress time in voice
+					if (v.loop) {
+						// put the looped signal in scratch buffer eventhough we're not filtering
+						// so panning doesn't need to worry about looping
+						for (SampleIndex s = 0; s < frames; s++) {
+							mScratchBuffer[0][s] = signal[0][(v.time + s) % signal.size()];
+						}
+						v.time = (v.time + frames) % signal.size(); // progress the time and make sure it's in bounds
+						in = mScratchBuffer[0];						// set buffer for panning
+						finished = false;							// never stop the voice
+					} else {
+						// Not filtering or looping
+						// Means we can use the original signal buffer but need to
+						// set the remaining samples so we don't run over the signal end
+						remaining = std::min(
+							frames, SampleIndex(signalLength - v.time
+						));
+						in = signal[0] + v.time;
+						finished = remaining != frames;	// we might have reached the end
+						v.time += remaining;			// progress time in voice
+					}
 				}
 
 
-				if (l.configuration == Listener::Configuration::HRTF &&v.HRTF && mHRTF.rate) {
+				if (l.configuration == Listener::Configuration::HRTF && v.HRTF && mHRTF.rate) {
 					// * HRTF Panning
 					VAE_ASSERT(vi < mVoiceHRTFs.size()) // only the lower voice can use hrtfs
 					VAE_PROFILER_SCOPE
@@ -177,9 +193,7 @@ namespace vae { namespace core {
 						hrtfVoice, remaining, target, in, distanceAttenuated
 					);
 
-				}
-
-				{
+				} else {
 					VAE_PROFILER_SCOPE
 					// * Normal SPCAP panning
 					auto& lastPan = manager.getVoicePan(vi);
@@ -226,7 +240,6 @@ namespace vae { namespace core {
 					}
 
 					lastPan = std::move(currentPan);
-
 				}
 				v.started = true;
 				return !finished;

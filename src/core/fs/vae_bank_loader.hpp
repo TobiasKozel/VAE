@@ -146,6 +146,7 @@ namespace vae { namespace core {
 					e.force_mixer	= (bool) i["force_mixer"];
 					e.HRTF 			= (bool) i["hrtf"];
 					e.spatial 		= (bool) i["spatial"];
+					e.loop			= (bool) i["loop"];
 
 					if (i["source"].is_null()) {
 						e.source = InvalidSourceHandle;

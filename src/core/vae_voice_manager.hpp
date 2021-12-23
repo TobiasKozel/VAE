@@ -35,7 +35,7 @@ namespace vae { namespace core {
 		HeapBuffer<Voice> mFinishedVoiceQueue;	///< voices that finished playing are queued here
 		HeapBuffer<Voice> mVoices;				///< Currently playing voice are here
 		HeapBuffer<Voice> mVirtualVoices;		///<
-		HeapBuffer<VoicePan> mVoicePans;		///< Interpolation data for the panning algorithm
+		HeapBuffer<VoicePan> mVoicePans;		///< Interpolation data for the panning algorithm or manual panning data
 		HeapBuffer<VoiceFilter> mVoiceFiltered;	///< Data needed for filtering is here
 
 		Size mActiveVoices = 0;					///< Number of currently playing voices
@@ -44,7 +44,6 @@ namespace vae { namespace core {
 		Size mHRTFVoiceCount = 0;				///< Number of voices reserved for hrtf
 		Size mHighestVoice = 0;					///< TODO bad
 		Size mHighestFinishedVoice = 0;			///< TODO bad as well
-
 	public:
 		Result init(const EngineConfig& config) {
 			VAE_PROFILER_SCOPE
@@ -187,7 +186,7 @@ namespace vae { namespace core {
 					}
 
 					v.gain = event.gain * gain;
-
+					v.loop = event.loop;
 					v.filtered = true; // todo provide way to init the filter settings
 					if (v.filtered) {
 						mVoiceFiltered[i] = { };
@@ -195,9 +194,7 @@ namespace vae { namespace core {
 
 					v.emitter = emitter;
 					v.spatialized = event.spatial;
-					if (v.spatialized) {
-						mVoicePans[i] = { };
-					}
+					mVoicePans[i] = { };	// Always clear this since non spatial use this for manual panning
 					v.HRTF = event.HRTF;
 					v.bank = bank;
 					if (v.HRTF) {

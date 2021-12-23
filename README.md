@@ -13,22 +13,19 @@ The easiest way to get started is to compile a shared library with ```cmake -DBU
 And then use the vae::EnginePimpl class in include/vae/vae_pimpl.hpp while linking against the shared library.
 
 Alternatively you can add the whole thing as a subproject and static link against it.
-Using the pimpl api is optional but the better option since it won't pull in all the headers.
+Using the pimpl api is optional but the better option since it won't pull in the whole thing.
 
 ## TODOs
 - Fix click at end of sounds for speex reampled sounds
 - Mixer effects
 - Split up pod data and internal data structures so they can be exposed to the public API as well.
-- Parameter controls
+- Parameter controls and smoothing
 - State
 - Automation
-- Gapless looping
-- Variable speed playback
-- Filtered voices
-- Faster HRTF
+- Faster HRTF and interpolation
 - streaming
 - signal generators
-- some sort of baisc authoring tool
+- some sort of basic authoring tool
 - Obstruction
 - Geometry and material system
 - Voice priority system (got unkillable voice)

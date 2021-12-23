@@ -36,34 +36,47 @@ namespace vae { namespace core {
 				auto& signal = source.signal;
 
 				if (signal.size() == 0) { return false; }
-
-				VAE_ASSERT(signal.sampleRate == sampleRate || v.filtered);
+				if (signal.sampleRate == sampleRate) {
+					v.filtered = true; // implicitly filter to resample
+				}
 
 				auto& mixer = bank.mixers[v.mixer];
 				auto& target = mixer.buffer;
-
-				target.setValidSize(frames); // mark mixer as active
-
-
 				const auto gain = v.gain * source.gain;
 
 				// TODO skip inaudible sounds
 				v.audible = true;
+				auto& pan = manager.getVoicePan(index);
+				const auto signalLength = signal.size();
+				const auto signalChannels = signal.channels();
+				const auto targetChannels = target.channels();
+				target.setValidSize(frames); // mark mixer as active
 
 				if (!v.filtered) {
 					VAE_PROFILER_SCOPE
 					// Basic rendering to all output channels w/o any effects
 					v.started = true;
-					const SampleIndex remaining = std::min(
-						frames, SampleIndex(signal.size() - v.time)
-					);
-					for (int c = 0; c < target.channels(); c++) {
-						const int channel = c % signal.channels();
+					SampleIndex remaining;
+
+					if (v.loop) {
+						remaining = frames;
+					} else {
+						remaining = std::min( frames, SampleIndex(signal.size() - v.time));
+					}
+
+					for (int c = 0; c < targetChannels; c++) {
+						const int channel = c % signalChannels;
 						for (SampleIndex s = 0; s < remaining; s++) {
-							target[c][s] += signal[channel][v.time + s] * gain;
+							target[c][s] +=
+								signal[channel][(v.time + s) % signalLength] *
+								gain * pan.volumes[c];
 						}
 					}
-					v.time += remaining; // progress time in voice
+					v.time = (v.time + frames) % signal.size(); // progress voice and keep it in bounds
+
+					if (v.loop) {
+						return true; // we don't stop the voice when looping
+					}
 					return remaining == frames; // Finished if there are no samples left in source
 				}
 
@@ -78,13 +91,11 @@ namespace vae { namespace core {
 						// Initialize filter variables when first playing the voice
 						for (int c = 0; c < Config::MaxChannels; c++) {
 							fd.highpassScratch[c]	= 0;
-							fd.lowpassScratch[c]	= signal[c % signal.channels()][v.time];
+							fd.lowpassScratch[c]	= signal[c % signalChannels][v.time];
 						}
 						v.started = true;
 					}
 
-					// max samples we can read
-					const Size countIn = signal.size();
 					// fractional time, we need the value after the loop, so it's defined outside
 					Sample position;
 
@@ -100,18 +111,17 @@ namespace vae { namespace core {
 							const Size lastIndex = (Size) lastPosition;
 							const Size nextIndex = (Size) lastPosition + 1;
 
-							if (countIn <= nextIndex) {
+							if (signalLength <= nextIndex && !v.loop) {
 								finished = true;
 								break;
 							}
 
 							Sample mix = position - lastPosition;
 							// mix = 0.5 * (1.0 - cos((mix) * 3.1416)); // cosine interpolation, introduces new harmonics somehow
-							const Sample last = signal[channel][lastIndex] * gain;
-							const Sample next = signal[channel][nextIndex] * gain;
+							const Sample last = signal[channel][lastIndex % signalLength] * gain;
+							const Sample next = signal[channel][nextIndex % signalLength] * gain;
 							// linear resampling, sounds alright enough
 							const Sample in = last + mix * (next - last);
-
 
 							//	* super simple lowpass and highpass filter
 							// just lerps with a previous value
@@ -122,13 +132,14 @@ namespace vae { namespace core {
 							const Sample hpd = hps + fd.highpass * (in - hps);
 							fd.highpassScratch[c] = hpd;
 
-							target[c][s] += (lpd - hpd);
+							target[c][s] += (lpd - hpd) * pan.volumes[c];
 						}
 					}
-					position += speed; // step to next sample
-					v.time = std::floor(position); // split up in sample and fractional time
-					fd.timeFract = position - v.time;
-					return !finished;
+					position += speed; 					// step to next sample
+					v.time = std::floor(position);		// split the signal in normal sample position
+					fd.timeFract = position - v.time;	// and fractional time for the next block
+					v.time = v.time % signalLength;		// set index back into bounds if we're looping
+					return !finished;					// is only true when exceeding signalLength and not looping
 				}
 			});
 		}
