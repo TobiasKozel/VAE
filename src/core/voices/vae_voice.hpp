@@ -8,7 +8,12 @@
 
 namespace vae { namespace core {
 	/**
-	 * @brief Barebones voice. Enough to play back a non spatialized and non filtered sound.
+	 * @brief Barebones voice.
+	 * Enough to play back a non spatialized and non filtered sound.
+	 * Other structs extend this and depend on it
+	 * @see VoicePan
+	 * @see VoiceHRTF
+	 * @see VoiceFilter
 	 */
 	struct Voice {
 		bool spatialized : 1;	///< If the voice has spatialization data

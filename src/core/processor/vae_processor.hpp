@@ -47,12 +47,12 @@ namespace vae { namespace core {
 
 				const auto gain = v.gain * source.gain;
 
-
-				v.started = true;
+				// TODO skip inaudible sounds
 				v.audible = true;
 
 				if (!v.filtered) {
 					// Basic rendering to all output channels w/o any effects
+					v.started = true;
 					const SampleIndex remaining = std::min(
 						frames, SampleIndex(signal.size() - v.time)
 					);
@@ -72,12 +72,13 @@ namespace vae { namespace core {
 
 				auto& fd = manager.getVoiceFilter(index);
 
-				if (v.time == 0) {
+				if (!v.started) {
 					// Initialize filter variables when first playing the voice
 					for (int c = 0; c < Config::MaxChannels; c++) {
 						fd.highpassScratch[c]	= 0;
 						fd.lowpassScratch[c]	= signal[c % signal.channels()][0];
 					}
+					v.started = true;
 				}
 
 				// max samples we can read
@@ -88,6 +89,7 @@ namespace vae { namespace core {
 				for (int c = 0; c < target.channels(); c++) {
 					const int channel = c % signal.channels();
 					for (SampleIndex s = 0; s < frames; s++) {
+						// Linear interpolation between two samples
 						position = v.time + (s * fd.speed) + fd.timeFract;
 						const Sample lastPosition = std::floor(position);
 						const Size lastIndex = (Size) lastPosition;

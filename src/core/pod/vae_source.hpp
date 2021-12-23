@@ -8,7 +8,8 @@
 namespace vae { namespace core {
 	struct Source {
 		SourceHandle id = InvalidSourceHandle;
-		bool stream : 1;		///< If false entire sample will be loaded in ram
+		bool stream : 1;		///< If false entire sample will be loaded in ram, there's no streaming for now
+		bool resample: 1;		///< Whether the sound will be resampled when loading it
 		enum class Format {
 			wav,		///< Uses dr_wav to decode wavs
 			ogg,		///< Uses stb_vorbis to decode oggs

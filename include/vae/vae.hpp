@@ -50,6 +50,7 @@ namespace vae {
 	constexpr BankHandle InvalidBankHandle			= ~0;
 	constexpr MixerHandle InvalidMixerHandle		= ~0;
 	constexpr ListenerHandle InvalidListenerHandle	= ~0;
+	constexpr ListenerHandle AllListeners			= (~0) - 1; ///< Will address all listeners
 	constexpr EmitterHandle InvalidEmitterHandle	= ~0;
 	constexpr GlobalEventHandle InvalidGlobalEventHandle
 		= InvalidEventHandle | (InvalidBankHandle << (sizeof(EventHandle) * 8));
@@ -75,7 +76,9 @@ namespace vae {
 		ValidHandleRequired,		///< Handle provided wasn't valid but needs to be
 		TooManyRecords,				///< Can't fit all data in fixed size array
 		DeviceError,				///< Can't open audio device
-		DuplicateEmitter			///< Trying to register emitter twice
+		DuplicateEmitter,			///< Trying to register emitter twice
+		InvalidBank,				///< Valid bank handle needed
+		InvalidEmitter				///< Emitter probably wasn't registered
 	};
 
 	/**

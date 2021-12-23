@@ -20,6 +20,21 @@ namespace vae { namespace core {
 		Mutex mMutex;					// Lock the bank for changes
 		BankLoader mBankLoader;
 	public:
+		/**
+		 * @brief Will reload all the banks
+		 *
+		 * @param rootPath
+		 * @param sampleRate
+		 */
+		void init(const char* rootPath, int sampleRate) {
+			for (auto& i : mBanks) {
+				if (i.id != InvalidBankHandle) { continue; }
+				PathString path = i.path;
+				unloadFromId(i.id);
+				load(path.c_str(), rootPath, sampleRate);
+			}
+		}
+
 		HeapBuffer<Bank>& all() {
 			return mBanks;
 		}

@@ -5,6 +5,10 @@
  * Banks are read in as json files and contain all data neded to play back audio.
  *
  * [See the main readme for more details](../README.md)
+ *
+ * [See readme about the driving data structures](../src/core/pod/README.md)
+ *
+ * Also vae::EnginePimpl or vae::core::Engine is a good place to start
  * @section install_sec Installation
  * All dependencies are included, submodules need to be initalized.
  * cmake will build a static a static lib by default and a simple example from the dev folder.

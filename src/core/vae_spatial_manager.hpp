@@ -8,6 +8,7 @@
 #include "./vae_util.hpp"
 #include "./vae_types.hpp"
 #include "./pod/vae_listener.hpp"
+#include "vae/vae.hpp"
 
 namespace vae { namespace core {
 	class SpatialManager {
@@ -16,9 +17,10 @@ namespace vae { namespace core {
 		Map<EmitterHandle, Emitter> mEmitters;	// All emitters across banks
 		Listeners mListeners;					// All Listeners
 	public:
-		SpatialManager(Size emitterCount) {
+		Result init(Size emitterCount) {
 			VAE_PROFILER_SCOPE
 			mEmitters.reserve(emitterCount);
+			return Result::Success;
 		}
 
 		Result addEmitter(EmitterHandle e) {
@@ -106,13 +108,20 @@ namespace vae { namespace core {
 		}
 
 		template <class Func>
-		void forEachListener(const Func&& func) {
+		Result forListeners(ListenerHandle handle, const Func&& func) {
 			VAE_PROFILER_SCOPE
-			for(ListenerHandle index = 0; index < Config::MaxListeners; index++) {
-				auto& i = mListeners[index];
-				if (i.id == InvalidListenerHandle) { continue; }
-				func(i, index);
+			if (handle == AllListeners) {
+				for(ListenerHandle index = 0; index < Config::MaxListeners; index++) {
+					auto& i = mListeners[index];
+					if (i.id == InvalidListenerHandle) { continue; }
+					Result result = func(i);
+					if (result != Result::Success) {
+						return result;
+					}
+				}
+				return Result::Success;
 			}
+			return func(mListeners[handle]);
 		}
 
 		ListenerHandle createListener() {
@@ -162,15 +171,10 @@ namespace vae { namespace core {
 
 		void update(VoiceManger& manager, BankManager& banks) {
 			VAE_PROFILER_SCOPE
-			manager.forEachVoice([&](Voice& v, Size vi) {
-				if (v.audible) { return true; }
-				if (!v.started) { return true; }
-				if (!v.spatialized) { return true; }
-				return false; // kill the inaudible voice
-			});
 
 			// TODO perf maybe swap loops
-			forEachListener([&](Listener& l, ListenerHandle li) {
+			// This triggers nearby auto emitters
+			forListeners(AllListeners, [&](Listener& l) {
 				for (auto& emitter : mEmitters) {
 					auto& e = emitter.second;
 					// TODO seperate auto emitter somehow
@@ -181,11 +185,15 @@ namespace vae { namespace core {
 					if (distance < e.maxDist) {
 						mEmitters[emitter.first].autoplaying = true;
 						auto& bank = banks.get(e.bank);
+						// we only trigger the sound for the listener nearby
+						// might not be ideal
 						manager.play(
-							bank.events[e.event], e.bank, 1.0, emitter.first, InvalidMixerHandle
+							bank.events[e.event], e.bank, 1.0,
+							emitter.first, l.id, InvalidMixerHandle
 						);
 					}
 				}
+				return Result::Success;
 			});
 		}
 	};

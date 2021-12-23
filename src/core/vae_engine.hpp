@@ -13,7 +13,6 @@
 #include "./pod/vae_emitter.hpp"
 #include "./vae_voice_manager.hpp"
 #include "./vae_spatial_manager.hpp"
-#include "./vae_event_manager.hpp"
 #include "./processor/vae_processor.hpp"
 #include "./processor/vae_spatial_processor.hpp"
 #include "./processor/vae_mixer_processor.hpp"
@@ -21,6 +20,8 @@
 
 #include "../../external/tklb/src/types/TSpinLock.hpp"
 #include "../../external/tklb/src/util/TMath.hpp"
+#include "vae/vae.hpp"
+#include "vae_logger.hpp"
 
 #include <cstring>				// strcmp
 #include <thread>				// mAudioThread
@@ -48,12 +49,11 @@ namespace vae { namespace core {
 		using Thread = std::thread;
 		using Semaphore = std::condition_variable;
 
-		const EngineConfig mConfig;		//< Config object provided at construction
+		EngineConfig mConfig;			//< Config object provided at initlalization
 
 		VoiceManger mVoiceManager;		//< Holds and handle voices
 		SpatialManager mSpatialManager;	//< Holds and manages spatial emitters
 		BankManager mBankManager;		//< Holds and manages banks
-		EventManager mEventManager;
 
 		Processor mProcessor;
 		MixerProcessor mMixerProcessor;
@@ -166,39 +166,9 @@ namespace vae { namespace core {
 			// mAudioConsumed->notify_one();
 		}
 
-		void postContructor() {
-			VAE_PROFILER_SCOPE
-			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
-			mScratchBuffer.set(0);
-			mScratchBuffer.sampleRate = mConfig.internalSampleRate;
-			VAE_DEBUG("Engine constructed")
-		}
-
 	public:
-		_VAE_PUBLIC_API Engine(const EngineConfig& config) :
-			mConfig(config),
-		 	mVoiceManager(mConfig),
-			mSpatialManager(mConfig.preAllocatedEmitters),
-			mSpatialProcessor(mConfig.voices)
-		{
-			postContructor();
-		}
 
-		_VAE_PUBLIC_API Engine() :
-			mConfig({}),
-		 	mVoiceManager(mConfig),
-			mSpatialManager(mConfig.preAllocatedEmitters),
-			mSpatialProcessor(mConfig.voices)
-		{
-			postContructor();
-		}
-
-		~Engine() {
-			stop();
-			unloadAllBanks();
-			VAE_INFO("Engine destructed")
-		}
-
+		Engine() = default;
 
 		/**
 		 * Don't allow any kind of move of copy of the object
@@ -208,6 +178,35 @@ namespace vae { namespace core {
 		Engine(Engine&&) = delete;
 		Engine& operator= (const Engine&) = delete;
 		Engine& operator= (Engine&&) = delete;
+
+		/**
+		 * @brief Initialized the engine and does most of the upfront allocations.
+		 * @details Everything will be allocated according to the provided config.
+		 * Loading a Bank will still cause an allocation.
+		 * If there are already banks loaded, they will be reloaded to have the correct samplerate.
+		 * @param config Optional config to setup the internals.
+		 * @return Result
+		 */
+		Result _VAE_PUBLIC_API init(const EngineConfig& config = {}) {
+			VAE_PROFILER_SCOPE
+			VAE_DEBUG("Initializing engine...")
+			mConfig = config;
+			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
+			mScratchBuffer.set(0);
+			mScratchBuffer.sampleRate = mConfig.internalSampleRate;
+			mVoiceManager.init(mConfig);
+			mSpatialManager.init(mConfig.preAllocatedEmitters);
+			mSpatialProcessor.init(mConfig.voices);
+			mBankManager.init(mConfig.rootPath, mConfig.internalSampleRate);
+			VAE_DEBUG("Engine initialized")
+			return Result::Success;
+		}
+
+		~Engine() {
+			stop();
+			unloadAllBanks();
+			VAE_INFO("Engine destructed")
+		}
 
 		/**
 		 * @brief Tries to open default device and start audio thread.
@@ -290,22 +289,118 @@ namespace vae { namespace core {
 		 * @param emitterHandle handle of the emitter, needed for spatial audio or controlling the voice
 		 * @param gain optional volume factor
 		 * @param mixerHandle optional id of mixer channel sound will be routed to, this will override the one set in the event
+		 * @param listenerHandle For which listener this event will be adible for, default to all
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API fireEvent(
-			BankHandle bank, EventHandle eventHandle,
+			BankHandle bankHandle, EventHandle eventHandle,
 			EmitterHandle emitterHandle,
 			Sample gain = 1.0,
-			MixerHandle mixerHandle = InvalidMixerHandle
+			MixerHandle mixerHandle = InvalidMixerHandle,
+			ListenerHandle listenerHandle = AllListeners
 		) {
+			VAE_PROFILER_SCOPE
 			if (emitterHandle != InvalidEmitterHandle && !mSpatialManager.hasEmitter(emitterHandle)) {
-				VAE_ERROR("No emitter %u registered, voice won't be audible.", emitterHandle)
+				VAE_ERROR("No emitter %u registered", emitterHandle)
+				return Result::InvalidEmitter;
 			}
-			return mEventManager.fireEvent(
-				bank, eventHandle,
-				emitterHandle, mixerHandle, gain,
-				mBankManager, mVoiceManager, mConfig
-			);
+
+			if (!mBankManager.has(bankHandle)) {
+				VAE_ERROR("Fired event %i on unloaded bank %i", eventHandle, bankHandle)
+				return Result::InvalidBank;
+			}
+
+			auto& bank = mBankManager.get(bankHandle);
+
+			if (bank.events.size() <= eventHandle) {
+				VAE_WARN("Fired missing event %i on bank %i", eventHandle, bankHandle)
+				return Result::ValidHandleRequired;
+			}
+
+			auto& event = bank.events[eventHandle];
+
+			Result result;
+
+			if (event.start) {
+				if (event.source != InvalidSourceHandle) {
+					VAE_DEBUG_EVENT("Event %i:%i starts source %i", eventHandle, bankHandle, event.source)
+					// Has source attached
+					if (event.spatial) {
+						// Spatialized sounds will play for every listener
+						result = mSpatialManager.forListeners(listenerHandle, [&](Listener& l) {
+							return mVoiceManager.play(
+								event, bankHandle, gain, emitterHandle, l.id, mixerHandle
+							);
+						});
+					} else {
+						// non spatialized sounds just once
+						result = mVoiceManager.play(
+							event, bankHandle, gain, emitterHandle, listenerHandle, mixerHandle
+						);
+					}
+
+				}
+				if (event.random) {
+					for (int index = rand() % event.on_start.size(); 0 <= index; index--) {
+						auto& i = event.on_start[index];
+						if (i == InvalidEventHandle) { continue; }
+						VAE_DEBUG_EVENT("Event %i:%i starts random event %i", eventHandle, bankHandle, i)
+						result = fireEvent(
+							bankHandle, i, emitterHandle, gain,
+							mixerHandle, listenerHandle
+						);
+						break;
+					}
+				} else {
+					// Fire all other chained events
+					for (auto& i : event.on_start) {
+						if (i == InvalidEventHandle) { continue; }
+						VAE_DEBUG_EVENT("Event %i:%i starts chained event %i", eventHandle, bankHandle, i)
+						result = fireEvent(
+							bankHandle, i, emitterHandle, gain,
+							mixerHandle, listenerHandle
+						);
+					}
+				}
+				if (result != Result::Success) {
+					VAE_DEBUG("Event %i:%i failed to start voices. Result %i", eventHandle, bankHandle, result)
+					return result; // ! someting went wrong
+				}
+			}
+
+			if (event.stop) {
+				// TODO test stopping
+				if (event.source != InvalidSourceHandle) {
+					VAE_DEBUG_EVENT("Event %i:%i stops source %i", eventHandle, bankHandle, event.source)
+					mVoiceManager.stopFromSource(event.source, emitterHandle);
+				}
+				for (auto& i : event.on_start) {
+					if (i == InvalidEventHandle) { continue; }
+					// kill every voice started from these events
+					VAE_DEBUG_EVENT("Event %i:%i stops voices from event %i", eventHandle, bankHandle, i)
+					mVoiceManager.stopFromEvent(i, emitterHandle);
+				}
+				if (event.mixer != Mixer::MasterMixerHandle) {
+					// kill every voice in a mixer channel
+					VAE_DEBUG_EVENT("Event %i:%i stops voices in mixer %i", eventHandle, bankHandle, event.mixer)
+					mVoiceManager.stopFromMixer(event.mixer, emitterHandle);
+				}
+			}
+
+			if (event.emit) {
+				VAE_DEBUG_EVENT("Event %i:%i emits event", eventHandle, bankHandle)
+				if (mConfig.eventCallback != nullptr) {
+					EventCallbackData data;
+					constexpr int as = sizeof(data);
+					data.context = mConfig.eventCallbackContext;
+					data.bank = bankHandle;
+					data.event = eventHandle;
+					data.emitter = emitterHandle;
+					mConfig.eventCallback(&data);
+				}
+			}
+
+			return Result::Success;
 		}
 
 		/**
@@ -408,8 +503,9 @@ namespace vae { namespace core {
 
 #pragma region bank_handling
 		/**
-		 * @brief Load bank from filesystem
-		 * Locks audio thread
+		 * @brief Load bank from filesystem.
+		 * @details This operation might take a little time but won't lock the audio thread
+		 * until the bank is inserted. This should be safe to do at any time.
 		 * @param path
 		 * @return Result
 		 */
@@ -418,8 +514,8 @@ namespace vae { namespace core {
 		}
 
 		/**
-		 * @brief Load bank from memory
-		 * Locks audio thread
+		 * @brief Load bank from memory.
+		 * @see loadBank
 		 * @param bank Moved and now owned by the engine
 		 * @return Result
 		 */
@@ -428,8 +524,7 @@ namespace vae { namespace core {
 		}
 
 		/**
-		 * @brief Add or replace a source in a bank
-		 * Locks audio thread
+		 * @brief Add or replace a source in a bank.
 		 * @param bankHandle
 		 * @param source Moved and now owned by bank
 		 * @return Result

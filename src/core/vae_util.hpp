@@ -14,7 +14,7 @@
 #endif // VAE_RELEASE
 
 namespace vae { namespace core {
-	inline void splitGlobalEventHandle(
+	constexpr void splitGlobalEventHandle(
 		const GlobalEventHandle& handle,
 		BankHandle& bank, EventHandle& event
 	) {

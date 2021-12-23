@@ -11,8 +11,8 @@ namespace vae { namespace core {
 	 * @details Extends Voice with channel volumes for interpolation.
 	 */
 	struct VoicePan {
-		StackBuffer<Sample, Config::MaxChannels> volumes;
-		// StackBuffer<Sample, Config::MaxChannels> phases;
+		Sample volumes[Config::MaxChannels];
+		// StackBuffer<Sample, Config::MaxChannels> phases; // don't thing we need phase for now
 	};
 
 	constexpr int _VAE_VOICE_PAN_PIP_SIZE = sizeof(VoicePan);
