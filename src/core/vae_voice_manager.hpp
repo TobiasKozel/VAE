@@ -407,6 +407,22 @@ namespace vae { namespace core {
 			return Result::Success;
 		}
 
+		Result stopFromBank(BankHandle bank) {
+			VAE_PROFILER_SCOPE
+			for (auto& v : mVirtualVoices) {
+				if (v.source == InvalidSourceHandle) { continue; }
+				if (v.bank == bank) {
+					v.source = InvalidSourceHandle;
+				}
+			}
+			for (auto& v : mVoices) {
+				if(v.bank == bank) {
+					stopVoice(v);
+				}
+			}
+			return Result::Success;
+		}
+
 		/**
 		 * @brief Stop all voice from a emitter
 		 *

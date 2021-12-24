@@ -171,18 +171,8 @@ public:
 	);
 
 	/**
-	 * @brief Unload bank from path
-	 * Locks audio thread
-	 * @param path
-	 * @return Result
-	 */
-	Result _VAE_API_EXPORT unloadBankFromPath (
-		const char* path
-	);
-
-	/**
-	 * @brief Unload bank from handle
-	 * Locks audio thread
+	 * @brief Unload bank from handle.
+	 * Locks audio thread and stops all voices from that bank.
 	 * @param bankHandle
 	 * @return Result
 	 */

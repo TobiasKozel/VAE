@@ -158,18 +158,6 @@ namespace vae { namespace core {
 			return Result::Success;
 		}
 
-		Result unloadFromPath(const char* path) {
-			VAE_PROFILER_SCOPE
-			Lock l(mMutex);
-			for (auto& i : mBanks) {
-				if (strcmp(path, i.path.c_str()) == 0) {
-					return unloadFromId(i.id);
-				}
-			}
-			VAE_WARN("Could not unload Bank %s", path)
-			return Result::ElementNotFound;
-		}
-
 		Result unloadFromId(BankHandle bankHandle) {
 			VAE_PROFILER_SCOPE
 			Lock l(mMutex);

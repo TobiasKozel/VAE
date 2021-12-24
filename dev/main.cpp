@@ -54,22 +54,21 @@ int main() {
 	engine.setListener(listener, {});
 
 	if (result == Result::Success) {
-		for (int i = 0; i < 100; i++) {
-			auto em = emitters[rand() % emitterCount];
-			// engine.fireGlobalEvent(vaeb::Bank1::Ambient, em);
-		}
-
 		for (int i = 0; i < 5000; i++) {
 			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(1000 / float(300)));
 			float t = i * 0.1;
 			engine.setEmitter(emitters[rand() % emitterCount], randomVec(), 0.5);
 			engine.fireGlobalEvent(vaeb::Bank1::JumpRand, emitters[rand() % emitterCount]);
+			if (i % 50 == 0) {
+				auto em = emitters[rand() % emitterCount];
+				engine.fireGlobalEvent(vaeb::Bank1::Ambient, em);
+			}
 			engine.update();
 		}
 	};
+	engine.unloadBankFromId(0);
 
 	engine.stop();
-	engine.unloadBankFromId(0);
 
 	return 0;
 }

@@ -191,15 +191,6 @@ Result EnginePimpl::loadBank (
 	);
 }
 
-Result EnginePimpl::unloadBankFromPath (
-	const char* path
-) {
-	auto& e = *reinterpret_cast<core::Engine*>(this);
-	return e.unloadBankFromPath(
-		path
-	);
-}
-
 Result EnginePimpl::unloadBankFromId (
 	BankHandle bankHandle
 ) {

@@ -17,15 +17,21 @@ namespace vae { namespace core {
 		bool mInitialized = false;
 
 		void cleanUp() {
+			VAE_PROFILER_SCOPE_NAMED("Cleanup portaudio")
 			if (!mInitialized || mStream == nullptr) {
 				return;
 			}
 
-			PaError err = Pa_StopStream(mStream);
-			VAE_ASSERT(err == paNoError)
-
-			err = Pa_CloseStream(mStream);
-			VAE_ASSERT(err == paNoError)
+			{
+				VAE_PROFILER_SCOPE_NAMED("Stop portaudio stream")
+				PaError err = Pa_StopStream(mStream);
+				VAE_ASSERT(err == paNoError)
+			}
+			{
+				VAE_PROFILER_SCOPE_NAMED("Close portaudio stream")
+				PaError err = Pa_CloseStream(mStream);
+				VAE_ASSERT(err == paNoError)
+			}
 			mInitialized = false;
 		}
 
@@ -89,16 +95,21 @@ namespace vae { namespace core {
 				device.bufferSize = mConfig.preferredBufferSize;
 			}
 
-			PaError err = Pa_OpenStream(
-				&mStream,
-				0 < inputParameters.channelCount ? &inputParameters : NULL,
-				0 < outputParameters.channelCount ? &outputParameters : NULL,
-				mConfig.internalSampleRate, // try getting internal samplerate
-				device.bufferSize,
-				paClipOff, // no clipping, device will do that
-				AudioCallback,
-				&mWorker
-			);
+			PaError err;
+			{
+				VAE_PROFILER_SCOPE_NAMED("Open stream portaudio")
+				err = Pa_OpenStream(
+					&mStream,
+					0 < inputParameters.channelCount ? &inputParameters : NULL,
+					0 < outputParameters.channelCount ? &outputParameters : NULL,
+					mConfig.internalSampleRate, // try getting internal samplerate
+					device.bufferSize,
+					paClipOff, // no clipping, device will do that
+					AudioCallback,
+					&mWorker
+				);
+
+			}
 
 			if (err != paNoError) {
 				VAE_ASSERT(false)
@@ -124,7 +135,10 @@ namespace vae { namespace core {
 				device.bufferSize // Pa doesn't provide any info, so we assume we got what we wanted
 			);
 
-			err = Pa_StartStream(mStream);
+			{
+				VAE_PROFILER_SCOPE_NAMED("Start stream portaudio")
+				err = Pa_StartStream(mStream);
+			}
 
 			if (err != paNoError) {
 				VAE_ASSERT(false)

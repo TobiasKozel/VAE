@@ -102,12 +102,14 @@ namespace vae { namespace core {
 
 					mScratchBuffer.setValidSize(remaining);
 
+					Size renderedNormal = 0;
+					Size renderedSpatial = 0;
 					// TODO PERF VAE banks could be processed in parallel
 					// however each bank needs to get a temporary own copy of the voice
 					// or else this will be false sharing city
 					mBankManager.forEach([&](Bank& i) {
-						mProcessor.mix(mVoiceManager, i, remaining, sampleRate);
-						mSpatialProcessor.mix(
+						renderedNormal += mProcessor.mix(mVoiceManager, i, remaining, sampleRate);
+						renderedSpatial += mSpatialProcessor.mix(
 							mVoiceManager, i, mSpatialManager, remaining, sampleRate
 						);
 						mMixerProcessor.mix(mVoiceManager, i, remaining);
@@ -115,6 +117,10 @@ namespace vae { namespace core {
 						mScratchBuffer.add(bankMaster);
 						bankMaster.set(0);
 					});
+
+					VAE_PROFILER_PLOT("Rendered Normal Voices", int64_t(renderedNormal));
+					VAE_PROFILER_PLOT("Rendered Spatial Voices", int64_t(renderedSpatial));
+					VAE_PROFILER_PLOT("Rendered Total Voices", int64_t(renderedSpatial + renderedNormal));
 
 					{
 						VAE_PROFILER_SCOPE_NAMED("Peak limiting")
@@ -570,22 +576,16 @@ namespace vae { namespace core {
 		}
 
 		/**
-		 * @brief Unload bank from path
-		 * Locks audio thread
-		 * @param path
-		 * @return Result
-		 */
-		Result _VAE_PUBLIC_API unloadBankFromPath(const char* path) {
-			return mBankManager.unloadFromPath(path);
-		}
-
-		/**
-		 * @brief Unload bank from handle
-		 * Locks audio thread
+		 * @brief Unload bank from handle.
+		 * Locks audio thread and stops all voices from that bank.
 		 * @param bankHandle
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API unloadBankFromId(BankHandle bankHandle) {
+			{
+				Lock l(mMutex);
+				mVoiceManager.stopFromBank(bankHandle);
+			}
 			return mBankManager.unloadFromId(bankHandle);
 		}
 

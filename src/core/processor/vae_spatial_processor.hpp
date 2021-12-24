@@ -41,17 +41,19 @@ namespace vae { namespace core {
 		 * @param banks
 		 * @param frames
 		 * @param sampleRate
+		 * @return Number of voices mixed
 		 */
-		void mix(
+		Size mix(
 			VoiceManger& manager, Bank& bank,
 			SpatialManager& spatial,
 			SampleIndex frames, Size sampleRate
 		) {
+			Size actuallyRendered = 0;
 			VAE_PROFILER_SCOPE_NAMED("Spatial Processor")
 			manager.forEachVoice([&](Voice& v, Size vi) {
-				VAE_PROFILER_SCOPE_NAMED("Spatial Voice")
 				if (v.bank != bank.id) { return true; }		// wrong bank
 				if (!v.spatialized) { return true; }		// not spatialized
+				VAE_PROFILER_SCOPE_NAMED("Spatial Voice")
 				if (!spatial.hasEmitter(v.emitter)) {
 					VAE_DEBUG("Spatial voice is missing emitter")
 					return false; // ! needs emitter
@@ -63,7 +65,7 @@ namespace vae { namespace core {
 				if (signal.size() == 0) { return false; }	// ! no signal
 
 				if (signal.sampleRate != sampleRate) {
-					VAE_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
+					// VAE_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
 					v.filtered = true; // implicitly filter to resample
 				}
 
@@ -72,25 +74,33 @@ namespace vae { namespace core {
 				const Sample gain = v.gain * source.gain;
 				auto& l = spatial.getListeners()[v.listener];
 
+				Sample distanceAttenuated;
+				Vec3 relativeDirection;
 				// * Attenuation calculation
+				{
+					VAE_PROFILER_SCOPE_NAMED("Attenuation calculation")
+					// samething as graphics, make the world rotate round the listener
+					// TODO this should be possible without a 4x4 matrix?
+					glm::mat4x4 lookAt = glm::lookAt(l.position, l.position + l.front, l.up);
+					// listener is the world origin now
+					relativeDirection = (lookAt * glm::vec4(emitter.position, 1.f));
 
-				// samething as graphics, make the world rotate round the listener
-				// TODO this should be possible without a 4x4 matrix?
-				glm::mat4x4 lookAt = glm::lookAt(l.position, l.position + l.front, l.up);
-				// listener is the world origin now
-				Vec3 relativeDirection = (lookAt * glm::vec4(emitter.position, 1.f));
 
+					const Sample distance = std::max(glm::length(relativeDirection), 0.1f);
+					relativeDirection /= distance;
+					distanceAttenuated = distance;
 
-				const Sample distance = std::max(glm::length(relativeDirection), 0.1f);
-				relativeDirection /= distance;
-				Sample distanceAttenuated = distance;
+					distanceAttenuated = std::max(distanceAttenuated, Sample(1));
+					distanceAttenuated = std::min(distanceAttenuated, Sample(1000000));
+					distanceAttenuated = Sample(std::pow(distanceAttenuated / Sample(1.0), -Sample(1)));
+					distanceAttenuated *= gain;
+				}
 
-				distanceAttenuated = std::max(distanceAttenuated, Sample(1));
-				distanceAttenuated = std::min(distanceAttenuated, Sample(1000000));
-				distanceAttenuated = Sample(std::pow(distanceAttenuated / Sample(1.0), -Sample(1)));
-				distanceAttenuated *= gain;
-
-				if (distanceAttenuated < Config::MinVolume) { return true; } // ! inaudible
+				if (distanceAttenuated < Config::MinVolume) {
+					return true; // ! inaudible
+					// TODO maybe progress still progress time?
+				}
+				actuallyRendered++;
 				target.setValidSize(frames); // mark mtarget ixer as active
 				v.audible = true;
 
@@ -181,7 +191,7 @@ namespace vae { namespace core {
 				if (l.configuration == Listener::Configuration::HRTF && v.HRTF && mHRTF.rate) {
 					// * HRTF Panning
 					VAE_ASSERT(vi < mVoiceHRTFs.size()) // only the lower voice can use hrtfs
-					VAE_PROFILER_SCOPE_NAMED("HRTF Render")
+					VAE_PROFILER_SCOPE_NAMED("Render HRTF")
 
 					Size closestIndex = HRTFUtil::closest(mHRTF, relativeDirection);
 
@@ -200,7 +210,7 @@ namespace vae { namespace core {
 					);
 
 				} else {
-					VAE_PROFILER_SCOPE_NAMED("SPCAP Render")
+					VAE_PROFILER_SCOPE_NAMED("Render SPCAP")
 					// * Normal SPCAP panning
 					auto& lastPan = manager.getVoicePan(vi);
 					VoicePan currentPan;
@@ -250,6 +260,7 @@ namespace vae { namespace core {
 				v.started = true;
 				return !finished;
 			});
+			return actuallyRendered;
 		}
 
 		Result loadHRTF(const char* path, const char* rootPath, Size sampleRate) {

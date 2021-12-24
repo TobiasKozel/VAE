@@ -13,7 +13,9 @@ namespace vae { namespace core {
 		RtAudio mAudio; // Rt Device instance
 
 		bool cleanUp() {
+			VAE_PROFILER_SCOPE_NAMED("Cleanup RtAudio")
 			if (mAudio.isStreamRunning()) {
+				VAE_PROFILER_SCOPE_NAMED("Stop RtAudio Stream")
 				auto result = mAudio.stopStream();
 				if (result != RTAUDIO_NO_ERROR) {
 					VAE_ASSERT(false)
@@ -21,6 +23,7 @@ namespace vae { namespace core {
 				}
 			}
 			if (mAudio.isStreamOpen()) {
+				VAE_PROFILER_SCOPE_NAMED("Close RtAudio Stream")
 				mAudio.closeStream();
 			}
 			return true;
@@ -68,12 +71,16 @@ namespace vae { namespace core {
 				device.bufferSize = mConfig.preferredBufferSize;
 			}
 
-			auto result = mAudio.openStream(
-				outParams.nChannels ? &outParams : nullptr,
-				inParams.nChannels  ? &inParams  : nullptr,
-				RTAUDIO_FLOAT32, device.sampleRate,
-				&device.bufferSize, &AudioCallback, &mWorker
-			);
+			RtAudioErrorType result;
+			{
+				VAE_PROFILER_SCOPE_NAMED("Open RtAudio stream")
+				result = mAudio.openStream(
+					outParams.nChannels ? &outParams : nullptr,
+					inParams.nChannels  ? &inParams  : nullptr,
+					RTAUDIO_FLOAT32, device.sampleRate,
+					&device.bufferSize, &AudioCallback, &mWorker
+				);
+			}
 
 			if (result != RTAUDIO_NO_ERROR) {
 				VAE_ERROR("Failed to open RtAudio device with code %i", result)
@@ -88,8 +95,11 @@ namespace vae { namespace core {
 				device.sampleRate, device.channelsIn, device.channelsOut,
 				device.bufferSize // RtAudio writes back to this on openStream
 			);
+			{
+				VAE_PROFILER_SCOPE_NAMED("Start RtAudio stream")
+				result = mAudio.startStream();
+			}
 
-			result = mAudio.startStream();
 			if (result != RTAUDIO_NO_ERROR) {
 				VAE_ERROR("Failed to open RtAudio device with code %i", result)
 				cleanUp();

@@ -30,9 +30,9 @@ namespace vae { namespace core { namespace profiler {
 	#define VAE_PROFILER_MALLOC(ptr, size)		TracyAlloc(ptr, size);
 	#define VAE_PROFILER_FREE(ptr)				TracyFree(ptr);
 
-	// Add tracking to tklb
-	// #define TKLB_TRACK_ALLOCATE(ptr, size)		VAE_PROFILER_MALLOC(ptr, size)
-	// #define TKLB_TRACK_FREE(ptr, size)			VAE_PROFILER_FREE(ptr)
+	// Add tracking to tklb which is mostly audiobuffers
+	#define TKLB_TRACK_ALLOCATE(ptr, size)		VAE_PROFILER_MALLOC(ptr, size)
+	#define TKLB_TRACK_FREE(ptr, size)			VAE_PROFILER_FREE(ptr)
 
 	#include <cstddef>
 	#include <memory>
@@ -42,8 +42,6 @@ namespace vae { namespace core { namespace profiler {
 
 
 	namespace vae { namespace core { namespace profiler {
-
-
 		template <class T>
 		struct Allocator {
 			typedef T value_type;

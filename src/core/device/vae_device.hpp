@@ -119,7 +119,7 @@ namespace vae { namespace core {
 		 * @param bufferSize The amount of frames a callback will provide/request
 		 */
 		void init(Size sampleRate, Uchar channelsIn, Uchar channelsOut, Size bufferSize) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE_NAMED("Init Device")
 			mWorker.channelsIn  = channelsIn;
 			mWorker.channelsOut = channelsOut;
 			mRealSampleRate  = sampleRate;
@@ -248,6 +248,7 @@ namespace vae { namespace core {
 				return pushed;
 			}
 			VAE_PROFILER_PLOT(profiler::engineOverruns, int64_t(mOverruns));
+			return 0;
 		}
 
 		/**

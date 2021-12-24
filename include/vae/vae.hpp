@@ -176,20 +176,24 @@ namespace vae {
 		unsigned int preAllocatedEmitters = _preAllocatedEmitters;
 
 		/**
-		 * @brief Hard limit on concurrent voices, can't be 0
+		 * @brief Hard limit on concurrent voices, can't be 0 or lower than hrtfVoices.
+		 * @details Rendering 512 voices with filters and spatialization
+		 * is probably pushing it for most situations and not even necessary.
+		 * This is a few years old but AudioKinetic recommends something around a 100
+		 * https://blog.audiokinetic.com/how-to-get-a-hold-on-your-voices-optimizing-for-cpu-part-1/
 		 */
-		unsigned int voices = 1024;
+		unsigned int voices = 512;
 
 		/**
 		 * @brief Amount of HRTF panned voices audible at any given time.
-		 * Does not add to total amounts of voices defined above
+		 * Eats into the budget above.
 		 */
 		unsigned int hrtfVoices = 16;
 
 		/**
-		 * @brief Hard limit on virtal voices
-		 * TODO no virtual voice system for now
-		 * Can be zero for no limit but will cause allocations on fireEvent
+		 * @brief Hard limit on virtal voices.
+		 * virtualized voices will be revived as soon as possible and
+		 * retain their playback position.
 		 */
 		unsigned int virtualVoices = _preAllocatedEmitters;
 
@@ -223,7 +227,7 @@ namespace vae {
 		 * and if a lot of work is done in the EventCallback defined above,
 		 * the audio thread will be blocked and underruns occur.
 		 */
-		bool updateInAudioThread = true;
+		bool updateInAudioThread = false;
 
 		/**
 		 * @brief If enabled, all processing and mixing will happen in the audio callback.
@@ -231,7 +235,7 @@ namespace vae {
 		 * isn't good practice apparently.
 		 *
 		 */
-		bool processInBufferSwitch = true;
+		bool processInBufferSwitch = false;
 	};
 } // namespace vae
 

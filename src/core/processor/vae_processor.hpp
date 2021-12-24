@@ -22,23 +22,25 @@ namespace vae { namespace core {
 		 * @param banks
 		 * @param frames
 		 * @param sampleRate
+		 * @return Voices renderd
 		 */
-		void mix(
+		Size mix(
 			VoiceManger& manager, Bank& bank,
 			SampleIndex frames, Size sampleRate
 		) {
+			Size actuallyRendered = 0;
 			VAE_PROFILER_SCOPE_NAMED("Default Processor")
 			manager.forEachVoice([&](Voice& v, Size index) {
-				VAE_PROFILER_SCOPE_NAMED("Default Voice")
 				if (v.bank != bank.id) { return true; }
 				if (v.spatialized) { return true; }
+				VAE_PROFILER_SCOPE_NAMED("Default Voice")
 
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
 
 				if (signal.size() == 0) { return false; }
 				if (signal.sampleRate != sampleRate) {
-					VAE_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
+					// VAE_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
 					v.filtered = true; // implicitly filter to resample
 				}
 
@@ -47,6 +49,7 @@ namespace vae { namespace core {
 				const auto gain = v.gain * source.gain;
 
 				// TODO skip inaudible sounds
+				actuallyRendered++;
 				v.audible = true;
 				auto& pan = manager.getVoicePan(index);
 				const auto signalLength = signal.size();
@@ -55,7 +58,7 @@ namespace vae { namespace core {
 				target.setValidSize(frames); // mark mixer as active
 
 				if (!v.filtered) {
-					VAE_PROFILER_SCOPE_NAMED("Voice Basic")
+					VAE_PROFILER_SCOPE_NAMED("Render Voice Basic")
 					// Basic rendering to all output channels w/o any effects
 					v.started = true;
 					SampleIndex remaining;
@@ -84,7 +87,7 @@ namespace vae { namespace core {
 
 				// Filtered voice processing
 				{
-					VAE_PROFILER_SCOPE_NAMED("Voice Filter")
+					VAE_PROFILER_SCOPE_NAMED("Render filtered Voice")
 					bool finished = false;
 
 					auto& fd = manager.getVoiceFilter(index);
@@ -144,6 +147,7 @@ namespace vae { namespace core {
 					return !finished;					// is only true when exceeding signalLength and not looping
 				}
 			});
+			return actuallyRendered;
 		}
 	};
 
