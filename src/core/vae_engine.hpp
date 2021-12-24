@@ -44,7 +44,7 @@ namespace vae { namespace core {
 		using CurrentBackend = BackendRtAudio;
 
 		using Thread = std::thread;
-		using Semaphore = std::condition_variable;
+		using ConditionVariable = std::condition_variable;
 
 		EngineConfig mConfig;			///< Config object provided at initlalization
 
@@ -52,10 +52,9 @@ namespace vae { namespace core {
 		SpatialManager mSpatialManager;	///< Holds and manages spatial emitters
 		BankManager mBankManager;		///< Holds and manages banks
 
-		Processor mProcessor;
-		MixerProcessor mMixerProcessor;
-		SpatialProcessor mSpatialProcessor;
-
+		Processor mProcessor;				///< Default Voice processor
+		MixerProcessor mMixerProcessor;		///< Mixer channel processor
+		SpatialProcessor mSpatialProcessor;	///< Spatial voice processor
 
 		Device* mDevice = nullptr;		///< Output device
 		AudioBuffer mScratchBuffer;		///< used to combine the signal from all banks and push it to the device
@@ -64,14 +63,17 @@ namespace vae { namespace core {
 		Sample mLimiterLastPeak = 1.0;	///< Master limiter last peak
 		Sample mMasterVolume = 1.0;		///< Master Colume applied after limiting
 
-		Thread* mAudioThread;			///< Thread processing voices and mixers
-		Semaphore* mAudioConsumed;		///< Notifies the audio thread when more audio is needed
-		VAE_PROFILER_MUTEX(Mutex, mMutex, "Engine Mutex")	///< Mutex to lock AudioThread and bank operations
+		Thread* mAudioThread;				///< Thread processing voices and mixers
+		ConditionVariable mAudioConsumed;	///< Notifies the audio thread when more audio is needed
+		Mutex mMutex;						///< Mutex needed to use mAudioConsumed, doesn't actually do anything else
 		bool mAudioThreadRunning = false;
 
 		/**
-		 * @brief Main processing function
-		 * Called either from onBufferSwap or threadedProcess
+		 * @brief Main processing function.
+		 * @details Called either from onBufferSwap or threadedProcess
+		 * This does't need to be locked since it only renders the banks.
+		 * The data accessed from this class will only be used from this thread.
+		 * The bank however needs to be locks which happens in the bankmanager
 		 */
 		void process() {
 			VAE_PROFILER_FRAME_MARK_START(profiler::audioFrame)
@@ -81,84 +83,83 @@ namespace vae { namespace core {
 
 			const Time step = 1.0 / Time(sampleRate);
 
-			{
-				Lock l(mMutex);
-				// process until output is full
-				while (true) {
-					// ! this is an estimate when resampling
-					auto remaining = d.canPush();
+			// process until device can't take any more audio
+			while (true) {
+				// ! this is an underestimate when resampling so we don't have any leftovers
+				auto remaining = d.canPush();
 
-					static_assert(32 <= Config::MaxBlock, "MaxBlock needs to be larger");
+				static_assert(32 <= Config::MaxBlock, "MaxBlock needs to be larger");
 
-					if (remaining < 32) {
-						break; // ! Don't even bother with small blocks, we'll get em next time
-					}
-
-					// clamp to max processable size
-					remaining = std::min(remaining, Config::MaxBlock);
-
-					mScratchBuffer.setValidSize(remaining);
-
-					Size renderedNormal = 0;
-					Size renderedSpatial = 0;
-					// TODO PERF VAE banks could be processed in parallel
-					// however each bank needs to get a temporary own copy of the voice
-					// or else this will be false sharing city
-					mBankManager.forEach([&](Bank& i) {
-						renderedNormal += mProcessor.mix(mVoiceManager, i, remaining, sampleRate);
-						renderedSpatial += mSpatialProcessor.mix(
-							mVoiceManager, i, mSpatialManager, remaining, sampleRate
-						);
-						mMixerProcessor.mix(mVoiceManager, i, remaining);
-						auto& bankMaster = i.mixers[Mixer::MasterMixerHandle].buffer;
-						mScratchBuffer.add(bankMaster);
-						bankMaster.set(0);
-					});
-
-					VAE_PROFILER_PLOT("Rendered Normal Voices", int64_t(renderedNormal));
-					VAE_PROFILER_PLOT("Rendered Spatial Voices", int64_t(renderedSpatial));
-					VAE_PROFILER_PLOT("Rendered Total Voices", int64_t(renderedSpatial + renderedNormal));
-
-					{
-						VAE_PROFILER_SCOPE_NAMED("Peak limiting")
-						// Shitty peak limiter
-						mLimiterLastPeak *= Sample(0.7); // return to normal slowly
-						mLimiterLastPeak = std::max(Sample(1.0), mLimiterLastPeak);
-						Sample currentPeak = 0;
-						for (Uchar c = 0; c < mScratchBuffer.channels(); c++) {
-							for (Size i = 0; i < mScratchBuffer.size(); i++) {
-								currentPeak = std::max(currentPeak, mScratchBuffer[c][i]);
-							}
-						}
-						mLimiterLastPeak = std::max(mLimiterLastPeak, currentPeak);
-						mScratchBuffer.multiply(Sample(1.0) / mLimiterLastPeak);
-					}
-					mScratchBuffer.multiply(mMasterVolume);
-					d.push(mScratchBuffer);
-					mScratchBuffer.set(0);
-					mTime += remaining;
-					mTimeFract += step * remaining;
+				if (remaining < 32) {
+					break; // ! Don't even bother with small blocks, we'll get em next time
 				}
+
+				// clamp to max processable size, the preallocated scratch buffers can't take any larger blocks
+				remaining = std::min(remaining, Config::MaxBlock);
+
+				mScratchBuffer.setValidSize(remaining);
+
+				Size renderedNormal = 0;
+				Size renderedSpatial = 0;
+				// TODO PERF VAE banks could be processed in parallel
+				// however each bank needs to get a temporary own copy of the voice
+				// or else this will be false sharing city
+				mBankManager.forEach([&](Bank& i) {
+					renderedNormal += mProcessor.mix(mVoiceManager, i, remaining, sampleRate);
+					renderedSpatial += mSpatialProcessor.mix(
+						mVoiceManager, i, mSpatialManager, remaining, sampleRate
+					);
+					mMixerProcessor.mix(mVoiceManager, i, remaining);
+					auto& bankMaster = i.mixers[Mixer::MasterMixerHandle].buffer;
+					mScratchBuffer.add(bankMaster);
+					bankMaster.set(0);
+				});
+
+				VAE_PROFILER_PLOT("Rendered Normal Voices", int64_t(renderedNormal));
+				VAE_PROFILER_PLOT("Rendered Spatial Voices", int64_t(renderedSpatial));
+				VAE_PROFILER_PLOT("Rendered Total Voices", int64_t(renderedSpatial + renderedNormal));
+
+				{
+					VAE_PROFILER_SCOPE_NAMED("Peak limiting")
+					// Shitty peak limiter
+					mLimiterLastPeak *= Sample(0.7); // return to normal slowly
+					mLimiterLastPeak = std::max(Sample(1.0), mLimiterLastPeak);
+					Sample currentPeak = 0;
+					for (Uchar c = 0; c < mScratchBuffer.channels(); c++) {
+						for (Size i = 0; i < mScratchBuffer.size(); i++) {
+							currentPeak = std::max(currentPeak, mScratchBuffer[c][i]);
+						}
+					}
+					mLimiterLastPeak = std::max(mLimiterLastPeak, currentPeak);
+					mScratchBuffer.multiply(Sample(1.0) / mLimiterLastPeak);
+				}
+				mScratchBuffer.multiply(mMasterVolume);
+				d.push(mScratchBuffer);
+				mScratchBuffer.set(0);
+				mTime += remaining;
+				mTimeFract += step * remaining;
 			}
 			VAE_PROFILER_FRAME_MARK_END(profiler::audioFrame)
 			VAE_PROFILER_FRAME_MARK()
 			if (mConfig.updateInAudioThread) { update(); }
 		}
 
+		/**
+		 * @brief Called from own audio thread, not the device
+		 *
+		 */
 		void threadedProcess() {
 			VEA_PROFILER_THREAD_NAME("Audio thread")
 			while(mAudioThreadRunning) {
-				process();
-				// TODO wait for device to notify
-				std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(2));
-				// std::unique_lock<std::mutex> lck(mutex_);
-				// mAudioConsumed.wait(lck);
+				process();	// Process one block in advance so there's no underrun
+				std::unique_lock<Mutex> l(mMutex);
+				mAudioConsumed.wait(l);	// Wait until we got work
 			}
 		}
 
 		/**
-		 * @brief Called from audio devices when they are about to
-		 * swap buffers. This will do sync audio processing
+		 * @brief Called from audio device when it needs more audio.
+		 * This will do synchronous processing.
 		 * @param device
 		 */
 		void onBufferSwap(Device* device) {
@@ -167,13 +168,13 @@ namespace vae { namespace core {
 		}
 
 		/**
-		 * @brief Called from audio devices when they are about to
-		 * swap buffers. This will only notify the audio thread to wake up.
+		 * @brief Called from audio device when using seperate audio thread.
+		 * This will only notify the adio thread to do work.
 		 * @param device
 		 */
 		void onThreadedBufferSwap(Device* device) {
 			(void) device;
-			// mAudioConsumed->notify_one();
+			mAudioConsumed.notify_one();
 		}
 
 	public:
@@ -223,7 +224,6 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API start() {
-			VAE_PROFILER_MESSAGE_L("Test message engine init")
 			VEA_PROFILER_THREAD_NAME("Application Thread")
 			VAE_PROFILER_SCOPE()
 			{
@@ -253,7 +253,6 @@ namespace vae { namespace core {
 		 */
 		Result _VAE_PUBLIC_API stop() {
 			VAE_PROFILER_SCOPE()
-			Lock l(mMutex);
 			mBankManager.lock();
 			if (mAudioThreadRunning) {
 				mAudioThreadRunning = false;
@@ -298,7 +297,6 @@ namespace vae { namespace core {
 			});
 			mBankManager.unlock();
 			VAE_PROFILER_FRAME_MARK_END(profiler::audioFrame)
-
 		}
 
 		/**
@@ -358,7 +356,6 @@ namespace vae { namespace core {
 							event, bankHandle, gain, emitterHandle, listenerHandle, mixerHandle
 						);
 					}
-
 				}
 				if (event.random) {
 					for (int index = rand() % event.on_start.size(); 0 <= index; index--) {
@@ -582,10 +579,7 @@ namespace vae { namespace core {
 		 */
 		Result _VAE_PUBLIC_API unloadBankFromId(BankHandle bankHandle) {
 			VAE_INFO("Start Unload bank %i", bankHandle)
-			{
-				Lock l(mMutex);
-				mVoiceManager.stopFromBank(bankHandle);
-			}
+			mVoiceManager.stopFromBank(bankHandle);
 			return mBankManager.unloadFromId(bankHandle);
 		}
 
