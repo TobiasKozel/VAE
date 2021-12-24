@@ -31,10 +31,10 @@ namespace vae { namespace core {
 	using Uint = unsigned int;
 	using Vec3 = glm::vec3;
 
-	using Mutex = tklb::SpinLock;
-	using Lock = tklb::LockGuard<Mutex>;
-
 	#ifndef VAE_USE_PROFILER
+		// vae_profiler.hpp provides them instead
+		using Mutex = tklb::SpinLock;
+		using Lock = tklb::LockGuard<Mutex>;
 		template<class T> using AllocatorFS = std::allocator<T>;		///< Allocator used for filesystem and deserialization
 		template<class T> using AllocatorMain = std::allocator<T>;		///< Allocator used for internal packed structs
 	#endif // VAE_USE_PROFILER

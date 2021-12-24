@@ -52,7 +52,7 @@ namespace vae { namespace core {
 			size_t streamTime = 0;			// device time without regard of underruns and overruns
 			Size underruns = 0;				// Happens when the sound card needs more data than queueToDevice provides
 			Size overruns = 0;				// Happens when the sound card emites more data than queueFromDevice fits
-			Mutex mutex;					// Lock the queues
+			VAE_PROFILER_MUTEX(Mutex, mutex, "Device mutex")	// Lock the queues
 			Uchar channelsOut = 0;
 			Uchar channelsIn = 0;
 

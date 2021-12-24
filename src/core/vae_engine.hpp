@@ -66,7 +66,7 @@ namespace vae { namespace core {
 
 		Thread* mAudioThread;			///< Thread processing voices and mixers
 		Semaphore* mAudioConsumed;		///< Notifies the audio thread when more audio is needed
-		Mutex mMutex;					///< Mutex to lock AudioThread and bank operations
+		VAE_PROFILER_MUTEX(Mutex, mMutex, "Engine Mutex")	///< Mutex to lock AudioThread and bank operations
 		bool mAudioThreadRunning = false;
 
 		/**
@@ -581,6 +581,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API unloadBankFromId(BankHandle bankHandle) {
+			VAE_INFO("Start Unload bank %i", bankHandle)
 			{
 				Lock l(mMutex);
 				mVoiceManager.stopFromBank(bankHandle);
@@ -592,6 +593,7 @@ namespace vae { namespace core {
 		 * @brief Unload every bank and data associated with it
 		 */
 		void _VAE_PUBLIC_API unloadAllBanks() {
+			VAE_INFO("Start unloading all banks")
 			mBankManager.unloadAll();
 		}
 #pragma endregion bank_handling

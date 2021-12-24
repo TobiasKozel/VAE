@@ -34,12 +34,13 @@ namespace vae { namespace core { namespace profiler {
 	#define VAE_PROFILER_FREE(ptr)					TracyFree(ptr);
 	#define VAE_PROFILER_MALLOC_L(ptr, size, name)	TracyAllocN(ptr, size, name);
 	#define VAE_PROFILER_FREE_L(ptr, name)			TracyFreeN(ptr, name);
+	#define VAE_PROFILER_MUTEX(type, name, desc)	TracyLockableN(type, name, desc)
 
 	// Add tracking to tklb which is mostly audiobuffers
 	#define TKLB_TRACK_ALLOCATE(ptr, size)		VAE_PROFILER_MALLOC_L(ptr, size, vae::core::profiler::tklbHeap)
 	#define TKLB_TRACK_FREE(ptr, size)			VAE_PROFILER_FREE_L(ptr, vae::core::profiler::tklbHeap)
 
-	#define VAE_PROFILER_OVERLOAD_NEW() \
+	#define VAE_PROFILER_OVERLOAD_NEW() 		\
 	void* operator new(std::size_t count) {		\
 		auto ptr = std::malloc(count);			\
 		VAE_PROFILER_MALLOC_L(ptr, count,		\
@@ -60,6 +61,9 @@ namespace vae { namespace core { namespace profiler {
 	#include <cstddef>
 	#include <memory>
 	#include <limits>
+
+	// #include "../../external/tklb/src/types/TSpinLock.hpp"
+	#include <mutex>
 
 	namespace vae { namespace core { namespace profiler {
 		/**
@@ -96,6 +100,8 @@ namespace vae { namespace core { namespace profiler {
 	} // profiler
 		template <class T> using AllocatorFS   = profiler::Allocator<T, profiler::FsAllocator>;
 		template <class T> using AllocatorMain = profiler::Allocator<T, profiler::MainAllocator>;
+		using Mutex = std::mutex;
+		using Lock = std::lock_guard<LockableBase(Mutex)>;
 	} } // vae::core
 
 #else
@@ -110,6 +116,7 @@ namespace vae { namespace core { namespace profiler {
 	#define VAE_PROFILER_MALLOC(ptr, size)			///< Track allocation
 	#define VAE_PROFILER_FREE(ptr)					///< Track free
 	#define VAE_PROFILER_OVERLOAD_NEW()				///< Overloads new and delete of class to be tracked
+	#define VAE_PROFILER_MUTEX(type, name, desc) type name;
 #endif // VAE_USE_PROFILER
 
 #endif // _VAE_PROFILER

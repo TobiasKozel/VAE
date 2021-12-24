@@ -14,7 +14,7 @@ namespace vae { namespace core {
 	 */
 	class BankManager {
 		HeapBuffer<Bank> mBanks;		// All the currently loaded banks
-		Mutex mMutex;					// Lock the bank for changes
+		VAE_PROFILER_MUTEX(Mutex, mMutex, "Bank Manager mutex")
 		BankLoader mBankLoader;
 	public:
 		/**
