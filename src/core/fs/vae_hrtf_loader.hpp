@@ -15,8 +15,8 @@
 namespace vae { namespace core {
 	struct HRTFLoader {
 		Result load(const char* path, const char* rootPath, const Size sampleRate, HRTF& hrtf) {
-			VAE_PROFILER_SCOPE
-			std::string json = path;
+			VAE_PROFILER_SCOPE()
+			PathString json = path;
 			json = rootPath + json;
 			std::ifstream file(json);
 
@@ -26,7 +26,9 @@ namespace vae { namespace core {
 			}
 
 			VAE_DEBUG("Started loading HRTF %s", path)
-			auto data = nlohmann::json::parse(file);
+			auto data = nlohmann::basic_json<
+				std::map, std::vector, std::string, bool, int, Size, Sample, AllocatorFS
+			>::parse(file);
 			hrtf.originalRate = data["samplerate"];
 			hrtf.rate = sampleRate;
 

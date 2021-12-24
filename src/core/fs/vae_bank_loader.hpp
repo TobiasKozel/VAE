@@ -24,18 +24,20 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result load(const char* path, const char* rootPath, Bank& bank) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			/**
 			 *					Open file and decode json
 			 */
-			std::string folder = path;
+			PathString folder = path;
 			folder = rootPath + folder + "/";
-			std::string json = folder + "bank.json";
+			PathString json = folder + "bank.json";
 			std::ifstream file(json);
 
 			if (!file.is_open()) { return Result::FileOpenError; }
 
-			auto data = nlohmann::json::parse(file);
+			auto data = nlohmann::basic_json<
+				std::map, std::vector, std::string, bool, int, Size, Sample, AllocatorFS
+			>::parse(file);
 
 			bank.name	= data["name"];
 			bank.id		= data["id"];
@@ -65,8 +67,8 @@ namespace vae { namespace core {
 					s.resample	= (bool) i["resample"];
 					s.stream	= (bool) i["stream"];
 
-					std::string format	= i["format"];
-					if (format == "wav")	{ s.format = Source::Format::wav; }
+					PathString format = i["format"];
+					if (format == "wav")		{ s.format = Source::Format::wav; }
 					if (format == "ogg")		{ s.format = Source::Format::ogg; }
 					if (format == "generator")	{ s.format = Source::Format::generator; }
 
@@ -141,7 +143,7 @@ namespace vae { namespace core {
 					e.name	= i["name"];
 					e.gain	= i["gain"];
 
-					std::string type = i["type"];
+					PathString type = i["type"];
 					e.random 		= type == "start_rand";
 					e.start			= type == "start" || e.random;
 					e.stop			= type == "stop";

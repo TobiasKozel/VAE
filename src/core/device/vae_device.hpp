@@ -23,8 +23,6 @@ namespace vae { namespace core {
 	class Device {
 	public:
 		using Resampler = tklb::ResamplerTpl<Sample>;
-		using Mutex = tklb::SpinLock;
-		using Lock = tklb::LockGuard<Mutex>;
 
 	protected:
 		Backend& mBackend;			// Can't be const because rt audio isn't doing any const
@@ -69,7 +67,7 @@ namespace vae { namespace core {
 			 */
 			template <typename T>
 			void swapBufferInterleaved(const T* from, T* to, Size frames) {
-				VAE_PROFILER_SCOPE
+				VAE_PROFILER_SCOPE()
 				VEA_PROFILER_THREAD_NAME("Device Thread")
 				if (from != nullptr) {
 					convertBuffer.setFromInterleaved(from, frames, channelsIn);
@@ -183,6 +181,8 @@ namespace vae { namespace core {
 		}
 
 	public:
+		VAE_PROFILER_OVERLOAD_NEW()
+
 		/**
 		 * @brief Only a Backend can construct a Device
 		 */
@@ -231,7 +231,7 @@ namespace vae { namespace core {
 		 * @param buffer Pushes the amount of valid samples
 		 */
 		Size push(const AudioBuffer& buffer) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			VAE_ASSERT(0 < mWorker.channelsOut)
 			const auto frames = buffer.validSize();
 			VAE_ASSERT(frames != 0) // need to have valid frames
@@ -257,7 +257,7 @@ namespace vae { namespace core {
 		 * @return Size
 		 */
 		Size canPush() const {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			auto remaining = mWorker.queueToDevice.remaining();
 			if (mResamplerToDevice.isInitialized()) {
 				return mResamplerToDevice.estimateNeed(remaining);
@@ -270,7 +270,7 @@ namespace vae { namespace core {
 		 * @param buffer Gets the amount of valid samples, might actualy get less
 		 */
 		void pop(AudioBuffer& buffer) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			VAE_ASSERT(0 < mWorker.channelsIn)
 			auto frames = buffer.validSize();
 			VAE_ASSERT(frames != 0) // need to have valid frames

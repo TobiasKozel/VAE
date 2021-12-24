@@ -122,7 +122,7 @@ namespace vae { namespace core {
 			const Sample gain, const EmitterHandle emitter,
 			const ListenerHandle listener, const MixerHandle mixer
 		) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 
 			Size searchStartIndex;
 			Size searchEndIndex;
@@ -229,7 +229,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result makeVirtual(Voice& v) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			for (Size i = 0; i < mVirtualVoices.size(); i++) {
 				auto& slot = mVirtualVoices[i];
 				if (slot.source != InvalidSourceHandle) { continue; }
@@ -260,7 +260,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stopVoice(Voice& v) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			if (v.source == InvalidSourceHandle) { return Result::Success; }
 
 			if (!v.chainedEvents) {
@@ -349,7 +349,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stopFromSource(SourceHandle source, EmitterHandle emitter) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			VAE_ASSERT(source != InvalidSourceHandle)
 			for (auto& v : mVoices) {
 				if(v.source == source) {
@@ -371,7 +371,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stopFromEvent(EventHandle event, EmitterHandle emitter) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			VAE_ASSERT(event != InvalidEventHandle)
 			for (auto& v : mVoices) {
 				if(v.event == event) {
@@ -393,7 +393,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stopFromMixer(MixerHandle mixer, EmitterHandle emitter) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			VAE_ASSERT(mixer != InvalidMixerHandle)
 			for (auto& v : mVoices) {
 				if(v.mixer == mixer) {
@@ -408,7 +408,7 @@ namespace vae { namespace core {
 		}
 
 		Result stopFromBank(BankHandle bank) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			for (auto& v : mVirtualVoices) {
 				if (v.source == InvalidSourceHandle) { continue; }
 				if (v.bank == bank) {
@@ -430,7 +430,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stopEmitter(EmitterHandle emitter) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			VAE_ASSERT(emitter != InvalidEmitterHandle)
 			for (auto& v : mVoices) {
 				if(v.emitter == emitter) {

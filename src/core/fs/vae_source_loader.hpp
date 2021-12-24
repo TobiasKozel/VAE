@@ -19,7 +19,7 @@ namespace vae { namespace core {
 		 * @param path
 		 * @return Result
 		 */
-		Result load(Source& s, std::string path) {
+		Result load(Source& s, PathString path) {
 			path = path + s.path;
 			if (!s.stream) {
 				if (s.format == Source::Format::wav) {

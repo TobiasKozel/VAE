@@ -15,8 +15,10 @@
 #include "../../external/glm/glm/glm.hpp"
 #include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../external/tklb/src/types/audio/TAudioRingBuffer.hpp"
+#include "../../external/tklb/src/types/TSpinLock.hpp"
 #include "../../include/vae/vae.hpp"
 #include "../wrapped/vae_profiler.hpp"
+#include <memory>
 #include <string>
 #include <vector>
 #include <array>
@@ -29,14 +31,17 @@ namespace vae { namespace core {
 	using Uint = unsigned int;
 	using Vec3 = glm::vec3;
 
-	template <class T, Size N> using StackBuffer = std::array<T, N>;
-	#ifdef VAE_USE_PROFILER
-		template <class T> using HeapBuffer = std::vector<T, profiler::Allocator<T>>;
-	#else
-		template <class T> using HeapBuffer = std::vector<T>;
-	#endif // VAE_USE_PROFILER
+	using Mutex = tklb::SpinLock;
+	using Lock = tklb::LockGuard<Mutex>;
 
-	// use this once it's viable
+	#ifndef VAE_USE_PROFILER
+		template<class T> using AllocatorFS = std::allocator<T>;		///< Allocator used for filesystem and deserialization
+		template<class T> using AllocatorMain = std::allocator<T>;		///< Allocator used for internal packed structs
+	#endif // VAE_USE_PROFILER
+	template <class T, Size N> using StackBuffer = std::array<T, N>;
+	template <class T> using HeapBuffer = std::vector<T, AllocatorMain<T>>;	///< Buffer used for internal packed structs like Event, Bank Voice etc
+
+	// move away from std vector once this once it's viable
 	constexpr int _VAE_SIZE_TKLB = sizeof(tklb::HeapBuffer<int>);
 	constexpr int _VAE_SIZE_STD = sizeof(std::vector<int>);
 

@@ -18,7 +18,6 @@
 #include "./processor/vae_mixer_processor.hpp"
 #include "./vae_bank_manager.hpp"
 
-#include "../../external/tklb/src/types/TSpinLock.hpp"
 #include "../../external/tklb/src/util/TMath.hpp"
 #include "vae/vae.hpp"
 #include "vae_logger.hpp"
@@ -42,8 +41,6 @@ namespace vae { namespace core {
 	 */
 
 	class Engine {
-		using Mutex = tklb::SpinLock;
-		using Lock = tklb::LockGuard<Mutex>;
 		using CurrentBackend = BackendRtAudio;
 
 		using Thread = std::thread;
@@ -144,7 +141,7 @@ namespace vae { namespace core {
 				}
 			}
 			VAE_PROFILER_FRAME_MARK_END(profiler::audioFrame)
-			VAE_PROFILER_FRAME_MARK
+			VAE_PROFILER_FRAME_MARK()
 			if (mConfig.updateInAudioThread) { update(); }
 		}
 
@@ -165,6 +162,7 @@ namespace vae { namespace core {
 		 * @param device
 		 */
 		void onBufferSwap(Device* device) {
+			(void) device;
 			process();
 		}
 
@@ -174,6 +172,7 @@ namespace vae { namespace core {
 		 * @param device
 		 */
 		void onThreadedBufferSwap(Device* device) {
+			(void) device;
 			// mAudioConsumed->notify_one();
 		}
 
@@ -226,7 +225,7 @@ namespace vae { namespace core {
 		Result _VAE_PUBLIC_API start() {
 			VAE_PROFILER_MESSAGE_L("Test message engine init")
 			VEA_PROFILER_THREAD_NAME("Application Thread")
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			{
 				VAE_PROFILER_SCOPE_NAMED("Device Instance")
 				Backend& backend = CurrentBackend::instance();
@@ -253,7 +252,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API stop() {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			Lock l(mMutex);
 			mBankManager.lock();
 			if (mAudioThreadRunning) {
@@ -320,7 +319,7 @@ namespace vae { namespace core {
 			MixerHandle mixerHandle = InvalidMixerHandle,
 			ListenerHandle listenerHandle = AllListeners
 		) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			if (emitterHandle != InvalidEmitterHandle && !mSpatialManager.hasEmitter(emitterHandle)) {
 				VAE_ERROR("No emitter %u registered", emitterHandle)
 				return Result::InvalidEmitter;
@@ -384,7 +383,7 @@ namespace vae { namespace core {
 					}
 				}
 				if (result != Result::Success) {
-					VAE_DEBUG("Event %i:%i failed to start voices. Result %i", eventHandle, bankHandle, result)
+					VAE_DEBUG("Event %i:%i failed to start voices", eventHandle, bankHandle)
 					return result; // ! someting went wrong
 				}
 			}

@@ -23,7 +23,6 @@ Alternatively you can add the whole thing as a subproject and static link agains
 Using the pimpl api is optional but the better option since it won't pull in the whole thing.
 
 ## TODOs
-- safe bank unloading
 - Fix click at end of sounds for speex reampled sounds
 - Mixer effects
 - Split up pod data and internal data structures so they can be exposed to the public API as well.
@@ -54,6 +53,7 @@ Using the pimpl api is optional but the better option since it won't pull in the
 - Realtime linear resampling otherwither
 - Per voice variable speed playback and high/lowpass filters
 - Multiple Listeners, no individual output devices however and not tested at all
+- Integration for the profiler tracy which can give nice insights on memory consumtion and cpu times
 
 ## Defines
 

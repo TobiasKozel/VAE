@@ -13,9 +13,6 @@ namespace vae { namespace core {
 	 *
 	 */
 	class BankManager {
-		using Mutex = tklb::SpinLock;
-		using Lock = tklb::LockGuard<Mutex>;
-
 		HeapBuffer<Bank> mBanks;		// All the currently loaded banks
 		Mutex mMutex;					// Lock the bank for changes
 		BankLoader mBankLoader;
@@ -73,19 +70,19 @@ namespace vae { namespace core {
 		}
 
 		Result load(const char* path, const char* rootPath, int sampleRate) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			VAE_INFO("Loading bank from file %s%s", rootPath, path)
 			Bank bank;
 			auto result = mBankLoader.load(path, rootPath, bank);
 			if (result != Result::Success) {
-				VAE_ERROR("Failed to load bank from file %s%s with error %i", rootPath, path, result)
+				VAE_ERROR("Failed to load bank from file %s%s", rootPath, path)
 				return result;
 			}
 			return load(bank, sampleRate);
 		}
 
 		Result load(Bank& bank, int sampleRate) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			// TODO init mixer effects
 
 			if (bank.mixers.empty()) {
@@ -121,7 +118,7 @@ namespace vae { namespace core {
 		}
 
 		Result addSource(BankHandle bankHandle, Source& source, int sampleRate) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			if (source.resample && source.signal.sampleRate && source.signal.sampleRate != sampleRate) {
 				tklb::ResamplerTpl<Sample>::resample(source.signal, sampleRate);
 			}
@@ -135,7 +132,7 @@ namespace vae { namespace core {
 		}
 
 		Result addEvent(BankHandle bankHandle, Event& event) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			auto& bank = mBanks[bankHandle];
 			Lock l(mMutex);
 			if (bank.events.size() <= event.id) {
@@ -146,7 +143,7 @@ namespace vae { namespace core {
 		}
 
 		Result addMixer(BankHandle bankHandle, Mixer& mixer) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			// TODO init mixer effects
 			mixer.buffer.resize(Config::MaxBlock, Config::MaxChannels);
 			Lock l(mMutex);
@@ -159,7 +156,7 @@ namespace vae { namespace core {
 		}
 
 		Result unloadFromId(BankHandle bankHandle) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			Lock l(mMutex);
 			if (mBanks.size() <= bankHandle) {
 				VAE_WARN("Could not unload bank with handle %i", bankHandle)
@@ -173,7 +170,7 @@ namespace vae { namespace core {
 		}
 
 		void unloadAll() {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			for (auto& i : mBanks) {
 				if (i.id == InvalidBankHandle) { continue; }
 				unloadFromId(i.id);

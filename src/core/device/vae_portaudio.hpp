@@ -57,6 +57,7 @@ namespace vae { namespace core {
 		}
 
 	public:
+		VAE_PROFILER_OVERLOAD_NEW()
 
 		DevicePortaudio(
 			Backend& backend, const EngineConfig& config

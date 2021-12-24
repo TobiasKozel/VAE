@@ -222,6 +222,8 @@ namespace vae { namespace core {
 					* @param panner Get's a panner instance with pan() and speakers() function
 					*/
 					const auto pan = [&](const auto& panner) {
+						// This is actually constexpr but not according to clangd
+						constexpr Size channels = std::min(Size(Config::MaxChannels), panner.speakers);
 						panner.pan(
 							relativeDirection, currentVolumes,
 							distanceAttenuated, emitter.spread
@@ -229,7 +231,7 @@ namespace vae { namespace core {
 
 						if (!v.started) {
 							// first time don't interpolate
-							for (Size c = 0; c < panner.speakers; c++) {
+							for (Size c = 0; c < channels; c++) {
 								lastVolumes[c] = currentVolumes[c];
 							}
 						}
@@ -239,7 +241,7 @@ namespace vae { namespace core {
 							const Sample sample = in[s];
 							// lerp between last and current channel volumes
 							// Not correct in terms of power convservation, but easy and efficient
-							for (Size c = 0; c < panner.speakers; c++) {
+							for (Size c = 0; c < channels; c++) {
 								target[c][s] += sample * (lastVolumes[c] + t * (currentVolumes[c] - lastVolumes[c]));
 							}
 							t += Sample(1) / Sample(frames);

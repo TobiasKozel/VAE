@@ -120,6 +120,7 @@ namespace vae { namespace core {
 
 		~BackendRtAudio() { }
 	public:
+		VAE_PROFILER_OVERLOAD_NEW()
 		static BackendRtAudio& instance() {
 			static BackendRtAudio backend;
 			return backend;

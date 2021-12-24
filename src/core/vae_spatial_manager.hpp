@@ -24,11 +24,11 @@ namespace vae { namespace core {
 		}
 
 		Result addEmitter(EmitterHandle e) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			VAE_ASSERT(e != InvalidEmitterHandle)
 
 			if (mEmitters.contains(e)) {
-				VAE_INFO("Trying to add duplicate emitter %lu", e)
+				VAE_INFO("Trying to add duplicate emitter %u", e)
 				return Result::DuplicateEmitter;
 			}
 			Emitter emitter;
@@ -41,7 +41,7 @@ namespace vae { namespace core {
 		}
 
 		EmitterHandle createEmitter() {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			EmitterHandle ret = rand();
 			while (hasEmitter(ret)) {
 				ret = rand();
@@ -54,7 +54,7 @@ namespace vae { namespace core {
 			BankHandle bank, EventHandle event, float maxDist,
 			const LocationDirection& locDir, Sample spread
 		) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			auto handle = createEmitter();
 			auto& e = mEmitters[handle];
 			e.position = { locDir.position.x, locDir.position.y, locDir.position.z };
@@ -66,7 +66,7 @@ namespace vae { namespace core {
 		}
 
 		Result removeEmitter(EmitterHandle e) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			auto res = mEmitters.erase(e);
 			if (res == 1) {
 				VAE_PROFILER_PLOT(profiler::emitters, int64_t(mEmitters.size()));
@@ -76,17 +76,17 @@ namespace vae { namespace core {
 		}
 
 		Emitter& getEmitter(EmitterHandle e) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			return mEmitters[e];
 		}
 
 		bool hasEmitter(EmitterHandle e) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			return mEmitters.contains(e);
 		}
 
 		void compact() {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			// mEmitters.compact();
 		}
 
@@ -94,7 +94,7 @@ namespace vae { namespace core {
 			EmitterHandle emitter, const LocationDirection& locDir,
 			Sample spread
 		) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			if (!hasEmitter(emitter)) {
 				VAE_DEBUG("Accessed invalid emitter %i", emitter)
 				return Result::ElementNotFound;
@@ -111,7 +111,7 @@ namespace vae { namespace core {
 
 		template <class Func>
 		Result forListeners(ListenerHandle handle, const Func&& func) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			if (handle == AllListeners) {
 				for(ListenerHandle index = 0; index < Config::MaxListeners; index++) {
 					auto& i = mListeners[index];
@@ -127,7 +127,7 @@ namespace vae { namespace core {
 		}
 
 		ListenerHandle createListener() {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			for (ListenerHandle index = 0; index < Config::MaxListeners; index++) {
 				auto& i = mListeners[index];
 				if (i.id == InvalidListenerHandle) {
@@ -146,7 +146,7 @@ namespace vae { namespace core {
 			ListenerHandle listener,
 			const LocationOrientation& locOr
 		) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			if (Config::MaxListeners <= listener) {
 				VAE_WARN("Accessed invalid listener %i", listener)
 				return Result::ValidHandleRequired;
@@ -162,7 +162,7 @@ namespace vae { namespace core {
 		}
 
 		Result removeListener(ListenerHandle listener) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE()
 			if (Config::MaxListeners <= listener) {
 				VAE_WARN("Accessed invalid listener %i", listener)
 				return Result::ValidHandleRequired;
