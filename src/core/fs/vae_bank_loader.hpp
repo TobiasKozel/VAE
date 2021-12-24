@@ -46,6 +46,7 @@ namespace vae { namespace core {
 			 */
 			auto sources = data["sources"];
 			if (!sources.empty()) {
+				VAE_PROFILER_SCOPE_NAMED("Deserialize sources")
 				bank.sources.resize(sources.size());
 				for (auto& i : sources) {
 					SourceHandle id = i["id"];
@@ -81,6 +82,7 @@ namespace vae { namespace core {
 			 */
 			auto mixers = data["mixers"];
 			if (!mixers.empty()) {
+				VAE_PROFILER_SCOPE_NAMED("Deserialize mixers")
 				const auto mixerCount = mixers.size();
 				bank.mixers.resize(mixerCount);
 				for (auto& i : mixers) {
@@ -118,6 +120,7 @@ namespace vae { namespace core {
 
 			auto events = data["events"];
 			if (!events.empty()) {
+				VAE_PROFILER_SCOPE_NAMED("Deserialize events")
 				bank.events.resize(events.size());
 				for (auto& i : events) {
 					EventHandle id = i["id"];

@@ -20,13 +20,14 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result load(Source& s, std::string path) {
-			VAE_PROFILER_SCOPE
 			path = path + s.path;
 			if (!s.stream) {
 				if (s.format == Source::Format::wav) {
+					VAE_PROFILER_SCOPE_NAMED("Load wav")
 					auto result = tklb::wave::load(path.c_str(), s.signal);
 					return result ? Result::Success : Result::GenericFailure;
 				} else if (s.format == Source::Format::ogg) {
+					VAE_PROFILER_SCOPE_NAMED("Load ogg")
 					auto result = tklb::ogg::load(path.c_str(), s.signal);
 					return result ? Result::Success : Result::GenericFailure;
 				}

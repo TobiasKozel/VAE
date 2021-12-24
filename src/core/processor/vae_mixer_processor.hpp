@@ -22,7 +22,7 @@ namespace vae { namespace core {
 		void mix(
 			VoiceManger& manager, Bank& bank, SampleIndex frames
 		) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE_NAMED("Mixer Processor")
 			VAE_ASSERT(!bank.mixers.empty()) // can't happen
 
 			/**

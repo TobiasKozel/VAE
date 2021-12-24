@@ -27,6 +27,7 @@ namespace vae { namespace core {
 		 * @param sampleRate
 		 */
 		void init(const char* rootPath, int sampleRate) {
+			VAE_PROFILER_SCOPE_NAMED("Bankmanager Init")
 			for (auto& i : mBanks) {
 				if (i.id != InvalidBankHandle) { continue; }
 				PathString path = i.path;
@@ -55,7 +56,7 @@ namespace vae { namespace core {
 		 */
 		template <class Func>
 		void forEach(const Func&& func) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE_NAMED("Foreach Bank")
 			Lock l(mMutex);
 			for (auto& i : mBanks) {
 				if (i.id == InvalidBankHandle) { continue; }
@@ -93,14 +94,18 @@ namespace vae { namespace core {
 				bank.mixers[0].id = 0;
 				bank.mixers[0].name = "Bank Master";
 			}
-
-			for (auto& m : bank.mixers) {
-				m.buffer.resize(Config::MaxBlock, Config::MaxChannels);
+			{
+				VAE_PROFILER_SCOPE_NAMED("Allocate mixers")
+				for (auto& m : bank.mixers) {
+					m.buffer.resize(Config::MaxBlock, Config::MaxChannels);
+				}
 			}
-
-			for (auto& s : bank.sources) {
-				if (s.resample && s.signal.sampleRate && s.signal.sampleRate != sampleRate) {
-					tklb::ResamplerTpl<Sample>::resample(s.signal, sampleRate);
+			{
+				VAE_PROFILER_SCOPE_NAMED("Offline resampling")
+				for (auto& s : bank.sources) {
+					if (s.resample && s.signal.sampleRate && s.signal.sampleRate != sampleRate) {
+						tklb::ResamplerTpl<Sample>::resample(s.signal, sampleRate);
+					}
 				}
 			}
 
@@ -117,7 +122,7 @@ namespace vae { namespace core {
 
 		Result addSource(BankHandle bankHandle, Source& source, int sampleRate) {
 			VAE_PROFILER_SCOPE
-			if (source.signal.sampleRate && source.signal.sampleRate != sampleRate) {
+			if (source.resample && source.signal.sampleRate && source.signal.sampleRate != sampleRate) {
 				tklb::ResamplerTpl<Sample>::resample(source.signal, sampleRate);
 			}
 			auto& bank = mBanks[bankHandle];

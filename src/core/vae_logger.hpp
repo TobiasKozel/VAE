@@ -23,10 +23,10 @@
 		#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 	#endif // _VAE_LOG_CONST_EXPR_FILEPATH
 
-	#define VAE_DEBUG(msg, ...) printf("DEBUG\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
-	#define VAE_INFO(msg, ...)  printf ("INFO\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
-	#define VAE_WARN(msg, ...)  printf ("WARN\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
-	#define VAE_ERROR(msg, ...) printf("ERROR\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
+	#define VAE_DEBUG(msg, ...) printf("DEBUG\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__); VAE_PROFILER_MESSAGE_L("DEBUG\t" msg)
+	#define VAE_INFO(msg, ...)  printf ("INFO\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__); VAE_PROFILER_MESSAGE_L("INFO\t" msg)
+	#define VAE_WARN(msg, ...)  printf ("WARN\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__); VAE_PROFILER_MESSAGE_L("WARN\t" msg)
+	#define VAE_ERROR(msg, ...) printf("ERROR\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__); VAE_PROFILER_MESSAGE_L("ERROR\t" msg)
 
 	#ifdef VAE_LOG_VOICES
 		#define VAE_DEBUG_VOICES(msg, ...) printf("VOICE\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);

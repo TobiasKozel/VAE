@@ -16,6 +16,7 @@
 #include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../external/tklb/src/types/audio/TAudioRingBuffer.hpp"
 #include "../../include/vae/vae.hpp"
+#include "../wrapped/vae_profiler.hpp"
 #include <string>
 #include <vector>
 #include <array>
@@ -29,7 +30,11 @@ namespace vae { namespace core {
 	using Vec3 = glm::vec3;
 
 	template <class T, Size N> using StackBuffer = std::array<T, N>;
-	template <class T> using HeapBuffer = std::vector<T>;
+	#ifdef VAE_USE_PROFILER
+		template <class T> using HeapBuffer = std::vector<T, profiler::Allocator<T>>;
+	#else
+		template <class T> using HeapBuffer = std::vector<T>;
+	#endif // VAE_USE_PROFILER
 
 	// use this once it's viable
 	constexpr int _VAE_SIZE_TKLB = sizeof(tklb::HeapBuffer<int>);

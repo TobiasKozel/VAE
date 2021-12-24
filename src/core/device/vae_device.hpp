@@ -70,6 +70,7 @@ namespace vae { namespace core {
 			template <typename T>
 			void swapBufferInterleaved(const T* from, T* to, Size frames) {
 				VAE_PROFILER_SCOPE
+				VEA_PROFILER_THREAD_NAME("Device Thread")
 				if (from != nullptr) {
 					convertBuffer.setFromInterleaved(from, frames, channelsIn);
 					if (resamplerFromDevice.isInitialized()) {
@@ -98,6 +99,8 @@ namespace vae { namespace core {
 					convertBuffer.putInterleaved(to, popped);
 				}
 				streamTime += frames;
+				VAE_PROFILER_PLOT(profiler::deviceUnderruns, int64_t(underruns));
+				VAE_PROFILER_PLOT(profiler::deviceOverruns, int64_t(overruns));
 			}
 		};
 
@@ -244,6 +247,7 @@ namespace vae { namespace core {
 				mOverruns += (frames - pushed);
 				return pushed;
 			}
+			VAE_PROFILER_PLOT(profiler::engineOverruns, int64_t(mOverruns));
 		}
 
 		/**
@@ -272,6 +276,7 @@ namespace vae { namespace core {
 			Lock lock(mWorker.mutex);
 			const auto popped = mWorker.queueFromDevice.pop(buffer, frames);
 			mUnderruns += (frames - popped);
+			VAE_PROFILER_PLOT(profiler::engineUnderruns, int64_t(mOverruns));
 		}
 
 		Size canPop() const {

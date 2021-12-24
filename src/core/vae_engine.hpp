@@ -77,7 +77,8 @@ namespace vae { namespace core {
 		 * Called either from onBufferSwap or threadedProcess
 		 */
 		void process() {
-			VAE_PROFILER_FRAME_MARK_START(_VAE_PROFILER_AUDIO)
+			VAE_PROFILER_FRAME_MARK_START(profiler::audioFrame)
+			VAE_PROFILER_SCOPE_NAMED("Engine Process")
 			auto& d = *mDevice;
 			auto sampleRate = d.getSampleRate();
 
@@ -116,6 +117,7 @@ namespace vae { namespace core {
 					});
 
 					{
+						VAE_PROFILER_SCOPE_NAMED("Peak limiting")
 						// Shitty peak limiter
 						mLimiterLastPeak *= Sample(0.7); // return to normal slowly
 						mLimiterLastPeak = std::max(Sample(1.0), mLimiterLastPeak);
@@ -135,11 +137,13 @@ namespace vae { namespace core {
 					mTimeFract += step * remaining;
 				}
 			}
-			VAE_PROFILER_FRAME_MARK_END(_VAE_PROFILER_AUDIO)
+			VAE_PROFILER_FRAME_MARK_END(profiler::audioFrame)
+			VAE_PROFILER_FRAME_MARK
 			if (mConfig.updateInAudioThread) { update(); }
 		}
 
 		void threadedProcess() {
+			VEA_PROFILER_THREAD_NAME("Audio thread")
 			while(mAudioThreadRunning) {
 				process();
 				// TODO wait for device to notify
@@ -189,7 +193,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API init(const EngineConfig& config = {}) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE_NAMED("Engine init")
 			VAE_DEBUG("Initializing engine...")
 			mConfig = config;
 			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
@@ -214,19 +218,28 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API start() {
+			VAE_PROFILER_MESSAGE_L("Test message engine init")
+			VEA_PROFILER_THREAD_NAME("Application Thread")
 			VAE_PROFILER_SCOPE
-			Backend& backend = CurrentBackend::instance();
-			mDevice = backend.createDevice(mConfig);
+			{
+				VAE_PROFILER_SCOPE_NAMED("Device Instance")
+				Backend& backend = CurrentBackend::instance();
+				mDevice = backend.createDevice(mConfig);
+			}
 			if (mConfig.processInBufferSwitch) {
 				mDevice->setCallback(TKLB_DELEGATE(&Engine::onBufferSwap, *this));
 				VAE_DEBUG("Mixing in buffer switch")
 			} else {
 				mDevice->setCallback(TKLB_DELEGATE(&Engine::onThreadedBufferSwap, *this));
 				mAudioThreadRunning = true;
+				VAE_PROFILER_SCOPE_NAMED("Start audio thread")
 				mAudioThread = new Thread(&Engine::threadedProcess, this);
 				VAE_DEBUG("Mixing in seperate thread")
 			}
-			return mDevice->openDevice() ? Result::Success : Result::DeviceError;
+			{
+				VAE_PROFILER_SCOPE_NAMED("Device Instance")
+				return mDevice->openDevice() ? Result::Success : Result::DeviceError;
+			}
 		}
 
 		/**
@@ -260,7 +273,8 @@ namespace vae { namespace core {
 		 * If this isn't called regularly events might be lost.
 		 */
 		void _VAE_PUBLIC_API update() {
-			VAE_PROFILER_FRAME_MARK_START(_VAE_PROFILER_UPDATE)
+			VAE_PROFILER_FRAME_MARK_START(profiler::audioFrame)
+			VAE_PROFILER_SCOPE_NAMED("Engine Update")
 			// Update emitters and start voices nearby
 			mBankManager.lock();
 			mSpatialManager.update(mVoiceManager, mBankManager);
@@ -278,7 +292,7 @@ namespace vae { namespace core {
 				return true;
 			});
 			mBankManager.unlock();
-			VAE_PROFILER_FRAME_MARK_END(_VAE_PROFILER_UPDATE)
+			VAE_PROFILER_FRAME_MARK_END(profiler::audioFrame)
 
 		}
 

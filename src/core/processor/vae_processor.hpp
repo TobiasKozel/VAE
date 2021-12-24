@@ -27,8 +27,9 @@ namespace vae { namespace core {
 			VoiceManger& manager, Bank& bank,
 			SampleIndex frames, Size sampleRate
 		) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE_NAMED("Default Processor")
 			manager.forEachVoice([&](Voice& v, Size index) {
+				VAE_PROFILER_SCOPE_NAMED("Default Voice")
 				if (v.bank != bank.id) { return true; }
 				if (v.spatialized) { return true; }
 
@@ -36,7 +37,8 @@ namespace vae { namespace core {
 				auto& signal = source.signal;
 
 				if (signal.size() == 0) { return false; }
-				if (signal.sampleRate == sampleRate) {
+				if (signal.sampleRate != sampleRate) {
+					VAE_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
 					v.filtered = true; // implicitly filter to resample
 				}
 
@@ -53,7 +55,7 @@ namespace vae { namespace core {
 				target.setValidSize(frames); // mark mixer as active
 
 				if (!v.filtered) {
-					VAE_PROFILER_SCOPE
+					VAE_PROFILER_SCOPE_NAMED("Voice Basic")
 					// Basic rendering to all output channels w/o any effects
 					v.started = true;
 					SampleIndex remaining;
@@ -82,7 +84,7 @@ namespace vae { namespace core {
 
 				// Filtered voice processing
 				{
-					VAE_PROFILER_SCOPE
+					VAE_PROFILER_SCOPE_NAMED("Voice Filter")
 					bool finished = false;
 
 					auto& fd = manager.getVoiceFilter(index);

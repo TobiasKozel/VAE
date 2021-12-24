@@ -2,6 +2,7 @@
 #define _VAE_HRTF_UTIL
 
 #include "../vae_types.hpp"
+#include "../vae_util.hpp"
 #include "../pod/vae_hrtf.hpp"
 #include "../voices/vae_voice_hrtf.hpp"
 #include <limits>
@@ -17,6 +18,7 @@ namespace vae { namespace core {
 		 */
 		static inline Size closest(const HRTF& hrtf, const Vec3& direction) {
 			// TODO this is obviously bad
+			VAE_PROFILER_SCOPE_NAMED("Search HRTF")
 			Sample closest = std::numeric_limits<Sample>::max();
 			Size closestIndex = ~0;
 			for (Size i = 0; i < hrtf.positions.size(); i++) {
@@ -47,6 +49,7 @@ namespace vae { namespace core {
 			HRTF::Position& hrtf, VoiceHRTF& hrtfVoice, SampleIndex frames,
 			AudioBuffer& target, const Sample* in, Sample distanceAttenuated
 		) {
+			VAE_PROFILER_SCOPE_NAMED("Apply HRTF")
 			const Sample* irLeft   = hrtf.ir[0][0];
 			const Sample* irRight  = hrtf.ir[1][0];
 			const Size irLen    = hrtf.ir[0].size();

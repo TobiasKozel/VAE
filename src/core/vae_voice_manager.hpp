@@ -43,10 +43,11 @@ namespace vae { namespace core {
 		Size mActiveHRTFVoices = 0;				///< Number of ative hrtf voices
 		Size mHRTFVoiceCount = 0;				///< Number of voices reserved for hrtf
 		Size mHighestVoice = 0;					///< TODO bad
+		Size mFinishedPending = 0;				///< Voices in mFinishedVoiceQueue
 		Size mHighestFinishedVoice = 0;			///< TODO bad as well
 	public:
 		Result init(const EngineConfig& config) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE_NAMED("Voicemanager Init")
 			mVoices.resize(config.voices);
 			mFinishedVoiceQueue.resize(config.finishedVoiceQueueSize);
 			mVoicePans.resize(config.voices);
@@ -76,7 +77,7 @@ namespace vae { namespace core {
 		 */
 		template <class Func>
 		void forEachVoice(const Func&& func) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE_NAMED("Foreach Voice")
 			for (Size index = 0; index <= mHighestVoice; index++) {
 				auto& i = mVoices[index];
 				if (i.source == InvalidSourceHandle) { continue; }
@@ -88,13 +89,15 @@ namespace vae { namespace core {
 
 		template <class Func>
 		void forEachFinishedVoice(const Func&& func) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE_NAMED("Foreach Finished Voice")
 			for (Size i = 0; i <= mHighestFinishedVoice; i++) {
 				auto& v = mFinishedVoiceQueue[i];
 				if (v.source == InvalidSourceHandle) { continue; }
 				if (!func(v)) { continue; };
+				mFinishedPending--;
 				v.source = InvalidSourceHandle; // now the finished voice is handled
 			}
+			VAE_PROFILER_PLOT(profiler::voiceFinishedCount, int64_t(mFinishedPending));
 		}
 
 		VoicePan& getVoicePan(Size index) {
@@ -187,7 +190,7 @@ namespace vae { namespace core {
 
 					v.gain = event.gain * gain;
 					v.loop = event.loop;
-					v.filtered = true; // todo provide way to init the filter settings
+					// v.filtered = true; // todo provide way to init the filter settings
 					if (v.filtered) {
 						mVoiceFiltered[i] = { };
 					}
@@ -202,6 +205,9 @@ namespace vae { namespace core {
 					} else {
 						mActiveVoices++;
 					}
+					VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+					VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+					VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
 					mHighestVoice = std::max(i, mHighestVoice);
 					VAE_DEBUG_VOICES("Started voice slot %i from event %i:%i\tactive: %i",
 						i, event.id, bank, mActiveVoices
@@ -223,6 +229,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result makeVirtual(Voice& v) {
+			VAE_PROFILER_SCOPE
 			for (Size i = 0; i < mVirtualVoices.size(); i++) {
 				auto& slot = mVirtualVoices[i];
 				if (slot.source != InvalidSourceHandle) { continue; }
@@ -234,6 +241,9 @@ namespace vae { namespace core {
 				} else {
 					mActiveVoices--;
 				}
+				VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+				VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+				VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
 				VAE_DEBUG_VOICES("Virtualized voice from event %i:%i\tactive: %i\tincative: %i",
 					v.event, v.bank, mActiveVoices, mInactiveVoices
 				)
@@ -267,6 +277,9 @@ namespace vae { namespace core {
 							VAE_DEBUG_VOICES("Revived voice from event %i:%i\tactive: %i\tincative: %i",
 								v.event, v.bank, mActiveVoices, mInactiveVoices
 							)
+							VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+							VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+							VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
 							return Result::Success;
 						}
 					}
@@ -277,6 +290,9 @@ namespace vae { namespace core {
 				} else {
 					mActiveVoices--;
 				}
+				VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+				VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+				VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
 				return Result::Success;
 			}
 
@@ -317,6 +333,11 @@ namespace vae { namespace core {
 				// Event will be discarded
 				VAE_WARN("finishedVoiceQueue is full. Stop Event %i in bank %i discarded", v.event, v.bank)
 			}
+			mFinishedPending++;
+			VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+			VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+			VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
+			VAE_PROFILER_PLOT(profiler::voiceFinishedCount, int64_t(mFinishedPending));
 			return Result::Success;
 		}
 

@@ -18,7 +18,7 @@ namespace vae { namespace core {
 		Listeners mListeners;					// All Listeners
 	public:
 		Result init(Size emitterCount) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE_NAMED("Spatial Init")
 			mEmitters.reserve(emitterCount);
 			return Result::Success;
 		}
@@ -36,6 +36,7 @@ namespace vae { namespace core {
 			emitter.event = InvalidEventHandle;
 			// TODO VAE_DEBUG when allocation happens and also lock audio thread
 			mEmitters.insert({e, emitter});
+			VAE_PROFILER_PLOT(profiler::emitters, int64_t(mEmitters.size()));
 			return Result::Success;
 		}
 
@@ -68,6 +69,7 @@ namespace vae { namespace core {
 			VAE_PROFILER_SCOPE
 			auto res = mEmitters.erase(e);
 			if (res == 1) {
+				VAE_PROFILER_PLOT(profiler::emitters, int64_t(mEmitters.size()));
 				return Result::Success;
 			}
 			return Result::ElementNotFound;
@@ -170,7 +172,7 @@ namespace vae { namespace core {
 		}
 
 		void update(VoiceManger& manager, BankManager& banks) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE_NAMED("Spatial Update")
 
 			// TODO perf maybe swap loops
 			// This triggers nearby auto emitters

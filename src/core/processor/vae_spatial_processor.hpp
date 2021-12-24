@@ -28,7 +28,7 @@ namespace vae { namespace core {
 		AudioBuffer mScratchBuffer;
 	public:
 		Result init(Size hrtfVoices) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE_NAMED("Spatial Processor Init")
 			mVoiceHRTFs.resize(hrtfVoices);
 			mScratchBuffer.resize(Config::MaxBlock);
 			return Result::Success;
@@ -47,18 +47,23 @@ namespace vae { namespace core {
 			SpatialManager& spatial,
 			SampleIndex frames, Size sampleRate
 		) {
-			VAE_PROFILER_SCOPE
+			VAE_PROFILER_SCOPE_NAMED("Spatial Processor")
 			manager.forEachVoice([&](Voice& v, Size vi) {
+				VAE_PROFILER_SCOPE_NAMED("Spatial Voice")
 				if (v.bank != bank.id) { return true; }		// wrong bank
 				if (!v.spatialized) { return true; }		// not spatialized
-				if (!spatial.hasEmitter(v.emitter)) { return false; } // ! needs emitter
+				if (!spatial.hasEmitter(v.emitter)) {
+					VAE_DEBUG("Spatial voice is missing emitter")
+					return false; // ! needs emitter
+				}
 
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
 
 				if (signal.size() == 0) { return false; }	// ! no signal
 
-				if (signal.sampleRate == sampleRate) {
+				if (signal.sampleRate != sampleRate) {
+					VAE_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
 					v.filtered = true; // implicitly filter to resample
 				}
 
@@ -99,7 +104,7 @@ namespace vae { namespace core {
 				bool finished = false; 			// the return value of this function stops the voice
 
 				if (v.filtered) {
-					VAE_PROFILER_SCOPE
+					VAE_PROFILER_SCOPE_NAMED("Voice Filter")
 					auto& fd = manager.getVoiceFilter(vi);
 
 					if (!v.started) {
@@ -149,6 +154,7 @@ namespace vae { namespace core {
 					v.time = v.time % signalLength;		// set index back into bounds if we're looping
 					in = mScratchBuffer[0];				// set the buffer to use for panning
 				} else {
+					VAE_PROFILER_SCOPE_NAMED("Non filtered Voice")
 					if (v.loop) {
 						// put the looped signal in scratch buffer eventhough we're not filtering
 						// so panning doesn't need to worry about looping
@@ -175,7 +181,7 @@ namespace vae { namespace core {
 				if (l.configuration == Listener::Configuration::HRTF && v.HRTF && mHRTF.rate) {
 					// * HRTF Panning
 					VAE_ASSERT(vi < mVoiceHRTFs.size()) // only the lower voice can use hrtfs
-					VAE_PROFILER_SCOPE
+					VAE_PROFILER_SCOPE_NAMED("HRTF Render")
 
 					Size closestIndex = HRTFUtil::closest(mHRTF, relativeDirection);
 
@@ -194,7 +200,7 @@ namespace vae { namespace core {
 					);
 
 				} else {
-					VAE_PROFILER_SCOPE
+					VAE_PROFILER_SCOPE_NAMED("SPCAP Render")
 					// * Normal SPCAP panning
 					auto& lastPan = manager.getVoicePan(vi);
 					VoicePan currentPan;

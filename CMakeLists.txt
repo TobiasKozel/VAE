@@ -108,14 +108,13 @@ target_include_directories(vae
 	PUBLIC
 		$<INSTALL_INTERFACE:include>
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> # the pimpl API
-	PRIVATERANDOM
+	PRIVATE
 		${VAE_DEPS}
 )
 
-target_link_libraries(vae PRIVATE ${VAE_DEPS})
-
 # optional profiler
 if(VAE_PROFILER)
+	list(APPEND VAE_DEPS ${CMAKE_DL_LIBS})
 	target_compile_definitions(
 		vae
 		PUBLIC
@@ -123,6 +122,9 @@ if(VAE_PROFILER)
 	)
 	message("VAE: Build with profiler")
 endif()
+
+target_link_libraries(vae PRIVATE ${VAE_DEPS})
+
 
 # for deveoloping
 add_subdirectory(dev)
