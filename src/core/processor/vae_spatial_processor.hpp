@@ -62,7 +62,11 @@ namespace vae { namespace core {
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
 
-				if (signal.size() == 0) { return false; }	// ! no signal
+				const auto signalLength = signal.size();
+
+				if (signalLength == 0) { return false; }	// ! no signal
+
+				v.time = v.time % signalLength;		// Keep signal in bounds before starting
 
 				if (signal.sampleRate != sampleRate) {
 					// VAE_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
@@ -108,7 +112,6 @@ namespace vae { namespace core {
 
 				// TODO This thing is littered with branches, maybe needs some cleanup
 
-				const auto signalLength = signal.size();
 				const Sample* in;				// The filtered, looped original signal used for panning later. We only do mono signals
 				SampleIndex remaining = frames;	// playback speed and looping affects this
 				bool finished = false; 			// the return value of this function stops the voice
@@ -161,7 +164,7 @@ namespace vae { namespace core {
 					position += speed; 					// step to next sample
 					v.time = std::floor(position);		// split the signal in normal sample position
 					fd.timeFract = position - v.time;	// and fractional time for the next block
-					v.time = v.time % signalLength;		// set index back into bounds if we're looping
+					v.time = v.time;					// set index back
 					in = mScratchBuffer[0];				// set the buffer to use for panning
 				} else {
 					VAE_PROFILER_SCOPE_NAMED("Non filtered Voice")
@@ -171,9 +174,9 @@ namespace vae { namespace core {
 						for (SampleIndex s = 0; s < frames; s++) {
 							mScratchBuffer[0][s] = signal[0][(v.time + s) % signal.size()];
 						}
-						v.time = (v.time + frames) % signal.size(); // progress the time and make sure it's in bounds
-						in = mScratchBuffer[0];						// set buffer for panning
-						finished = false;							// never stop the voice
+						v.time = (v.time + frames);	// progress the time
+						in = mScratchBuffer[0];		// set buffer for panning
+						finished = false;			// never stop the voice
 					} else {
 						// Not filtering or looping
 						// Means we can use the original signal buffer but need to

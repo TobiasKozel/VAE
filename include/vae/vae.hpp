@@ -28,6 +28,10 @@ namespace vaeb { }
  * @brief Contains everything related to vae
  */
 namespace vae {
+	using Sample = float;						///< Default sample types used where ever possible, changing this means the engine needs to berecompiled
+	using Size = unsigned int;					///< How the elements are addressed in the heapbuffer
+	using Time = double;						///< Time sotred in seconds
+
 	using SmallHandle		= unsigned char;
 	using GenericHandle 	= unsigned short;
 	using LargeHandle		= unsigned int;
@@ -97,9 +101,7 @@ namespace vae {
 	/**
 	 * @brief Public vae Vector 3 type
 	 */
-	struct Vector3 {
-		float x, y, z;
-	};
+	struct Vector3 { float x, y, z; };
 
 	/**
 	 * @brief Emitters have a position and direction vector
@@ -147,7 +149,7 @@ namespace vae {
 		 * If it doesn't support it, a resampler is used.
 		 * Most of the audio samples used should be in this rate.
 		 */
-		unsigned int internalSampleRate = 48000;
+		Size internalSampleRate = 48000;
 
 		/**
 		 * @brief Each time a event of the type emit gets triggered
@@ -161,7 +163,7 @@ namespace vae {
 		 */
 		void* eventCallbackContext = nullptr;
 
-		static constexpr unsigned int _preAllocatedEmitters = 1 << 14;
+		static constexpr Size _preAllocatedEmitters = 1 << 14;
 
 		/**
 		 * @brief How many emitters to allocate upfront.
@@ -173,7 +175,7 @@ namespace vae {
 		 * since each voice will have one assigned.
 		 * Unless one emitter triggers a lot of sounds.
 		 */
-		unsigned int preAllocatedEmitters = _preAllocatedEmitters;
+		Size preAllocatedEmitters = _preAllocatedEmitters;
 
 		/**
 		 * @brief Hard limit on concurrent voices, can't be 0 or lower than hrtfVoices.
@@ -182,27 +184,27 @@ namespace vae {
 		 * This is a few years old but AudioKinetic recommends something around a 100
 		 * https://blog.audiokinetic.com/how-to-get-a-hold-on-your-voices-optimizing-for-cpu-part-1/
 		 */
-		unsigned int voices = 512;
+		Size voices = 512;
 
 		/**
 		 * @brief Amount of HRTF panned voices audible at any given time.
 		 * Eats into the budget above.
 		 */
-		unsigned int hrtfVoices = 16;
+		Size hrtfVoices = 16;
 
 		/**
 		 * @brief Hard limit on virtal voices.
 		 * virtualized voices will be revived as soon as possible and
 		 * retain their playback position.
 		 */
-		unsigned int virtualVoices = _preAllocatedEmitters;
+		Size virtualVoices = _preAllocatedEmitters;
 
 		/**
 		 * @brief Size of the voice queue for finished voices which
 		 * need to trigger other events on_end when updating the engine.
 		 * Too low of a value can cause these events to be discarded.
 		 */
-		unsigned int finishedVoiceQueueSize = 1024;
+		Size finishedVoiceQueueSize = 1024;
 
 
 		/**
@@ -212,14 +214,14 @@ namespace vae {
 		 * higher values to work properly.
 		 * The actual buffer size might vary based on the device.
 		 */
-		unsigned int preferredBufferSize = 512;
+		Size preferredBufferSize = 512;
 
 		/**
 		 * @brief Number of blocks/buffers to processed ahead.
 		 * Increases latency but reduces chances of underruns
 		 * since it's more forgiving to the scheduler.
 		 */
-		unsigned int bufferPeriods = 3;
+		Size bufferPeriods = 3;
 
 		/**
 		 * @brief If this is true update() does not need to be called on the engine instance.

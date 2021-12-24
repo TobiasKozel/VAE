@@ -439,6 +439,28 @@ namespace vae { namespace core {
 			}
 			return Result::Success;
 		}
+
+		template <typename T>
+		void setVoiceProperty(EmitterHandle emitter, T Voice::*member, const T& value) {
+			VAE_PROFILER_SCOPE()
+			for (auto& v : mVoices) {
+				if(v.emitter == emitter) {
+					(&v)->*member = value;
+				}
+			}
+		}
+
+		template <typename T>
+		void setVoiceProperty(EmitterHandle emitter, T VoiceFilter::*member, const T& value) {
+			VAE_PROFILER_SCOPE()
+			for (Size i = 0; i < mVoices.size(); i++) {
+				auto& v = mVoices[i];
+				if(v.emitter == emitter) {
+					(&mVoiceFiltered[i])->*member = value;
+					v.filtered = true;
+				}
+			}
+		}
 	};
 
 	constexpr int _VAE_SIZE_VOICE_MANAGER = sizeof(VoiceManger);

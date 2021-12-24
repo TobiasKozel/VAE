@@ -98,7 +98,7 @@ namespace vae { namespace core {
 				}
 				streamTime += frames;
 				VAE_PROFILER_PLOT(profiler::deviceUnderruns, int64_t(underruns));
-				VAE_PROFILER_PLOT(profiler::deviceOverruns, int64_t(overruns));
+				// VAE_PROFILER_PLOT(profiler::deviceOverruns, int64_t(overruns)); // don't track them since they're not getting drained for now
 			}
 		};
 

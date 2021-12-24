@@ -38,23 +38,26 @@ namespace vae { namespace core {
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
 
-				if (signal.size() == 0) { return false; }
+				const auto signalLength = signal.size();
+
+				if (signalLength == 0) { return false; }
 				if (signal.sampleRate != sampleRate) {
 					// VAE_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
 					v.filtered = true; // implicitly filter to resample
 				}
 
+				const auto signalChannels = signal.channels();
+				v.time = v.time % signalLength;		// Keep signal in bounds before starting
+
 				auto& mixer = bank.mixers[v.mixer];
 				auto& target = mixer.buffer;
+				const auto targetChannels = target.channels();
 				const auto gain = v.gain * source.gain;
 
 				// TODO skip inaudible sounds
 				actuallyRendered++;
 				v.audible = true;
 				auto& pan = manager.getVoicePan(index);
-				const auto signalLength = signal.size();
-				const auto signalChannels = signal.channels();
-				const auto targetChannels = target.channels();
 				target.setValidSize(frames); // mark mixer as active
 
 				if (!v.filtered) {
@@ -77,7 +80,7 @@ namespace vae { namespace core {
 								gain * pan.volumes[c];
 						}
 					}
-					v.time = (v.time + frames) % signal.size(); // progress voice and keep it in bounds
+					v.time = v.time + frames; // progress voice
 
 					if (v.loop) {
 						return true; // we don't stop the voice when looping
@@ -130,11 +133,13 @@ namespace vae { namespace core {
 
 							//	* super simple lowpass and highpass filter
 							// just lerps with a previous value
-							const Sample lpd = in + fd.lowpass * (fd.lowpassScratch[c] - in);
+							const Sample lf = fd.lowpass;
+							const Sample lpd = in + lf * (fd.lowpassScratch[c] - in);
 							fd.lowpassScratch[c] = lpd;
 
+							const Sample hf = fd.highpass;
 							const Sample hps = fd.highpassScratch[c];
-							const Sample hpd = hps + fd.highpass * (in - hps);
+							const Sample hpd = hps + hf * (in - hps);
 							fd.highpassScratch[c] = hpd;
 
 							target[c][s] += (lpd - hpd) * pan.volumes[c];
@@ -143,7 +148,6 @@ namespace vae { namespace core {
 					position += speed; 					// step to next sample
 					v.time = std::floor(position);		// split the signal in normal sample position
 					fd.timeFract = position - v.time;	// and fractional time for the next block
-					v.time = v.time % signalLength;		// set index back into bounds if we're looping
 					return !finished;					// is only true when exceeding signalLength and not looping
 				}
 			});

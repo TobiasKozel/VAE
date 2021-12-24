@@ -34,14 +34,6 @@ Using the pimpl api is optional but the better option since it won't pull in the
 - some sort of basic authoring tool
 - Geometry and material system for obstruction and reverb zones
 
-## Nice to haves
-- signal generators
-- Inject audio stream at runtime (e.g. for VoiP)
-- Voice priority system (got unkillable voice at least)
-- Seperate Mixing hirarchies for each listener
-- Seperate Audio device per listener
-
-
 ## Features
 - 3D SPCAP or HRTF panning (slow implementation)
 - Event driven sound system
@@ -54,6 +46,16 @@ Using the pimpl api is optional but the better option since it won't pull in the
 - Per voice variable speed playback and high/lowpass filters
 - Multiple Listeners, no individual output devices however and not tested at all
 - Integration for the profiler tracy which can give nice insights on memory consumtion and cpu times
+
+## Performance
+- Figure out why SPCAP voices are faster than Default voices, test mono and stereo.
+
+## Nice to haves
+- signal generators
+- Inject audio stream at runtime (e.g. for VoiP)
+- Voice priority system (got unkillable voice at least)
+- Seperate Mixing hirarchies for each listener
+- Seperate Audio device per listener
 
 ## Defines
 

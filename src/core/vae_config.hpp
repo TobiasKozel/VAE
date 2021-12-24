@@ -1,7 +1,7 @@
 #ifndef _VAE_CONFIG
 #define _VAE_CONFIG
 
-#include "./vae_types.hpp"
+#include "../../include/vae/vae.hpp"
 
 namespace vae { namespace core {
 
@@ -20,13 +20,13 @@ namespace vae { namespace core {
 		 * Used to preallocate buffers.
 		 * Higher values need more memory might play better with instruction caches.
 		 */
-		constexpr unsigned int MaxBlock = 256;
+		constexpr Size MaxBlock = 256;
 
 		/**
 		 * @brief How many Samples to prefetch for streaming sources
 		 * TODO no streaming for now
 		 */
-		constexpr unsigned int StreamPrefetch = 1024 * 8;
+		constexpr Size StreamPrefetch = 1024 * 8;
 
 		/**
 		 * @brief How many listeners can observe 3D voices
@@ -49,5 +49,7 @@ namespace vae { namespace core {
 		constexpr Sample MinVolume  = 0.01;
 	}
 } }
+
+#define TKLB_MAXCHANNELS ::vae::core::MaxChannels
 
 #endif // VAE_CONFIG

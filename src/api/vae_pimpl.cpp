@@ -40,7 +40,7 @@ Result EnginePimpl::fireEvent (
 	BankHandle bankHandle,
 	EventHandle eventHandle,
 	EmitterHandle emitterHandle,
-	float gain,
+	Sample gain,
 	MixerHandle mixerHandle,
 	ListenerHandle listenerHandle
 ) {
@@ -58,7 +58,7 @@ Result EnginePimpl::fireEvent (
 Result EnginePimpl::fireGlobalEvent (
 	GlobalEventHandle globalHandle,
 	EmitterHandle emitterHandle,
-	float gain,
+	Sample gain,
 	MixerHandle mixerHandle,
 	ListenerHandle listenerHandle
 ) {
@@ -87,11 +87,66 @@ int EnginePimpl::getActiveVoiceCount () {
 }
 
 void EnginePimpl::setMasterVolume (
-	float volume
+	Sample volume
 ) {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.setMasterVolume(
 		volume
+	);
+}
+
+void EnginePimpl::setVolume (
+	EmitterHandle emitter,
+	Sample gain
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.setVolume(
+		emitter,
+		gain
+	);
+}
+
+void EnginePimpl::seek (
+	EmitterHandle emitter,
+	Size time
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.seek(
+		emitter,
+		time
+	);
+}
+
+void EnginePimpl::setSpeed (
+	EmitterHandle emitter,
+	float speed
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.setSpeed(
+		emitter,
+		speed
+	);
+}
+
+void EnginePimpl::setLowpass (
+	EmitterHandle emitter,
+	float cutoff
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.setLowpass(
+		emitter,
+		cutoff
+	);
+}
+
+void EnginePimpl::setHighpass (
+	EmitterHandle emitter,
+	float cutoff
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.setHighpass(
+		emitter,
+		cutoff
 	);
 }
 

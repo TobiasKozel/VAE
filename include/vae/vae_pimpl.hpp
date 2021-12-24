@@ -79,7 +79,7 @@ public:
 		BankHandle bankHandle,
 		EventHandle eventHandle,
 		EmitterHandle emitterHandle,
-		float gain = 1.0,
+		Sample gain = 1.0,
 		MixerHandle mixerHandle = InvalidMixerHandle,
 		ListenerHandle listenerHandle = AllListeners
 	);
@@ -97,11 +97,17 @@ public:
 	Result _VAE_API_EXPORT fireGlobalEvent (
 		GlobalEventHandle globalHandle,
 		EmitterHandle emitterHandle,
-		float gain = 1.0,
+		Sample gain = 1.0,
 		MixerHandle mixerHandle = InvalidMixerHandle,
 		ListenerHandle listenerHandle = AllListeners
 	);
 
+	/**
+	 * @brief Stop all voices from emitter.
+	 *
+	 * @param emitter
+	 * @return Result
+	 */
 	Result _VAE_API_EXPORT stopEmitter (
 		EmitterHandle emitter
 	);
@@ -111,8 +117,64 @@ public:
 	 */
 	int _VAE_API_EXPORT getActiveVoiceCount ();
 
+	/**
+	 * @brief Set the global output volume after the limiter
+	 * @param volume 1.0 is the default
+	 */
 	void _VAE_API_EXPORT setMasterVolume (
-		float volume
+		Sample volume
+	);
+
+	/**
+	 * @brief Sets the volume of all active voices with this emitter
+	 * @param emitter
+	 * @param gain
+	 */
+	void _VAE_API_EXPORT setVolume (
+		EmitterHandle emitter,
+		Sample gain
+	);
+
+	/**
+	 * @brief Set the current time of all voices with the emitter.
+	 * @param emitter
+	 * @param time Time in samples
+	 */
+	void _VAE_API_EXPORT seek (
+		EmitterHandle emitter,
+		Size time
+	);
+
+	/**
+	 * @brief Set the playback speed
+	 * @param emitter
+	 * @param speed 1.0 is the default speed, pitch will be affected as well.
+	 */
+	void _VAE_API_EXPORT setSpeed (
+		EmitterHandle emitter,
+		float speed
+	);
+
+	/**
+	 * @brief Simple lowpass filter for the voices
+	 *
+	 * @param emitter
+	 * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum
+	 */
+	void _VAE_API_EXPORT setLowpass (
+		EmitterHandle emitter,
+		float cutoff
+	);
+
+	/**
+	 * @brief Simple highpass filter for the voices
+	 *
+	 * @param emitter
+	 * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum
+	 */
+	void _VAE_API_EXPORT setHighpass (
+		EmitterHandle emitter,
+		float cutoff
 	);
 
 	EmitterHandle _VAE_API_EXPORT createEmitter ();

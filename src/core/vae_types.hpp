@@ -12,11 +12,11 @@
 #ifndef _VAE_TYPES
 #define _VAE_TYPES
 
+#include "../../include/vae/vae.hpp"
 #include "../../external/glm/glm/glm.hpp"
 #include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../external/tklb/src/types/audio/TAudioRingBuffer.hpp"
 #include "../../external/tklb/src/types/TSpinLock.hpp"
-#include "../../include/vae/vae.hpp"
 #include "../wrapped/vae_profiler.hpp"
 #include <memory>
 #include <string>
@@ -24,9 +24,6 @@
 #include <array>
 
 namespace vae { namespace core {
-	using Sample = float;					// Default sample types used whereever possible
-	using Size = unsigned int;				// How the elements are addressed in the heapbuffer
-	using Time = double;					// Time sotred in seconds
 	using Uchar = unsigned char;
 	using Uint = unsigned int;
 	using Vec3 = glm::vec3;

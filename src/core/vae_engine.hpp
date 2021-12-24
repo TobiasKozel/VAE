@@ -19,8 +19,8 @@
 #include "./vae_bank_manager.hpp"
 
 #include "../../external/tklb/src/util/TMath.hpp"
-#include "vae/vae.hpp"
-#include "vae_logger.hpp"
+#include "./vae_logger.hpp"
+#include "./voices/vae_voice_filter.hpp"
 
 #include <cstring>				// strcmp
 #include <thread>				// mAudioThread
@@ -253,9 +253,9 @@ namespace vae { namespace core {
 		 */
 		Result _VAE_PUBLIC_API stop() {
 			VAE_PROFILER_SCOPE()
-			mBankManager.lock();
 			if (mAudioThreadRunning) {
 				mAudioThreadRunning = false;
+				mAudioConsumed.notify_one(); // make sure the audio thread knows it's time to go
 				if(mAudioThread->joinable()) {
 					mAudioThread->join();
 					delete mAudioThread;
@@ -268,7 +268,6 @@ namespace vae { namespace core {
 				delete mDevice;
 				mDevice = nullptr;
 			}
-			mBankManager.unlock();
 			return Result::Success;
 		}
 
@@ -313,7 +312,7 @@ namespace vae { namespace core {
 		Result _VAE_PUBLIC_API fireEvent(
 			BankHandle bankHandle, EventHandle eventHandle,
 			EmitterHandle emitterHandle,
-			float gain = 1.0,
+			Sample gain = 1.0,
 			MixerHandle mixerHandle = InvalidMixerHandle,
 			ListenerHandle listenerHandle = AllListeners
 		) {
@@ -433,7 +432,7 @@ namespace vae { namespace core {
 		Result _VAE_PUBLIC_API fireGlobalEvent(
 			GlobalEventHandle globalHandle,
 			EmitterHandle emitterHandle,
-			float gain = 1.0,
+			Sample gain = 1.0,
 			MixerHandle mixerHandle = InvalidMixerHandle,
 			ListenerHandle listenerHandle = AllListeners
 		) {
@@ -446,7 +445,12 @@ namespace vae { namespace core {
 			);
 		}
 
-
+		/**
+		 * @brief Stop all voices from emitter.
+		 *
+		 * @param emitter
+		 * @return Result
+		 */
 		Result _VAE_PUBLIC_API stopEmitter(EmitterHandle emitter) {
 			return mVoiceManager.stopEmitter(emitter);
 		}
@@ -458,10 +462,60 @@ namespace vae { namespace core {
 			return mVoiceManager.getActiveVoiceCount();
 		}
 
-		void _VAE_PUBLIC_API setMasterVolume(float volume) {
+		/**
+		 * @brief Set the global output volume after the limiter
+		 * @param volume 1.0 is the default
+		 */
+		void _VAE_PUBLIC_API setMasterVolume(Sample volume) {
 			mMasterVolume = volume;
 		}
 
+		/**
+		 * @brief Sets the volume of all active voices with this emitter
+		 * @param emitter
+		 * @param gain
+		 */
+		void _VAE_PUBLIC_API setVolume(EmitterHandle emitter, Sample gain) {
+			mVoiceManager.setVoiceProperty(emitter, &Voice::gain, gain);
+		}
+
+		/**
+		 * @brief Set the current time of all voices with the emitter.
+		 * @param emitter
+		 * @param time Time in samples
+		 */
+		void _VAE_PUBLIC_API seek(EmitterHandle emitter, Size time) {
+			mVoiceManager.setVoiceProperty(emitter, &Voice::time, SampleIndex(time));
+		}
+
+		/**
+		 * @brief Set the playback speed
+		 * @param emitter
+		 * @param speed 1.0 is the default speed, pitch will be affected as well.
+		 */
+		void _VAE_PUBLIC_API setSpeed(EmitterHandle emitter, float speed) {
+			mVoiceManager.setVoiceProperty(emitter, &VoiceFilter::speed, speed);
+		}
+
+		/**
+		 * @brief Simple lowpass filter for the voices
+		 *
+		 * @param emitter
+		 * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum
+		 */
+		void _VAE_PUBLIC_API setLowpass(EmitterHandle emitter, float cutoff) {
+			mVoiceManager.setVoiceProperty(emitter, &VoiceFilter::lowpass, cutoff);
+		}
+
+		/**
+		 * @brief Simple highpass filter for the voices
+		 *
+		 * @param emitter
+		 * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum
+		 */
+		void _VAE_PUBLIC_API setHighpass(EmitterHandle emitter, float cutoff) {
+			mVoiceManager.setVoiceProperty(emitter, &VoiceFilter::highpass, cutoff);
+		}
 
 #pragma region emitter
 
