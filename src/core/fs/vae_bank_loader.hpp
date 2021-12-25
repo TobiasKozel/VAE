@@ -114,8 +114,24 @@ namespace vae { namespace core {
 					m.name			= i["name"];
 					m.gain			= i["gain"];
 					auto effects	= i["effects"];
-					for (size_t j = 0; j < Config::MaxMixerEffects; j++) {
-						m.effects[j] = { };
+
+					for (auto& i : effects) {
+						int index = i["index"];
+						auto& e	= m.effects[index];
+
+						{
+							std::string name = i["name"];
+							e.name	= name.c_str();
+							e.index = index;
+						}
+
+						int paramIndex = 0;
+						for (auto& j : i["parameters"]) {
+							std::string name = j[0];
+							e.parameters[paramIndex].name = name.c_str();
+							e.parameters[paramIndex].value = j[1];
+							paramIndex++;
+						}
 					}
 				}
 			}

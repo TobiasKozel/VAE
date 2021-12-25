@@ -25,7 +25,8 @@
 namespace vaeb { }
 
 /**
- * @brief Contains everything related to vae
+ * @brief Contains Typedefinitions and basic structures use by the public API and internally
+ * @details The types used internally like handles or static settings can be changed, but vae::EnginePimpl needs to be recompiled.
  */
 namespace vae {
 	using Sample = float;						///< Default sample types used where ever possible, changing this means the engine needs to berecompiled
@@ -112,12 +113,13 @@ namespace vae {
 	};
 
 	/**
-	 * @brief Listener uses additional up vector
+	 * @brief Listener uses additional up vector.
+	 * This is the default coordinate system orientation.
 	 */
 	struct LocationOrientation {
 		Vector3 position	= { 0.f, 0.f,  0.f };
-		Vector3 front		= { 0.f, 0.f, -1.f };
-		Vector3 up			= { 0.f, 1.f,  0.f };
+		Vector3 front		= { 0.f, 0.f, -1.f };	///< -z front
+		Vector3 up			= { 0.f, 1.f,  0.f };	///< Y up
 	};
 
 
@@ -136,7 +138,7 @@ namespace vae {
 
 	/**
 	 * @brief Settings for the engine defined
-	 * at construction of the engine object.
+	 * at EnginePimpl::init
 	 */
 	struct EngineConfig {
 		/**
@@ -239,6 +241,54 @@ namespace vae {
 		 */
 		bool processInBufferSwitch = false;
 	};
+
+	/**
+	 * @brief Contains some fundamental Configuration needed at compile time
+	 * Dynamic settings are contained in the EngineSettings struct above.
+	 * @details Changes made here need recompilation
+	 */
+	namespace Config {
+		/**
+		 * @brief Maximum channel count used to pre allocate buffers
+		 */
+		constexpr unsigned char MaxChannels = 2;
+
+		/**
+		 * @brief Maximum block size
+		 * Used to preallocate buffers for mixers and dsp.
+		 * Higher values need more memory might play better with instruction caches
+		 * but uses more memory.
+		 */
+		constexpr Size MaxBlock = 512;
+
+		/**
+		 * @brief How many Samples to prefetch for streaming sources
+		 * TODO no streaming for now might even be a runtime settings
+		 */
+		constexpr Size StreamPrefetch = 1024 * 8;
+
+		/**
+		 * @brief How many listeners can observe 3D voices
+		 */
+		constexpr Size MaxListeners = 4;
+
+		/**
+		 * @brief How many effects a mixer channel can process
+		 */
+		constexpr Size MaxMixerEffects = 4;
+
+		constexpr Size MaxEffectsParameter = 4;
+
+		/**
+		 * @brief How many chained events can fit in on_start and on_end
+		 */
+		constexpr Size MaxChainedEvents = 4;
+
+		/**
+		 * @brief Minimum volume before sounds will skip rendering
+		 */
+		constexpr Sample MinVolume  = 0.01;
+	}
 } // namespace vae
 
 #endif // _VAE_API

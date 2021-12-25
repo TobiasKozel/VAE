@@ -12,6 +12,8 @@ outFolder = os.path.join(dspFolder, "generated")
 archFile = os.path.join(dspFolder, "vae_faust_arch.hpp")
 baseCommand = f"faust -lang cpp -i -single -exp10 -cm -vec -mapp -a {archFile} -scn FaustBase"
 
+Path(outFolder).mkdir(parents=True, exist_ok=True)
+
 faustSources = []
 
 for root, dirs, files in os.walk(dspFolder):

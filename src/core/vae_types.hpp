@@ -18,8 +18,10 @@
 #include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../external/tklb/src/types/audio/TAudioRingBuffer.hpp"
 #include "../../external/tklb/src/types/TSpinLock.hpp"
+#include "../../external/tklb/src/types/TString.hpp"
 #include "../wrapped/vae_profiler.hpp"
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <array>
@@ -30,12 +32,13 @@ namespace vae { namespace core {
 	using Vec3 = glm::vec3;
 
 	#ifndef VAE_USE_PROFILER
-		// vae_profiler.hpp provides them instead
-		using Mutex = tklb::SpinLock;
-		using Lock = tklb::LockGuard<Mutex>;
-		template<class T> using AllocatorFS = std::allocator<T>;		///< Allocator used for filesystem and deserialization
-		template<class T> using AllocatorMain = std::allocator<T>;		///< Allocator used for internal packed structs
+		// vae_profiler.hpp provides wrapped versions for tracking
+		using Mutex	= std::mutex;
+		using Lock	= std::unique_lock<Mutex>;
+		template<class T> using AllocatorFS		= std::allocator<T>;	///< Allocator used for filesystem and deserialization
+		template<class T> using AllocatorMain	= std::allocator<T>;	///< Allocator used for internal packed structs Voice, Bank etc
 	#endif // VAE_USE_PROFILER
+
 	template <class T, Size N> using StackBuffer = std::array<T, N>;
 	template <class T> using HeapBuffer = std::vector<T, AllocatorMain<T>>;	///< Buffer used for internal packed structs like Event, Bank Voice etc
 
@@ -64,10 +67,11 @@ namespace vae { namespace core {
 			const char* c_str() { return nullptr; }
 		};
 	#else
-		using NameString = std::string;	// Used for debug names
+		using NameString = std::string;			///< Used for debug names
 	#endif // VAE_RELEASE
 
-		using PathString = std::string;	// Non optional string used for locations, maybe replaceable with a unique_ptr or something
+		using PathString = std::string;			///< Non optional string used for locations, maybe replaceable with a unique_ptr or something
+		using IdString = tklb::StackString<16>;	///< Non optional string used to id things
 
 } } // namespace vae::core
 

@@ -24,7 +24,6 @@ Using the pimpl api is optional but the better option since it won't pull in the
 
 ## TODOs
 - Fix click at end of sounds for speex reampled sounds
-- Mixer effects
 - Split up pod data and internal data structures so they can be exposed to the public API as well.
 - Parameter controls and smoothing
 - State

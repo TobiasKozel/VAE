@@ -6,12 +6,16 @@
 #include "../pod/vae_mixer.hpp"
 #include "../vae_voice_manager.hpp"
 #include "./vae_effects_processor.hpp"
+#include "vae/vae.hpp"
 
 namespace vae { namespace core {
 
 	class MixerProcessor {
 		EffectsProcessor mEffectsProcessor;
 	public:
+		void init() {
+			mEffectsProcessor.init();
+		}
 		/**
 		 * @brief Process the mixers for a single bank
 		 *
@@ -22,7 +26,7 @@ namespace vae { namespace core {
 		void mix(
 			VoiceManger& manager, Bank& bank, SampleIndex frames
 		) {
-			VAE_PROFILER_SCOPE_NAMED("Mixer Processor")
+			VAE_PROFILER_SCOPE_NAMED("Bank Mixer Processor")
 			VAE_ASSERT(!bank.mixers.empty()) // can't happen
 
 			/**
@@ -31,6 +35,7 @@ namespace vae { namespace core {
 			 * a lower id than themselves to avoid recursion
 			 */
 			for (Uint i = Uint(bank.mixers.size()) - 1; 0 < i; i--) {
+				VAE_PROFILER_SCOPE_NAMED("Process Mixer Channel")
 				auto& sourceMixer = bank.mixers[i];
 				// skip inactive mixers
 				if (sourceMixer.buffer.validSize() == 0) { continue; }

@@ -209,6 +209,7 @@ namespace vae { namespace core {
 			mVoiceManager.init(mConfig);
 			mSpatialManager.init(mConfig.preAllocatedEmitters);
 			mSpatialProcessor.init(mConfig.voices);
+			mMixerProcessor.init();
 			mBankManager.init(mConfig.rootPath, mConfig.internalSampleRate);
 			VAE_DEBUG("Engine initialized")
 			return Result::Success;

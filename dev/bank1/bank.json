@@ -103,7 +103,14 @@
 			"id": 2,
 			"name": "Music",
 			"gain": 1.0,
-			"effects": [],
+			"effects": [
+				{	"index": 0,
+					"name": "VAEReverb",
+					"parameters": [
+						["Mix", 0.5]
+					]
+				}
+			],
 			"parent": 0
 		},
 		{

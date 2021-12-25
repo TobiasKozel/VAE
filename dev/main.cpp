@@ -84,8 +84,8 @@ int main() {
 	auto result = engine.loadBank("bank1");
 
 	if (result == Result::Success) {
-		benchmark(engine);
-		// filterTest(engine);
+		// benchmark(engine);
+		filterTest(engine);
 	};
 	engine.unloadBankFromId(0);
 

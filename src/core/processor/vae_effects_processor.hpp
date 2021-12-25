@@ -3,11 +3,24 @@
 
 #include "../pod/vae_effect.hpp"
 #include "../pod/vae_mixer.hpp"
+#include "../dsp/vae_effect_base.hpp"
+#include "../vae_util.hpp"
 
 namespace vae { namespace core {
-	struct EffectsProcessor {
+	class EffectsProcessor {
+		AudioBuffer mScratchBuffer;
+	public:
+		void init() {
+			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
+		}
 		void mix(Effect& effect, AudioBuffer& buffer) {
-			// TODO processing
+			if (Config::MaxMixerEffects <= effect.index) { return; }
+			VAE_PROFILER_SCOPE_NAMED("Process Effect")
+			mScratchBuffer.set(buffer);
+			mScratchBuffer.setValidSize(buffer.validSize());
+			VAE_ASSERT(effect.effect->getNumInputs() == effect.effect->getNumOutputs())
+			VAE_ASSERT(buffer.channels() <= effect.effect->getNumInputs())
+			effect.effect->process(effect, mScratchBuffer, buffer);
 		}
 	}; // EffectsProcessor
 } } // vae::core

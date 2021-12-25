@@ -17,6 +17,7 @@ namespace vae { namespace core { namespace profiler {
 	const char* const objAllocator			= "new Allocator";		///< Generic object heap like vae::core::Device
 	const char* const fsAllocator			= "FS Allocator";		///< Deals with everything  deserialization
 	const char* const mainAllocator			= "Main Allocator";		///< Allocates all the bank, event emitter arrays
+	const char* const dspAllocator			= "DSP allocator";		///< Tracks DSP memory usage
 } } } // vae::core::profiler
 
 
@@ -134,6 +135,8 @@ namespace vae { namespace core { namespace profiler {
 	#define VAE_PROFILER_FREE(ptr)					///< Track free
 	#define VAE_PROFILER_OVERLOAD_NEW()				///< Overloads new and delete of class to be tracked
 	#define VAE_PROFILER_MUTEX(type, name, desc) type name;
+	#define VAE_PROFILER_FREE_L(ptr, name)			///< Track named allocaions
+	#define VAE_PROFILER_MALLOC_L(ptr, size, name)	///< Track named allocaions
 #endif // VAE_USE_PROFILER
 
 #endif // _VAE_PROFILER

@@ -2,131 +2,85 @@
 #define _VAE_FAUST_COMMON
 
 #include "../vae_types.hpp"
+#include "./vae_effect_base.hpp"
+#include "vae/vae.hpp"
 
 #define FAUSTFLOAT Sample
 
-namespace vae { namespace core { namespace faust {
-struct Meta {
-    virtual ~Meta() {};
-    virtual void declare(const char* key, const char* value) = 0;
-};
+namespace vae { namespace core { namespace effect {
+	struct Meta { void declare(const char* key, const char* value) { }; };
+	struct UI {
+		Effect& effect;
+		/**
+		 * @brief The only important function to control the dsp code
+		 *
+		 * @param name Name of the parameter
+		 * @param prop Pointer to the parameter
+		 * @param pDefault Default value
+		 * @param min minimum valid valud
+		 * @param max maximum valid value
+		 * @param stepSize Increments value should be altered
+		 */
+		void addHorizontalSlider(
+			const char* name, Sample* prop, Sample pDefault,
+			Sample min, Sample max, Sample stepSize
+		) const {
+			for (auto& i : effect.parameters) {
+				if (i.name == name) {
+					*prop = i.value;
+					return;
+				}
+			}
+			// node->addParameter(name, prop, pDefault, min, max, stepSize);
+		}
 
-struct UI {
-
-    UI() {}
-    virtual ~UI() {}
-
-    // -- widget's layouts
-
-    virtual void openTabBox(const char* label) = 0;
-    virtual void openHorizontalBox(const char* label) = 0;
-    virtual void openVerticalBox(const char* label) = 0;
-    virtual void closeBox() = 0;
-
-    // -- active widgets
-
-    virtual void addButton(const char* label, FAUSTFLOAT* zone) = 0;
-    virtual void addCheckButton(const char* label, FAUSTFLOAT* zone) = 0;
-    virtual void addVerticalSlider(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT init,
-                                   FAUSTFLOAT min, FAUSTFLOAT max, FAUSTFLOAT step) = 0;
-    virtual void addHorizontalSlider(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT init,
-                                     FAUSTFLOAT min, FAUSTFLOAT max, FAUSTFLOAT step) = 0;
-    virtual void addNumEntry(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT init,
-                             FAUSTFLOAT min, FAUSTFLOAT max, FAUSTFLOAT step) = 0;
-
-    // -- passive widgets
-
-    virtual void addHorizontalBargraph(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT min, FAUSTFLOAT max) = 0;
-    virtual void addVerticalBargraph(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT min, FAUSTFLOAT max) = 0;
-
-    // -- metadata declarations
-
-    virtual void declare(FAUSTFLOAT* zone, const char* key, const char* val) {}
-};
-
-class FaustBase {
-
-public:
-
-	FaustBase() {}
-	virtual ~FaustBase() {}
-
-	/* Return instance number of audio inputs */
-	virtual int getNumInputs() = 0;
-
-	/* Return instance number of audio outputs */
-	virtual int getNumOutputs() = 0;
+		void openVerticalBox(const char* key) { };
+		void openHorizontalBox(const char* key) { };
+		void closeBox() { };
+		void declare(Sample*, const char*, const char*) { };
+		void addVerticalSlider(const char* name, Sample* prop, Sample pDefault, Sample min, Sample max, Sample stepSize) const { addHorizontalSlider(name, prop, pDefault, min, max, stepSize); }
+		void addCheckButton(const char* name, Sample* prop) const { addHorizontalSlider(name, prop, 0, 0, 1, 1); }
+		void addVerticalBargraph(const char* name, Sample* prop, Sample min, Sample max) const { };
+		void addHorizontalBargraph(const char* name, Sample* prop, Sample min, Sample max) const { addVerticalBargraph(name, prop, min, max); };
+	};
 
 	/**
-	 * Trigger the ui_interface parameter with instance specific calls
-	 * to 'openTabBox', 'addButton', 'addVerticalSlider'... in order to build the UI.
-	 *
-	 * @param ui_interface - the user interface builder
+	 * @brief Interaface for faust DSP code
 	 */
-	virtual void buildUserInterface(UI* ui_interface) = 0;
+	class FaustBase : public EffectBase {
+	public:
+		// These three will be overridden by the generated faust code
+		virtual void buildUserInterface(UI* ui_interface) = 0;
 
-	/* Return the sample rate currently used by the instance */
-	virtual int getSampleRate() = 0;
+		virtual void instanceConstants(int samplingFreq) = 0; // called on init
 
-	/**
-	 * Global init, calls the following methods:
-	 * - static class 'classInit': static tables initialization
-	 * - 'instanceInit': constants and instance state initialization
-	 *
-	 * @param sample_rate - the sampling rate in Hz
-	 */
-	virtual void init(int sample_rate) = 0;
+		virtual void metadata(Meta* m) = 0;
 
-	/**
-	 * Init instance state
-	 *
-	 * @param sample_rate - the sampling rate in Hz
-	 */
-	virtual void instanceInit(int sample_rate) = 0;
+		virtual void compute(int count, Sample** inputs, Sample** outputs) = 0;
 
-	/**
-	 * Init instance constant state
-	 *
-	 * @param sample_rate - the sampling rate in HZ
-	 */
-	virtual void instanceConstants(int sample_rate) = 0;
+		void process(Effect& effect, const AudioBuffer& in, AudioBuffer& out) override {
+			// Update DSP values
+			{
+				VAE_PROFILER_SCOPE_NAMED("Update Faust DSP")
+				UI ui = { effect };
+				buildUserInterface(&ui);
+			}
 
-	/* Init default control parameters values */
-	virtual void instanceResetUserInterface() = 0;
+			// Convert buffers
+			const Sample* ain[Config::MaxChannels];
+			Sample* aout[Config::MaxChannels];
+			in.getRaw(ain);
+			out.getRaw(aout);
 
-	/* Init instance state (like delay lines..) but keep the control parameter values */
-	virtual void instanceClear() = 0;
-
-	/**
-	 * Return a clone of the instance.
-	 *
-	 * @return a copy of the instance on success, otherwise a null pointer.
-	 */
-	virtual FaustBase* clone() = 0;
-
-	/**
-	 * Trigger the Meta* parameter with instance specific calls to 'declare'
-	 * (key, value) metadata.
-	 *
-	 * @param m - the Meta* meta user
-	 */
-	virtual void metadata(Meta* m) = 0;
-
-	/**
-	 * DSP instance computation, to be called with successive in/out audio buffers.
-	 *
-	 * @param count - the number of frames to compute
-	 * @param inputs - the input audio buffers as an array of non-interleaved
-	 * FAUSTFLOAT samples (eiher float, double or quad)
-	 * @param outputs - the output audio buffers as an array of non-interleaved
-	 * FAUSTFLOAT samples (eiher float, double or quad)
-	 *
-	 */
-	virtual void compute(int count, FAUSTFLOAT** inputs, FAUSTFLOAT** outputs) = 0;
-};
-
-} } } // vae::core::faust
-
-
+			// Do the thing
+			{
+				VAE_PROFILER_SCOPE_NAMED("Faust DSP")
+				compute(in.validSize(), const_cast<Sample**>(ain), aout);
+			}
+		}
+		FaustBase() { }
+		virtual ~FaustBase() { }
+	};
+} } } // vae::core::effect
 
 #endif // _VAE_FAUST_COMMON

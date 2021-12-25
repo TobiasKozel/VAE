@@ -6,7 +6,7 @@
 #include "./pod/vae_bank.hpp"
 #include "./fs/vae_bank_loader.hpp"
 #include "../../external/tklb/src/types/audio/resampler/TResampler.hpp"
-
+#include "./dsp/vae_effects_factory.hpp"
 namespace vae { namespace core {
 	/**
 	 * @brief Holds all the banks
@@ -16,6 +16,20 @@ namespace vae { namespace core {
 		HeapBuffer<Bank> mBanks;		// All the currently loaded banks
 		VAE_PROFILER_MUTEX(Mutex, mMutex, "Bank Manager mutex")
 		BankLoader mBankLoader;
+
+		void initMixer(Mixer& mixer, Size sampleRate) {
+			VAE_PROFILER_SCOPE_NAMED("Mixer Init")
+			mixer.buffer.resize(Config::MaxBlock, Config::MaxChannels);
+			for (auto& i : mixer.effects) {
+				if (i.name.empty()) { continue; }
+				i.effect = effect::EffectsFactory::create(i.name);
+				if (i.effect == nullptr) {
+					VAE_ERROR("Effect %s could not be loaded.", i.name.c_str())
+					continue;
+				}
+				i.effect->init(sampleRate);
+			}
+		}
 	public:
 		/**
 		 * @brief Will reload all the banks
@@ -91,12 +105,11 @@ namespace vae { namespace core {
 				bank.mixers[0].id = 0;
 				bank.mixers[0].name = "Bank Master";
 			}
-			{
-				VAE_PROFILER_SCOPE_NAMED("Allocate mixers")
-				for (auto& m : bank.mixers) {
-					m.buffer.resize(Config::MaxBlock, Config::MaxChannels);
-				}
+
+			for (auto& m : bank.mixers) {
+				initMixer(m, sampleRate);
 			}
+
 			{
 				VAE_PROFILER_SCOPE_NAMED("Offline resampling")
 				for (auto& s : bank.sources) {
@@ -165,6 +178,14 @@ namespace vae { namespace core {
 			auto& bank = mBanks[bankHandle];
 			VAE_ASSERT(bank.id == bankHandle)
 			VAE_INFO("Unloading bank %s", bank.name.c_str())
+			// TODO use a smart pointer or something
+			for (auto& m : bank.mixers) {
+				for (auto& e : m.effects) {
+					if (e.effect != nullptr) {
+						delete e.effect;
+					}
+				}
+			}
 			bank = { }; // should free all the memory
 			return Result::Success;
 		}
