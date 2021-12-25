@@ -26,9 +26,12 @@ Using the pimpl api is optional but the better option since it won't pull in the
 - Fix click at end of sounds for speex reampled sounds
 - Split up pod data and internal data structures so they can be exposed to the public API as well.
 - Parameter controls and smoothing
+- progress virtual voices and kill them so they don't pile up
+- Event queue
 - State
 - Automation
-- Faster HRTF and interpolation
+- Faster HRTF (currently in time domain and about 80 times slower than a normal voice)
+- HRTF interoplation
 - streaming
 - some sort of basic authoring tool
 - Geometry and material system for obstruction and reverb zones

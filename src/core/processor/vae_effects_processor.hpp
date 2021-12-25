@@ -14,7 +14,7 @@ namespace vae { namespace core {
 			mScratchBuffer.resize(StaticConfig::MaxBlock, StaticConfig::MaxChannels);
 		}
 		void mix(Effect& effect, AudioBuffer& buffer) {
-			if (StaticConfig::MaxMixerEffects <= effect.index) { return; }
+			if (effect.effect == nullptr || effect.bypassed) { return; }
 			VAE_PROFILER_SCOPE_NAMED("Process Effect")
 			mScratchBuffer.set(buffer);
 			mScratchBuffer.setValidSize(buffer.validSize());

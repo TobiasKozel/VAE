@@ -422,20 +422,6 @@ namespace vae { namespace core {
 		}
 
 		/**
-		 * @brief
-		 *
-		 */
-		void queueEvent(
-			BankHandle bankHandle, EventHandle eventHandle,
-			EmitterHandle emitterHandle,
-			Sample gain = 1.0,
-			MixerHandle mixerHandle = InvalidMixerHandle,
-			ListenerHandle listenerHandle = AllListeners
-		) {
-
-		}
-
-		/**
 		 * @brief Works like fireEvent but with a global Event identifier
 		 *
 		 * @param globalHandle The GlobalEventHandle combines both bank and event id
@@ -462,6 +448,13 @@ namespace vae { namespace core {
 		}
 
 		/**
+		 * @brief Get the number of currently playing Voices
+		 */
+		int _VAE_PUBLIC_API getActiveVoiceCount() const {
+			return mVoiceManager.getActiveVoiceCount();
+		}
+
+		/**
 		 * @brief Stop all voices from emitter.
 		 *
 		 * @param emitter
@@ -471,12 +464,8 @@ namespace vae { namespace core {
 			return mVoiceManager.stopEmitter(emitter);
 		}
 
-		/**
-		 * @brief Get the number of currently playing Voices
-		 */
-		int _VAE_PUBLIC_API getActiveVoiceCount() const {
-			return mVoiceManager.getActiveVoiceCount();
-		}
+#pragma region emitter
+
 
 		/**
 		 * @brief Set the global output volume after the limiter
@@ -533,7 +522,6 @@ namespace vae { namespace core {
 			mVoiceManager.setVoiceProperty(emitter, &VoiceFilter::highpass, cutoff);
 		}
 
-#pragma region emitter
 
 		EmitterHandle _VAE_PUBLIC_API createEmitter() {
 			return mSpatialManager.createEmitter();
@@ -562,14 +550,21 @@ namespace vae { namespace core {
 			return mSpatialManager.setEmitter(emitter, locDir, spread);
 		}
 
-		// Result stopEmitter(EmitterHandle emitter) {
-		// 	return mVoiceManager.stopEmitter(emitter);
-		// }
+#pragma endregion emitter
 
+		/**
+		 * @brief Create a Listener object
+		 * @details TODO make listener 0 implicit
+		 * @return ListenerHandle
+		 */
 		ListenerHandle _VAE_PUBLIC_API createListener() {
 			return mSpatialManager.createListener();
 		}
 
+		/**
+		 * @brief Unregister listener
+		 * @param listener
+		 */
 		Result _VAE_PUBLIC_API removeListener(ListenerHandle listener) {
 			return mSpatialManager.removeListener(listener);
 		}
@@ -592,7 +587,6 @@ namespace vae { namespace core {
 
 
 
-#pragma endregion emitter
 
 #pragma region bank_handling
 		/**

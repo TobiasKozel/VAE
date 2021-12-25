@@ -167,7 +167,7 @@ namespace vae { namespace core {
 						mScratchBuffer[0][s] = (lpd - hpd);
 					}
 					position += speed; 					// step to next sample
-					v.time = std::floor(position);		// split the signal in normal sample position
+					v.time = (SampleIndex) std::floor(position);		// split the signal in normal sample position
 					fd.timeFract = position - v.time;	// and fractional time for the next block
 					v.time = v.time;					// set index back
 					in = mScratchBuffer[0];				// set the buffer to use for panning

@@ -104,7 +104,8 @@
 			"name": "Music",
 			"gain": 1.0,
 			"effects": [
-				{	"index": 0,
+				{
+					"index": 0,
 					"name": "VAEReverb",
 					"parameters": [
 						["Mix", 0.5]

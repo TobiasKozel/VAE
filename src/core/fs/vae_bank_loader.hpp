@@ -122,7 +122,6 @@ namespace vae { namespace core {
 						{
 							std::string name = i["name"];
 							e.name	= name.c_str();
-							e.index = index;
 						}
 
 						int paramIndex = 0;

@@ -288,7 +288,7 @@ namespace vae {
 		/**
 		 * @brief Minimum volume before sounds will skip rendering
 		 */
-		constexpr Sample MinVolume  = 0.01;
+		constexpr Sample MinVolume  = 0.01f;
 	}
 } // namespace vae
 

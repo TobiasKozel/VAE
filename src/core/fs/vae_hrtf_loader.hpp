@@ -33,7 +33,7 @@ namespace vae { namespace core {
 			hrtf.rate = sampleRate;
 
 			auto& positions = data["positions"];
-			const Size positionCount = positions.size();
+			const Size positionCount = (Size) positions.size();
 			hrtf.positions.resize(positionCount);
 
 			Vec3 up = {
@@ -76,7 +76,7 @@ namespace vae { namespace core {
 				auto& pi = positions[i];
 				p.pos = (matchCoord * glm::vec4(pi["x"], pi["y"], pi["z"], 1.f));
 				nlohmann::json irSamples[2] = { pi["left"], pi["right"]};
-				const Size irLength = irSamples[0].size();
+				const Size irLength = (Size) irSamples[0].size();
 				maxIrLength = std::max(maxIrLength, irLength);
 				for (int c = 0; c < 2; c++) {
 					p.ir[c].resize(irLength, 1);

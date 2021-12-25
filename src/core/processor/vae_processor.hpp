@@ -150,7 +150,7 @@ namespace vae { namespace core {
 						}
 					}
 					position += speed; 					// step to next sample
-					v.time = std::floor(position);		// split the signal in normal sample position
+					v.time = (SampleIndex) std::floor(position);		// split the signal in normal sample position
 					fd.timeFract = position - v.time;	// and fractional time for the next block
 					return !finished;					// is only true when exceeding signalLength and not looping
 				}

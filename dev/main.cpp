@@ -37,12 +37,12 @@ void benchmark(vae::core::Engine& engine) {
 
 		engine.setEmitter(i, randomVec(), spread);
 	}
-	for (int i = 0; i < 6000; i++) {
+	for (int i = 0; i < 2000; i++) {
 		sleep(2);
 		float t = i * 0.1;
 		engine.setEmitter(emitters[rand() % emitterCount], randomVec(), 0.5);
 		engine.fireGlobalEvent(vaeb::Bank1::JumpRand, emitters[rand() % emitterCount]);
-		if (i % 20 == 0) {
+		if (i % 3 == 0) {
 			auto em = emitters[rand() % emitterCount];
 			engine.fireGlobalEvent(vaeb::Bank1::Ambient, em);
 		}
@@ -57,7 +57,7 @@ void filterTest(vae::core::Engine& engine) {
 	for (int i = 0; i < 2000; i++) {
 		sleep(30);
 		// engine.setHighpass(emitter, sin(i * 0.1) * 0.5 + 0.5);
-		engine.setSpeed(emitter, sin(i * 0.3) * 0.2 + 1);
+		engine.setSpeed(emitter, sin(i * 0.3) * 0.2 + 1.0);
 		if (i % 100 == 0) {
 			engine.fireGlobalEvent(vaeb::Bank1::JumpRand, emitter);
 		}

@@ -134,7 +134,7 @@ namespace vae { namespace core {
 				starved = mActiveHRTFVoices == mHRTFVoiceCount;
 			} else {
 				searchStartIndex = mHRTFVoiceCount;
-				searchEndIndex = mVoices.size();
+				searchEndIndex = (Size) mVoices.size();
 				starved = mActiveVoices == (mVoices.size() - mHRTFVoiceCount);
 			}
 
@@ -216,7 +216,7 @@ namespace vae { namespace core {
 				}
 			}
 
-			mHighestVoice = mVoices.size() - 1;
+			mHighestVoice = (Size) mVoices.size() - 1;
 
 			VAE_WARN("Voice starvation. Can't start voice from event %i:%i", event.id, bank)
 
@@ -328,7 +328,7 @@ namespace vae { namespace core {
 			v.source = InvalidSourceHandle; // Mark voice as free
 
 			if (!finished) {
-				mHighestFinishedVoice = mFinishedVoiceQueue.size() - 1;
+				mHighestFinishedVoice = (Size) mFinishedVoiceQueue.size() - 1;
 				// Failed to find a free spot in finished voices array
 				// Event will be discarded
 				VAE_WARN("finishedVoiceQueue is full. Stop Event %i in bank %i discarded", v.event, v.bank)
@@ -417,6 +417,22 @@ namespace vae { namespace core {
 			}
 			for (auto& v : mVoices) {
 				if(v.bank == bank) {
+					stopVoice(v);
+				}
+			}
+			return Result::Success;
+		}
+
+		Result stopFromListener(ListenerHandle listener) {
+			VAE_PROFILER_SCOPE()
+			for (auto& v : mVirtualVoices) {
+				if (v.source == InvalidSourceHandle) { continue; }
+				if (v.listener == listener) {
+					v.source = InvalidSourceHandle;
+				}
+			}
+			for (auto& v : mVoices) {
+				if(v.listener == listener) {
 					stopVoice(v);
 				}
 			}
