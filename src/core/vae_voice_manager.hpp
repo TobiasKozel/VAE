@@ -82,7 +82,7 @@ namespace vae { namespace core {
 				auto& i = mVoices[index];
 				if (i.source == InvalidSourceHandle) { continue; }
 				if (!func(i, index)) {
-					stopVoice(i); // stop the voice if callback returns false
+					stop(i); // stop the voice if callback returns false
 				}
 			}
 		}
@@ -259,7 +259,7 @@ namespace vae { namespace core {
 		 * @param v Voice to stop
 		 * @return Result
 		 */
-		Result stopVoice(Voice& v) {
+		Result stop(Voice& v) {
 			VAE_PROFILER_SCOPE()
 			if (v.source == InvalidSourceHandle) { return Result::Success; }
 
@@ -342,116 +342,32 @@ namespace vae { namespace core {
 		}
 
 		/**
-		 * @brief Stop every voice started from a source and emitter if provided
-		 *
-		 * @param source Source to kill
-		 * @param emitter Must also match emitter if not InvalidHandle
-		 * @return Result
+		 * @brief Stop voice based on a member value and optionally an emitter
+		 * @details Can kill multiple voices if they match. Alco affects virtual voices
+		 * @tparam T Handle type like MixerHandle
+		 * @param handle Handle to use to look for voice
+		 * @param member Pointer to member variable of Voice
+		 * @param emitter Optional emitter which also needs to match if provided
+		 * @return Result Alsoways a success
 		 */
-		Result stopFromSource(SourceHandle source, EmitterHandle emitter) {
+		template <typename T>
+		Result stop(T handle, T Voice::*member, const EmitterHandle emitter = InvalidEmitterHandle) {
 			VAE_PROFILER_SCOPE()
-			VAE_ASSERT(source != InvalidSourceHandle)
-			for (auto& v : mVoices) {
-				if(v.source == source) {
-					if (emitter == InvalidEmitterHandle) {
-						stopVoice(v);
-					} else if (v.emitter == emitter) {
-						stopVoice(v);
-					}
-				}
-			}
-			return Result::Success;
-		}
-
-		/**
-		 * @brief Stops all voice triggered from event
-		 *
-		 * @param event
-		 * @param emitter
-		 * @return Result
-		 */
-		Result stopFromEvent(EventHandle event, EmitterHandle emitter) {
-			VAE_PROFILER_SCOPE()
-			VAE_ASSERT(event != InvalidEventHandle)
-			for (auto& v : mVoices) {
-				if(v.event == event) {
-					if (emitter == InvalidEmitterHandle) {
-						stopVoice(v);
-					} else if (v.emitter == emitter) {
-						stopVoice(v);
-					}
-				}
-			}
-			return Result::Success;	// Nothing was playing
-		}
-
-		/**
-		 * @brief Kills all voices in mixer channel
-		 *
-		 * @param mixer
-		 * @param emitter
-		 * @return Result
-		 */
-		Result stopFromMixer(MixerHandle mixer, EmitterHandle emitter) {
-			VAE_PROFILER_SCOPE()
-			VAE_ASSERT(mixer != InvalidMixerHandle)
-			for (auto& v : mVoices) {
-				if(v.mixer == mixer) {
-					if (emitter == InvalidEmitterHandle) {
-						stopVoice(v);
-					} else if (v.emitter == emitter) {
-						stopVoice(v);
-					}
-				}
-			}
-			return Result::Success;
-		}
-
-		Result stopFromBank(BankHandle bank) {
-			VAE_PROFILER_SCOPE()
+			// Kill all the virtual voices first
 			for (auto& v : mVirtualVoices) {
 				if (v.source == InvalidSourceHandle) { continue; }
-				if (v.bank == bank) {
-					v.source = InvalidSourceHandle;
-				}
+				// only consider active voices
+				if ((&v)->*member != handle) { continue; }
+				// If we got an emitter it has to match too
+				if (emitter != InvalidEmitterHandle && v.emitter == emitter) { continue; }
+				v.source = InvalidSourceHandle;
 			}
-			for (auto& v : mVoices) {
-				if(v.bank == bank) {
-					stopVoice(v);
-				}
-			}
-			return Result::Success;
-		}
 
-		Result stopFromListener(ListenerHandle listener) {
-			VAE_PROFILER_SCOPE()
-			for (auto& v : mVirtualVoices) {
+			for (auto& v : mVoices) {
 				if (v.source == InvalidSourceHandle) { continue; }
-				if (v.listener == listener) {
-					v.source = InvalidSourceHandle;
-				}
-			}
-			for (auto& v : mVoices) {
-				if(v.listener == listener) {
-					stopVoice(v);
-				}
-			}
-			return Result::Success;
-		}
-
-		/**
-		 * @brief Stop all voice from a emitter
-		 *
-		 * @param emitter
-		 * @return Result
-		 */
-		Result stopEmitter(EmitterHandle emitter) {
-			VAE_PROFILER_SCOPE()
-			VAE_ASSERT(emitter != InvalidEmitterHandle)
-			for (auto& v : mVoices) {
-				if(v.emitter == emitter) {
-					stopVoice(v);
-				}
+				if ((&v)->*member != handle) { continue; }
+				if (emitter != InvalidEmitterHandle && v.emitter == emitter) { continue; }
+				stop(v);
 			}
 			return Result::Success;
 		}

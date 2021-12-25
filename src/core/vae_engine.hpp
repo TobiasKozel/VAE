@@ -390,18 +390,18 @@ namespace vae { namespace core {
 				// TODO test stopping
 				if (event.source != InvalidSourceHandle) {
 					VAE_DEBUG_EVENT("Event %i:%i stops source %i", eventHandle, bankHandle, event.source)
-					mVoiceManager.stopFromSource(event.source, emitterHandle);
+					mVoiceManager.stop(event.source, &Voice::source, emitterHandle);
 				}
 				for (auto& i : event.on_start) {
 					if (i == InvalidEventHandle) { continue; }
 					// kill every voice started from these events
 					VAE_DEBUG_EVENT("Event %i:%i stops voices from event %i", eventHandle, bankHandle, i)
-					mVoiceManager.stopFromEvent(i, emitterHandle);
+					mVoiceManager.stop(i, &Voice::event, emitterHandle);
 				}
 				if (event.mixer != Mixer::MasterMixerHandle) {
 					// kill every voice in a mixer channel
 					VAE_DEBUG_EVENT("Event %i:%i stops voices in mixer %i", eventHandle, bankHandle, event.mixer)
-					mVoiceManager.stopFromMixer(event.mixer, emitterHandle);
+					mVoiceManager.stop(event.mixer, &Voice::mixer, emitterHandle);
 				}
 			}
 
@@ -455,24 +455,86 @@ namespace vae { namespace core {
 		}
 
 		/**
-		 * @brief Stop all voices from emitter.
-		 *
-		 * @param emitter
-		 * @return Result
-		 */
-		Result _VAE_PUBLIC_API stopEmitter(EmitterHandle emitter) {
-			return mVoiceManager.stopEmitter(emitter);
-		}
-
-#pragma region emitter
-
-
-		/**
 		 * @brief Set the global output volume after the limiter
 		 * @param volume 1.0 is the default
 		 */
 		void _VAE_PUBLIC_API setMasterVolume(Sample volume) {
 			mMasterVolume = volume;
+		}
+
+#pragma region emitter
+
+		/** @name Emitter manipulation
+		 * Contains everything related to emitter creation and basic manipulation of voices started from them
+		 */
+		///@{
+
+		/**
+		 * @brief Creates an emitter and returns the handle
+		 * @return EmitterHandle Random handle
+		 */
+		EmitterHandle _VAE_PUBLIC_API createEmitter() {
+			return mSpatialManager.createEmitter();
+		}
+
+		/**
+		 * @brief Emitter which triggers an event once a listener is close enough
+		 *
+		 * @param bank
+		 * @param event
+		 * @param maxDist
+		 * @param locDir
+		 * @param spread
+		 * @return EmitterHandle Handle like a normal emitter
+		 */
+		EmitterHandle _VAE_PUBLIC_API createAutoEmitter(
+			BankHandle bank, EventHandle event, float maxDist,
+			const LocationDirection& locDir, float spread
+		) {
+			return mSpatialManager.createAutoEmitter(bank, event, maxDist, locDir, spread);
+		}
+
+		/**
+		 * @brief Adds an emitter with a custom handle, can be an internal ID for example
+		 * @details migt be desireable to make EmitterHandle the same size as a pointer
+		 * so this can simply be the pointer of the entity that is associated with it.
+		 * @param h
+		 * @return Result
+		 */
+		Result _VAE_PUBLIC_API addEmitter(EmitterHandle h) {
+			return mSpatialManager.addEmitter(h);
+		}
+
+		/**
+		 * @brief Unregister a emiter an kill all its voices
+		 * @param h
+		 * @return Result
+		 */
+		Result _VAE_PUBLIC_API removeEmitter(EmitterHandle h) {
+			mVoiceManager.stop(h, &Voice::emitter);
+			return mSpatialManager.removeEmitter(h);
+		}
+
+		/**
+		 * @brief Set the Emitter position, orientation and spread
+		 * @param emitter The emitter
+		 * @param locDir The desired location
+		 * @param spread The width of the panning (if it's spatial and not HRTF)
+		 * @return Result
+		 */
+		Result _VAE_PUBLIC_API setEmitter(
+			EmitterHandle emitter, const LocationDirection& locDir, float spread
+		) {
+			return mSpatialManager.setEmitter(emitter, locDir, spread);
+		}
+
+		/**
+		 * @brief Stop all voices from emitter.
+		 * @param emitter
+		 * @return Result
+		 */
+		Result _VAE_PUBLIC_API stopEmitter(EmitterHandle emitter) {
+			return mVoiceManager.stop(emitter, &Voice::emitter);
 		}
 
 		/**
@@ -504,7 +566,6 @@ namespace vae { namespace core {
 
 		/**
 		 * @brief Simple lowpass filter for the voices
-		 *
 		 * @param emitter
 		 * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum
 		 */
@@ -514,7 +575,6 @@ namespace vae { namespace core {
 
 		/**
 		 * @brief Simple highpass filter for the voices
-		 *
 		 * @param emitter
 		 * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum
 		 */
@@ -522,35 +582,10 @@ namespace vae { namespace core {
 			mVoiceManager.setVoiceProperty(emitter, &VoiceFilter::highpass, cutoff);
 		}
 
-
-		EmitterHandle _VAE_PUBLIC_API createEmitter() {
-			return mSpatialManager.createEmitter();
-		}
-
-		EmitterHandle _VAE_PUBLIC_API createAutoEmitter(
-			BankHandle bank, EventHandle event, float maxDist,
-			const LocationDirection& locDir, float spread
-		) {
-			return mSpatialManager.createAutoEmitter(bank, event, maxDist, locDir, spread);
-		}
-
-		Result _VAE_PUBLIC_API addEmitter(EmitterHandle h) {
-			return mSpatialManager.addEmitter(h);
-		}
-
-		Result _VAE_PUBLIC_API removeEmitter(EmitterHandle h) {
-			mVoiceManager.stopEmitter(h);
-			return mSpatialManager.removeEmitter(h);
-		}
-
-		Result _VAE_PUBLIC_API setEmitter(
-			EmitterHandle emitter, const LocationDirection& locDir,
-			float spread
-		) {
-			return mSpatialManager.setEmitter(emitter, locDir, spread);
-		}
-
+		///@}
 #pragma endregion emitter
+
+#pragma region listener
 
 		/**
 		 * @brief Create a Listener object
@@ -585,10 +620,15 @@ namespace vae { namespace core {
 			);
 		}
 
-
+#pragma endregion listsner
 
 
 #pragma region bank_handling
+
+		/** @name Ressource Management
+		 * Everything related to Bank and other ressource loading/unloading
+		 */
+		///@{
 		/**
 		 * @brief Load bank from filesystem.
 		 * @details This operation might take a little time but won't lock the audio thread
@@ -643,7 +683,7 @@ namespace vae { namespace core {
 		 */
 		Result _VAE_PUBLIC_API unloadBankFromId(BankHandle bankHandle) {
 			VAE_INFO("Start Unload bank %i", bankHandle)
-			mVoiceManager.stopFromBank(bankHandle);
+			mVoiceManager.stop(bankHandle, &Voice::bank);
 			return mBankManager.unloadFromId(bankHandle);
 		}
 
@@ -654,6 +694,8 @@ namespace vae { namespace core {
 			VAE_INFO("Start unloading all banks")
 			mBankManager.unloadAll();
 		}
+
+		///@}
 #pragma endregion bank_handling
 
 		/**
