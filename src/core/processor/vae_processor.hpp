@@ -60,16 +60,16 @@ namespace vae { namespace core {
 				auto& pan = manager.getVoicePan(index);
 				target.setValidSize(frames); // mark mixer as active
 
+				SampleIndex remaining = frames;
+
 				if (!v.filtered) {
 					VAE_PROFILER_SCOPE_NAMED("Render Voice Basic")
 					// Basic rendering to all output channels w/o any effects
 					v.started = true;
-					SampleIndex remaining;
 
-					if (v.loop) {
-						remaining = frames;
-					} else {
-						remaining = std::min( frames, SampleIndex(signal.size() - v.time));
+
+					if (!v.loop) {
+						remaining = std::min(frames, SampleIndex(signal.size() - v.time));
 					}
 
 					for (int c = 0; c < targetChannels; c++) {
@@ -110,19 +110,23 @@ namespace vae { namespace core {
 					// Playback speed taking samplerate into account
 					const Sample speed = fd.speed * (Sample(signal.sampleRate) / Sample(sampleRate));
 
+					if (!v.loop) {
+						// If we're not looping, end time calculation is a bit more complex
+						remaining = std::min(
+							frames,
+							SampleIndex(std::floor((signalLength - v.time) / speed - fd.timeFract))
+						);
+						finished = remaining != frames;	// we might have reached the end
+					}
+
 					for (int c = 0; c < target.channels(); c++) {
 						const int channel = c % signal.channels();
-						for (SampleIndex s = 0; s < frames; s++) {
+						for (SampleIndex s = 0; s < remaining; s++) {
 							// Linear interpolation between two samples
 							position = v.time + (s * speed) + fd.timeFract;
 							const Sample lastPosition = std::floor(position);
 							const Size lastIndex = (Size) lastPosition;
 							const Size nextIndex = (Size) lastPosition + 1;
-
-							if (signalLength <= nextIndex && !v.loop) {
-								finished = true;
-								break;
-							}
 
 							Sample mix = position - lastPosition;
 							// mix = 0.5 * (1.0 - cos((mix) * 3.1416)); // cosine interpolation, introduces new harmonics somehow

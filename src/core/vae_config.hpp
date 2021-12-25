@@ -11,14 +11,15 @@ namespace vae { namespace core {
 	 */
 	namespace Config {
 		/**
-		 * Maximum channel count used to pre allocate buffers
+		 * @brief Maximum channel count used to pre allocate buffers
 		 */
 		constexpr unsigned char MaxChannels = 2;
 
 		/**
-		 * Maximum block size.
+		 * @brief Maximum block size
 		 * Used to preallocate buffers.
-		 * Higher values need more memory might play better with instruction caches.
+		 * Higher values need more memory might play better with instruction caches
+		 * but uses more memory.
 		 */
 		constexpr Size MaxBlock = 256;
 
@@ -50,6 +51,6 @@ namespace vae { namespace core {
 	}
 } }
 
-#define TKLB_MAXCHANNELS ::vae::core::MaxChannels
+#define TKLB_MAXCHANNELS vae::core::Config::MaxChannels
 
 #endif // VAE_CONFIG

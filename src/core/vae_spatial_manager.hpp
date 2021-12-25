@@ -11,10 +11,20 @@
 #include "vae/vae.hpp"
 
 namespace vae { namespace core {
+
 	class SpatialManager {
+		// We do a little bit of templating
+		template <typename key, class T> using Map =
+			tsl::robin_map<
+				key, T,
+				std::hash<key>,
+				std::equal_to<key>,
+				AllocatorMain<std::pair<key, T>>,
+				true
+			>;
 		// TODO for power of 2 sizes other maps might be faster and need the same amount of ram
-		template <typename key, class T> using Map = tsl::robin_map<key, T>;
 		Map<EmitterHandle, Emitter> mEmitters;	// All emitters across banks
+
 		Listeners mListeners;					// All Listeners
 	public:
 		Result init(Size emitterCount) {

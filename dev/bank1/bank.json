@@ -17,7 +17,7 @@
 			"path": "jump_1.wav",
 			"format": "wav",
 			"stream": false,
-			"resample": true,
+			"resample": false,
 			"gain": 1.0
 		},
 		{
@@ -35,7 +35,7 @@
 			"path": "jump_3.wav",
 			"format": "wav",
 			"stream": false,
-			"resample": true,
+			"resample": false,
 			"gain": 1.0
 		},
 		{
@@ -71,8 +71,8 @@
 			"path": "ambience.ogg",
 			"format": "ogg",
 			"stream": false,
-			"resample": true,
-			"gain": 0.3
+			"resample": false,
+			"gain": 0.6
 		},
 		{
 			"id": 8,
@@ -94,10 +94,24 @@
 		},
 		{
 			"id": 1,
-			"name": "Character",
+			"name": "SFX",
 			"gain": 1.0,
 			"effects": [],
 			"parent": 0
+		},
+		{
+			"id": 2,
+			"name": "Music",
+			"gain": 1.0,
+			"effects": [],
+			"parent": 0
+		},
+		{
+			"id": 3,
+			"name": "Character",
+			"gain": 1.0,
+			"effects": [],
+			"parent": 1
 		}
 	],
 	"rtcps": [],
@@ -124,7 +138,7 @@
 			"on_start": [],
 			"on_end": [],
 			"gain": 1.0,
-			"mixer": 1,
+			"mixer": 3,
 			"hrtf": true,
 			"loop": false,
 			"spatial": true,
@@ -137,7 +151,7 @@
 			"source": 2,
 			"on_start": [],
 			"on_end": [],
-			"mixer": 1,
+			"mixer": 3,
 			"gain": 1.0,
 			"hrtf": false,
 			"loop": false,
@@ -151,7 +165,7 @@
 			"source": 3,
 			"on_start": [],
 			"on_end": [],
-			"mixer": 1,
+			"mixer": 3,
 			"gain": 1.0,
 			"hrtf": true,
 			"loop": false,
@@ -180,7 +194,7 @@
 			"on_start": [],
 			"on_end": [],
 			"gain": 1.0,
-			"mixer": 0,
+			"mixer": 2,
 			"hrtf": false,
 			"loop": true,
 			"spatial": false,

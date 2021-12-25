@@ -13,6 +13,7 @@
 #define _VAE_TYPES
 
 #include "../../include/vae/vae.hpp"
+#include "./vae_config.hpp"
 #include "../../external/glm/glm/glm.hpp"
 #include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../external/tklb/src/types/audio/TAudioRingBuffer.hpp"

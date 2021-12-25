@@ -21,7 +21,7 @@ namespace vae { namespace core {
 		bool started : 1;		///< Whether the voice has started playing
 		bool audible : 1;		///< Whether the voice was heard by any listener
 		bool HRTF : 1;			///< If the voice should be rendered using hrtfs
-		bool loop : 1;			///! Voice will loop until killed
+		bool loop : 1;			///< Voice will loop until killed
 		bool filtered : 1;		///< This will enable high/lowpass filters and variable speed playback. Gets turned on when signal does not match EngineConfig::internalSampleRate
 		bool critical : 1;		///< Voice can't be killed in favor of new voice
 		BankHandle bank;							///< Which bank it belongs to

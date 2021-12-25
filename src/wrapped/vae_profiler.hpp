@@ -13,9 +13,10 @@ namespace vae { namespace core { namespace profiler {
 	const char* const deviceOverruns		= "Device Overruns";
 	const char* const engineUnderruns		= "Engine Underruns";
 	const char* const engineOverruns		= "Engine Overruns";
-	const char* const tklbHeap				= "tklb heap";			///< Contains all tklb heap like tklb::AudioBuffer or tkbl::Resampler
-	const char* const vaeHeap				= "vae heapbuffers";	///< All heapbuffers like voice pools and so on
-	const char* const objHeap				= "global new heap";	///< Generic object heap like vae::core::Device
+	const char* const tklbAllocator			= "tklb Allocator";		///< Contains all tklb heap like tklb::AudioBuffer or tkbl::Resampler
+	const char* const objAllocator			= "new Allocator";		///< Generic object heap like vae::core::Device
+	const char* const fsAllocator			= "FS Allocator";		///< Deals with everything  deserialization
+	const char* const mainAllocator			= "Main Allocator";		///< Allocates all the bank, event emitter arrays
 } } } // vae::core::profiler
 
 
@@ -37,20 +38,20 @@ namespace vae { namespace core { namespace profiler {
 	#define VAE_PROFILER_MUTEX(type, name, desc)	TracyLockableN(type, name, desc)
 
 	// Add tracking to tklb which is mostly audiobuffers
-	#define TKLB_TRACK_ALLOCATE(ptr, size)		VAE_PROFILER_MALLOC_L(ptr, size, vae::core::profiler::tklbHeap)
-	#define TKLB_TRACK_FREE(ptr, size)			VAE_PROFILER_FREE_L(ptr, vae::core::profiler::tklbHeap)
+	#define TKLB_TRACK_ALLOCATE(ptr, size)		VAE_PROFILER_MALLOC_L(ptr, size, vae::core::profiler::tklbAllocator)
+	#define TKLB_TRACK_FREE(ptr, size)			VAE_PROFILER_FREE_L(ptr, vae::core::profiler::tklbAllocator)
 
 	#define VAE_PROFILER_OVERLOAD_NEW() 		\
 	void* operator new(std::size_t count) {		\
 		auto ptr = std::malloc(count);			\
 		VAE_PROFILER_MALLOC_L(ptr, count,		\
-			vae::core::profiler::objHeap		\
+			vae::core::profiler::objAllocator	\
 		);										\
 		return ptr;								\
 	}											\
 	void operator delete (void* ptr) noexcept {	\
 		VAE_PROFILER_FREE_L(ptr,				\
-			vae::core::profiler::objHeap		\
+			vae::core::profiler::objAllocator		\
 		);										\
 		std::free(ptr);							\
 	}											\
@@ -62,9 +63,6 @@ namespace vae { namespace core { namespace profiler {
 	#include <memory>
 	#include <limits>
 
-	// #include "../../external/tklb/src/types/TSpinLock.hpp"
-	#include <mutex>
-
 	namespace vae { namespace core { namespace profiler {
 		/**
 		 * @brief Allocator used for all heapbuffers in VAE
@@ -74,8 +72,10 @@ namespace vae { namespace core { namespace profiler {
 		struct Allocator {
 			typedef T value_type;
 
-			Allocator () = default;
-			// template <class U, const char* N> constexpr Allocator (const Allocator<U><N>&) noexcept { }
+			Allocator() = default;
+			Allocator(const Allocator&) = default;
+			template <class U, class J >
+			Allocator(const Allocator<U, J>&) { }
 
 			T* allocate(std::size_t n) {
 				if (n > std::numeric_limits<std::size_t>::max() / sizeof(T)) {
@@ -95,6 +95,23 @@ namespace vae { namespace core { namespace profiler {
 				std::free(ptr);
 			}
 		};
+
+		/**
+		 * @brief I don't even know what this does, but it has to be here for robin_map.h
+		 */
+		template <class T, class U, class J >
+			bool operator==(const Allocator<T, J>&, const Allocator<U, J>&) {
+			return true;
+		}
+
+		template <class T, class U, class J >
+			bool operator!=(const Allocator<T, J>&, const Allocator<U, J>&) {
+			return false;
+		}
+
+		/**
+		 * @brief This is here to get a name into the allocator without writing the whole thing again
+		 */
 		struct FsAllocator   { static constexpr const char* name = "FS Allocator";   };
 		struct MainAllocator { static constexpr const char* name = "Main Allocator"; };
 	} // profiler

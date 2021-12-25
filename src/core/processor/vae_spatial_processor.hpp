@@ -15,7 +15,6 @@
 
 #include "../fs/vae_hrtf_loader.hpp"
 #include "../../../external/glm/glm/gtc/matrix_transform.hpp"
-#include "../../../external/tklb/src/types/audio/fft/TOouraFFT.hpp"
 
 namespace vae { namespace core {
 	class SpatialProcessor {
@@ -126,10 +125,20 @@ namespace vae { namespace core {
 						fd.lowpassScratch[0]	= signal[0][v.time];
 					}
 
-					// fractional time, we need the value after the loop, so it's defined outside
-					Sample position;
 					// Playback speed taking samplerate into account
 					const Sample speed = fd.speed * (Sample(signal.sampleRate) / Sample(sampleRate));
+
+					if (!v.loop) {
+						// If we're not looping, end time calculation is a bit more complex
+						remaining = std::min(
+							frames,
+							SampleIndex(std::floor((signalLength - v.time) / speed - fd.timeFract))
+						);
+						finished = remaining != frames;	// we might have reached the end
+					}
+
+					// fractional time, we need the value after the loop, so it's defined outside
+					Sample position;
 					for (SampleIndex s = 0; s < frames; s++) {
 						// Linear interpolation between two samples
 						position = v.time + (s * speed) + fd.timeFract;
@@ -137,14 +146,10 @@ namespace vae { namespace core {
 						const Size lastIndex = (Size) lastPosition;
 						const Size nextIndex = (Size) lastPosition + 1;
 
-						if (signalLength <= nextIndex && !v.loop) {
-							remaining = s;
-							finished = true;
-							break;
-						}
-
 						Sample mix = position - lastPosition;
 						// mix = 0.5 * (1.0 - cos((mix) * 3.1416)); // cosine interpolation, introduces new harmonics somehow
+
+						// TODO 30% of the time in here is spent on the modulo
 						const Sample last = signal[0][lastIndex % signalLength] * gain;
 						const Sample next = signal[0][nextIndex % signalLength] * gain;
 						// linear resampling, sounds alright enough
