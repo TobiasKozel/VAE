@@ -14,7 +14,7 @@ namespace vae { namespace core {
 		) : Device(backend, config) { }
 
 		bool openDevice(bool input = false) override {
-			init(mConfig.internalSampleRate, 0, 2, Config::MaxBlock);
+			init(mConfig.internalSampleRate, 0, 2, StaticConfig::MaxBlock);
 			postInit();
 			return true;
 		}

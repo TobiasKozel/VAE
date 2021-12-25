@@ -19,7 +19,7 @@ namespace vae { namespace core {
 
 		void initMixer(Mixer& mixer, Size sampleRate) {
 			VAE_PROFILER_SCOPE_NAMED("Mixer Init")
-			mixer.buffer.resize(Config::MaxBlock, Config::MaxChannels);
+			mixer.buffer.resize(StaticConfig::MaxBlock, StaticConfig::MaxChannels);
 			for (auto& i : mixer.effects) {
 				if (i.name.empty()) { continue; }
 				i.effect = effect::EffectsFactory::create(i.name);
@@ -158,7 +158,7 @@ namespace vae { namespace core {
 		Result addMixer(BankHandle bankHandle, Mixer& mixer) {
 			VAE_PROFILER_SCOPE()
 			// TODO init mixer effects
-			mixer.buffer.resize(Config::MaxBlock, Config::MaxChannels);
+			mixer.buffer.resize(StaticConfig::MaxBlock, StaticConfig::MaxChannels);
 			Lock l(mMutex);
 			auto& bank = mBanks[bankHandle];
 			if (bank.mixers.size() <= mixer.id) {

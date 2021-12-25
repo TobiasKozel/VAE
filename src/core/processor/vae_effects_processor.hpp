@@ -11,10 +11,10 @@ namespace vae { namespace core {
 		AudioBuffer mScratchBuffer;
 	public:
 		void init() {
-			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
+			mScratchBuffer.resize(StaticConfig::MaxBlock, StaticConfig::MaxChannels);
 		}
 		void mix(Effect& effect, AudioBuffer& buffer) {
-			if (Config::MaxMixerEffects <= effect.index) { return; }
+			if (StaticConfig::MaxMixerEffects <= effect.index) { return; }
 			VAE_PROFILER_SCOPE_NAMED("Process Effect")
 			mScratchBuffer.set(buffer);
 			mScratchBuffer.setValidSize(buffer.validSize());

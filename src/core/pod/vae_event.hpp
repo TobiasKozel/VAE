@@ -25,8 +25,8 @@ namespace vae { namespace core {
 		EventHandle id = InvalidEventHandle;						///< Own id
 		SourceHandle source = InvalidSourceHandle;					///< Handle to a source
 		Sample gain = 1.0;											///< Volume applied to triggered voice
-		StackBuffer<EventHandle, Config::MaxChainedEvents> on_start;///< Events called when the source starts playing
-		StackBuffer<EventHandle, Config::MaxChainedEvents> on_end;	///< Events fired once the source is finished, not called when there's no source
+		StackBuffer<EventHandle, StaticConfig::MaxChainedEvents> on_start;///< Events called when the source starts playing
+		StackBuffer<EventHandle, StaticConfig::MaxChainedEvents> on_end;	///< Events fired once the source is finished, not called when there's no source
 		NameString name;											///< Name for debugging
 
 		/**
@@ -34,7 +34,7 @@ namespace vae { namespace core {
 		 * initialized properly since 0 is a valid event handle
 		 */
 		Event() {
-			for (size_t i = 0; i < Config::MaxChainedEvents; i++) {
+			for (size_t i = 0; i < StaticConfig::MaxChainedEvents; i++) {
 				on_start[i] = InvalidEventHandle;
 				on_end[i] = InvalidEventHandle;
 			}

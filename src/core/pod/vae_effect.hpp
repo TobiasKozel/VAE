@@ -20,7 +20,7 @@ namespace vae { namespace core {
 		Uchar index = ~0;		///< Which effects slot 0 to (MaxMixerEffects-1)
 		IdString name;			///< Name of the effect to load, not an arbitrary name
 		effect::EffectBase* effect = nullptr;				///< References the DSP
-		Parameter parameters[Config::MaxEffectsParameter];	///< Parameters
+		Parameter parameters[StaticConfig::MaxEffectsParameter];	///< Parameters
 	};
 } } // vae::core
 

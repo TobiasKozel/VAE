@@ -139,10 +139,10 @@ namespace vae { namespace core {
 				if (0 < channelsOut) {
 					// But only DSP max block size in this direction
 					mResamplerToDevice.init(
-						mConfig.internalSampleRate, sampleRate, Config::MaxBlock
+						mConfig.internalSampleRate, sampleRate, StaticConfig::MaxBlock
 					);
 					mResamplerBufferToDevice.resize(
-						mResamplerToDevice.calculateBufferSize(Config::MaxBlock),
+						mResamplerToDevice.calculateBufferSize(StaticConfig::MaxBlock),
 						channelsOut
 					);
 					mResamplerBufferToDevice.sampleRate = sampleRate;

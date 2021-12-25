@@ -60,8 +60,8 @@ namespace vae { namespace core {
 				VAE_ERROR("Failed to open deivce with index out of bounds")
 				return false;
 			}
-			device.channelsIn = tklb::clamp<int>(device.channelsIn, 0, Config::MaxChannels);
-			device.channelsOut = tklb::clamp<int>(device.channelsOut, 0, Config::MaxChannels);
+			device.channelsIn = tklb::clamp<int>(device.channelsIn, 0, StaticConfig::MaxChannels);
+			device.channelsOut = tklb::clamp<int>(device.channelsOut, 0, StaticConfig::MaxChannels);
 			RtAudio::StreamParameters inParams, outParams;
 			inParams.deviceId = device.id;
 			inParams.nChannels = device.channelsIn;

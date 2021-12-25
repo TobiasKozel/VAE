@@ -37,13 +37,14 @@ namespace vae {
 	using GenericHandle 	= unsigned short;
 	using LargeHandle		= unsigned int;
 
-	using BankHandle 		= SmallHandle;
-	using EventHandle 		= GenericHandle;	///< The handle used to address events within a bank
-	using GlobalEventHandle	= LargeHandle;		///< Used to globally address events, holds space for BankHandle and EventHandle
-	using SourceHandle 		= GenericHandle;
-	using EmitterHandle 	= LargeHandle;
-	using MixerHandle		= SmallHandle;
-	using ListenerHandle	= SmallHandle;
+	using BankHandle 			= SmallHandle;
+	using EventHandle 			= GenericHandle;	///< The handle used to address events within a bank
+	using GlobalEventHandle		= LargeHandle;		///< Used to globally address events, holds space for BankHandle and EventHandle
+	using SourceHandle 			= GenericHandle;
+	using EmitterHandle 		= LargeHandle;
+	using MixerHandle			= SmallHandle;
+	using ListenerHandle		= SmallHandle;
+	using CommandQueueHandle	= SmallHandle;
 
 	/**
 	 * @brief Since 0 is a valid handle, these are used to identify invalid ones.
@@ -247,7 +248,7 @@ namespace vae {
 	 * Dynamic settings are contained in the EngineSettings struct above.
 	 * @details Changes made here need recompilation
 	 */
-	namespace Config {
+	namespace StaticConfig {
 		/**
 		 * @brief Maximum channel count used to pre allocate buffers
 		 */

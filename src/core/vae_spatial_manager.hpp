@@ -123,7 +123,7 @@ namespace vae { namespace core {
 		Result forListeners(ListenerHandle handle, const Func&& func) {
 			VAE_PROFILER_SCOPE()
 			if (handle == AllListeners) {
-				for(ListenerHandle index = 0; index < Config::MaxListeners; index++) {
+				for(ListenerHandle index = 0; index < StaticConfig::MaxListeners; index++) {
 					auto& i = mListeners[index];
 					if (i.id == InvalidListenerHandle) { continue; }
 					Result result = func(i);
@@ -138,7 +138,7 @@ namespace vae { namespace core {
 
 		ListenerHandle createListener() {
 			VAE_PROFILER_SCOPE()
-			for (ListenerHandle index = 0; index < Config::MaxListeners; index++) {
+			for (ListenerHandle index = 0; index < StaticConfig::MaxListeners; index++) {
 				auto& i = mListeners[index];
 				if (i.id == InvalidListenerHandle) {
 					i.id = index;
@@ -148,7 +148,7 @@ namespace vae { namespace core {
 					return index;
 				}
 			}
-			VAE_ERROR("Exeeded maxim amount of listeners define in Config::MaxListeners")
+			VAE_ERROR("Exeeded maxim amount of listeners define in StaticConfig::MaxListeners")
 			return InvalidListenerHandle;
 		}
 
@@ -157,7 +157,7 @@ namespace vae { namespace core {
 			const LocationOrientation& locOr
 		) {
 			VAE_PROFILER_SCOPE()
-			if (Config::MaxListeners <= listener) {
+			if (StaticConfig::MaxListeners <= listener) {
 				VAE_WARN("Accessed invalid listener %i", listener)
 				return Result::ValidHandleRequired;
 			}
@@ -173,7 +173,7 @@ namespace vae { namespace core {
 
 		Result removeListener(ListenerHandle listener) {
 			VAE_PROFILER_SCOPE()
-			if (Config::MaxListeners <= listener) {
+			if (StaticConfig::MaxListeners <= listener) {
 				VAE_WARN("Accessed invalid listener %i", listener)
 				return Result::ValidHandleRequired;
 			}

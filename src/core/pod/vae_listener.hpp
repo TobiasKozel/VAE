@@ -30,7 +30,7 @@ namespace vae { namespace core {
 		Uchar configuration = Configuration::HRTF;
 	};
 
-	using Listeners = StackBuffer<Listener, Config::MaxListeners>;
+	using Listeners = StackBuffer<Listener, StaticConfig::MaxListeners>;
 
 	constexpr int _VAE_LISTENER_SIZE = sizeof(Listener);
 } } // vae::core

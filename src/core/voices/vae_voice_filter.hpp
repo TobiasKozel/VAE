@@ -16,11 +16,11 @@ namespace vae { namespace core {
 		Sample highpass = 0.0;	///< Highpasses the signal as the value approaches 1
 		Sample speed = 1.0;		///< Playback speed, will alter pitch
 		Sample timeFract = 0.0;	///< Fractional time component for interpolation
-		Sample lowpassScratch[Config::MaxChannels];		///< Last sample per channel for IIR filter
-		Sample highpassScratch[Config::MaxChannels];	///< Last sample per channel for IIR filter
+		Sample lowpassScratch[StaticConfig::MaxChannels];		///< Last sample per channel for IIR filter
+		Sample highpassScratch[StaticConfig::MaxChannels];	///< Last sample per channel for IIR filter
 
 		VoiceFilter() {
-			for (Size i = 0; i < Config::MaxChannels; i++) {
+			for (Size i = 0; i < StaticConfig::MaxChannels; i++) {
 				lowpassScratch[i]  = 0;
 				highpassScratch[i] = 0;
 			}

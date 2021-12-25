@@ -176,7 +176,7 @@ namespace vae { namespace core {
 					}
 
 					auto onStart = i["on_start"];
-					if (Config::MaxChainedEvents < onStart.size()) {
+					if (StaticConfig::MaxChainedEvents < onStart.size()) {
 						VAE_ERROR("Event %i:%i has too many chained on_start events.", id, bank.id)
 						return Result::TooManyRecords;
 					}
@@ -185,7 +185,7 @@ namespace vae { namespace core {
 					}
 
 					auto onEnd = i["on_end"];
-					if (Config::MaxChainedEvents < onEnd.size()) {
+					if (StaticConfig::MaxChainedEvents < onEnd.size()) {
 						VAE_ERROR("Event %i:%i has too many chained on_end events.", id, bank.id)
 						return Result::TooManyRecords;
 					}

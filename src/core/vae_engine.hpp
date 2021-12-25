@@ -89,14 +89,14 @@ namespace vae { namespace core {
 				// ! this is an underestimate when resampling so we don't have any leftovers
 				auto remaining = d.canPush();
 
-				static_assert(32 <= Config::MaxBlock, "MaxBlock needs to be larger");
+				static_assert(32 <= StaticConfig::MaxBlock, "MaxBlock needs to be larger");
 
 				if (remaining < 32) {
 					break; // ! Don't even bother with small blocks, we'll get em next time
 				}
 
 				// clamp to max processable size, the preallocated scratch buffers can't take any larger blocks
-				remaining = std::min(remaining, Config::MaxBlock);
+				remaining = std::min(remaining, StaticConfig::MaxBlock);
 
 				mScratchBuffer.setValidSize(remaining);
 
@@ -203,7 +203,7 @@ namespace vae { namespace core {
 			VAE_PROFILER_SCOPE_NAMED("Engine init")
 			VAE_DEBUG("Initializing engine...")
 			mConfig = config;
-			mScratchBuffer.resize(Config::MaxBlock, Config::MaxChannels);
+			mScratchBuffer.resize(StaticConfig::MaxBlock, StaticConfig::MaxChannels);
 			mScratchBuffer.set(0);
 			mScratchBuffer.sampleRate = mConfig.internalSampleRate;
 			mVoiceManager.init(mConfig);
@@ -419,6 +419,20 @@ namespace vae { namespace core {
 			}
 
 			return Result::Success;
+		}
+
+		/**
+		 * @brief
+		 *
+		 */
+		void queueEvent(
+			BankHandle bankHandle, EventHandle eventHandle,
+			EmitterHandle emitterHandle,
+			Sample gain = 1.0,
+			MixerHandle mixerHandle = InvalidMixerHandle,
+			ListenerHandle listenerHandle = AllListeners
+		) {
+
 		}
 
 		/**

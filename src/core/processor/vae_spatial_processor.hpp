@@ -29,7 +29,7 @@ namespace vae { namespace core {
 		Result init(Size hrtfVoices) {
 			VAE_PROFILER_SCOPE_NAMED("Spatial Processor Init")
 			mVoiceHRTFs.resize(hrtfVoices);
-			mScratchBuffer.resize(Config::MaxBlock);
+			mScratchBuffer.resize(StaticConfig::MaxBlock);
 			return Result::Success;
 		}
 
@@ -99,7 +99,7 @@ namespace vae { namespace core {
 					distanceAttenuated *= gain;
 				}
 
-				if (distanceAttenuated < Config::MinVolume) {
+				if (distanceAttenuated < StaticConfig::MinVolume) {
 					return true; // ! inaudible
 					// TODO maybe progress still progress time?
 				}
@@ -231,7 +231,7 @@ namespace vae { namespace core {
 					*/
 					const auto pan = [&](const auto& panner) {
 						// This is actually constexpr but not according to clangd
-						constexpr Size channels = std::min(Size(Config::MaxChannels), panner.speakers);
+						constexpr Size channels = std::min(Size(StaticConfig::MaxChannels), panner.speakers);
 						panner.pan(
 							relativeDirection, currentVolumes,
 							distanceAttenuated, emitter.spread

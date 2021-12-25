@@ -21,7 +21,7 @@ namespace vae { namespace core {
 		 * 0 is always the bank master and the default.
 		 */
 		MixerHandle id = InvalidMixerHandle;
-		StackBuffer<Effect, Config::MaxMixerEffects> effects;
+		StackBuffer<Effect, StaticConfig::MaxMixerEffects> effects;
 		NameString name; // name for debugging
 	};
 

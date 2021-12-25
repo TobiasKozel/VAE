@@ -73,8 +73,8 @@ namespace vae { namespace core {
 				return false;
 			}
 
-			device.channelsIn = tklb::clamp<int>(device.channelsIn, 0, Config::MaxChannels);
-			device.channelsOut = tklb::clamp<int>(device.channelsOut, 0, Config::MaxChannels);
+			device.channelsIn = tklb::clamp<int>(device.channelsIn, 0, StaticConfig::MaxChannels);
+			device.channelsOut = tklb::clamp<int>(device.channelsOut, 0, StaticConfig::MaxChannels);
 
 			PaStreamParameters inputParameters;
 			inputParameters.device = device.id;

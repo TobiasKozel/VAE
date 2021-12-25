@@ -11,6 +11,6 @@ namespace vae { namespace Config {
 /**
  * @brief Forward internal max channels to tklb for tklb::AudioBuffer
  */
-#define TKLB_MAXCHANNELS vae::Config::MaxChannels
+#define TKLB_MAXCHANNELS vae::StaticConfig::MaxChannels
 
 #endif // VAE_CONFIG

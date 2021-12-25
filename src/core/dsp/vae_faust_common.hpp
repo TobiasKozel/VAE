@@ -67,8 +67,8 @@ namespace vae { namespace core { namespace effect {
 			}
 
 			// Convert buffers
-			const Sample* ain[Config::MaxChannels];
-			Sample* aout[Config::MaxChannels];
+			const Sample* ain[StaticConfig::MaxChannels];
+			Sample* aout[StaticConfig::MaxChannels];
 			in.getRaw(ain);
 			out.getRaw(aout);
 
