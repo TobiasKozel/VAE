@@ -23,6 +23,7 @@
 #include "./voices/vae_voice_filter.hpp"
 
 #include <cstring>				// strcmp
+#include <mutex>
 #include <thread>				// mAudioThread
 #include <condition_variable>	// mAudioConsumed
 
@@ -65,7 +66,7 @@ namespace vae { namespace core {
 
 		Thread* mAudioThread;				///< Thread processing voices and mixers
 		ConditionVariable mAudioConsumed;	///< Notifies the audio thread when more audio is needed
-		Mutex mMutex;						///< Mutex needed to use mAudioConsumed, doesn't actually do anything else
+		std::mutex mMutex;					///< Mutex needed to use mAudioConsumed, doesn't actually do anything else
 		bool mAudioThreadRunning = false;
 
 		/**
@@ -152,7 +153,7 @@ namespace vae { namespace core {
 			VEA_PROFILER_THREAD_NAME("Audio thread")
 			while(mAudioThreadRunning) {
 				process();	// Process one block in advance so there's no underrun
-				std::unique_lock<Mutex> l(mMutex);
+				std::unique_lock<std::mutex> l(mMutex);
 				mAudioConsumed.wait(l);	// Wait until we got work
 			}
 		}

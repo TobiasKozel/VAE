@@ -76,6 +76,15 @@ else()
 	endif()
 endif()
 
+# TODO there are a lot of warnings to take care of
+# if (MSVC)
+# 	# warning level 4 and all warnings as errors
+# 	add_compile_options(/W4 /WX)
+# else()
+# 	# lots of warnings and all warnings as errors
+# 	add_compile_options(-Wall -Wextra -pedantic -Werror)
+# endif()
+
 
 source_group("core" FILES ${SRC_CORE})
 
@@ -123,8 +132,15 @@ if(VAE_PROFILER)
 	message("VAE: Build with profiler")
 endif()
 
+# if (NOT MSVC)
+# 	if (VAE_PROFILER)
+# 		add_compile_options(-finstrument-functions)
+# 		message("VAE: instrument functions")
+# 	endif()
+# endif()
+
 target_link_libraries(vae PRIVATE ${VAE_DEPS})
 
 
-# for deveoloping
+# for developing
 add_subdirectory(dev)

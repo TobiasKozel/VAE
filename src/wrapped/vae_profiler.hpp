@@ -51,7 +51,7 @@ namespace vae { namespace core { namespace profiler {
 	}											\
 	void operator delete (void* ptr) noexcept {	\
 		VAE_PROFILER_FREE_L(ptr,				\
-			vae::core::profiler::objAllocator		\
+			vae::core::profiler::objAllocator	\
 		);										\
 		std::free(ptr);							\
 	}											\

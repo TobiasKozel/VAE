@@ -67,7 +67,7 @@ namespace vae { namespace core {
 		using NameString = std::string;	// Used for debug names
 	#endif // VAE_RELEASE
 
-		using PathString = std::string;	// Used for path strings
+		using PathString = std::string;	// Non optional string used for locations, maybe replaceable with a unique_ptr or something
 
 } } // namespace vae::core
 

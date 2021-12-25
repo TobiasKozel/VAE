@@ -21,7 +21,7 @@ namespace vae { namespace core {
 		 * Higher values need more memory might play better with instruction caches
 		 * but uses more memory.
 		 */
-		constexpr Size MaxBlock = 256;
+		constexpr Size MaxBlock = 512;
 
 		/**
 		 * @brief How many Samples to prefetch for streaming sources

@@ -37,7 +37,7 @@ void benchmark(vae::core::Engine& engine) {
 
 		engine.setEmitter(i, randomVec(), spread);
 	}
-	for (int i = 0; i < 2000; i++) {
+	for (int i = 0; i < 6000; i++) {
 		sleep(2);
 		float t = i * 0.1;
 		engine.setEmitter(emitters[rand() % emitterCount], randomVec(), 0.5);
