@@ -9,12 +9,23 @@
 #include "../voices/vae_voice_pan.hpp"
 #include "../vae_voice_manager.hpp"
 #include <cmath>
+#include <limits>
 
 namespace vae { namespace core {
 	/**
 	 * @brief Non spatial voice processor
 	 */
-	struct Processor {
+	class Processor {
+		/**
+		 * @brief Temporary filtered/looped signal TODO this will not work with parallel bank processing
+		 */
+		AudioBuffer mScratchBuffer;
+	public:
+		Result init() {
+			mScratchBuffer.resize(StaticConfig::MaxBlock, StaticConfig::MaxChannels);
+			return Result::Success;
+		}
+
 		/**
 		 * @brief Process a single bank
 		 *
@@ -38,7 +49,7 @@ namespace vae { namespace core {
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
 
-				const auto signalLength = signal.size();
+				const SampleIndex signalLength = signal.size();
 
 				if (signalLength == 0) { return false; }
 				if (signal.sampleRate != sampleRate) {
@@ -46,9 +57,9 @@ namespace vae { namespace core {
 					v.filtered = true; // implicitly filter to resample
 				}
 
-				const auto signalChannels = signal.channels();
 				v.time = v.time % signalLength;		// Keep signal in bounds before starting
 
+				const auto signalChannels = signal.channels();
 				auto& mixer = bank.mixers[v.mixer];
 				auto& target = mixer.buffer;
 				const auto targetChannels = target.channels();
@@ -60,39 +71,39 @@ namespace vae { namespace core {
 				auto& pan = manager.getVoicePan(index);
 				target.setValidSize(frames); // mark mixer as active
 
-				SampleIndex remaining = frames;
-
 				if (!v.filtered) {
 					VAE_PROFILER_SCOPE_NAMED("Render Voice Basic")
 					// Basic rendering to all output channels w/o any effects
 					v.started = true;
-
-
-					if (!v.loop) {
-						remaining = std::min(frames, SampleIndex(signal.size() - v.time));
-					}
-
-					for (int c = 0; c < targetChannels; c++) {
-						const int channel = c % signalChannels;
-						for (SampleIndex s = 0; s < remaining; s++) {
-							target[c][s] +=
-								signal[channel][(v.time + s) % signalLength] *
-								gain * pan.volumes[c];
-						}
-					}
-					v.time = v.time + frames; // progress voice
+					const SampleIndex needed = v.loop ? frames : std::min(frames, SampleIndex(signalLength - v.time));
 
 					if (v.loop) {
-						return true; // we don't stop the voice when looping
+						for (int c = 0; c < targetChannels; c++) {
+							const int channel = c % signalChannels;
+							for (SampleIndex s = 0; s < needed; s++) {
+								target[c][s] +=
+									signal[channel][((v.time + s) % signalLength)] * gain * pan.volumes[c];
+							}
+						}
+					} else {
+						// Having these seperate results in like a 3x speedup
+						// TODO check this in a more diffictult to branchpredict scenario
+						for (int c = 0; c < targetChannels; c++) {
+							for (SampleIndex s = 0; s < needed; s++) {
+							const int channel = c % signalChannels;
+								target[c][s] +=
+									signal[channel][v.time + s] * gain * pan.volumes[c];
+							}
+						}
 					}
-					return remaining == frames; // Finished if there are no samples left in source
+
+					v.time = v.time + frames;	// progress voice
+					return needed == frames;	// Finished if there are no samples left in source
 				}
 
 				// Filtered voice processing
 				{
 					VAE_PROFILER_SCOPE_NAMED("Render filtered Voice")
-					bool finished = false;
-
 					auto& fd = manager.getVoiceFilter(index);
 
 					if (!v.started) {
@@ -109,19 +120,13 @@ namespace vae { namespace core {
 
 					// Playback speed taking samplerate into account
 					const Sample speed = fd.speed * (Sample(signal.sampleRate) / Sample(sampleRate));
-
-					if (!v.loop) {
-						// If we're not looping, end time calculation is a bit more complex
-						remaining = std::min(
-							frames,
-							SampleIndex(std::floor((signalLength - v.time) / speed - fd.timeFract))
-						);
-						finished = remaining != frames;	// we might have reached the end
-					}
+					const SampleIndex needed = v.loop ? frames : std::min(
+						frames, SampleIndex(std::floor((signalLength - v.time) / speed - fd.timeFract))
+					);
 
 					for (int c = 0; c < target.channels(); c++) {
+						for (SampleIndex s = 0; s < needed; s++) {
 						const int channel = c % signal.channels();
-						for (SampleIndex s = 0; s < remaining; s++) {
 							// Linear interpolation between two samples
 							position = v.time + (s * speed) + fd.timeFract;
 							const Sample lastPosition = std::floor(position);
@@ -149,10 +154,10 @@ namespace vae { namespace core {
 							target[c][s] += (lpd - hpd) * pan.volumes[c];
 						}
 					}
-					position += speed; 					// step to next sample
-					v.time = (SampleIndex) std::floor(position);		// split the signal in normal sample position
-					fd.timeFract = position - v.time;	// and fractional time for the next block
-					return !finished;					// is only true when exceeding signalLength and not looping
+					position += speed; 								// step to next sample
+					v.time = (SampleIndex) std::floor(position);	// split the signal in normal sample position
+					fd.timeFract = position - v.time;				// and fractional time for the next block
+					return needed == frames;						// we might have reached the end;					// is only true when exceeding signalLength and not looping
 				}
 			});
 			return actuallyRendered;

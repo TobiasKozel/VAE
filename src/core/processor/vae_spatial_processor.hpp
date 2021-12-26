@@ -181,7 +181,7 @@ namespace vae { namespace core {
 						// put the looped signal in scratch buffer eventhough we're not filtering
 						// so panning doesn't need to worry about looping
 						for (SampleIndex s = 0; s < frames; s++) {
-							mScratchBuffer[0][s] = signal[0][(v.time + s) % signal.size()];
+							mScratchBuffer[0][s] = signal[0][(v.time + s) % signalLength];
 						}
 						v.time = (v.time + frames);	// progress the time
 						in = mScratchBuffer[0];		// set buffer for panning
@@ -198,7 +198,6 @@ namespace vae { namespace core {
 						v.time += remaining;			// progress time in voice
 					}
 				}
-
 
 				if (l.configuration == Listener::Configuration::HRTF && v.HRTF && mHRTF.rate) {
 					// * HRTF Panning

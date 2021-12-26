@@ -638,6 +638,7 @@ namespace vae { namespace core {
 		 */
 		Result muteMixerEffect(BankHandle bank, MixerHandle mixer, Size index, bool mute) {
 			mBankManager.get(bank).mixers[mixer].effects[index].bypassed = mute;
+			return Result::Success;
 		}
 
 		/**

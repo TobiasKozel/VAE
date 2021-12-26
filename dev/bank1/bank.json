@@ -15,21 +15,21 @@
 			"name": "Jump1",
 			"path": "jump_1.wav",
 			"format": "wav",
-			"resample": false
+			"resample": true
 		},
 		{
 			"id": 2,
 			"name": "Jump2",
 			"path": "jump_2.wav",
 			"format": "wav",
-			"resample": false
+			"resample": true
 		},
 		{
 			"id": 3,
 			"name": "Jump3",
 			"path": "jump_3.wav",
 			"format": "wav",
-			"resample": false
+			"resample": true
 		},
 		{
 			"id": 4,
@@ -144,6 +144,7 @@
 			"name": "Jump1",
 			"action": "start",
 			"source": 1,
+			"spatial": false,
 			"mixer": 3
 		},
 		{
@@ -151,6 +152,7 @@
 			"name": "Jump2",
 			"action": "start",
 			"source": 2,
+			"spatial": false,
 			"mixer": 3
 		},
 		{
@@ -158,6 +160,7 @@
 			"name": "Jump3",
 			"action": "start",
 			"source": 3,
+			"spatial": false,
 			"mixer": 3
 		},
 		{
