@@ -8,7 +8,7 @@
 #include "./vae_util.hpp"
 #include "./vae_types.hpp"
 #include "./pod/vae_listener.hpp"
-#include "vae/vae.hpp"
+
 
 namespace vae { namespace core {
 
@@ -181,7 +181,8 @@ namespace vae { namespace core {
 			return Result::Success;
 		}
 
-		void update(VoiceManger& manager, BankManager& banks) {
+		template <class Callback>
+		void update(VoiceManger& manager, Callback callback) {
 			VAE_PROFILER_SCOPE_NAMED("Spatial Update")
 
 			// TODO perf maybe swap loops
@@ -190,19 +191,13 @@ namespace vae { namespace core {
 				for (auto& emitter : mEmitters) {
 					auto& e = emitter.second;
 					// TODO seperate auto emitter somehow
-					if (e.bank == InvalidBankHandle) { continue; }
+					if (e.bank == InvalidBankHandle) { continue; } // means it wants to auto emit
 					if (e.autoplaying) { continue; }
 					// only trigger sounds which haven't been auto triggered
 					const auto distance = glm::distance(l.position, e.position);
 					if (distance < e.maxDist) {
 						mEmitters[emitter.first].autoplaying = true;
-						auto& bank = banks.get(e.bank);
-						// we only trigger the sound for the listener nearby
-						// might not be ideal
-						manager.play(
-							bank.events[e.event], e.bank, 1.0,
-							emitter.first, l.id, InvalidMixerHandle
-						);
+						callback(e.event, e.bank, emitter.first);
 					}
 				}
 				return Result::Success;

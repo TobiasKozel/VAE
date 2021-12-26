@@ -39,13 +39,14 @@ namespace vae {
 
 	using BankHandle 			= SmallHandle;
 	using EventHandle 			= GenericHandle;	///< The handle used to address events within a bank
-	using GlobalEventHandle		= LargeHandle;		///< Used to globally address events, holds space for BankHandle and EventHandle
 	using SourceHandle 			= GenericHandle;
 	using EmitterHandle 		= LargeHandle;
 	using MixerHandle			= SmallHandle;
 	using ListenerHandle		= SmallHandle;
-	using CommandQueueHandle	= SmallHandle;
 
+	using GlobalEventHandle		= LargeHandle;		///< Used to globally address events, holds space for BankHandle and EventHandle
+	using GlobalMixerHandle		= GenericHandle;	///< TODO
+	using GlobalParameterHandle = LargeHandle;		///< TODO
 	/**
 	 * @brief Since 0 is a valid handle, these are used to identify invalid ones.
 	 * Seems a little odd but means they can be used to direcly address array elements.

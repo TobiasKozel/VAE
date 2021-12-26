@@ -191,11 +191,23 @@ namespace vae { namespace core {
 		Engine& operator= (const Engine&) = delete;
 		Engine& operator= (Engine&&) = delete;
 
+		~Engine() {
+			stop();
+			unloadAllBanks();
+			VAE_INFO("Engine destructed")
+		}
+
+		/** @name Engine Controls
+		 * Main engine functionality
+		 */
+		///@{
+
 		/**
-		 * @brief Initialized the engine and does most of the upfront allocations.
+		 * @brief Initializes the engine and does most of the upfront allocations. Run this before start !
 		 * @details Everything will be allocated according to the provided config.
 		 * Loading a Bank will still cause an allocation.
 		 * If there are already banks loaded, they will be reloaded to have the correct samplerate.
+		 * @see start
 		 * @param config Optional config to setup the internals.
 		 * @return Result
 		 */
@@ -215,14 +227,9 @@ namespace vae { namespace core {
 			return Result::Success;
 		}
 
-		~Engine() {
-			stop();
-			unloadAllBanks();
-			VAE_INFO("Engine destructed")
-		}
-
 		/**
-		 * @brief Tries to open default device and start audio thread.
+		 * @brief Tries to open default device and start audio thread. Call this after start.
+		 * @see init
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API start() {
@@ -274,15 +281,22 @@ namespace vae { namespace core {
 		}
 
 		/**
-		 * @brief Update function needs to be called regularly to handle outbound events.
-		 * If this isn't called regularly events might be lost.
+		 * @brief Update function needs to be called regularly to handle outbound events and other housekeeping.
+		 * @details If this isn't called regularly events might be lost and chained events not fired.
+		 * When EngineConfig::updateInAudioThread is true, this doesn't need to be called manually.
+		 * @see EngineConfig::updateInAudioThread
 		 */
 		void _VAE_PUBLIC_API update() {
 			VAE_PROFILER_FRAME_MARK_START(profiler::audioFrame)
 			VAE_PROFILER_SCOPE_NAMED("Engine Update")
 			// Update emitters and start voices nearby
 			mBankManager.lock();
-			mSpatialManager.update(mVoiceManager, mBankManager);
+			mSpatialManager.update(
+				mVoiceManager,
+				[&](EventHandle event, BankHandle bank, EmitterHandle emitter) {
+					fireEvent(bank, event, emitter);
+				}
+			);
 
 			// Handle finished voices and their events
 			mVoiceManager.forEachFinishedVoice([&](Voice& v) {
@@ -302,7 +316,7 @@ namespace vae { namespace core {
 
 		/**
 		 * @brief Main mechanism to start and stop sounds
-		 *
+		 * @see Event
 		 * @param bankHandle bank id where the event is provided
 		 * @param eventHandle id of the event
 		 * @param emitterHandle handle of the emitter, needed for spatial audio or controlling the voice
@@ -340,7 +354,7 @@ namespace vae { namespace core {
 
 			Result result;
 
-			if (event.start) {
+			if (event.action == Event::Action::start) {
 				if (event.source != InvalidSourceHandle) {
 					VAE_DEBUG_EVENT("Event %i:%i starts source %i", eventHandle, bankHandle, event.source)
 					// Has source attached
@@ -358,35 +372,37 @@ namespace vae { namespace core {
 						);
 					}
 				}
-				if (event.random) {
-					for (int index = rand() % event.on_start.size(); 0 <= index; index--) {
-						auto& i = event.on_start[index];
-						if (i == InvalidEventHandle) { continue; }
-						VAE_DEBUG_EVENT("Event %i:%i starts random event %i", eventHandle, bankHandle, i)
-						result = fireEvent(
-							bankHandle, i, emitterHandle, gain,
-							mixerHandle, listenerHandle
-						);
-						break;
-					}
-				} else {
-					// Fire all other chained events
-					for (auto& i : event.on_start) {
-						if (i == InvalidEventHandle) { continue; }
-						VAE_DEBUG_EVENT("Event %i:%i starts chained event %i", eventHandle, bankHandle, i)
-						result = fireEvent(
-							bankHandle, i, emitterHandle, gain,
-							mixerHandle, listenerHandle
-						);
-					}
+
+				// Fire all other chained events
+				for (auto& i : event.on_start) {
+					if (i == InvalidEventHandle) { continue; }
+					VAE_DEBUG_EVENT("Event %i:%i starts chained event %i", eventHandle, bankHandle, i)
+					result = fireEvent(
+						bankHandle, i, emitterHandle, gain,
+						mixerHandle, listenerHandle
+					);
 				}
+
 				if (result != Result::Success) {
 					VAE_DEBUG("Event %i:%i failed to start voices", eventHandle, bankHandle)
 					return result; // ! someting went wrong
 				}
 			}
 
-			if (event.stop) {
+			else if (event.action == Event::Action::random) {
+				for (int index = rand() % event.on_start.size(); 0 <= index; index--) {
+					auto& i = event.on_start[index];
+					if (i == InvalidEventHandle) { continue; }
+					VAE_DEBUG_EVENT("Event %i:%i starts random event %i", eventHandle, bankHandle, i)
+					result = fireEvent(
+						bankHandle, i, emitterHandle, gain,
+						mixerHandle, listenerHandle
+					);
+					break;
+				}
+			}
+
+			else if (event.action == Event::Action::stop) {
 				// TODO test stopping
 				if (event.source != InvalidSourceHandle) {
 					VAE_DEBUG_EVENT("Event %i:%i stops source %i", eventHandle, bankHandle, event.source)
@@ -405,7 +421,7 @@ namespace vae { namespace core {
 				}
 			}
 
-			if (event.emit) {
+			else if (event.action == Event::Action::emit) {
 				VAE_DEBUG_EVENT("Event %i:%i emits event", eventHandle, bankHandle)
 				if (mConfig.eventCallback != nullptr) {
 					EventCallbackData data;
@@ -423,12 +439,11 @@ namespace vae { namespace core {
 
 		/**
 		 * @brief Works like fireEvent but with a global Event identifier
-		 *
+		 * @see fireEvent
 		 * @param globalHandle The GlobalEventHandle combines both bank and event id
 		 * @param emitterHandle optional handle of the emitter, needed for spatial audio
 		 * @param gain optional volume factor
 		 * @param mixerHandle id of mixer channel sound will be routed to, this will override the one set in the event
-		 * @see fireEvent
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API fireGlobalEvent(
@@ -455,12 +470,26 @@ namespace vae { namespace core {
 		}
 
 		/**
-		 * @brief Set the global output volume after the limiter
-		 * @param volume 1.0 is the default
+		 * @brief Set the global output volume before the limiter.
+		 * @details The engine can't clip, but if the output is too load
+		 * the signal will be squashed in the limiter.
+		 * @param volume 1.0 is the default, not interpolated for now
 		 */
 		void _VAE_PUBLIC_API setMasterVolume(Sample volume) {
 			mMasterVolume = volume;
 		}
+
+		/**
+		 * @brief Check if the compiled version matches
+		 */
+		bool _VAE_PUBLIC_API checkVersion(int major, int minor, int patch) {
+			return
+				VAE_VERSION_MAJOR == major &&
+				VAE_VERSION_MINOR == minor &&
+				VAE_VERSION_PATCH == patch;
+		}
+
+		///@}
 
 #pragma region emitter
 
@@ -585,6 +614,53 @@ namespace vae { namespace core {
 		///@}
 #pragma endregion emitter
 
+		/**
+		 * @brief Set the Mixer Volume
+		 *
+		 * @param bank
+		 * @param mixer
+		 * @param volume
+		 * @return Result
+		 */
+		Result setMixerVolume(BankHandle bank, MixerHandle mixer, Sample volume) {
+			mBankManager.get(bank).mixers[mixer].gain = volume;
+			return Result::Success;
+		}
+
+		/**
+		 * @brief Bypass a effect in a mixer
+		 *
+		 * @param bank
+		 * @param mixer
+		 * @param index See setMixerEffectParameter
+		 * @param mute
+		 * @return Result
+		 */
+		Result muteMixerEffect(BankHandle bank, MixerHandle mixer, Size index, bool mute) {
+			mBankManager.get(bank).mixers[mixer].effects[index].bypassed = mute;
+		}
+
+		/**
+		 * @brief Set the Mixer Effect Parameter
+		 *
+		 * @param bank
+		 * @param mixer
+		 * @param index which effects slot out of StaticConfig::MaxMixerEffects
+		 * @param param	which param by index out of StaticConfig::MaxEffectsParameter
+		 * @param value value of the parameter from 0 to 1
+		 * @return Result
+		 */
+		Result setMixerEffectParameter(BankHandle bank, MixerHandle mixer, Size index, Size param, Sample value) {
+			// TODO this is garbage but needs a event queue anyways
+			mBankManager.get(bank).mixers[mixer].effects[index].parameters[param].value = value;
+			return Result::Success;
+		}
+#pragma region mixer
+
+
+
+#pragma endregion emitter
+
 #pragma region listener
 
 		/**
@@ -698,15 +774,6 @@ namespace vae { namespace core {
 		///@}
 #pragma endregion bank_handling
 
-		/**
-		 * @brief Check if the compiled version matches
-		 */
-		bool _VAE_PUBLIC_API checkVersion(int major, int minor, int patch) {
-			return
-				VAE_VERSION_MAJOR == major &&
-				VAE_VERSION_MINOR == minor &&
-				VAE_VERSION_PATCH == patch;
-		}
 
 	}; // Engine class
 	constexpr int _VAE_ENGINE_SIZE = sizeof(Engine);

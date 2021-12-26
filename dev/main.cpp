@@ -44,7 +44,7 @@ void benchmark(vae::core::Engine& engine) {
 		engine.fireGlobalEvent(vaeb::Bank1::JumpRand, emitters[rand() % emitterCount]);
 		if (i % 3 == 0) {
 			auto em = emitters[rand() % emitterCount];
-			engine.fireGlobalEvent(vaeb::Bank1::Ambient, em);
+			engine.fireGlobalEvent(vaeb::Bank1::Ambience1, em);
 		}
 		engine.update();
 	}
@@ -52,15 +52,17 @@ void benchmark(vae::core::Engine& engine) {
 
 void filterTest(vae::core::Engine& engine) {
 	auto emitter = engine.createEmitter();
-	engine.fireGlobalEvent(vaeb::Bank1::Ambient, emitter);
-	engine.fireGlobalEvent(vaeb::Bank1::ShortSineLoop, emitter, 0.3);
+	auto emitter2 = engine.createEmitter();
+	engine.fireGlobalEvent(vaeb::Bank1::Ambience1, emitter2);
+	// engine.fireGlobalEvent(vaeb::Bank1::ShortSineLoop, emitter, 0.3);
 	for (int i = 0; i < 2000; i++) {
 		sleep(30);
 		// engine.setHighpass(emitter, sin(i * 0.1) * 0.5 + 0.5);
 		engine.setSpeed(emitter, sin(i * 0.3) * 0.2 + 1.0);
 		if (i % 100 == 0) {
-			engine.fireGlobalEvent(vaeb::Bank1::JumpRand, emitter);
+			// engine.fireGlobalEvent(vaeb::Bank1::JumpRand, emitter);
 		}
+		engine.setMixerEffectParameter(0, 3, 0, 3, sin(i) * 0.45 + 0.5);
 	}
 }
 

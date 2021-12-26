@@ -14,7 +14,7 @@ namespace vae { namespace core {
 		 */
 		static constexpr MixerHandle MasterMixerHandle = 0;
 		AudioBuffer buffer; // not very POD
-		Sample gain = 1.0;
+		Sample gain;
 		MixerHandle parent;
 		/**
 		 * @brief The handle of the mixer the signal will be routed to.
@@ -23,6 +23,11 @@ namespace vae { namespace core {
 		MixerHandle id = InvalidMixerHandle;
 		StackBuffer<Effect, StaticConfig::MaxMixerEffects> effects;
 		NameString name; // name for debugging
+
+		Mixer() {
+			gain = 1.0;
+			parent = MasterMixerHandle;
+		}
 	};
 
 	constexpr int _VAE_MIXER_SIZE = sizeof(Mixer);

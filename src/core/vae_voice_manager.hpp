@@ -85,6 +85,9 @@ namespace vae { namespace core {
 					stop(i); // stop the voice if callback returns false
 				}
 			}
+			VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+			VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+			VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
 		}
 
 		template <class Func>
@@ -97,6 +100,9 @@ namespace vae { namespace core {
 				mFinishedPending--;
 				v.source = InvalidSourceHandle; // now the finished voice is handled
 			}
+			VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+			VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+			VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
 			VAE_PROFILER_PLOT(profiler::voiceFinishedCount, int64_t(mFinishedPending));
 		}
 
@@ -190,6 +196,7 @@ namespace vae { namespace core {
 
 					v.gain = event.gain * gain;
 					v.loop = event.loop;
+					v.attenuate = event.attenuate;
 					// v.filtered = true; // todo provide way to init the filter settings
 					if (v.filtered) {
 						mVoiceFiltered[i] = { };
@@ -244,6 +251,7 @@ namespace vae { namespace core {
 				VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
 				VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
 				VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
+
 				VAE_DEBUG_VOICES("Virtualized voice from event %i:%i\tactive: %i\tincative: %i",
 					v.event, v.bank, mActiveVoices, mInactiveVoices
 				)

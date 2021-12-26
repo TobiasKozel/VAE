@@ -63,14 +63,15 @@ namespace vae { namespace core {
 					s.id		= id;
 					s.name		= i["name"];
 					s.path		= i["path"];
-					s.gain		= i["gain"];
-					s.resample	= (bool) i["resample"];
-					s.stream	= (bool) i["stream"];
+
+					if (i.contains("gain"))		s.gain		= i["gain"];
+					if (i.contains("resample"))	s.resample	= (bool) i["resample"];
+					if (i.contains("stream"))	s.stream	= (bool) i["stream"];
 
 					PathString format = i["format"];
-					if (format == "wav")		{ s.format = Source::Format::wav; }
-					if (format == "ogg")		{ s.format = Source::Format::ogg; }
-					if (format == "generator")	{ s.format = Source::Format::generator; }
+					if (format == "wav")		s.format = Source::Format::wav;
+					if (format == "ogg")		s.format = Source::Format::ogg;
+					if (format == "generator")	s.format = Source::Format::generator;
 
 					auto result = mSourceLoader.load(s, folder);
 					if (result != Result::Success) {
@@ -101,7 +102,12 @@ namespace vae { namespace core {
 						VAE_ERROR("Duplicate Mixer id %i in bank %i", m.id, bank.id)
 						return Result::BankFormatDuplicateIndex;
 					}
-					m.parent = i["parent"];
+
+					m.name	= i["name"];
+					m.id 	= id;
+
+					if (i.contains("parent"))	m.parent = i["parent"];
+					if (i.contains("gain"))		m.gain = i["gain"];
 
 					if (m.id != Mixer::MasterMixerHandle && m.id <= m.parent) {
 						// Mixer can only write to mixers with lower ids than themselves
@@ -110,14 +116,14 @@ namespace vae { namespace core {
 						return Result::BankFormatBadMixHirarchy;
 					}
 
-					m.id 			= id;
-					m.name			= i["name"];
-					m.gain			= i["gain"];
-					auto effects	= i["effects"];
+					if (!i.contains("effects")) { continue; }
+
+					auto effects = i["effects"];
 
 					for (auto& i : effects) {
 						int index = i["index"];
 						auto& e	= m.effects[index];
+						e.bypassed = i["bypassed"];
 
 						{
 							std::string name = i["name"];
@@ -156,43 +162,48 @@ namespace vae { namespace core {
 
 					e.id	= id;
 					e.name	= i["name"];
-					e.gain	= i["gain"];
 
-					PathString type = i["type"];
-					e.random 		= type == "start_rand";
-					e.start			= type == "start" || e.random;
-					e.stop			= type == "stop";
-					e.emit			= type == "emit";
-					e.force_mixer	= (bool) i["force_mixer"];
-					e.HRTF 			= (bool) i["hrtf"];
-					e.spatial 		= (bool) i["spatial"];
-					e.loop			= (bool) i["loop"];
+					PathString action = i["action"];
+					if (action == "start_rand")		e.action		= Event::Action::random;
+					if (action == "emit")			e.action		= Event::Action::emit;
+					if (action == "stop")			e.action		= Event::Action::stop;
+					if (action == "start")			e.action		= Event::Action::start;
 
-					if (i["source"].is_null()) {
-						e.source = InvalidSourceHandle;
-					} else {
-						e.source = i["source"];
+					if (i.contains("force_mixer"))	e.force_mixer	= (bool) i["force_mixer"];
+					if (i.contains("spatial"))		e.spatial		= (bool) i["spatial"];
+					if (i.contains("critical"))		e.critical		= (bool) i["critical"];
+					if (i.contains("loop"))			e.loop			= (bool) i["loop"];
+					if (i.contains("HRTF"))			e.HRTF			= (bool) i["hrtf"];
+					if (i.contains("attenuate"))	e.attenuate		= (bool) i["attenuate"];
+					if (i.contains("mixer"))		e.mixer			= i["mixer"];
+					if (i.contains("gain"))			e.gain			= i["gain"];
+
+					if (i.contains("source") && !i["source"].is_null()) {
+						e.source = i["source"]; // source an also be null
 					}
 
-					auto onStart = i["on_start"];
-					if (StaticConfig::MaxChainedEvents < onStart.size()) {
-						VAE_ERROR("Event %i:%i has too many chained on_start events.", id, bank.id)
-						return Result::TooManyRecords;
-					}
-					for (size_t j = 0; j < onStart.size(); j++) {
-						e.on_start[j] = onStart[j];
-					}
-
-					auto onEnd = i["on_end"];
-					if (StaticConfig::MaxChainedEvents < onEnd.size()) {
-						VAE_ERROR("Event %i:%i has too many chained on_end events.", id, bank.id)
-						return Result::TooManyRecords;
-					}
-					for (size_t j = 0; j < onEnd.size(); j++) {
-						e.on_end[j] = onEnd[j];
+					if (i.contains("on_start")) {
+						auto onStart = i["on_start"];
+						if (StaticConfig::MaxChainedEvents < onStart.size()) {
+							VAE_ERROR("Event %i:%i has too many chained on_start events.", id, bank.id)
+							return Result::TooManyRecords;
+						}
+						for (size_t j = 0; j < onStart.size(); j++) {
+							e.on_start[j] = onStart[j];
+						}
 					}
 
-					e.mixer = i["mixer"];
+					if (i.contains("on_end")) {
+						auto onEnd = i["on_end"];
+						if (StaticConfig::MaxChainedEvents < onEnd.size()) {
+							VAE_ERROR("Event %i:%i has too many chained on_end events.", id, bank.id)
+							return Result::TooManyRecords;
+						}
+						for (size_t j = 0; j < onEnd.size(); j++) {
+							e.on_end[j] = onEnd[j];
+						}
+					}
+
 				}
 			}
 			return Result::Success;

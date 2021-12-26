@@ -35,10 +35,11 @@ public:
 	void _VAE_API_EXPORT destroy();
 
 	/**
-	 * @brief Initialized the engine and does most of the upfront allocations.
+	 * @brief Initializes the engine and does most of the upfront allocations. Run this before start !
 	 * @details Everything will be allocated according to the provided config.
 	 * Loading a Bank will still cause an allocation.
 	 * If there are already banks loaded, they will be reloaded to have the correct samplerate.
+	 * @see start
 	 * @param config Optional config to setup the internals.
 	 * @return Result
 	 */
@@ -47,7 +48,8 @@ public:
 	);
 
 	/**
-	 * @brief Tries to open default device and start audio thread.
+	 * @brief Tries to open default device and start audio thread. Call this after start.
+	 * @see init
 	 * @return Result
 	 */
 	Result _VAE_API_EXPORT start ();
@@ -59,14 +61,16 @@ public:
 	Result _VAE_API_EXPORT stop ();
 
 	/**
-	 * @brief Update function needs to be called regularly to handle outbound events.
-	 * If this isn't called regularly events might be lost.
+	 * @brief Update function needs to be called regularly to handle outbound events and other housekeeping.
+	 * @details If this isn't called regularly events might be lost and chained events not fired.
+	 * When EngineConfig::updateInAudioThread is true, this doesn't need to be called manually.
+	 * @see EngineConfig::updateInAudioThread
 	 */
 	void _VAE_API_EXPORT update ();
 
 	/**
 	 * @brief Main mechanism to start and stop sounds
-	 *
+	 * @see Event
 	 * @param bankHandle bank id where the event is provided
 	 * @param eventHandle id of the event
 	 * @param emitterHandle handle of the emitter, needed for spatial audio or controlling the voice
@@ -86,12 +90,11 @@ public:
 
 	/**
 	 * @brief Works like fireEvent but with a global Event identifier
-	 *
+	 * @see fireEvent
 	 * @param globalHandle The GlobalEventHandle combines both bank and event id
 	 * @param emitterHandle optional handle of the emitter, needed for spatial audio
 	 * @param gain optional volume factor
 	 * @param mixerHandle id of mixer channel sound will be routed to, this will override the one set in the event
-	 * @see fireEvent
 	 * @return Result
 	 */
 	Result _VAE_API_EXPORT fireGlobalEvent (
@@ -103,26 +106,93 @@ public:
 	);
 
 	/**
-	 * @brief Stop all voices from emitter.
-	 *
-	 * @param emitter
-	 * @return Result
-	 */
-	Result _VAE_API_EXPORT stopEmitter (
-		EmitterHandle emitter
-	);
-
-	/**
 	 * @brief Get the number of currently playing Voices
 	 */
 	int _VAE_API_EXPORT getActiveVoiceCount ();
 
 	/**
-	 * @brief Set the global output volume after the limiter
-	 * @param volume 1.0 is the default
+	 * @brief Set the global output volume before the limiter.
+	 * @details The engine can't clip, but if the output is too load
+	 * the signal will be squashed in the limiter.
+	 * @param volume 1.0 is the default, not interpolated for now
 	 */
 	void _VAE_API_EXPORT setMasterVolume (
 		Sample volume
+	);
+
+	/**
+	 * @brief Check if the compiled version matches
+	 */
+	bool _VAE_API_EXPORT checkVersion (
+		int major,
+		int minor,
+		int patch
+	);
+
+	/**
+	 * @brief Creates an emitter and returns the handle
+	 * @return EmitterHandle Random handle
+	 */
+	EmitterHandle _VAE_API_EXPORT createEmitter ();
+
+	/**
+	 * @brief Emitter which triggers an event once a listener is close enough
+	 *
+	 * @param bank
+	 * @param event
+	 * @param maxDist
+	 * @param locDir
+	 * @param spread
+	 * @return EmitterHandle Handle like a normal emitter
+	 */
+	EmitterHandle _VAE_API_EXPORT createAutoEmitter (
+		BankHandle bank,
+		EventHandle event,
+		float maxDist,
+		const LocationDirection& locDir,
+		float spread
+	);
+
+	/**
+	 * @brief Adds an emitter with a custom handle, can be an internal ID for example
+	 * @details migt be desireable to make EmitterHandle the same size as a pointer
+	 * so this can simply be the pointer of the entity that is associated with it.
+	 * @param h
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT addEmitter (
+		EmitterHandle h
+	);
+
+	/**
+	 * @brief Unregister a emiter an kill all its voices
+	 * @param h
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT removeEmitter (
+		EmitterHandle h
+	);
+
+	/**
+	 * @brief Set the Emitter position, orientation and spread
+	 * @param emitter The emitter
+	 * @param locDir The desired location
+	 * @param spread The width of the panning (if it's spatial and not HRTF)
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT setEmitter (
+		EmitterHandle emitter,
+		const LocationDirection& locDir,
+		float spread
+	);
+
+	/**
+	 * @brief Stop all voices from emitter.
+	 * @param emitter
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT stopEmitter (
+		EmitterHandle emitter
 	);
 
 	/**
@@ -157,7 +227,6 @@ public:
 
 	/**
 	 * @brief Simple lowpass filter for the voices
-	 *
 	 * @param emitter
 	 * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum
 	 */
@@ -168,7 +237,6 @@ public:
 
 	/**
 	 * @brief Simple highpass filter for the voices
-	 *
 	 * @param emitter
 	 * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum
 	 */
@@ -177,32 +245,17 @@ public:
 		float cutoff
 	);
 
-	EmitterHandle _VAE_API_EXPORT createEmitter ();
-
-	EmitterHandle _VAE_API_EXPORT createAutoEmitter (
-		BankHandle bank,
-		EventHandle event,
-		float maxDist,
-		const LocationDirection& locDir,
-		float spread
-	);
-
-	Result _VAE_API_EXPORT addEmitter (
-		EmitterHandle h
-	);
-
-	Result _VAE_API_EXPORT removeEmitter (
-		EmitterHandle h
-	);
-
-	Result _VAE_API_EXPORT setEmitter (
-		EmitterHandle emitter,
-		const LocationDirection& locDir,
-		float spread
-	);
-
+	/**
+	 * @brief Create a Listener object
+	 * @details TODO make listener 0 implicit
+	 * @return ListenerHandle
+	 */
 	ListenerHandle _VAE_API_EXPORT createListener ();
 
+	/**
+	 * @brief Unregister listener
+	 * @param listener
+	 */
 	Result _VAE_API_EXPORT removeListener (
 		ListenerHandle listener
 	);
@@ -246,15 +299,6 @@ public:
 	 * @brief Unload every bank and data associated with it
 	 */
 	void _VAE_API_EXPORT unloadAllBanks ();
-
-	/**
-	 * @brief Check if the compiled version matches
-	 */
-	bool _VAE_API_EXPORT checkVersion (
-		int major,
-		int minor,
-		int patch
-	);
 
 }; // class EnginePimpl
 

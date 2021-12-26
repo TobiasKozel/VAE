@@ -7,201 +7,171 @@
 			"name": "Sine",
 			"path": "sine.wav",
 			"format": "wav",
-			"stream": false,
 			"resample": true,
-			"gain": 1.0
+			"gain": 0.6
 		},
 		{
 			"id": 1,
 			"name": "Jump1",
 			"path": "jump_1.wav",
 			"format": "wav",
-			"stream": false,
-			"resample": false,
-			"gain": 1.0
+			"resample": false
 		},
 		{
 			"id": 2,
 			"name": "Jump2",
 			"path": "jump_2.wav",
 			"format": "wav",
-			"stream": false,
-			"resample": false,
-			"gain": 1.0
+			"resample": false
 		},
 		{
 			"id": 3,
 			"name": "Jump3",
 			"path": "jump_3.wav",
 			"format": "wav",
-			"stream": false,
-			"resample": false,
-			"gain": 1.0
+			"resample": false
 		},
 		{
 			"id": 4,
 			"name": "WalkConrete1",
 			"path": "concrete_1.wav",
 			"format": "wav",
-			"stream": false,
-			"resample": true,
-			"gain": 1.0
+			"resample": true
 		},
 		{
 			"id": 5,
 			"name": "WalkConrete2",
 			"path": "concrete_2.wav",
 			"format": "wav",
-			"stream": false,
-			"resample": true,
-			"gain": 1.0
+			"resample": true
 		},
 		{
 			"id": 6,
 			"name": "WalkConrete3",
 			"path": "concrete_3.wav",
 			"format": "wav",
-			"stream": false,
-			"resample": true,
-			"gain": 1.0
+			"resample": true
 		},
 		{
 			"id": 7,
-			"name": "Ambience",
-			"path": "ambience.ogg",
+			"name": "Music",
+			"path": "music.ogg",
 			"format": "ogg",
-			"stream": false,
-			"resample": false,
-			"gain": 0.6
+			"resample": false
 		},
 		{
 			"id": 8,
 			"name": "ShortSine",
 			"path": "short1000hz.wav",
 			"format": "wav",
-			"stream": false,
-			"resample": false,
-			"gain": 1.0
+			"resample": false
+		},
+		{
+			"id": 9,
+			"name": "Ambience1",
+			"path": "ambience1.ogg",
+			"format": "ogg",
+			"resample": false
+		},
+		{
+			"id": 10,
+			"name": "Ambience2",
+			"path": "ambience2.ogg",
+			"format": "ogg",
+			"resample": false
+		},
+		{
+			"id": 11,
+			"name": "Ambience3",
+			"path": "ambience3.ogg",
+			"format": "ogg",
+			"resample": false
+		},
+		{
+			"id": 12,
+			"name": "Ambience4",
+			"path": "ambience4.ogg",
+			"format": "ogg",
+			"resample": false
+		},
+		{
+			"id": 13,
+			"name": "Denied",
+			"path": "denied.wav",
+			"format": "wav"
 		}
 	],
 	"mixers": [
 		{
-			"id": 0,
-			"name": "Bank Master",
-			"gain": 1.0,
-			"effects": [],
-			"parent": 0
+			"id": 0, "name": "Bank Master"
 		},
 		{
-			"id": 1,
-			"name": "SFX",
-			"gain": 1.0,
-			"effects": [],
-			"parent": 0
+			"id": 1, "name": "SFX"
 		},
 		{
-			"id": 2,
-			"name": "Music",
-			"gain": 1.0,
+			"id": 2, "name": "Music", "gain": 0.7
+		},
+		{
+			"id": 3, "name": "Character",
 			"effects": [
 				{
 					"index": 0,
+					"bypassed": false,
 					"name": "VAEReverb",
 					"parameters": [
-						["Mix", 0.5]
+						["fb1", 0.4],
+						["fb2", 0.2],
+						["mix", 0.3],
+						["pre", 0.1]
 					]
 				}
 			],
-			"parent": 0
+			"parent": 1
 		},
 		{
-			"id": 3,
-			"name": "Character",
-			"gain": 1.0,
-			"effects": [],
-			"parent": 1
+			"id": 4, "name": "Steps", "gain": 0.3, "parent": 3
 		}
 	],
-	"rtcps": [],
 	"events": [
 		{
 			"id": 0,
 			"name": "JumpRand",
-			"type": "start_rand",
-			"source": null,
-			"on_start": [1, 2, 3],
-			"on_end": [],
-			"mixer": 1,
-			"gain": 1.0,
-			"hrtf": false,
-			"loop": false,
-			"spatial": true,
-			"force_mixer": true
+			"action": "start_rand",
+			"on_start": [1, 2, 3]
 		},
 		{
 			"id": 1,
 			"name": "Jump1",
-			"type": "start",
+			"action": "start",
 			"source": 1,
-			"on_start": [],
-			"on_end": [],
-			"gain": 1.0,
-			"mixer": 3,
-			"hrtf": true,
-			"loop": false,
-			"spatial": true,
-			"force_mixer": true
+			"mixer": 3
 		},
 		{
 			"id": 2,
 			"name": "Jump2",
-			"type": "start",
+			"action": "start",
 			"source": 2,
-			"on_start": [],
-			"on_end": [],
-			"mixer": 3,
-			"gain": 1.0,
-			"hrtf": false,
-			"loop": false,
-			"spatial": true,
-			"force_mixer": true
+			"mixer": 3
 		},
 		{
 			"id": 3,
 			"name": "Jump3",
-			"type": "start",
+			"action": "start",
 			"source": 3,
-			"on_start": [],
-			"on_end": [],
-			"mixer": 3,
-			"gain": 1.0,
-			"hrtf": true,
-			"loop": false,
-			"spatial": true,
-			"force_mixer": true
+			"mixer": 3
 		},
 		{
 			"id": 4,
-			"name": "Ambient",
-			"type": "start",
-			"source": 7,
-			"on_start": [],
-			"on_end": [],
-			"gain": 1.0,
-			"mixer": 0,
-			"hrtf": false,
-			"loop": true,
-			"spatial": false,
-			"force_mixer": true
+			"name": "Denied",
+			"action": "start",
+			"source": 13,
+			"gain": 0.7
 		},
 		{
 			"id": 5,
 			"name": "ShortSineLoop",
-			"type": "start",
+			"action": "start",
 			"source": 8,
-			"on_start": [],
-			"on_end": [],
-			"gain": 1.0,
 			"mixer": 2,
 			"hrtf": false,
 			"loop": true,
@@ -211,16 +181,106 @@
 		{
 			"id": 6,
 			"name": "LongSineSelfTirgger",
-			"type": "start",
+			"action": "start",
 			"source": 0,
-			"on_start": [],
 			"on_end": [6],
 			"gain": 1.0,
 			"mixer": 0,
 			"hrtf": false,
-			"loop": false,
 			"spatial": false,
 			"force_mixer": true
+		},
+		{
+			"id": 7,
+			"name": "StepRand",
+			"action": "start_rand",
+			"on_start": [8, 9, 10]
+		},
+		{
+			"id": 8,
+			"name": "Step1",
+			"action": "start",
+			"source": 4,
+			"mixer": 4
+		},
+		{
+			"id": 9,
+			"name": "Step2",
+			"action": "start",
+			"source": 5,
+			"mixer": 4
+		},
+		{
+			"id": 10,
+			"name": "Step3",
+			"action": "start",
+			"source": 6,
+			"mixer": 4
+		},
+		{
+			"id": 11,
+			"name": "Ambience1",
+			"action": "start",
+			"source": 9,
+			"mixer": 1,
+			"gain": 0.2,
+			"loop": true,
+			"spatial": true,
+			"critical": true,
+			"attenuate": false
+		},
+		{
+			"id": 12,
+			"name": "Ambience2",
+			"action": "start",
+			"source": 10,
+			"mixer": 1,
+			"gain": 0.2,
+			"loop": true,
+			"spatial": true,
+			"critical": true,
+			"attenuate": false
+		},
+		{
+			"id": 13,
+			"name": "Ambience3",
+			"action": "start",
+			"source": 11,
+			"mixer": 1,
+			"loop": true,
+			"gain": 0.2,
+			"spatial": true,
+			"critical": true,
+			"attenuate": false
+		},
+		{
+			"id": 14,
+			"name": "Ambience4",
+			"action": "start",
+			"source": 12,
+			"mixer": 1,
+			"gain": 0.2,
+			"loop": true,
+			"spatial": true,
+			"critical": true,
+			"attenuate": false
+		},
+		{
+			"id": 15,
+			"name": "Music",
+			"action": "start",
+			"source": 7,
+			"mixer": 2,
+			"loop": true,
+			"spatial": false,
+			"critical": true
+		}
+		,
+		{
+			"id": 16,
+			"name": "Music",
+			"action": "stop",
+			"on_start": [15]
 		}
 	]
 }

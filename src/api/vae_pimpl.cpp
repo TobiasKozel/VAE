@@ -72,15 +72,6 @@ Result EnginePimpl::fireGlobalEvent (
 	);
 }
 
-Result EnginePimpl::stopEmitter (
-	EmitterHandle emitter
-) {
-	auto& e = *reinterpret_cast<core::Engine*>(this);
-	return e.stopEmitter(
-		emitter
-	);
-}
-
 int EnginePimpl::getActiveVoiceCount () {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.getActiveVoiceCount();
@@ -92,6 +83,81 @@ void EnginePimpl::setMasterVolume (
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.setMasterVolume(
 		volume
+	);
+}
+
+bool EnginePimpl::checkVersion (
+	int major,
+	int minor,
+	int patch
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.checkVersion(
+		major,
+		minor,
+		patch
+	);
+}
+
+EmitterHandle EnginePimpl::createEmitter () {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.createEmitter();
+}
+
+EmitterHandle EnginePimpl::createAutoEmitter (
+	BankHandle bank,
+	EventHandle event,
+	float maxDist,
+	const LocationDirection& locDir,
+	float spread
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.createAutoEmitter(
+		bank,
+		event,
+		maxDist,
+		locDir,
+		spread
+	);
+}
+
+Result EnginePimpl::addEmitter (
+	EmitterHandle h
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.addEmitter(
+		h
+	);
+}
+
+Result EnginePimpl::removeEmitter (
+	EmitterHandle h
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.removeEmitter(
+		h
+	);
+}
+
+Result EnginePimpl::setEmitter (
+	EmitterHandle emitter,
+	const LocationDirection& locDir,
+	float spread
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.setEmitter(
+		emitter,
+		locDir,
+		spread
+	);
+}
+
+Result EnginePimpl::stopEmitter (
+	EmitterHandle emitter
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.stopEmitter(
+		emitter
 	);
 }
 
@@ -150,59 +216,6 @@ void EnginePimpl::setHighpass (
 	);
 }
 
-EmitterHandle EnginePimpl::createEmitter () {
-	auto& e = *reinterpret_cast<core::Engine*>(this);
-	return e.createEmitter();
-}
-
-EmitterHandle EnginePimpl::createAutoEmitter (
-	BankHandle bank,
-	EventHandle event,
-	float maxDist,
-	const LocationDirection& locDir,
-	float spread
-) {
-	auto& e = *reinterpret_cast<core::Engine*>(this);
-	return e.createAutoEmitter(
-		bank,
-		event,
-		maxDist,
-		locDir,
-		spread
-	);
-}
-
-Result EnginePimpl::addEmitter (
-	EmitterHandle h
-) {
-	auto& e = *reinterpret_cast<core::Engine*>(this);
-	return e.addEmitter(
-		h
-	);
-}
-
-Result EnginePimpl::removeEmitter (
-	EmitterHandle h
-) {
-	auto& e = *reinterpret_cast<core::Engine*>(this);
-	return e.removeEmitter(
-		h
-	);
-}
-
-Result EnginePimpl::setEmitter (
-	EmitterHandle emitter,
-	const LocationDirection& locDir,
-	float spread
-) {
-	auto& e = *reinterpret_cast<core::Engine*>(this);
-	return e.setEmitter(
-		emitter,
-		locDir,
-		spread
-	);
-}
-
 ListenerHandle EnginePimpl::createListener () {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.createListener();
@@ -258,19 +271,6 @@ Result EnginePimpl::unloadBankFromId (
 void EnginePimpl::unloadAllBanks () {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.unloadAllBanks();
-}
-
-bool EnginePimpl::checkVersion (
-	int major,
-	int minor,
-	int patch
-) {
-	auto& e = *reinterpret_cast<core::Engine*>(this);
-	return e.checkVersion(
-		major,
-		minor,
-		patch
-	);
 }
 
 

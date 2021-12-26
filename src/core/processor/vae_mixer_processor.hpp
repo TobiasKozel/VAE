@@ -6,7 +6,6 @@
 #include "../pod/vae_mixer.hpp"
 #include "../vae_voice_manager.hpp"
 #include "./vae_effects_processor.hpp"
-#include "vae/vae.hpp"
 
 namespace vae { namespace core {
 

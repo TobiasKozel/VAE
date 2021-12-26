@@ -91,11 +91,15 @@ namespace vae { namespace core {
 
 					const Sample distance = std::max(glm::length(relativeDirection), 0.1f);
 					relativeDirection /= distance;
-					distanceAttenuated = distance;
 
-					distanceAttenuated = std::max(distanceAttenuated, Sample(1));
-					distanceAttenuated = std::min(distanceAttenuated, Sample(1000000));
-					distanceAttenuated = Sample(std::pow(distanceAttenuated / Sample(1.0), -Sample(1)));
+					if (v.attenuate) {
+						distanceAttenuated = distance;
+						distanceAttenuated = std::max(distanceAttenuated, Sample(1));
+						distanceAttenuated = std::min(distanceAttenuated, Sample(1000000));
+						distanceAttenuated = Sample(std::pow(distanceAttenuated / Sample(1.0), -Sample(1)));
+					} else {
+						distanceAttenuated = 1.0;
+					}
 					distanceAttenuated *= gain;
 				}
 
