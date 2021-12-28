@@ -34,6 +34,6 @@ namespace vae { namespace core { namespace effect {
 	};
 } } } // vae::core::faust
 
-// #include "./generated/reverb_gen.hpp"
+#include "./generated/reverb_gen.hpp"
 
 #endif // _VAE_EFFECTS_LIST

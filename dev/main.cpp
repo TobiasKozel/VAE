@@ -90,6 +90,7 @@ int main() {
 
 	core::Engine engine;
 	engine.init(config);
+	engine.setMasterVolume(4);
 
 	auto listener = engine.createListener();
 	engine.setListener(listener, {});

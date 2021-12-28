@@ -27,6 +27,7 @@ namespace vae { namespace core {
 			resample = true;
 			gain = 1.0;
 			id = InvalidSourceHandle;
+			raw = false;
 		}
 	};
 
