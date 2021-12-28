@@ -701,9 +701,9 @@ namespace vae { namespace core {
 			return mSpatialManager.setListener(listener, locOr);
 		}
 
-		Result _VAE_PUBLIC_API loadHRTF(const char* path) {
+		Result _VAE_PUBLIC_API loadHRTF(const char* path, Size size = 0) {
 			return mSpatialProcessor.loadHRTF(
-				path, mConfig.rootPath,
+				path, size, mConfig.rootPath,
 				mConfig.internalSampleRate
 			);
 		}

@@ -271,7 +271,8 @@ public:
 	);
 
 	Result _VAE_API_EXPORT loadHRTF (
-		const char* path
+		const char* path,
+		Size size = 0
 	);
 
 	/**
@@ -282,7 +283,8 @@ public:
 	 * @return Result
 	 */
 	Result _VAE_API_EXPORT loadBank (
-		const char* path
+		const char* path,
+		Size size = 0
 	);
 
 	/**

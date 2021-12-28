@@ -242,20 +242,24 @@ Result EnginePimpl::setListener (
 }
 
 Result EnginePimpl::loadHRTF (
-	const char* path
+	const char* path,
+	Size size
 ) {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.loadHRTF(
-		path
+		path,
+		size
 	);
 }
 
 Result EnginePimpl::loadBank (
-	const char* path
+	const char* path,
+	Size size
 ) {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.loadBank(
-		path
+		path,
+		size
 	);
 }
 

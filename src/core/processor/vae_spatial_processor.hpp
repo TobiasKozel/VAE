@@ -276,8 +276,8 @@ namespace vae { namespace core {
 			return actuallyRendered;
 		}
 
-		Result loadHRTF(const char* path, const char* rootPath, Size sampleRate) {
-			Result result = mHRTFLoader.load(path, rootPath, sampleRate, mHRTF);
+		Result loadHRTF(const char* path, Size length, const char* rootPath, Size sampleRate) {
+			Result result = mHRTFLoader.load(path, length, rootPath, sampleRate, mHRTF);
 			if (result != Result::Success) { return result; }
 			for (auto& i : mVoiceHRTFs) {
 				i.convolutionBuffer.resize(mHRTF.irLength);

@@ -28,6 +28,18 @@ void sleep(double ms) {
 	std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(ms));
 }
 
+
+// Play one unfiltered voice
+void benchmarkBasicVoice(vae::core::Engine& engine) {
+	auto emitter = engine.createEmitter();
+	for (int i = 0; i < 2000; i++) {
+		sleep(1);
+		engine.fireGlobalEvent(vaeb::Bank1::JumpRand, emitter);
+		engine.update();
+	}
+}
+
+// play a bunch of long, short and spatialized sounds
 void benchmark(vae::core::Engine& engine) {
 	const int emitterCount = 10000;
 	EmitterHandle emitters[emitterCount];
@@ -81,13 +93,14 @@ int main() {
 
 	auto listener = engine.createListener();
 	engine.setListener(listener, {});
-	// auto hrtf = engine.loadHRTF("hrtf.json");
+	auto hrtf = engine.loadHRTF("hrtf.json");
 	engine.start();
 	auto result = engine.loadBank("bank1");
 
 	if (result == Result::Success) {
+		benchmarkBasicVoice(engine);
 		// benchmark(engine);
-		filterTest(engine);
+		// filterTest(engine);
 	};
 	engine.unloadBankFromId(0);
 

@@ -46,7 +46,6 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result load(const char* path, Size length, const char* rootPath, Bank& bank) {
-			VAE_PROFILER_SCOPE()
 			/**
 			 *					Open file and decode json
 			 */
@@ -56,6 +55,8 @@ namespace vae { namespace core {
 			String jsonText;
 			if (length == 0) { // length 0 indicates the file is on disk
 			#ifndef VAE_NO_STDIO
+				VAE_DEBUG("Started loading bank %s", path)
+				VAE_PROFILER_SCOPE_NAMED("BankFile IO")
 				folder = rootPath;
 				folder.append(path);
 				folder.append("/");
@@ -80,6 +81,9 @@ namespace vae { namespace core {
 				return Result::FileOpenError;
 			#endif
 			}
+
+			VAE_PROFILER_SCOPE()
+
 
 			json_settings settings = { };
 			settings.mem_alloc = allocate;
