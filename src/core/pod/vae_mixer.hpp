@@ -5,8 +5,6 @@
 #include "./vae_effect.hpp"
 #include "../vae_config.hpp"
 
-#include <array>
-
 namespace vae { namespace core {
 	struct Mixer {
 		/**
@@ -21,7 +19,7 @@ namespace vae { namespace core {
 		 * 0 is always the bank master and the default.
 		 */
 		MixerHandle id = InvalidMixerHandle;
-		StackBuffer<Effect, StaticConfig::MaxMixerEffects> effects;
+		Effect effects[StaticConfig::MaxMixerEffects];
 		NameString name; // name for debugging
 
 		Mixer() {

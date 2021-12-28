@@ -36,26 +36,16 @@ echo "Updating httplib"
 rm ./httplib.h
 curl -LO https://raw.githubusercontent.com/yhirose/cpp-httplib/master/httplib.h
 
-echo "Updating assetsys"
-rm ./assetsys.h
-rm ./strpool.h
-curl -LO https://raw.githubusercontent.com/mattiasgustavsson/libs/main/strpool.h
-curl -LO https://raw.githubusercontent.com/mattiasgustavsson/libs/main/assetsys.h
 
 echo "Updating json"
-rm ./json.hpp
-curl -LO https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp
+rm ./json.c
+rm ./json.h
+curl -LO https://raw.githubusercontent.com/json-parser/json-parser/master/json.c
+curl -LO https://raw.githubusercontent.com/json-parser/json-parser/master/json.h
 
 echo "Updating hash map"
 rm ./robin_hood.h
 curl -LO https://raw.githubusercontent.com/martinus/robin-hood-hashing/master/src/include/robin_hood.h
-
-rm ./robin_growth_policy.h
-rm ./robin_hash.h
-rm ./robin_map.h
-curl -LO https://raw.githubusercontent.com/Tessil/robin-map/master/include/tsl/robin_hash.h
-curl -LO https://raw.githubusercontent.com/Tessil/robin-map/master/include/tsl/robin_map.h
-curl -LO https://raw.githubusercontent.com/Tessil/robin-map/master/include/tsl/robin_growth_policy.h
 
 cd ..
 

@@ -31,6 +31,14 @@ file(GLOB SRC_CORE "src/core/*.hpp")
 file(GLOB SRC_WRAPPED "src/wrapped/*.cpp")
 file(GLOB SRC_DEVICE "src/core/device/*.hpp")
 
+set(VAE_DEPS tklb)	# Things to link against
+set(VAE_DEFINES)	# Preprocessor info about stuff being built
+
+
+if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+	list(APPEND VAE_DEFINES "VAE_RELEASE")
+endif()
+
 function(VAE_ADD_SHARED)
 	message("VAE: shared build")
 	add_library(vae
@@ -40,11 +48,7 @@ function(VAE_ADD_SHARED)
 			${SRC_DEVICE}
 			${PIMPL_API}
 	)
-	target_compile_definitions(
-		vae
-		PUBLIC
-			VAE_DLL_EXPORT
-	)
+	list(APPEND VAE_DEFINES "VAE_DLL_EXPORT")
 endfunction()
 
 function(VAE_ADD_STATIC)
@@ -76,6 +80,8 @@ else()
 	endif()
 endif()
 
+source_group("core" FILES ${SRC_CORE})
+
 # TODO there are a lot of warnings to take care of
 # if (MSVC)
 # 	# warning level 4 and all warnings as errors
@@ -86,7 +92,6 @@ endif()
 # endif()
 
 
-source_group("core" FILES ${SRC_CORE})
 
 #Add an alias so that library can be used inside the build tree, e.g. when testing
 # add_library(VAE::vae ALIAS vae)
@@ -95,22 +100,23 @@ source_group("core" FILES ${SRC_CORE})
 
 find_package(tklb REQUIRED)
 
-set(VAE_DEPS tklb)
 
-# set(THREADS_PREFER_PTHREAD_FLAG ON)
-# find_package(Threads REQUIRED)
-# list(APPEND VAE_DEPS Threads::Threads)
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+list(APPEND VAE_DEPS Threads::Threads)
 
 if(VAE_BACKEND_RTAUDIO)
 	find_package(RtAudio REQUIRED)
+
+	list(APPEND VAE_DEFINES "_VAE_HAS_RT_AUDIO")
 	list(APPEND VAE_DEPS rtaudio) # lower case smh
 endif()
 if(VAE_BACKEND_PORTAUDIO)
+	list(APPEND VAE_DEFINES "_VAE_HAS_PORT_AUDIO")
 	find_package(PortAudio REQUIRED)
 	list(APPEND VAE_DEPS PortAudio)
 endif()
-
-message(${CMAKE_CURRENT_LIST_DIR}/external/rtaudio/)
 
 # Goal is to have no public dependencies
 target_include_directories(vae
@@ -124,11 +130,7 @@ target_include_directories(vae
 # optional profiler
 if(VAE_PROFILER)
 	list(APPEND VAE_DEPS ${CMAKE_DL_LIBS})
-	target_compile_definitions(
-		vae
-		PUBLIC
-			VAE_USE_PROFILER
-	)
+	list(APPEND VAE_DEFINES "VAE_USE_PROFILER")
 	message("VAE: Build with profiler")
 endif()
 
@@ -139,6 +141,11 @@ endif()
 # 	endif()
 # endif()
 
+target_compile_definitions(
+	vae
+	PUBLIC
+		${VAE_DEFINES}
+)
 target_link_libraries(vae PRIVATE ${VAE_DEPS})
 
 

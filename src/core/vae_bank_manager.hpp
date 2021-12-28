@@ -32,7 +32,7 @@ namespace vae { namespace core {
 		}
 	public:
 		/**
-		 * @brief Will reload all the banks
+		 * @brief Will unload all the banks
 		 *
 		 * @param rootPath
 		 * @param sampleRate
@@ -41,22 +41,18 @@ namespace vae { namespace core {
 			VAE_PROFILER_SCOPE_NAMED("Bankmanager Init")
 			for (auto& i : mBanks) {
 				if (i.id != InvalidBankHandle) { continue; }
-				PathString path = i.path;
 				unloadFromId(i.id);
-				load(path.c_str(), rootPath, sampleRate);
 			}
 		}
 
-		HeapBuffer<Bank>& all() {
-			return mBanks;
-		}
-
-		void lock() {
-			mMutex.lock();
-		}
-
-		void unlock() {
-			mMutex.unlock();
+		HeapBuffer<Bank>& all() { return mBanks; }
+		void lock() { mMutex.lock(); }
+		void unlock() { mMutex.unlock(); }
+		Bank& get(BankHandle bank) { return mBanks[bank]; }
+		bool has(BankHandle bank) {
+			const auto size = mBanks.size();
+			if (size <= bank) { return false; }
+			return mBanks[bank].id != InvalidBankHandle;
 		}
 
 		/**
@@ -75,19 +71,11 @@ namespace vae { namespace core {
 			}
 		}
 
-		Bank& get(BankHandle bank) { return mBanks[bank]; }
-
-		bool has(BankHandle bank) {
-			const auto size = mBanks.size();
-			if (size <= bank) { return false; }
-			return mBanks[bank].id != InvalidBankHandle;
-		}
-
-		Result load(const char* path, const char* rootPath, int sampleRate) {
+		Result load(const char* path, Size size, const char* rootPath, int sampleRate) {
 			VAE_PROFILER_SCOPE()
 			VAE_INFO("Loading bank from file %s%s", rootPath, path)
 			Bank bank;
-			auto result = mBankLoader.load(path, rootPath, bank);
+			auto result = mBankLoader.load(path, size, rootPath, bank);
 			if (result != Result::Success) {
 				VAE_ERROR("Failed to load bank from file %s%s", rootPath, path)
 				return result;
@@ -114,7 +102,7 @@ namespace vae { namespace core {
 				VAE_PROFILER_SCOPE_NAMED("Offline resampling")
 				for (auto& s : bank.sources) {
 					if (s.resample && s.signal.sampleRate && s.signal.sampleRate != sampleRate) {
-						tklb::ResamplerTpl<Sample>::resample(s.signal, sampleRate);
+						tklb::ResamplerTpl<Sample, AudioBuffer>::resample(s.signal, sampleRate);
 					}
 				}
 			}
@@ -133,7 +121,7 @@ namespace vae { namespace core {
 		Result addSource(BankHandle bankHandle, Source& source, int sampleRate) {
 			VAE_PROFILER_SCOPE()
 			if (source.resample && source.signal.sampleRate && source.signal.sampleRate != sampleRate) {
-				tklb::ResamplerTpl<Sample>::resample(source.signal, sampleRate);
+				tklb::ResamplerTpl<Sample, AudioBuffer>::resample(source.signal, sampleRate);
 			}
 			auto& bank = mBanks[bankHandle];
 			Lock l(mMutex);

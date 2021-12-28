@@ -22,7 +22,7 @@ namespace vae { namespace core {
 	 */
 	class Device {
 	public:
-		using Resampler = tklb::ResamplerTpl<Sample>;
+		using Resampler = tklb::ResamplerTpl<Sample, AudioBuffer>;
 
 	protected:
 		Backend& mBackend;			// Can't be const because rt audio isn't doing any const

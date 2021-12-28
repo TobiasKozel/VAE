@@ -57,67 +57,7 @@ namespace vae { namespace core { namespace profiler {
 		std::free(ptr);							\
 	}											\
 
-	#include <cstdlib>
-	#include <cstddef>
-	#include <new>
-	#include <cstddef>
-	#include <memory>
-	#include <limits>
-
-	namespace vae { namespace core { namespace profiler {
-		/**
-		 * @brief Allocator used for all heapbuffers in VAE
-		 * @tparam T
-		 */
-		template <class T, class NAME>
-		struct Allocator {
-			typedef T value_type;
-
-			Allocator() = default;
-			Allocator(const Allocator&) = default;
-			template <class U, class J >
-			Allocator(const Allocator<U, J>&) { }
-
-			T* allocate(std::size_t n) {
-				if (n > std::numeric_limits<std::size_t>::max() / sizeof(T)) {
-					throw std::bad_array_new_length();
-				}
-
-				if (auto ptr = static_cast<T*>(std::malloc(n * sizeof(T)))) {
-					VAE_PROFILER_MALLOC_L(ptr, n * sizeof(T), NAME::name)
-					return ptr;
-				}
-
-				throw std::bad_alloc();
-			}
-
-			void deallocate(T* ptr, std::size_t n) noexcept {
-				VAE_PROFILER_FREE_L(ptr, NAME::name)
-				std::free(ptr);
-			}
-		};
-
-		/**
-		 * @brief I don't even know what this does, but it has to be here for robin_map.h
-		 */
-		template <class T, class U, class J >
-			bool operator==(const Allocator<T, J>&, const Allocator<U, J>&) {
-			return true;
-		}
-
-		template <class T, class U, class J >
-			bool operator!=(const Allocator<T, J>&, const Allocator<U, J>&) {
-			return false;
-		}
-
-		/**
-		 * @brief This is here to get a name into the allocator without writing the whole thing again
-		 */
-		struct FsAllocator   { static constexpr const char* name = "FS Allocator";   };
-		struct MainAllocator { static constexpr const char* name = "Main Allocator"; };
-	} // profiler
-		template <class T> using AllocatorFS   = profiler::Allocator<T, profiler::FsAllocator>;
-		template <class T> using AllocatorMain = profiler::Allocator<T, profiler::MainAllocator>;
+	namespace vae { namespace core {
 		using Mutex = std::mutex;
 		using Lock = std::lock_guard<LockableBase(Mutex)>;
 	} } // vae::core

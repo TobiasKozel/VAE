@@ -13,7 +13,7 @@ namespace vae { namespace core {
 	 */
 	struct Event {
 		enum class Action {
-			start = 0,			///< Starts a source
+			start = 0,		///< Starts a source
 			stop,			///< Stops a source
 			emit,			///< Emits an event to the EventCallback defined in the engine config
 			random			///< triggers one random on_start event
@@ -25,13 +25,13 @@ namespace vae { namespace core {
 		bool attenuate : 1;		///< whether distance is taken into consideration
 		bool critical : 1;		///< wheather the voice can be killer
 
-		MixerHandle mixer = Mixer::MasterMixerHandle;				///< Mixer the source gets written to
-		EventHandle id = InvalidEventHandle;						///< Own id
-		SourceHandle source = InvalidSourceHandle;					///< Handle to a source
-		Sample gain;												///< Volume applied to triggered voice
-		StackBuffer<EventHandle, StaticConfig::MaxChainedEvents> on_start;///< Events called when the source starts playing
-		StackBuffer<EventHandle, StaticConfig::MaxChainedEvents> on_end;///< Events fired once the source is finished, not called when there's no source
-		NameString name;											///< Name for debugging
+		MixerHandle mixer = Mixer::MasterMixerHandle;			///< Mixer the source gets written to
+		EventHandle id = InvalidEventHandle;					///< Own id
+		SourceHandle source = InvalidSourceHandle;				///< Handle to a source
+		Sample gain;											///< Volume applied to triggered voice
+		EventHandle on_start[StaticConfig::MaxChainedEvents];	///< Events called when the source starts playing
+		EventHandle on_end[StaticConfig::MaxChainedEvents];		///< Events fired once the source is finished, not called when there's no source
+		NameString name;										///< Name for debugging
 
 		/**
 		 * TODO this isn't exactly pod style but the arrays need to be

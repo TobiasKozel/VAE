@@ -1,13 +1,11 @@
 #ifndef _VAE_ENGINE
 #define _VAE_ENGINE
 
-#include "./vae_util.hpp"
 #include "./vae_types.hpp"
+#include "./vae_util.hpp"
 #include "./vae_config.hpp"
 
-#include "./device/vae_rtaudio.hpp"
-#include "./device/vae_portaudio.hpp"
-#include "./device/vae_device_dummy.hpp"
+#include "./device/vae_default_backend.hpp"
 
 #include "./pod/vae_listener.hpp"
 #include "./pod/vae_emitter.hpp"
@@ -22,10 +20,11 @@
 #include "./vae_logger.hpp"
 #include "./voices/vae_voice_filter.hpp"
 
-#include <cstring>				// strcmp
-#include <mutex>
-#include <thread>				// mAudioThread
-#include <condition_variable>	// mAudioConsumed
+#ifndef VAE_NO_AUDIO_THREAD
+	#include <mutex>
+	#include <thread>				// mAudioThread
+	#include <condition_variable>	// mAudioConsumed
+#endif // !VAE_NO_AUDIO_THREAD
 
 /**
  * @brief Marks a function for export to the generated vae::EnginePimpl class
@@ -42,11 +41,6 @@ namespace vae { namespace core {
 	 */
 
 	class Engine {
-		using CurrentBackend = BackendRtAudio;
-
-		using Thread = std::thread;
-		using ConditionVariable = std::condition_variable;
-
 		EngineConfig mConfig;			///< Config object provided at initlalization
 
 		VoiceManger mVoiceManager;		///< Holds and handle voices
@@ -64,10 +58,18 @@ namespace vae { namespace core {
 		Sample mLimiterLastPeak = 1.0;	///< Master limiter last peak
 		Sample mMasterVolume = 1.0;		///< Master Colume applied after limiting
 
+	#ifndef VAE_NO_AUDIO_THREAD
+		using Thread = std::thread;
+		using ConditionVariable = std::condition_variable;
 		Thread* mAudioThread;				///< Thread processing voices and mixers
 		ConditionVariable mAudioConsumed;	///< Notifies the audio thread when more audio is needed
 		std::mutex mMutex;					///< Mutex needed to use mAudioConsumed, doesn't actually do anything else
 		bool mAudioThreadRunning = false;
+	#endif // !VAE_NO_AUDIO_THREAD
+
+		void process(SampleIndex frames) {
+
+		}
 
 		/**
 		 * @brief Main processing function.
@@ -145,6 +147,7 @@ namespace vae { namespace core {
 			if (mConfig.updateInAudioThread) { update(); }
 		}
 
+	#ifndef VAE_NO_AUDIO_THREAD
 		/**
 		 * @brief Called from own audio thread, not the device
 		 *
@@ -159,6 +162,17 @@ namespace vae { namespace core {
 		}
 
 		/**
+		 * @brief Called from audio device when using seperate audio thread.
+		 * This will only notify the adio thread to do work.
+		 * @param device
+		 */
+		void onThreadedBufferSwap(Device* device) {
+			(void) device;
+			mAudioConsumed.notify_one();
+		}
+	#endif // !VAE_NO_AUDIO_THREAD
+
+		/**
 		 * @brief Called from audio device when it needs more audio.
 		 * This will do synchronous processing.
 		 * @param device
@@ -168,15 +182,6 @@ namespace vae { namespace core {
 			process();
 		}
 
-		/**
-		 * @brief Called from audio device when using seperate audio thread.
-		 * This will only notify the adio thread to do work.
-		 * @param device
-		 */
-		void onThreadedBufferSwap(Device* device) {
-			(void) device;
-			mAudioConsumed.notify_one();
-		}
 
 	public:
 
@@ -237,18 +242,22 @@ namespace vae { namespace core {
 			VAE_PROFILER_SCOPE()
 			{
 				VAE_PROFILER_SCOPE_NAMED("Device Instance")
-				Backend& backend = CurrentBackend::instance();
+				Backend& backend = DefaultBackend::instance();
 				mDevice = backend.createDevice(mConfig);
 			}
 			if (mConfig.processInBufferSwitch) {
 				mDevice->setCallback(TKLB_DELEGATE(&Engine::onBufferSwap, *this));
 				VAE_DEBUG("Mixing in buffer switch")
 			} else {
+			#ifndef VAE_NO_AUDIO_THREAD
 				mDevice->setCallback(TKLB_DELEGATE(&Engine::onThreadedBufferSwap, *this));
 				mAudioThreadRunning = true;
 				VAE_PROFILER_SCOPE_NAMED("Start audio thread")
 				mAudioThread = new Thread(&Engine::threadedProcess, this);
 				VAE_DEBUG("Mixing in seperate thread")
+			#else
+				VAE_ERROR("Can't mix in audio thread since it's disabled via VAE_NO_AUDIO_THREAD")
+			#endif // !VAE_NO_AUDIO_THREAD
 			}
 			{
 				VAE_PROFILER_SCOPE_NAMED("Device Instance")
@@ -262,6 +271,7 @@ namespace vae { namespace core {
 		 */
 		Result _VAE_PUBLIC_API stop() {
 			VAE_PROFILER_SCOPE()
+			#ifndef VAE_NO_AUDIO_THREAD
 			if (mAudioThreadRunning) {
 				mAudioThreadRunning = false;
 				mAudioConsumed.notify_one(); // make sure the audio thread knows it's time to go
@@ -273,6 +283,7 @@ namespace vae { namespace core {
 					VAE_ERROR("Can't join audio thread")
 				}
 			}
+			#endif // !VAE_NO_AUDIO_THREAD
 			if (mDevice != nullptr) {
 				delete mDevice;
 				mDevice = nullptr;
@@ -390,7 +401,7 @@ namespace vae { namespace core {
 			}
 
 			else if (event.action == Event::Action::random) {
-				for (int index = rand() % event.on_start.size(); 0 <= index; index--) {
+				for (int index = rand() % StaticConfig::MaxChainedEvents; 0 <= index; index--) {
 					auto& i = event.on_start[index];
 					if (i == InvalidEventHandle) { continue; }
 					VAE_DEBUG_EVENT("Event %i:%i starts random event %i", eventHandle, bankHandle, i)
@@ -713,8 +724,8 @@ namespace vae { namespace core {
 		 * @param path
 		 * @return Result
 		 */
-		Result _VAE_PUBLIC_API loadBank(const char* path) {
-			return mBankManager.load(path, mConfig.rootPath, mConfig.internalSampleRate);
+		Result _VAE_PUBLIC_API loadBank(const char* path, Size size = 0) {
+			return mBankManager.load(path, size, mConfig.rootPath, mConfig.internalSampleRate);
 		}
 
 		/**

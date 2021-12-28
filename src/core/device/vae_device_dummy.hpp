@@ -1,5 +1,5 @@
-#ifndef VAEZ_DEVICE_DUMMY
-#define VAEZ_DEVICE_DUMMY
+#ifndef _VAE_DEVICE_DUMMY
+#define _VAE_DEVICE_DUMMY
 
 #include "./vae_device.hpp"
 
@@ -77,4 +77,4 @@ namespace vae { namespace core {
 	};
 } } // VAE::core
 
-#endif // VAEZ_DEVICE_DUMMY
+#endif // _VAE_DEVICE_DUMMY

@@ -3,7 +3,6 @@
 
 #include "../vae_types.hpp"
 #include "./vae_effect_base.hpp"
-#include "vae/vae.hpp"
 
 #define FAUSTFLOAT Sample
 

@@ -68,5 +68,23 @@ Using the pimpl api is optional but the better option since it won't pull in the
 ### VAE_LOG_EVENTS
 Logs all events
 
+### VAE_LOG_VOICES
+Logs voices starting and stopping
+
 ### VAE_DLL_EXPORT
 Only relevant for the PIMPL Api, will add __declspec to all funcitons
+
+### VAE_NO_AUDIO_THREAD
+Does remove ability to render audio in a seperate thread if vae::EngineConfig::processInBufferSwitch is false
+the processing function has to be called manually (TODO)
+
+### VAE_NO_EXCEPT
+Tries to disable exceptions in third party libs
+
+### VAE_NO_SIMD
+Disables SIMD
+
+### VAE_NO_STDIO
+No file reading writing
+
+

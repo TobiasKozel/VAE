@@ -1,7 +1,8 @@
 #ifndef _VAE_SPATIAL_MANAGER
 #define _VAE_SPATIAL_MANAGER
 
-#include "../../external/headeronly/robin_map.h"
+
+
 #include "./pod/vae_emitter.hpp"
 #include "./vae_bank_manager.hpp"
 #include "./vae_voice_manager.hpp"
@@ -9,19 +10,24 @@
 #include "./vae_types.hpp"
 #include "./pod/vae_listener.hpp"
 
+#define VAE_NO_EXCEPT
+#ifdef VAE_NO_EXCEPT
+	#define TSL_NO_EXCEPTIONS
+#endif
+
+
+#ifdef VAE_NO_SIMD
+	#define ROBIN_HOOD_DISABLE_INTRINSICS
+#endif
+#include "../../external/headeronly/robin_hood.h"
 
 namespace vae { namespace core {
 
 	class SpatialManager {
+
 		// We do a little bit of templating
 		template <typename key, class T> using Map =
-			tsl::robin_map<
-				key, T,
-				std::hash<key>,
-				std::equal_to<key>,
-				AllocatorMain<std::pair<key, T>>,
-				true
-			>;
+			robin_hood::unordered_map<key, T>;
 		// TODO for power of 2 sizes other maps might be faster and need the same amount of ram
 		Map<EmitterHandle, Emitter> mEmitters;	// All emitters across banks
 
@@ -36,7 +42,6 @@ namespace vae { namespace core {
 		Result addEmitter(EmitterHandle e) {
 			VAE_PROFILER_SCOPE()
 			VAE_ASSERT(e != InvalidEmitterHandle)
-
 			if (mEmitters.contains(e)) {
 				VAE_INFO("Trying to add duplicate emitter %u", e)
 				return Result::DuplicateEmitter;

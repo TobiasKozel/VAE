@@ -10,7 +10,8 @@
 #ifndef VAE_RELEASE
 	#define VAE_ASSERT(condition) TKLB_ASSERT(condition)
 #else
-	VAE_ASSERT(condition)
+	#define VAE_ASSERT(condition)
+	#define TKLB_NO_ASSERT
 #endif // VAE_RELEASE
 
 namespace vae { namespace core {
