@@ -1,7 +1,9 @@
 #ifndef _VAE_LOGGER
 #define _VAE_LOGGER
 
-#ifndef VAE_RELEASE
+#define VAE_FORCE_LOG
+
+#if !defined(VAE_RELEASE) || defined(VAE_FORCE_LOG)
 	#ifdef _VAE_LOG_CONST_EXPR_FILEPATH
 		namespace vae { namespace core { namespace log {
 			using cstr = const char* const;

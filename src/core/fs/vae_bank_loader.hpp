@@ -188,8 +188,9 @@ namespace vae { namespace core {
 
 						int paramIndex = 0;
 						for (auto& j : i["parameters"].u.array) {
-							e.parameters[paramIndex].name = j[0];
-							e.parameters[paramIndex].value = (double) j[1];
+
+							e.parameters[paramIndex].name = (const char*) (*j)[0];
+							e.parameters[paramIndex].value = (double) (*j)[1];
 							paramIndex++;
 						}
 					}

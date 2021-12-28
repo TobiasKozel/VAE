@@ -664,7 +664,11 @@ namespace vae { namespace core {
 		 */
 		Result setMixerEffectParameter(BankHandle bank, MixerHandle mixer, Size index, Size param, Sample value) {
 			// TODO this is garbage but needs a event queue anyways
-			mBankManager.get(bank).mixers[mixer].effects[index].parameters[param].value = value;
+			auto& b = mBankManager.get(bank);
+			auto& m = b.mixers[mixer];
+			auto& e = m.effects[index];
+			auto& p = e.parameters[param];
+			p.value = value;
 			return Result::Success;
 		}
 #pragma region mixer
