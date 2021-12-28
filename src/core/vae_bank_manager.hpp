@@ -156,6 +156,14 @@ namespace vae { namespace core {
 			return Result::Success;
 		}
 
+		Result addBank(Bank& bank) {
+			if (mBanks.size() < bank.id) {
+				mBanks.resize(bank.id);
+			}
+			mBanks[bank.id] = std::move(bank);
+			return Result::Success;
+		}
+
 		Result unloadFromId(BankHandle bankHandle) {
 			VAE_PROFILER_SCOPE()
 			Lock l(mMutex);

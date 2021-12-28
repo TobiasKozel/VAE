@@ -24,14 +24,13 @@ namespace vae { namespace core {
 
 		Source() {
 			stream = false;
-			resample = true;
+			resample = false;
 			gain = 1.0;
 			id = InvalidSourceHandle;
 			raw = false;
 		}
 	};
 
-	constexpr int _VAE_STRING_SIZE = sizeof(std::string);
 	constexpr int _VAE_BUF_SIZE = sizeof(AudioBuffer);
 	constexpr int _VAE_SOURCE_SIZE = sizeof(Source);
 } } // namespace vae::vore

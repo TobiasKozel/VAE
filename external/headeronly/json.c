@@ -35,7 +35,12 @@
    #endif
 #endif
 
-#include <stdio.h>
+#ifndef VAE_NO_STDIO
+	#include <stdio.h>
+#else
+	#define sprintf(...)
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>

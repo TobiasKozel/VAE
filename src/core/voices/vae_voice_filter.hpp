@@ -12,10 +12,10 @@ namespace vae { namespace core {
 	 * playback speeds.
 	 */
 	struct VoiceFilter {
-		Sample lowpass = 0.0;	///< Lowpasses the signal as the value approaches 1
-		Sample highpass = 0.0;	///< Highpasses the signal as the value approaches 1
-		Sample speed = 1.0;		///< Playback speed, will alter pitch
-		Sample timeFract = 0.0;	///< Fractional time component for interpolation
+		Real lowpass = 0.0;	///< Lowpasses the signal as the value approaches 1
+		Real highpass = 0.0;	///< Highpasses the signal as the value approaches 1
+		Real speed = 1.0;		///< Playback speed, will alter pitch
+		Real timeFract = 0.0;	///< Fractional time component for interpolation
 		Sample lowpassScratch[StaticConfig::MaxChannels];		///< Last sample per channel for IIR filter
 		Sample highpassScratch[StaticConfig::MaxChannels];	///< Last sample per channel for IIR filter
 

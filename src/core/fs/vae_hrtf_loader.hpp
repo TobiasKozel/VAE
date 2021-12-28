@@ -6,9 +6,7 @@
 #include "../vae_config.hpp"
 #include "../pod/vae_hrtf.hpp"
 
-#ifndef VAE_NO_STDIO
-	#include <stdio.h>
-#endif
+#include "../../wrapped/vae_fs.hpp"
 
 #ifndef _JSON_H
 	#include "../../../external/headeronly/json.h"
@@ -50,20 +48,13 @@ namespace vae { namespace core {
 				PathString folder;
 				folder = rootPath;
 				folder.append(path);
-				FILE* fp = fopen(folder.c_str(), "rt");
-				if (fp == nullptr) { return Result::FileOpenError; }
-				fseek(fp, 0L, SEEK_END);
-				size_t size = ftell(fp);
-				rewind(fp);
-				jsonText.reserve(size);
 
-				if (fread(jsonText.data(), size, 1, fp) != 1) {
-					fclose(fp);
+				fs::File file(folder.c_str());
+				jsonText.reserve(file.size());
+				if (!file.readAll(jsonText.data())) {
 					return Result::FileOpenError;
 				}
-
-				fclose(fp);
-				length = size;
+				length = jsonText.size();
 				encoded = jsonText.c_str();
 			#else
 				return Result::FileOpenError;

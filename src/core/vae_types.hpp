@@ -29,7 +29,6 @@
 #include "../../external/tklb/src/types/audio/TAudioRingBuffer.hpp"
 #include "../../external/tklb/src/types/TString.hpp"
 #include "./vae_allocators.hpp"
-#include <memory>
 
 #ifndef VAE_NO_AUDIO_THREAD
 	#include <mutex>
@@ -41,7 +40,7 @@ namespace vae { namespace core {
 	using Uchar = unsigned char;
 	using Uint = unsigned int;
 	using Vec3 = glm::vec3;
-
+	using Real = float;
 	#ifndef VAE_USE_PROFILER
 		// vae_profiler.hpp provides wrapped versions for tracking
 		#ifndef VAE_NO_AUDIO_THREAD

@@ -9,11 +9,7 @@
 #include "../pod/vae_bank.hpp"
 
 #include "./vae_source_loader.hpp"
-#include <cstring>
-
-#ifndef VAE_NO_STDIO
-	#include <stdio.h>
-#endif
+#include "../../wrapped/vae_fs.hpp"
 
 #ifndef _JSON_H
 	#include "../../../external/headeronly/json.h"
@@ -53,8 +49,8 @@ namespace vae { namespace core {
 			const char* encoded = path;	// The plain json text
 
 			String jsonText;
+
 			if (length == 0) { // length 0 indicates the file is on disk
-			#ifndef VAE_NO_STDIO
 				VAE_DEBUG("Started loading bank %s", path)
 				VAE_PROFILER_SCOPE_NAMED("BankFile IO")
 				folder = rootPath;
@@ -62,24 +58,14 @@ namespace vae { namespace core {
 				folder.append("/");
 				PathString json = folder;
 				json.append("bank.json");
-				FILE* fp = fopen(json.c_str(), "rt");
-				if (fp == nullptr) { return Result::FileOpenError; }
-				fseek(fp, 0L, SEEK_END);
-				size_t size = ftell(fp);
-				rewind(fp);
-				jsonText.reserve(size);
-
-				if (fread(jsonText.data(), size, 1, fp) != 1) {
-					fclose(fp);
+				fs::File file(json.c_str());
+				jsonText.resize(file.size());
+				if (!file.readAll(jsonText.data())) {
+					VAE_DEBUG("Failed to read file")
 					return Result::FileOpenError;
 				}
-
-				fclose(fp);
-				length = size;
+				length = jsonText.size();
 				encoded = jsonText.c_str();
-			#else
-				return Result::FileOpenError;
-			#endif
 			}
 
 			VAE_PROFILER_SCOPE()

@@ -6,9 +6,12 @@
 #include "../vae_util.hpp"
 #include "../pod/vae_source.hpp"
 
-#include "../../../external/tklb/src/types/audio/TWaveFile.hpp"
+#ifndef VAE_NO_WAV
+	#include "../../../external/tklb/src/types/audio/TWaveFile.hpp"
+#endif
 #include "../../../external/tklb/src/types/audio/TOggFile.hpp"
 
+#include "../../wrapped/vae_fs.hpp"
 
 namespace vae { namespace core {
 	struct SourceLoader {
@@ -26,15 +29,26 @@ namespace vae { namespace core {
 				joinedPath = path;
 				joinedPath.append(s.path);
 				data = joinedPath.c_str();
+			#ifdef VAE_NO_STDIO
+				fs::File file(data);
+				length = file.size();
+				joinedPath.reserve(length);
+				if (!file.readAll(joinedPath.data())) { return Result::FileOpenError; }
+				data = joinedPath.data();
+			#endif
 			} else {
 				length = s.path.size();
 			}
 
 			if (!s.stream) {
 				if (s.format == Source::Format::wav) {
+				#ifdef VAE_NO_WAV
+					return Result::GenericFailure;
+				#else
 					VAE_PROFILER_SCOPE_NAMED("Load wav")
 					bool success = tklb::wave::load<Sample, AudioBuffer>(data, s.signal, length);
 					return success ? Result::Success : Result::GenericFailure;
+				#endif
 				} else if (s.format == Source::Format::ogg) {
 					VAE_PROFILER_SCOPE_NAMED("Load ogg")
 					auto result = tklb::ogg::load<Sample, AudioBuffer>(data, s.signal, length);

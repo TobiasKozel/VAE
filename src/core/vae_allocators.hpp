@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <new>
 #include <cstddef>
-#include <memory>
 #include <limits>
 #include "../wrapped/vae_profiler.hpp"
 
@@ -23,12 +22,12 @@ namespace vae { namespace core { namespace memory {
 		template <class U, class J >
 		Allocator(const Allocator<U, J>&) { }
 
-		T* allocate(std::size_t n) noexcept {
+		T* allocate(size_t n) noexcept {
 			if (n > std::numeric_limits<std::size_t>::max() / sizeof(T)) {
 				return nullptr;
 			}
 
-			if (auto ptr = static_cast<T*>(std::malloc(n * sizeof(T)))) {
+			if (auto ptr = static_cast<T*>(malloc(n * sizeof(T)))) {
 				VAE_PROFILER_MALLOC_L(ptr, n * sizeof(T), NAME::name)
 				return ptr;
 			}
@@ -38,7 +37,7 @@ namespace vae { namespace core { namespace memory {
 
 		void deallocate(T* ptr, std::size_t n) noexcept {
 			VAE_PROFILER_FREE_L(ptr, NAME::name)
-			std::free(ptr);
+			free(ptr);
 		}
 	};
 

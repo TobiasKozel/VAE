@@ -15,7 +15,7 @@ namespace vae { namespace core {
 		 */
 		struct Parameter {
 			IdString name;		///< name of the parameter of the effect
-			Sample value;		///< current value, always 0 to 1
+			Real value;		///< current value, always 0 to 1
 		};
 		IdString name;			///< Name of the effect to load, not an arbitrary name
 		effect::EffectBase* effect = nullptr;						///< References the DSP

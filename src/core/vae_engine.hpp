@@ -5,7 +5,7 @@
 #include "./vae_util.hpp"
 #include "./vae_config.hpp"
 
-#include "./device/vae_default_backend.hpp"
+
 
 #include "./pod/vae_listener.hpp"
 #include "./pod/vae_emitter.hpp"
@@ -19,6 +19,11 @@
 #include "../../external/tklb/src/util/TMath.hpp"
 #include "./vae_logger.hpp"
 #include "./voices/vae_voice_filter.hpp"
+
+
+#ifndef VAE_NO_AUDIO_DEVICE
+	#include "./device/vae_default_backend.hpp"
+#endif // !VAE_NO_AUDIO_DEVICE
 
 #ifndef VAE_NO_AUDIO_THREAD
 	#include <mutex>
@@ -51,12 +56,15 @@ namespace vae { namespace core {
 		MixerProcessor mMixerProcessor;		///< Mixer channel processor
 		SpatialProcessor mSpatialProcessor;	///< Spatial voice processor
 
-		Device* mDevice = nullptr;		///< Output device
 		AudioBuffer mScratchBuffer;		///< used to combine the signal from all banks and push it to the device
 		SampleIndex mTime = 0;			///< Global engine time in samples
 		Time mTimeFract = 0;			///< Global engine time in seconds
 		Sample mLimiterLastPeak = 1.0;	///< Master limiter last peak
 		Sample mMasterVolume = 1.0;		///< Master Colume applied after limiting
+
+	#ifndef VAE_NO_AUDIO_DEVICE
+		Device* mDevice = nullptr;		///< Output device
+	#endif //
 
 	#ifndef VAE_NO_AUDIO_THREAD
 		using Thread = std::thread;
@@ -67,10 +75,7 @@ namespace vae { namespace core {
 		bool mAudioThreadRunning = false;
 	#endif // !VAE_NO_AUDIO_THREAD
 
-		void process(SampleIndex frames) {
-
-		}
-
+	#ifndef VAE_NO_AUDIO_DEVICE
 		/**
 		 * @brief Main processing function.
 		 * @details Called either from onBufferSwap or threadedProcess
@@ -82,7 +87,7 @@ namespace vae { namespace core {
 			VAE_PROFILER_FRAME_MARK_START(profiler::audioFrame)
 			VAE_PROFILER_SCOPE_NAMED("Engine Process")
 			auto& d = *mDevice;
-			auto sampleRate = d.getSampleRate();
+			auto sampleRate = mConfig.internalSampleRate;
 
 			const Time step = 1.0 / Time(sampleRate);
 
@@ -147,6 +152,18 @@ namespace vae { namespace core {
 			if (mConfig.updateInAudioThread) { update(); }
 		}
 
+		/**
+		 * @brief Called from audio device when it needs more audio.
+		 * This will do synchronous processing.
+		 * @param device
+		 */
+		void onBufferSwap(Device* device) {
+			(void) device;
+			process();
+		}
+
+	#endif // !VAE_NO_AUDIO_DEVICE
+
 	#ifndef VAE_NO_AUDIO_THREAD
 		/**
 		 * @brief Called from own audio thread, not the device
@@ -171,16 +188,6 @@ namespace vae { namespace core {
 			mAudioConsumed.notify_one();
 		}
 	#endif // !VAE_NO_AUDIO_THREAD
-
-		/**
-		 * @brief Called from audio device when it needs more audio.
-		 * This will do synchronous processing.
-		 * @param device
-		 */
-		void onBufferSwap(Device* device) {
-			(void) device;
-			process();
-		}
 
 
 	public:
@@ -238,6 +245,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API start() {
+		#ifndef VAE_NO_AUDIO_DEVICE
 			VEA_PROFILER_THREAD_NAME("Application Thread")
 			VAE_PROFILER_SCOPE()
 			{
@@ -263,6 +271,8 @@ namespace vae { namespace core {
 				VAE_PROFILER_SCOPE_NAMED("Device Instance")
 				return mDevice->openDevice() ? Result::Success : Result::DeviceError;
 			}
+		#endif // !VAE_NO_AUDIO_DEVICE
+			return Result::GenericFailure;
 		}
 
 		/**
@@ -270,6 +280,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API stop() {
+		#ifndef VAE_NO_AUDIO_DEVICE
 			VAE_PROFILER_SCOPE()
 			#ifndef VAE_NO_AUDIO_THREAD
 			if (mAudioThreadRunning) {
@@ -288,8 +299,10 @@ namespace vae { namespace core {
 				delete mDevice;
 				mDevice = nullptr;
 			}
+	#endif // !VAE_NO_AUDIO_DEVICE
 			return Result::Success;
 		}
+
 
 		/**
 		 * @brief Update function needs to be called regularly to handle outbound events and other housekeeping.
@@ -324,6 +337,39 @@ namespace vae { namespace core {
 			mBankManager.unlock();
 			VAE_PROFILER_FRAME_MARK_END(profiler::audioFrame)
 		}
+
+#define VAE_NO_AUDIO_DEVICE
+	#ifdef VAE_NO_AUDIO_DEVICE
+		template <typename T>
+		void process(const SampleIndex frames, T* output, int channels) {
+			SampleIndex time = 0;
+			while (time < frames) {
+				// clamp to max processable size, the preallocated scratch buffers can't take any larger blocks
+				SampleIndex remaining = std::min(remaining, StaticConfig::MaxBlock);
+
+				mScratchBuffer.setValidSize(remaining);
+
+				// however each bank needs to get a temporary own copy of the voice
+				// or else this will be false sharing city
+				mBankManager.forEach([&](Bank& i) {
+					mProcessor.mix(mVoiceManager, i, remaining, mConfig.internalSampleRate);
+					mSpatialProcessor.mix(
+						mVoiceManager, i, mSpatialManager, remaining, mConfig.internalSampleRate
+					);
+					mMixerProcessor.mix(mVoiceManager, i, remaining);
+					auto& bankMaster = i.mixers[Mixer::MasterMixerHandle].buffer;
+					mScratchBuffer.add(bankMaster);
+					bankMaster.set(0);
+				});
+
+				mScratchBuffer.multiply(mMasterVolume);
+				mScratchBuffer.putInterleaved(output + time * channels, remaining);
+				mScratchBuffer.set(0);
+				mTime += remaining;
+				time += remaining;
+			}
+		}
+	#endif // VAE_NO_AUDIO_DEVICE
 
 		/**
 		 * @brief Main mechanism to start and stop sounds
@@ -476,8 +522,12 @@ namespace vae { namespace core {
 		/**
 		 * @brief Get the number of currently playing Voices
 		 */
-		int _VAE_PUBLIC_API getActiveVoiceCount() const {
+		Size _VAE_PUBLIC_API getActiveVoiceCount() const {
 			return mVoiceManager.getActiveVoiceCount();
+		}
+
+		Size _VAE_PUBLIC_API getStreamTime() const  {
+			return mTime;
 		}
 
 		/**
@@ -765,6 +815,10 @@ namespace vae { namespace core {
 
 		Result addMixer(BankHandle bankHandle, Mixer& mixer) {
 			return mBankManager.addMixer(bankHandle, mixer);
+		}
+
+		Result addBank(Bank& bank) {
+			return mBankManager.addBank(bank);
 		}
 
 		/**

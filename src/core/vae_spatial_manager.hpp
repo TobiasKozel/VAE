@@ -19,6 +19,8 @@
 #ifdef VAE_NO_SIMD
 	#define ROBIN_HOOD_DISABLE_INTRINSICS
 #endif
+
+// TODO get rid of this since it relies on <functional> and <memory> which pull in <stdio.h>
 #include "../../external/headeronly/robin_hood.h"
 
 namespace vae { namespace core {

@@ -116,10 +116,10 @@ namespace vae { namespace core {
 					}
 
 					// fractional time, we need the value after the loop, so it's defined outside
-					Sample position;
+					Real position;
 
 					// Playback speed taking samplerate into account
-					const Sample speed = fd.speed * (Sample(signal.sampleRate) / Sample(sampleRate));
+					const Real speed = fd.speed * (Sample(signal.sampleRate) / Sample(sampleRate));
 					const SampleIndex needed = v.loop ? frames : std::min(
 						frames, SampleIndex(std::floor((signalLength - v.time) / speed - fd.timeFract))
 					);
@@ -129,11 +129,11 @@ namespace vae { namespace core {
 						const int channel = c % signal.channels();
 							// Linear interpolation between two samples
 							position = v.time + (s * speed) + fd.timeFract;
-							const Sample lastPosition = std::floor(position);
+							const Real lastPosition = std::floor(position);
 							const Size lastIndex = (Size) lastPosition;
 							const Size nextIndex = (Size) lastPosition + 1;
 
-							Sample mix = position - lastPosition;
+							Real mix = position - lastPosition;
 							// mix = 0.5 * (1.0 - cos((mix) * 3.1416)); // cosine interpolation, introduces new harmonics somehow
 							const Sample last = signal[channel][lastIndex % signalLength] * gain;
 							const Sample next = signal[channel][nextIndex % signalLength] * gain;
