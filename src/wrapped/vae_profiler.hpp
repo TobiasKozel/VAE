@@ -13,7 +13,7 @@ namespace vae { namespace core { namespace profiler {
 	const char* const deviceOverruns		= "Device Overruns";
 	const char* const engineUnderruns		= "Engine Underruns";
 	const char* const engineOverruns		= "Engine Overruns";
-	const char* const tklbAllocator			= "tklb Allocator";		///< Contains all tklb heap like tklb::AudioBuffer or tkbl::Resampler
+	const char* const tklbAllocator			= "tklb Allocator";		///< Old tklb stuff, shouldn't be anything important in here
 	const char* const objAllocator			= "new Allocator";		///< Generic object heap like vae::core::Device
 	const char* const fsAllocator			= "FS Allocator";		///< Deals with everything  deserialization
 	const char* const mainAllocator			= "Main Allocator";		///< Allocates all the bank, event emitter arrays

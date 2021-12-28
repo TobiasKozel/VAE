@@ -22,12 +22,12 @@
 
 
 #include "../../include/vae/vae.hpp"
+#include "../wrapped/vae_profiler.hpp"
 #include "./vae_config.hpp"
 #include "../../external/glm/glm/glm.hpp"
 #include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
 #include "../../external/tklb/src/types/audio/TAudioRingBuffer.hpp"
 #include "../../external/tklb/src/types/TString.hpp"
-#include "../wrapped/vae_profiler.hpp"
 #include "./vae_allocators.hpp"
 #include <memory>
 
