@@ -1,9 +1,9 @@
 # VAE Readme
-Virtual Audio Engine is a fairly WIP 3D softwareaudio rendererc.
+Virtual Audio Engine is a fairly WIP 3D software-audio-renderer.
 
 It aims to be a fairly small and data driven Engine with a focus on performance.
 Its design is mostly data oriented and tries to avoid inhertance and preallocates
-almost all memory upfront.
+almost all memory upfront and while loading banks.
 
 Most of it one single compilation unit so the compilercangoon it's way and inline
 whatever it wants to.
