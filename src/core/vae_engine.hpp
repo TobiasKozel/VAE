@@ -207,6 +207,7 @@ namespace vae { namespace core {
 		Engine& operator= (Engine&&) = delete;
 
 		~Engine() {
+			VAE_PROFILER_SCOPE_NAMED("Destroy Engine")
 			stop();
 			unloadAllBanks();
 			VAE_INFO("Engine destructed")
@@ -444,7 +445,7 @@ namespace vae { namespace core {
 				}
 
 				if (result != Result::Success) {
-					VAE_DEBUG("Event %i:%i failed to start voices", eventHandle, bankHandle)
+					VAE_DEBUG_EVENT("Event %i:%i failed to start voices", eventHandle, bankHandle)
 					return result; // ! someting went wrong
 				}
 			}
@@ -832,6 +833,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API unloadBankFromId(BankHandle bankHandle) {
+			VAE_PROFILER_SCOPE()
 			VAE_INFO("Start Unload bank %i", bankHandle)
 			mVoiceManager.stop(bankHandle, &Voice::bank);
 			return mBankManager.unloadFromId(bankHandle);
@@ -841,6 +843,7 @@ namespace vae { namespace core {
 		 * @brief Unload every bank and data associated with it
 		 */
 		void _VAE_PUBLIC_API unloadAllBanks() {
+			VAE_PROFILER_SCOPE()
 			VAE_INFO("Start unloading all banks")
 			mBankManager.unloadAll();
 		}

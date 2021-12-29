@@ -7,6 +7,8 @@ namespace vae { namespace core { namespace profiler {
 	const char* const voiceCount			= "Voices";
 	const char* const voiceFinishedCount	= "Voices Finished Queue";
 	const char* const voiceVirtualCount		= "Virtual voices";
+	const char* const starvedVoiceCount		= "Starved voices";
+	const char* const stoppedVoiceOverflow	= "Stopped voice overflow";
 	const char* const voiceHRTFCount		= "HRTF voices";
 	const char* const emitters				= "Emitters";
 	const char* const deviceUnderruns		= "Device Underruns";

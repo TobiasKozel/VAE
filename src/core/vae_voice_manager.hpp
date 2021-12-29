@@ -45,6 +45,8 @@ namespace vae { namespace core {
 		Size mHighestVoice = 0;					///< TODO bad
 		Size mFinishedPending = 0;				///< Voices in mFinishedVoiceQueue
 		Size mHighestFinishedVoice = 0;			///< TODO bad as well
+		Size mStarvedVoices = 0;				///< Voices which could not play since no other voice could be killed and are lost forever
+		Size mStoppedQueueOverflow = 0;			///< Voice which did not fit mFinishedVoiceQueue and could not triggered chained events
 	public:
 		Result init(const EngineConfig& config) {
 			VAE_PROFILER_SCOPE_NAMED("Voicemanager Init")
@@ -146,6 +148,7 @@ namespace vae { namespace core {
 
 			// No voices left, find one to virtualize
 			if(starved) {
+				VAE_PROFILER_SCOPE_NAMED("Search killable Voice")
 				Size potentialVirtual = ~0;
 				Sample lowestGain = 10;
 				for (Size i = searchStartIndex; i < searchEndIndex; i++) {
@@ -173,6 +176,7 @@ namespace vae { namespace core {
 
 			// Find a free voice
 			for (Size i = searchStartIndex; i < searchEndIndex; i++) {
+				VAE_PROFILER_SCOPE_NAMED("Search Free Voice")
 				auto& v = mVoices[i];
 				if(v.source == InvalidSourceHandle) {
 					v = { }; // re init object resets time and so on
@@ -225,7 +229,10 @@ namespace vae { namespace core {
 
 			mHighestVoice = (Size) mVoices.size() - 1;
 
-			VAE_WARN("Voice starvation. Can't start voice from event %i:%i", event.id, bank)
+			mStarvedVoices++;
+			VAE_PROFILER_PLOT(profiler::starvedVoiceCount, int64_t(mStarvedVoices));
+
+			VAE_DEBUG_VOICES("Voice starvation. Can't start voice from event %i:%i", event.id, bank)
 
 			return Result::VoiceStarvation;
 		}
@@ -339,9 +346,12 @@ namespace vae { namespace core {
 				mHighestFinishedVoice = (Size) mFinishedVoiceQueue.size() - 1;
 				// Failed to find a free spot in finished voices array
 				// Event will be discarded
-				VAE_WARN("finishedVoiceQueue is full. Stop Event %i in bank %i discarded", v.event, v.bank)
+				VAE_DEBUG_VOICES("finishedVoiceQueue is full. Stop Event %i in bank %i discarded", v.event, v.bank)
+				mStoppedQueueOverflow++;
+				VAE_PROFILER_PLOT(profiler::stoppedVoiceOverflow, int64_t(mStoppedQueueOverflow));
+			} else {
+				mFinishedPending++;
 			}
-			mFinishedPending++;
 			VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
 			VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
 			VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));

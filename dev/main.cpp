@@ -65,7 +65,7 @@ void benchmark(vae::core::Engine& engine) {
 void filterTest(vae::core::Engine& engine) {
 	auto emitter = engine.createEmitter();
 	auto emitter2 = engine.createEmitter();
-	engine.fireGlobalEvent(vaeb::Bank1::Ambience1, emitter2);
+	engine.fireGlobalEvent(vaeb::Bank1::Music, emitter2);
 	// engine.fireGlobalEvent(vaeb::Bank1::ShortSineLoop, emitter, 0.3);
 	for (int i = 0; i < 2000; i++) {
 		sleep(30);
@@ -88,6 +88,17 @@ int main() {
 	config.eventCallback = &eventTriggered;
 	config.internalSampleRate = rate;
 
+	/**
+	 * @brief very low settings
+	 */
+	config.hrtfVoices = 0;
+	config.voices = 8;
+	config.preAllocatedEmitters = 128;
+	config.virtualVoices = 32;
+	config.bufferPeriods = 2;
+	config.finishedVoiceQueueSize = 16;
+	config.preferredBufferSize = 128;
+
 	core::Engine engine;
 	engine.init(config);
 	engine.setMasterVolume(4);
@@ -99,9 +110,9 @@ int main() {
 	auto result = engine.loadBank("bank1");
 
 	if (result == Result::Success) {
-		benchmarkBasicVoice(engine);
+		// benchmarkBasicVoice(engine);
 		// benchmark(engine);
-		// filterTest(engine);
+		filterTest(engine);
 	};
 	engine.unloadBankFromId(0);
 
