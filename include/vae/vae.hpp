@@ -29,7 +29,7 @@ namespace vaeb { }
  * @details The types used internally like handles or static settings can be changed, but vae::EnginePimpl needs to be recompiled.
  */
 namespace vae {
-	using Sample = float;						///< Default sample types used where ever possible, changing this means the engine needs to berecompiled
+	using Sample = float;						///< Default sample types used where ever possible, changing this means the engine needs to be recompiled, short and int isn't working, probably needs a few changes in the pipeline
 	using Size = unsigned int;					///< How the elements are addressed in the heapbuffer
 	using Time = double;						///< Time sotred in seconds
 

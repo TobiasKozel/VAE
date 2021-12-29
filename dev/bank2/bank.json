@@ -1,0 +1,111 @@
+{
+	"id": 1,
+	"name": "Bank2",
+	"sources": [
+		{
+			"id": 0,
+			"name": "Music",
+			"path": "music.ogg",
+			"format": "ogg",
+			"resample": false
+		},
+		{
+			"id": 1,
+			"name": "Ambience1",
+			"path": "ambience1.ogg",
+			"format": "ogg",
+			"resample": false
+		},
+		{
+			"id": 2,
+			"name": "Ambience2",
+			"path": "ambience2.ogg",
+			"format": "ogg",
+			"resample": false
+		},
+		{
+			"id": 3,
+			"name": "Ambience3",
+			"path": "ambience3.ogg",
+			"format": "ogg",
+			"resample": false
+		},
+		{
+			"id": 4,
+			"name": "Ambience4",
+			"path": "ambience4.ogg",
+			"format": "ogg",
+			"resample": false
+		}
+	],
+	"mixers": [
+		{
+			"id": 0, "name": "Bank Master"
+		},
+		{
+			"id": 1, "name": "Ambience", "gain": 0.2
+		}
+	],
+	"events": [
+		{
+			"id": 0,
+			"name": "Ambience1",
+			"action": "start",
+			"source": 1,
+			"loop": true,
+			"mixer": 1,
+			"spatial": true,
+			"critical": true,
+			"attenuate": false
+		},
+		{
+			"id": 1,
+			"name": "Ambience2",
+			"action": "start",
+			"source": 2,
+			"mixer": 1,
+			"loop": true,
+			"spatial": true,
+			"critical": true,
+			"attenuate": false
+		},
+		{
+			"id": 2,
+			"name": "Ambience3",
+			"action": "start",
+			"source": 3,
+			"loop": true,
+			"mixer": 1,
+			"spatial": true,
+			"critical": true,
+			"attenuate": false
+		},
+		{
+			"id": 3,
+			"name": "Ambience4",
+			"action": "start",
+			"source": 4,
+			"loop": true,
+			"mixer": 1,
+			"spatial": true,
+			"critical": true,
+			"attenuate": false
+		},
+		{
+			"id": 4,
+			"name": "Music",
+			"action": "start",
+			"source": 0,
+			"gain": 0.7,
+			"loop": true,
+			"spatial": false,
+			"critical": true
+		},
+		{
+			"id": 5,
+			"name": "MusicStop",
+			"action": "stop",
+			"on_start": [4]
+		}
+	]
+}

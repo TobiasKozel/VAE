@@ -54,48 +54,13 @@
 		},
 		{
 			"id": 7,
-			"name": "Music",
-			"path": "music.ogg",
-			"format": "ogg",
-			"resample": false
-		},
-		{
-			"id": 8,
 			"name": "ShortSine",
 			"path": "short1000hz.wav",
 			"format": "wav",
 			"resample": false
 		},
 		{
-			"id": 9,
-			"name": "Ambience1",
-			"path": "ambience1.ogg",
-			"format": "ogg",
-			"resample": false
-		},
-		{
-			"id": 10,
-			"name": "Ambience2",
-			"path": "ambience2.ogg",
-			"format": "ogg",
-			"resample": false
-		},
-		{
-			"id": 11,
-			"name": "Ambience3",
-			"path": "ambience3.ogg",
-			"format": "ogg",
-			"resample": false
-		},
-		{
-			"id": 12,
-			"name": "Ambience4",
-			"path": "ambience4.ogg",
-			"format": "ogg",
-			"resample": false
-		},
-		{
-			"id": 13,
+			"id": 8,
 			"name": "Denied",
 			"path": "denied.wav",
 			"format": "wav"
@@ -109,10 +74,7 @@
 			"id": 1, "name": "SFX"
 		},
 		{
-			"id": 2, "name": "Music", "gain": 0.7
-		},
-		{
-			"id": 3, "name": "Character",
+			"id": 2, "name": "Character",
 			"effects": [
 				{
 					"index": 0,
@@ -129,7 +91,7 @@
 			"parent": 1
 		},
 		{
-			"id": 4, "name": "Steps", "gain": 0.3, "parent": 3
+			"id": 3, "name": "Steps", "gain": 0.3, "parent": 2
 		}
 	],
 	"events": [
@@ -144,38 +106,38 @@
 			"name": "Jump1",
 			"action": "start",
 			"source": 1,
-			"spatial": false,
-			"mixer": 3
+			"spatial": true,
+			"mixer": 2
 		},
 		{
 			"id": 2,
 			"name": "Jump2",
 			"action": "start",
 			"source": 2,
-			"spatial": false,
-			"mixer": 3
+			"spatial": true,
+			"mixer": 2
 		},
 		{
 			"id": 3,
 			"name": "Jump3",
 			"action": "start",
 			"source": 3,
-			"spatial": false,
-			"mixer": 3
+			"spatial": true,
+			"mixer": 2
 		},
 		{
 			"id": 4,
 			"name": "Denied",
 			"action": "start",
-			"source": 13,
+			"source": 8,
 			"gain": 0.7
 		},
 		{
 			"id": 5,
 			"name": "ShortSineLoop",
 			"action": "start",
-			"source": 8,
-			"mixer": 2,
+			"source": 7,
+			"mixer": 1,
 			"hrtf": false,
 			"loop": true,
 			"spatial": false,
@@ -204,86 +166,21 @@
 			"name": "Step1",
 			"action": "start",
 			"source": 4,
-			"mixer": 4
+			"mixer": 3
 		},
 		{
 			"id": 9,
 			"name": "Step2",
 			"action": "start",
 			"source": 5,
-			"mixer": 4
+			"mixer": 3
 		},
 		{
 			"id": 10,
 			"name": "Step3",
 			"action": "start",
 			"source": 6,
-			"mixer": 4
-		},
-		{
-			"id": 11,
-			"name": "Ambience1",
-			"action": "start",
-			"source": 9,
-			"mixer": 1,
-			"gain": 0.2,
-			"loop": true,
-			"spatial": true,
-			"critical": true,
-			"attenuate": false
-		},
-		{
-			"id": 12,
-			"name": "Ambience2",
-			"action": "start",
-			"source": 10,
-			"mixer": 1,
-			"gain": 0.2,
-			"loop": true,
-			"spatial": true,
-			"critical": true,
-			"attenuate": false
-		},
-		{
-			"id": 13,
-			"name": "Ambience3",
-			"action": "start",
-			"source": 11,
-			"mixer": 1,
-			"loop": true,
-			"gain": 0.2,
-			"spatial": true,
-			"critical": true,
-			"attenuate": false
-		},
-		{
-			"id": 14,
-			"name": "Ambience4",
-			"action": "start",
-			"source": 12,
-			"mixer": 1,
-			"gain": 0.2,
-			"loop": true,
-			"spatial": true,
-			"critical": true,
-			"attenuate": false
-		},
-		{
-			"id": 15,
-			"name": "Music",
-			"action": "start",
-			"source": 7,
-			"mixer": 2,
-			"loop": true,
-			"spatial": false,
-			"critical": true
-		}
-		,
-		{
-			"id": 16,
-			"name": "Music",
-			"action": "stop",
-			"on_start": [15]
+			"mixer": 3
 		}
 	]
 }

@@ -56,7 +56,7 @@ void benchmark(vae::core::Engine& engine) {
 		engine.fireGlobalEvent(vaeb::Bank1::JumpRand, emitters[rand() % emitterCount]);
 		if (i % 3 == 0) {
 			auto em = emitters[rand() % emitterCount];
-			engine.fireGlobalEvent(vaeb::Bank1::Ambience1, em);
+			engine.fireGlobalEvent(vaeb::Bank2::Ambience1, em);
 		}
 		engine.update();
 	}
@@ -65,7 +65,7 @@ void benchmark(vae::core::Engine& engine) {
 void filterTest(vae::core::Engine& engine) {
 	auto emitter = engine.createEmitter();
 	auto emitter2 = engine.createEmitter();
-	engine.fireGlobalEvent(vaeb::Bank1::Music, emitter2);
+	engine.fireGlobalEvent(vaeb::Bank2::Music, emitter2);
 	// engine.fireGlobalEvent(vaeb::Bank1::ShortSineLoop, emitter, 0.3);
 	for (int i = 0; i < 2000; i++) {
 		sleep(30);
@@ -107,13 +107,15 @@ int main() {
 	engine.setListener(listener, {});
 	auto hrtf = engine.loadHRTF("hrtf.json");
 	engine.start();
-	auto result = engine.loadBank("bank1");
 
-	if (result == Result::Success) {
-		// benchmarkBasicVoice(engine);
-		// benchmark(engine);
-		filterTest(engine);
-	};
+	auto result = engine.loadBank("bank1");
+	if (result != Result::Success) { return 1; }
+	result = engine.loadBank("bank2");
+	if (result != Result::Success) { return 1; }
+
+	// benchmarkBasicVoice(engine);
+	// benchmark(engine);
+	filterTest(engine);
 	engine.unloadBankFromId(0);
 
 	engine.stop();
