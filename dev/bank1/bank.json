@@ -119,10 +119,10 @@
 					"bypassed": false,
 					"name": "VAEReverb",
 					"parameters": [
-						["fb1", 0.4],
-						["fb2", 0.2],
+						["fb1", 0.3],
+						["fb2", 0.4],
 						["mix", 0.3],
-						["pre", 0.9]
+						["pre", 0.4]
 					]
 				}
 			],

@@ -57,7 +57,7 @@ namespace vae { namespace core { namespace effect {
 
 		virtual void compute(int count, Sample** inputs, Sample** outputs) = 0;
 
-		void process(Effect& effect, const AudioBuffer& in, AudioBuffer& out) override {
+		void process(Effect& effect, const ScratchBuffer& in, ScratchBuffer& out) override {
 			// Update DSP values
 			{
 				VAE_PROFILER_SCOPE_NAMED("Update Faust DSP")

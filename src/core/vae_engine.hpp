@@ -56,7 +56,7 @@ namespace vae { namespace core {
 		MixerProcessor mMixerProcessor;		///< Mixer channel processor
 		SpatialProcessor mSpatialProcessor;	///< Spatial voice processor
 
-		AudioBuffer mScratchBuffer;		///< used to combine the signal from all banks and push it to the device
+		ScratchBuffer mScratchBuffer;		///< used to combine the signal from all banks and push it to the device
 		SampleIndex mTime = 0;			///< Global engine time in samples
 		Time mTimeFract = 0;			///< Global engine time in seconds
 		Sample mLimiterLastPeak = 1.0;	///< Master limiter last peak
@@ -130,18 +130,21 @@ namespace vae { namespace core {
 				{
 					VAE_PROFILER_SCOPE_NAMED("Peak limiting")
 					// Shitty peak limiter
-					mLimiterLastPeak *= Sample(0.7); // return to normal slowly
+					mLimiterLastPeak *= Sample(0.99); // return to normal slowly
 					mLimiterLastPeak = std::max(Sample(1.0), mLimiterLastPeak);
 					Sample currentPeak = 0;
 					for (Uchar c = 0; c < mScratchBuffer.channels(); c++) {
-						for (Size i = 0; i < mScratchBuffer.size(); i++) {
+						for (Size i = 0; i < remaining; i++) {
 							currentPeak = std::max(currentPeak, mScratchBuffer[c][i]);
 						}
 					}
+					currentPeak *= mMasterVolume; // pretend we already applied the master volume
 					mLimiterLastPeak = std::max(mLimiterLastPeak, currentPeak);
-					mScratchBuffer.multiply(Sample(1.0) / mLimiterLastPeak);
+					mLimiterLastPeak += 0.05; // add a little extra so we really stay away from clipping
 				}
-				mScratchBuffer.multiply(mMasterVolume);
+				const Sample gain = mMasterVolume / mLimiterLastPeak; // this can be higher than 1 one but the result can't
+				VAE_PROFILER_PLOT("Limited Master Volume", int64_t(gain * 1000));
+				mScratchBuffer.multiply(gain); // apply the master volume and limiter
 				d.push(mScratchBuffer);
 				mScratchBuffer.set(0);
 				mTime += remaining;
@@ -713,6 +716,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result setMixerEffectParameter(BankHandle bank, MixerHandle mixer, Size index, Size param, Sample value) {
+			VAE_PROFILER_SCOPE_NAMED("Set Mixer Effect");
 			// TODO this is garbage but needs a event queue anyways
 			auto& b = mBankManager.get(bank);
 			auto& m = b.mixers[mixer];

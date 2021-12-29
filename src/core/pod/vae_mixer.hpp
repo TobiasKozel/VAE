@@ -11,7 +11,7 @@ namespace vae { namespace core {
 		 * @brief This is the master mixer for a bank
 		 */
 		static constexpr MixerHandle MasterMixerHandle = 0;
-		AudioBuffer buffer; // not very POD
+		ScratchBuffer buffer; // not very POD
 		Sample gain;
 		MixerHandle parent;
 		/**

@@ -37,6 +37,9 @@ set(VAE_DEFINES)	# Preprocessor info about stuff being built
 
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
 	list(APPEND VAE_DEFINES "VAE_RELEASE")
+	if (NOT MSVC)
+		# add_compile_options(-march=native -mtune=native -Ofast)
+	endif()
 endif()
 
 function(VAE_ADD_SHARED)
@@ -110,10 +113,12 @@ if(VAE_BACKEND_RTAUDIO)
 	find_package(RtAudio REQUIRED)
 
 	list(APPEND VAE_DEFINES "_VAE_HAS_RT_AUDIO")
+	message("VAE: Build with RtAudio")
 	list(APPEND VAE_DEPS rtaudio) # lower case smh
 endif()
 if(VAE_BACKEND_PORTAUDIO)
 	list(APPEND VAE_DEFINES "_VAE_HAS_PORT_AUDIO")
+	message("VAE: Build with portaudio")
 	find_package(PortAudio REQUIRED)
 	list(APPEND VAE_DEPS PortAudio)
 endif()

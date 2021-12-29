@@ -1,12 +1,7 @@
 #ifndef _VAE_DEVICE
 #define _VAE_DEVICE
 
-#include "../../../external/tklb/src/memory/TMemory.hpp"
-#include "../../../external/tklb/src/types/audio/TAudioBuffer.hpp"
-#include "../../../external/tklb/src/types/audio/TAudioRingBuffer.hpp"
 #include "../../../external/tklb/src/types/audio/resampler/TResampler.hpp"
-#include "../../../external/tklb/src/types/TSpinLock.hpp"
-#include "../../../external/tklb/src/types/TLockGuard.hpp"
 #include "../../../external/tklb/src/types/TDelegate.hpp"
 
 #include "../../../include/vae/vae.hpp"
@@ -22,7 +17,7 @@ namespace vae { namespace core {
 	 */
 	class Device {
 	public:
-		using Resampler = tklb::ResamplerTpl<Sample, AudioBuffer>;
+		using Resampler = tklb::ResamplerTpl<Sample, ScratchBuffer>;
 
 	protected:
 		Backend& mBackend;			// Can't be const because rt audio isn't doing any const
@@ -34,7 +29,7 @@ namespace vae { namespace core {
 		Size mUnderruns = 0;		// Happens when too many frames are popper from the device
 
 		Resampler mResamplerToDevice;
-		AudioBuffer mResamplerBufferToDevice;
+		ScratchBuffer mResamplerBufferToDevice;
 
 		/**
 		 * @brief Data shared with audio thread
@@ -44,10 +39,10 @@ namespace vae { namespace core {
 			Device* device;					// Device passed to callback function
 			RingBuffer queueToDevice;		// Deinterleaved data in device samplerate
 			RingBuffer queueFromDevice;		// Deinterleaved data in device samplerate
-			AudioBuffer convertBuffer;		// convert from interleaved, and Sample type
+			ScratchBuffer convertBuffer;		// convert from interleaved, and Sample type
 
 			Resampler resamplerFromDevice;	// Resample audio before putting it in queueFromDevice
-			AudioBuffer resampleBufferFromdevice;
+			ScratchBuffer resampleBufferFromdevice;
 
 			size_t streamTime = 0;			// device time without regard of underruns and overruns
 			Size underruns = 0;				// Happens when the sound card needs more data than queueToDevice provides
@@ -230,7 +225,7 @@ namespace vae { namespace core {
 		 * @brief Push samples to the audio device
 		 * @param buffer Pushes the amount of valid samples
 		 */
-		Size push(const AudioBuffer& buffer) {
+		Size push(const ScratchBuffer& buffer) {
 			VAE_PROFILER_SCOPE()
 			VAE_ASSERT(0 < mWorker.channelsOut)
 			const auto frames = buffer.validSize();
@@ -269,7 +264,7 @@ namespace vae { namespace core {
 		 * @brief Get samples form audio device
 		 * @param buffer Gets the amount of valid samples, might actualy get less
 		 */
-		void pop(AudioBuffer& buffer) {
+		void pop(ScratchBuffer& buffer) {
 			VAE_PROFILER_SCOPE()
 			VAE_ASSERT(0 < mWorker.channelsIn)
 			auto frames = buffer.validSize();

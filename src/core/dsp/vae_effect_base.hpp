@@ -15,7 +15,7 @@ namespace vae { namespace core { namespace effect {
 		virtual int getNumInputs() = 0;
 		virtual int getNumOutputs() = 0;
 		virtual void instanceClear() = 0;				///< Reset dsp state delay lines and so on
-		virtual void process(Effect& effect, const AudioBuffer& in, AudioBuffer& out) = 0;
+		virtual void process(Effect& effect, const ScratchBuffer& in, ScratchBuffer& out) = 0;
 		EffectBase() { }
 		virtual ~EffectBase() {
 			VAE_PROFILER_FREE_L(this, vae::core::profiler::dspAllocator)

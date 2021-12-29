@@ -78,13 +78,26 @@ Only relevant for the PIMPL Api, will add __declspec to all funcitons
 Does remove ability to render audio in a seperate thread if vae::EngineConfig::processInBufferSwitch is false
 the processing function has to be called manually (TODO)
 
+### VAE_NO_AUDIO_DEVICE
+Only makessense with VAE_NO_AUDIO_THREAD to drive the engine from the outside.
+Will expose vae::core::Engine::process which can be called from a custom callback.
+
+Not pretty and goes against the device abstraction idea
+
 ### VAE_NO_EXCEPT
-Tries to disable exceptions in third party libs
+Tries to disable exceptions in third party libs, should build with -fno-exceptions
 
 ### VAE_NO_SIMD
 Disables SIMD
 
 ### VAE_NO_STDIO
-No file reading writing
+Tries to get rid of most stdio, hash map currently still depends on it
 
+File reading and writing need to be provided by defining the functions vae_fs.hpp
+
+Also requires VAE_PRINT to be defined
+
+### VAE_PRINT
+
+Can be defined to redirect logging, same interface as printf
 

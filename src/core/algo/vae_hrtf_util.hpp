@@ -47,7 +47,7 @@ namespace vae { namespace core {
 		 */
 		static inline void apply(
 			HRTF::Position& hrtf, VoiceHRTF& hrtfVoice, SampleIndex frames,
-			AudioBuffer& target, const Sample* in, Sample distanceAttenuated
+			ScratchBuffer& target, const Sample* in, Sample distanceAttenuated
 		) {
 			VAE_PROFILER_SCOPE_NAMED("Apply HRTF")
 			const Sample* irLeft   = hrtf.ir[0][0];

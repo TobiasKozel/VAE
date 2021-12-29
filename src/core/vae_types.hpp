@@ -12,6 +12,11 @@
 #ifndef _VAE_TYPES
 #define _VAE_TYPES
 
+/**
+ * @brief Forward these to tklb
+ * TODO find a better place for this
+ *
+ */
 #ifdef VAE_NO_SIMD
 	#define TKLB_NO_SIMD
 #endif
@@ -55,13 +60,18 @@ namespace vae { namespace core {
 	// Buffer used for internal packed structs like Event, Bank Voice etc
 	template <class T> using HeapBuffer = tklb::HeapBuffer<T, 0, memory::AllocatorMain<unsigned char>>;
 
+	/**
+	 * @brief Buffer type to hold all the audio data meant for playback
+	 */
 	using AudioBuffer = tklb::AudioBufferTpl<
 		Sample, tklb::HeapBuffer<
 			Sample, tklb::DEFAULT_ALIGNMENT, memory::AllocatorAudio<unsigned char>
 		>
 	>;
 
-
+	/**
+	 * @brief Buffer type to do all the work like mixing, filtering and so on
+	 */
 	using ScratchBuffer = tklb::AudioBufferTpl<
 		Sample, tklb::HeapBuffer<
 			Sample, tklb::DEFAULT_ALIGNMENT, memory::AllocatorScratch<unsigned char>
@@ -70,16 +80,16 @@ namespace vae { namespace core {
 
 	using RingBuffer = tklb::AudioRingBufferTpl<
 		Sample, tklb::HeapBuffer<
-			Sample, tklb::DEFAULT_ALIGNMENT, memory::AllocatorAudio<unsigned char>
+			Sample, tklb::DEFAULT_ALIGNMENT, memory::AllocatorScratch<unsigned char>
 		>
 	>;
 
 	using SampleIndex = AudioBuffer::Size;	// Time stored in samples
 
 	#ifdef VAE_RELEASE
-		using NameString = tklb::StackString<0>;		///< Used for debug names
+		using NameString = tklb::StackString<0>;			///< Used for debug names
 	#else
-		using NameString = tklb::StackString<16>;		///< Used for debug names
+		using NameString = tklb::StackString<16>;			///< Used for debug names
 	#endif // VAE_RELEASE
 		using String = tklb::String<HeapBuffer<char>>;
 		using PathString = tklb::String<HeapBuffer<char>>;	///< Non optional string used for locations, maybe replaceable with a unique_ptr or something

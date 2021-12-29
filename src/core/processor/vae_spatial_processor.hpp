@@ -24,7 +24,7 @@ namespace vae { namespace core {
 		/**
 		 * @brief Temporary filtered/looped signal TODO this will not work with parallel bank processing
 		 */
-		AudioBuffer mScratchBuffer;
+		ScratchBuffer mScratchBuffer;
 	public:
 		Result init(Size hrtfVoices) {
 			VAE_PROFILER_SCOPE_NAMED("Spatial Processor Init")
@@ -72,12 +72,12 @@ namespace vae { namespace core {
 					v.filtered = true; // implicitly filter to resample
 				}
 
-				const auto& emitter = spatial.getEmitter(v.emitter);
+				auto& emitter = spatial.getEmitter(v.emitter);
 				auto& target = bank.mixers[v.mixer].buffer;
 				const Sample gain = v.gain * source.gain;
 				auto& l = spatial.getListeners()[v.listener];
 
-				Sample distanceAttenuated;
+				Real distanceAttenuated;
 				Vec3 relativeDirection;
 				// * Attenuation calculation
 				{
@@ -89,14 +89,14 @@ namespace vae { namespace core {
 					relativeDirection = (lookAt * glm::vec4(emitter.position, 1.f));
 
 
-					const Sample distance = std::max(glm::length(relativeDirection), 0.1f);
+					const Real distance = std::max(glm::length(relativeDirection), 0.1f);
 					relativeDirection /= distance;
 
 					if (v.attenuate) {
 						distanceAttenuated = distance;
-						distanceAttenuated = std::max(distanceAttenuated, Sample(1));
-						distanceAttenuated = std::min(distanceAttenuated, Sample(1000000));
-						distanceAttenuated = Sample(std::pow(distanceAttenuated / Sample(1.0), -Sample(1)));
+						distanceAttenuated = std::max(distanceAttenuated, Real(1));
+						distanceAttenuated = std::min(distanceAttenuated, Real(1000000));
+						distanceAttenuated = Real(std::pow(distanceAttenuated / Real(1.0), -Real(1)));
 					} else {
 						distanceAttenuated = 1.0;
 					}
@@ -142,15 +142,15 @@ namespace vae { namespace core {
 					}
 
 					// fractional time, we need the value after the loop, so it's defined outside
-					Sample position;
+					Real position;
 					for (SampleIndex s = 0; s < frames; s++) {
 						// Linear interpolation between two samples
 						position = v.time + (s * speed) + fd.timeFract;
-						const Sample lastPosition = std::floor(position);
+						const Real lastPosition = std::floor(position);
 						const Size lastIndex = (Size) lastPosition;
 						const Size nextIndex = (Size) lastPosition + 1;
 
-						Sample mix = position - lastPosition;
+						Real mix = position - lastPosition;
 						// mix = 0.5 * (1.0 - cos((mix) * 3.1416)); // cosine interpolation, introduces new harmonics somehow
 
 						// TODO 30% of the time in here is spent on the modulo
@@ -271,7 +271,11 @@ namespace vae { namespace core {
 					lastPan = std::move(currentPan);
 				}
 				v.started = true;
-				return !finished;
+				if (finished) {
+					emitter.autoplaying = false;
+					return false;
+				}
+				return true;
 			});
 			return actuallyRendered;
 		}

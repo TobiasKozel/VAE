@@ -19,7 +19,7 @@ namespace vae { namespace core {
 		/**
 		 * @brief Temporary filtered/looped signal TODO this will not work with parallel bank processing
 		 */
-		AudioBuffer mScratchBuffer;
+		ScratchBuffer mScratchBuffer;
 	public:
 		Result init() {
 			mScratchBuffer.resize(StaticConfig::MaxBlock, StaticConfig::MaxChannels);

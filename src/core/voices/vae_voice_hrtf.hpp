@@ -10,8 +10,8 @@ namespace vae { namespace core {
 	 * @brief Data needed to process HRTFs
 	 */
 	struct VoiceHRTF {
-		AudioBuffer convolutionBuffer;	///< Temporary buffer for the convolution
-		Size convolutionIndex;			///< position in convolution buffer
+		ScratchBuffer convolutionBuffer;	///< Temporary buffer for the convolution
+		Size convolutionIndex;				///< position in convolution buffer
 	};
 
 	constexpr int _VAE_VOICE_HRTF_SIZE = sizeof(VoiceHRTF);

@@ -18,7 +18,7 @@ namespace vae { namespace core {
 		} format : 2;
 
 		Sample gain;		///< Gain applied to every voice creatd frin this source
-		AudioBuffer signal;	///< Signal or scratch buffer for generated types
+		AudioBuffer signal;	///< Audio signal itself loaded by SourceLoader
 		PathString path;	///< Filesystem path
 		NameString name;	///< Name for debugging
 

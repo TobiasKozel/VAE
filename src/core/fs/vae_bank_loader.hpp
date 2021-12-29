@@ -42,6 +42,8 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result load(const char* path, Size length, const char* rootPath, Bank& bank) {
+			VAE_PROFILER_SCOPE()
+
 			/**
 			 *					Open file and decode json
 			 */
@@ -68,14 +70,17 @@ namespace vae { namespace core {
 				encoded = jsonText.c_str();
 			}
 
-			VAE_PROFILER_SCOPE()
 
 
 			json_settings settings = { };
 			settings.mem_alloc = allocate;
 			settings.mem_free = deallocate;
 
-			json_value* json = json_parse_ex(&settings, encoded, length, 0);
+			json_value* json;
+			{
+				VAE_PROFILER_SCOPE_NAMED("BankFile Parsing")
+				json = json_parse_ex(&settings, encoded, length, 0);
+			}
 			if (json == nullptr) { return Result::BankFormatError; }
 			json_value& data = (*json);
 

@@ -8,12 +8,12 @@
 
 namespace vae { namespace core {
 	class EffectsProcessor {
-		AudioBuffer mScratchBuffer;
+		ScratchBuffer mScratchBuffer;
 	public:
 		void init() {
 			mScratchBuffer.resize(StaticConfig::MaxBlock, StaticConfig::MaxChannels);
 		}
-		void mix(Effect& effect, AudioBuffer& buffer) {
+		void mix(Effect& effect, ScratchBuffer& buffer) {
 			if (effect.effect == nullptr || effect.bypassed) { return; }
 			VAE_PROFILER_SCOPE_NAMED("Process Effect")
 			mScratchBuffer.set(buffer);
