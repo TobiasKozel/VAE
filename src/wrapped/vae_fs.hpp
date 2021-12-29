@@ -57,13 +57,15 @@ namespace vae { namespace core { namespace fs {
 		File(const char* path, Mode mode = Mode::Read) {
 			const char* MODES[3] = { "r", "w", "rw" };
 			mHandle = vae_file_open(path, MODES[(size_t) mode]);
+			if (mHandle == 0) { return; }
+			mSize = vae_file_seek(mHandle, 0L, (int) Seek::end);
+			vae_file_seek(mHandle, 0L, (int) Seek::set);
 		}
+
+		bool valid() const { return mHandle != nullptr; }
 
 		size_t size() {
 			if (mHandle == nullptr) { return 0; }
-			if (mSize != 0) { return mSize; }
-			mSize = vae_file_seek(mHandle, 0L, (int) Seek::end);
-			vae_file_seek(mHandle, 0L, (int) Seek::set);
 			return mSize;
 		}
 
