@@ -34,6 +34,7 @@ namespace vae { namespace core {
 		}
 	public:
 		Result load(const char* path, Size length, const char* rootPath, const Size sampleRate, HRTF& hrtf) {
+			VAE_PROFILER_SCOPE()
 
 			/**
 			 *					Open file and decode json
@@ -50,7 +51,7 @@ namespace vae { namespace core {
 				folder.append(path);
 
 				fs::File file(folder.c_str());
-				jsonText.reserve(file.size());
+				jsonText.resize(file.size());
 				if (!file.readAll(jsonText.data())) {
 					return Result::FileOpenError;
 				}
@@ -61,15 +62,22 @@ namespace vae { namespace core {
 			#endif
 			}
 
-			VAE_PROFILER_SCOPE()
+
 
 
 			json_settings settings = { };
 			settings.mem_alloc = allocate;
 			settings.mem_free = deallocate;
 
-			json_value* json = json_parse_ex(&settings, encoded, length, 0);
-			if (json == nullptr) { return Result::BankFormatError; }
+			json_value* json;
+			{
+				VAE_PROFILER_SCOPE_NAMED("HRTF Parse")
+				json = json_parse_ex(&settings, encoded, length, 0);
+			}
+			if (json == nullptr) {
+				VAE_ERROR("Failed to parse HRTF")
+				return Result::BankFormatError;
+			}
 			json_value& data = (*json);
 
 			hrtf.rate = sampleRate;
@@ -113,19 +121,21 @@ namespace vae { namespace core {
 			}
 
 			Size maxIrLength = 0;
-
-			for (Size i = 0; i < positionCount; i++) {
-				HRTF::Position& p = hrtf.positions[i];
-				auto& pi = *positions.values[i];
-				glm::vec4 pos((double) pi["x"], (double)pi["y"], (double)pi["z"], 1.0);
-				p.pos = matchCoord * pos;
-				json_value irSamples[2] = { pi["left"], pi["right"]};
-				const Size irLength = irSamples[0].u.array.length;
-				maxIrLength = std::max(maxIrLength, irLength);
-				for (int c = 0; c < 2; c++) {
-					p.ir[c].resize(irLength, 1);
-					for (Size j = 0; j < irLength; j++) {
-						p.ir[c][0][j] = (double) *(irSamples[c].u.array.values[j]);
+			{
+				VAE_PROFILER_SCOPE_NAMED("HRTF Convert")
+				for (Size i = 0; i < positionCount; i++) {
+					HRTF::Position& p = hrtf.positions[i];
+					auto& pi = *positions.values[i];
+					glm::vec4 pos((double) pi["x"], (double)pi["y"], (double)pi["z"], 1.0);
+					p.pos = matchCoord * pos;
+					json_value irSamples[2] = { pi["left"], pi["right"]};
+					const Size irLength = irSamples[0].u.array.length;
+					maxIrLength = std::max(maxIrLength, irLength);
+					for (int c = 0; c < 2; c++) {
+						p.ir[c].resize(irLength, 1);
+						for (Size j = 0; j < irLength; j++) {
+							p.ir[c][0][j] = (double) *(irSamples[c].u.array.values[j]);
+						}
 					}
 				}
 			}

@@ -15,7 +15,7 @@ path = vaeFolder + "/scripts/MRT01.sofa" # cartesian
 # path = vaeFolder + "/scripts/subject_003.sofa" # spherical
 
 sofa = SOFAFile(path, "r")
-outPath = vaeFolder + "/../demo/banks/hrtf.json"
+outPath = vaeFolder + "/dev/hrtf.json"
 
 dimensions = sofa.getDimensionsAsDict()
 positions = dimensions["M"].size

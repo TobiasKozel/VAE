@@ -221,7 +221,7 @@ namespace vae { namespace core {
 					if (i["spatial"].type == json_boolean)		e.spatial		= i["spatial"];
 					if (i["critical"].type == json_boolean)		e.critical		= i["critical"];
 					if (i["loop"].type == json_boolean)			e.loop			= i["loop"];
-					if (i["HRTF"].type == json_boolean)			e.HRTF			= i["hrtf"];
+					if (i["hrtf"].type == json_boolean)			e.HRTF			= i["hrtf"];
 					if (i["attenuate"].type == json_boolean)	e.attenuate		= i["attenuate"];
 					if (i["mixer"].type == json_integer)		e.mixer			= (json_int_t) i["mixer"];
 					if (i["gain"].type == json_double)			e.gain			= (double) i["gain"];

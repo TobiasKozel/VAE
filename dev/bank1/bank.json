@@ -107,6 +107,7 @@
 			"action": "start",
 			"source": 1,
 			"spatial": true,
+			"hrtf": true,
 			"mixer": 2
 		},
 		{
@@ -115,6 +116,7 @@
 			"action": "start",
 			"source": 2,
 			"spatial": true,
+			"hrtf": true,
 			"mixer": 2
 		},
 		{
@@ -123,6 +125,7 @@
 			"action": "start",
 			"source": 3,
 			"spatial": true,
+			"hrtf": true,
 			"mixer": 2
 		},
 		{
