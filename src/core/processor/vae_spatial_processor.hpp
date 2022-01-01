@@ -94,9 +94,8 @@ namespace vae { namespace core {
 
 					if (v.attenuate) {
 						distanceAttenuated = distance;
-						distanceAttenuated = std::max(distanceAttenuated, Real(1));
-						distanceAttenuated = std::min(distanceAttenuated, Real(1000000));
-						distanceAttenuated = Real(std::pow(distanceAttenuated / Real(1.0), -Real(1)));
+						distanceAttenuated = std::max(distanceAttenuated, Real(1)); // we don't want to get louder than 1
+						distanceAttenuated = Real(1) / distanceAttenuated;
 					} else {
 						distanceAttenuated = 1.0;
 					}
@@ -154,10 +153,10 @@ namespace vae { namespace core {
 						// mix = 0.5 * (1.0 - cos((mix) * 3.1416)); // cosine interpolation, introduces new harmonics somehow
 
 						// TODO 30% of the time in here is spent on the modulo
-						const Sample last = signal[0][lastIndex % signalLength] * gain;
-						const Sample next = signal[0][nextIndex % signalLength] * gain;
+						const Sample last = signal[0][lastIndex % signalLength];
+						const Sample next = signal[0][nextIndex % signalLength];
 						// linear resampling, sounds alright enough
-						const Sample in = last + mix * (next - last);
+						const Sample in = (last + mix * (next - last)) * gain;
 
 						//	* super simple lowpass and highpass filter
 						// just lerps with a previous value
