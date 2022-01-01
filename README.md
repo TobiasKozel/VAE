@@ -4,31 +4,36 @@ Virtual Audio Engine is a fairly WIP 3D software-audio-renderer.
 Minimal example to play some sound
 ```C++
 #include <thread>
-// Pimpl API
-#include "vae/vae_pimpl.hpp"
-// generated bank names from json (generate_bank_defines.py)
-#include "./vae_def.hpp"
+#include "vae/vae_pimpl.hpp"	// Pimpl API
+#include "./vae_def.hpp"		// generated bank names from json (generate_bank_defines.py)
 
 int main() {
-	vae::EnginePimpl e;
-	e.init();	// Uses defaultsettings and default audio device
-	e.start();	// Starts audio
-	auto result = engine.loadBank("bank1"); // open ./bank1/bank.json
+	vae::EnginePimpl e = vae::EnginePimpl::create();
+	e->init();	// Uses default settings and default audio device
+	e->start();	// Starts audio
+	auto result = e->loadBank("bank1"); // open ./bank1/bank.json
+	result = e->loadBank("bank2");		// open ./bank2/bank.json
+	// see /dev/bank1/ and /dev/bank2/ for examples
+
 	if (result != Result::Success) { return 1; }
-	auto emitter = e.createEmitter();
-	auto listener = e.createListener();
-	e.fireGlobalEvent(vaeb::Bank1::Music, emitter); // fire named event
-	e.setSpeed(emitter, 0.6); // slow the music
-	// Fire event 0 on bank 0, will not be slowed down
-	e.fireEvent(0, 0, emitter);
+	auto emitter = e->createEmitter();
+	auto listener = e->createListener(); // only needed for spatialized sounds
+	e->fireGlobalEvent(vaeb::Bank1::Music, emitter); // fire named event
+	e->setSpeed(emitter, 0.6); // slow the music
+
 	// let it run for a little
 	for (int i = 0; i < 2000, i++) {
-		e.update(); // update engine state
+		if (i % 100 == 0) {
+			// Fire event 0 on bank 0, will not be slowed down
+			e->fireEvent(0, 0, emitter);
+		}
+		e->update(); // update engine state
 		// sleep a little
 		std::this_thread::sleep_for(
 			std::chrono::duration<double, std::milli>(1.0 / 60.0)
 		);
 	}
+	e->destroy(); // clean up
 	return 0;
 }
 
