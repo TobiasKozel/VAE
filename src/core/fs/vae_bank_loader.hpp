@@ -226,28 +226,19 @@ namespace vae { namespace core {
 					if (i["mixer"].type == json_integer)		e.mixer			= (json_int_t) i["mixer"];
 					if (i["gain"].type == json_double)			e.gain			= (double) i["gain"];
 					if (i["source"].type == json_integer)		e.source 		= (json_int_t) i["source"];
+					if (i["on_end"].type == json_integer)		e.on_end		= (json_int_t) i["on_end"];
 
-					if (i["on_start"].type == json_array) {
-						auto onStart = i["on_start"].u.array;
+					if (i["chained_events"].type == json_array) {
+						auto onStart = i["chained_events"].u.array;
 						if (StaticConfig::MaxChainedEvents < onStart.length) {
-							VAE_ERROR("Event %i:%i has too many chained on_start events.", id, bank.id)
+							VAE_ERROR("Event %i:%i has too many chained chained_events events.", id, bank.id)
 							return Result::TooManyRecords;
 						}
 						for (size_t j = 0; j < onStart.length; j++) {
-							e.on_start[j] = (json_int_t) (*onStart.values[j]);
+							e.chained_events[j] = (json_int_t) (*onStart.values[j]);
 						}
 					}
 
-					if (i["on_end"].type == json_array) {
-						auto onEnd = i["on_end"].u.array;
-						if (StaticConfig::MaxChainedEvents < onEnd.length) {
-							VAE_ERROR("Event %i:%i has too many chained on_end events.", id, bank.id)
-							return Result::TooManyRecords;
-						}
-						for (size_t j = 0; j < onEnd.length; j++) {
-							e.on_end[j] = (json_int_t) (*onEnd.values[j]);
-						}
-					}
 				}
 			}
 

@@ -282,7 +282,7 @@ namespace vae {
 		constexpr Size MaxEffectsParameter = 4;
 
 		/**
-		 * @brief How many chained events can fit in on_start and on_end
+		 * @brief How many chained events can fit in chain_events on the core::Event structure
 		 */
 		constexpr Size MaxChainedEvents = 4;
 

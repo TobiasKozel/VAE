@@ -16,7 +16,7 @@ namespace vae { namespace core {
 			start = 0,		///< Starts a source
 			stop,			///< Stops a source
 			emit,			///< Emits an event to the EventCallback defined in the engine config
-			random			///< triggers one random on_start event
+			random			///< triggers one random chained_events event
 		} action : 3;
 		bool force_mixer : 1;	///< Prevents overriding the mixer from chained events or fireEvent
 		bool loop : 1;			///< gapless looping
@@ -25,13 +25,13 @@ namespace vae { namespace core {
 		bool attenuate : 1;		///< whether distance is taken into consideration
 		bool critical : 1;		///< wheather the voice can be killer
 
-		MixerHandle mixer = Mixer::MasterMixerHandle;			///< Mixer the source gets written to
-		SourceHandle source = InvalidSourceHandle;				///< Handle to a source
-		EventHandle id = InvalidEventHandle;					///< Own id
-		Sample gain;											///< Volume applied to triggered voice
-		EventHandle on_start[StaticConfig::MaxChainedEvents];	///< Events called when the source starts playing
-		EventHandle on_end[StaticConfig::MaxChainedEvents];		///< Events fired once the source is finished, not called when there's no source
-		NameString name;										///< Name for debugging
+		MixerHandle mixer = Mixer::MasterMixerHandle;				///< Mixer the source gets written to
+		SourceHandle source = InvalidSourceHandle;					///< Handle to a source
+		EventHandle id = InvalidEventHandle;						///< Own id
+		Sample gain;												///< Volume applied to triggered voice
+		EventHandle chained_events[StaticConfig::MaxChainedEvents];	///< Events called when the source starts playing
+		EventHandle on_end;											///< Event fired once the source is finished, not called when there's no source
+		NameString name;											///< Name for debugging
 
 		/**
 		 * TODO this isn't exactly pod style but the arrays need to be
@@ -45,10 +45,8 @@ namespace vae { namespace core {
 			attenuate = true;
 			critical = false;
 			gain = 1.0;
-			for (size_t i = 0; i < StaticConfig::MaxChainedEvents; i++) {
-				on_start[i] = InvalidEventHandle;
-				on_end[i] = InvalidEventHandle;
-			}
+			for (auto& i : chained_events) { i = InvalidEventHandle; }
+			on_end = InvalidEventHandle;
 		}
 	};
 

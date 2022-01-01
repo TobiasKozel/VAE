@@ -105,7 +105,7 @@
 			"id": 5,
 			"name": "MusicStop",
 			"action": "stop",
-			"on_start": [4]
+			"chained_events": [4]
 		}
 	]
 }

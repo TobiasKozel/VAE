@@ -332,9 +332,9 @@ namespace vae { namespace core {
 					mSpatialManager.getEmitter(v.emitter).autoplaying = false;
 					// Make sure the event can be triggered again by that emitter
 				}
-				for (auto& i : mBankManager.get(v.bank).events[v.event].on_end) {
-					if (i == InvalidEventHandle) { continue; }
-					fireEvent(v.bank, i, v.emitter, 1.0, v.mixer);
+				auto onEnd = mBankManager.get(v.bank).events[v.event].on_end;
+				if (onEnd != InvalidEventHandle) {
+					fireEvent(v.bank, onEnd, v.emitter, 1.0, v.mixer);
 				}
 				return true;
 			});
@@ -435,7 +435,7 @@ namespace vae { namespace core {
 				}
 
 				// Fire all other chained events
-				for (auto& i : event.on_start) {
+				for (auto& i : event.chained_events) {
 					if (i == InvalidEventHandle) { continue; }
 					VAE_DEBUG_EVENT("Event %i:%i starts chained event %i", eventHandle, bankHandle, i)
 					result = fireEvent(
@@ -452,7 +452,7 @@ namespace vae { namespace core {
 
 			else if (event.action == Event::Action::random) {
 				for (int index = rand() % StaticConfig::MaxChainedEvents; 0 <= index; index--) {
-					auto& i = event.on_start[index];
+					auto& i = event.chained_events[index];
 					if (i == InvalidEventHandle) { continue; }
 					VAE_DEBUG_EVENT("Event %i:%i starts random event %i", eventHandle, bankHandle, i)
 					result = fireEvent(
@@ -469,7 +469,7 @@ namespace vae { namespace core {
 					VAE_DEBUG_EVENT("Event %i:%i stops source %i", eventHandle, bankHandle, event.source)
 					mVoiceManager.stop(event.source, &Voice::source, emitterHandle);
 				}
-				for (auto& i : event.on_start) {
+				for (auto& i : event.chained_events) {
 					if (i == InvalidEventHandle) { continue; }
 					// kill every voice started from these events
 					VAE_DEBUG_EVENT("Event %i:%i stops voices from event %i", eventHandle, bankHandle, i)

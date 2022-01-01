@@ -184,10 +184,9 @@ namespace vae { namespace core {
 					v.event = event.id;
 					v.listener = listener;
 
-					for (auto& i : event.on_end) {
-						// find out if voice should trigger events on end
-						v.chainedEvents = v.chainedEvents || (i != InvalidEventHandle);
-					}
+					// find out if voice should trigger events on end
+					// if not killing the voice is easier so this gets a flag
+					v.chainedEvents = v.chainedEvents || (event.on_end != InvalidEventHandle);
 
 					if (mixer != InvalidMixerHandle && !event.force_mixer) {
 						// Only use the mixer provided if it's valid

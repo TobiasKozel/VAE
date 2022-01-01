@@ -99,7 +99,7 @@
 			"id": 0,
 			"name": "JumpRand",
 			"action": "start_rand",
-			"on_start": [1, 2, 3]
+			"chained_events": [1, 2, 3]
 		},
 		{
 			"id": 1,
@@ -162,7 +162,7 @@
 			"id": 7,
 			"name": "StepRand",
 			"action": "start_rand",
-			"on_start": [8, 9, 10]
+			"chained_events": [8, 9, 10]
 		},
 		{
 			"id": 8,
