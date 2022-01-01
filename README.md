@@ -1,13 +1,46 @@
 # VAE Readme
 Virtual Audio Engine is a fairly WIP 3D software-audio-renderer.
 
+Minimal example to play some sound
+```C++
+#include <thread>
+// Pimpl API
+#include "vae/vae_pimpl.hpp"
+// generated bank names from json (generate_bank_defines.py)
+#include "./vae_def.hpp"
+
+int main() {
+	vae::EnginePimpl e;
+	e.init();	// Uses defaultsettings and default audio device
+	e.start();	// Starts audio
+	auto result = engine.loadBank("bank1"); // open ./bank1/bank.json
+	if (result != Result::Success) { return 1; }
+	auto emitter = e.createEmitter();
+	auto listener = e.createListener();
+	e.fireGlobalEvent(vaeb::Bank1::Music, emitter); // fire named event
+	e.setSpeed(emitter, 0.6); // slow the music
+	// Fire event 0 on bank 0, will not be slowed down
+	e.fireEvent(0, 0, emitter);
+	// let it run for a little
+	for (int i = 0; i < 2000, i++) {
+		e.update(); // update engine state
+		// sleep a little
+		std::this_thread::sleep_for(
+			std::chrono::duration<double, std::milli>(1.0 / 60.0)
+		);
+	}
+	return 0;
+}
+
+```
+
 It aims to be a fairly small and data driven Engine with a focus on performance.
 Its design is mostly data oriented and tries to avoid inhertance and preallocates
 almost all memory upfront and while loading banks.
 
-Most of it one single compilation unit so the compilercangoon it's way and inline
+Most of it inside one single compilation unit, so the compiler can go on it's way and inline
 whatever it wants to.
-This also means extending it is done directly in source and not via interfaces or other common mechanisms.
+This also means extending it is done directly in source and not via interfaces or other common mechanisms (besides AudioDevice and EffectBase which are interfaces).
 
 The easiest way to get started is to compile a shared library with
 ```
@@ -27,7 +60,7 @@ Using the pimpl api is optional but the better option since it won't pull in the
 - Split up pod data and internal data structures so they can be exposed to the public API as well.
 - Parameter controls and smoothing
 - progress virtual voices and kill them so they don't pile up
-- Event queue
+- Event queue for synchronized playback
 - State
 - Automation
 - Faster HRTF (currently in time domain and about 80 times slower than a normal voice)
@@ -44,13 +77,14 @@ Using the pimpl api is optional but the better option since it won't pull in the
 - Simple mixer hirachry
 - Fixed mixrate with high quality resampler for deviceoutput (speex)
 - High quality resampling when loading audio
-- Realtime linear resampling otherwither
+- Realtime linear resampling otherwise
 - Per voice variable speed playback and high/lowpass filters
 - Multiple Listeners, no individual output devices however and not tested at all
 - Integration for the profiler tracy which can give nice insights on memory consumtion and cpu times
 
 ## Performance
 - Figure out why SPCAP voices are faster than Default voices, test mono and stereo.
+- deduplicate audio rendering code
 
 ## Nice to haves
 - signal generators

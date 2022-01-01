@@ -1,4 +1,2 @@
-# Small testing bank
-
-## Sound credits
-- ambience.ogg https://freesound.org/people/Soundkrampf/sounds/237329/ CC0
+# Small testing bank1
+Contains one shot sounds
