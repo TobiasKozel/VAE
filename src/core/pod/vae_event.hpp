@@ -13,8 +13,8 @@ namespace vae { namespace core {
 	 */
 	struct Event {
 		enum class Action {
-			start = 0,		///< Starts a source
-			stop,			///< Stops a source
+			start = 0,		///< Starts a source if defined and every Event in chained_events
+			stop,			///< Stops a source if defined and stops every voice started from a event in chained_events
 			emit,			///< Emits an event to the EventCallback defined in the engine config
 			random			///< triggers one random chained_events event
 		} action : 3;

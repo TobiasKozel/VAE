@@ -60,6 +60,8 @@ And then use the vae::EnginePimpl class in include/vae/vae_pimpl.hpp while linki
 Alternatively you can add the whole thing as a subproject and static link against it.
 Using the pimpl api is optional but the better option since it won't pull in the whole thing.
 
+[doxygen page](https://tobiaskozel.github.io/VAE-Docs/)
+
 ## TODOs
 - Fix click at end of sounds for speex reampled sounds
 - Split up pod data and internal data structures so they can be exposed to the public API as well.
