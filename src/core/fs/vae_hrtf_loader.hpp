@@ -141,8 +141,10 @@ namespace vae { namespace core {
 			}
 
 			hrtf.irLength = maxIrLength;
-
-			json_value_free_ex(&settings, json);
+			{
+				VAE_PROFILER_SCOPE_NAMED("HRTF Dealloc")
+				json_value_free_ex(&settings, json);
+			}
 
 			VAE_DEBUG("Finished loading HRTF %s", path)
 

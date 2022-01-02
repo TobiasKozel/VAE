@@ -64,6 +64,12 @@
 			"name": "Denied",
 			"path": "denied.wav",
 			"format": "wav"
+		},
+		{
+			"id": 9,
+			"name": "Engine",
+			"path": "engine.wav",
+			"format": "wav"
 		}
 	],
 	"mixers": [
@@ -106,8 +112,7 @@
 			"name": "Jump1",
 			"action": "start",
 			"source": 1,
-			"spatial": true,
-			"hrtf": true,
+			"spatial": false,
 			"mixer": 2
 		},
 		{
@@ -115,8 +120,7 @@
 			"name": "Jump2",
 			"action": "start",
 			"source": 2,
-			"spatial": true,
-			"hrtf": true,
+			"spatial": false,
 			"mixer": 2
 		},
 		{
@@ -124,8 +128,7 @@
 			"name": "Jump3",
 			"action": "start",
 			"source": 3,
-			"spatial": true,
-			"hrtf": true,
+			"spatial": false,
 			"mixer": 2
 		},
 		{
@@ -184,6 +187,15 @@
 			"action": "start",
 			"source": 6,
 			"mixer": 3
+		},
+		{
+			"id": 11,
+			"name": "engine",
+			"action": "start",
+			"source": 9,
+			"loop": true,
+			"spatial": true,
+			"hrtf": true
 		}
 	]
 }
