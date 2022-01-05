@@ -16,8 +16,8 @@ namespace vae { namespace core {
 		HeapBuffer<Mixer> mixers;		///< Audio Mixers which can have effects ! is presorted !
 		HeapBuffer<Event> events;		///< Events defined
 		BankHandle id = InvalidBankHandle;
-		NameString name;				///< Name of the bank used for debugging
 		PathString path;				///< Path to the bank definition file
+		NameString name;				///< Name of the bank used for debugging, needs to be last so it can be zero sized
 	};
 
 	constexpr int _VAE_BANK_SIZE = sizeof(Bank);

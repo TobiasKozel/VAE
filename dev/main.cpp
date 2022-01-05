@@ -93,13 +93,13 @@ int main() {
 	/**
 	 * @brief very low settings
 	 */
-	config.hrtfVoices = 0;
-	config.voices = 8;
-	config.preAllocatedEmitters = 128;
-	config.virtualVoices = 32;
-	config.bufferPeriods = 2;
-	config.finishedVoiceQueueSize = 16;
-	config.preferredBufferSize = 128;
+	// config.hrtfVoices = 0;
+	// config.voices = 8;
+	// config.preAllocatedEmitters = 128;
+	// config.virtualVoices = 32;
+	// config.bufferPeriods = 2;
+	// config.finishedVoiceQueueSize = 16;
+	// config.preferredBufferSize = 128;
 
 	core::Engine engine;
 	engine.init(config);

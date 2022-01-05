@@ -34,6 +34,7 @@ namespace vae { namespace core { namespace profiler {
 	#define VAE_PROFILER_PLOT(name, value)			TracyPlot(name, value)
 	#define VEA_PROFILER_THREAD_NAME(name)			tracy::SetThreadName(name);
 	#define VAE_PROFILER_MESSAGE_L(msg)				TracyMessageL(msg)
+	#define VAE_PROFILER_MESSAGE(msg, size)			TracyMessage(msg, size)
 	#define VAE_PROFILER_MALLOC(ptr, size)			TracyAlloc(ptr, size);
 	#define VAE_PROFILER_FREE(ptr)					TracyFree(ptr);
 	#define VAE_PROFILER_MALLOC_L(ptr, size, name)	TracyAllocN(ptr, size, name);
@@ -72,7 +73,8 @@ namespace vae { namespace core { namespace profiler {
 	#define VAE_PROFILER_SCOPE_NAMED(name)			///< Profiles a scope and names it
 	#define VAE_PROFILER_PLOT(name, value)			///< Records a value
 	#define VEA_PROFILER_THREAD_NAME(name)			///< Sets name for current thread
-	#define VAE_PROFILER_MESSAGE_L(msg)				///< Send message to profiler
+	#define VAE_PROFILER_MESSAGE_L(msg)				///< Send literal message to profiler
+	#define VAE_PROFILER_MESSAGE(msg, size)			///< Send dynamic string message
 	#define VAE_PROFILER_MALLOC(ptr, size)			///< Track allocation
 	#define VAE_PROFILER_FREE(ptr)					///< Track free
 	#define VAE_PROFILER_OVERLOAD_NEW()				///< Overloads new and delete of class to be tracked

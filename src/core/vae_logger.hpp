@@ -3,7 +3,6 @@
 
 #include "../../include/vae/vae.hpp"
 
-
 void vae_print(vae::LogLevel level, const char* message);
 
 #ifdef VAE_NO_LOG
@@ -21,9 +20,11 @@ void vae_print(vae::LogLevel level, const char* message);
 			printf("\n");
 		}
 	#endif
-
+	#include "../wrapped/vae_profiler.hpp"
 	#include <stdarg.h>
 	#include <cstring>
+
+	// TODO this might cause redefinition errors
 	#define STB_SPRINTF_IMPLEMENTATION
 	#include "../../external/headeronly/stb_sprintf.h"
 
@@ -33,10 +34,10 @@ void vae_print(vae::LogLevel level, const char* message);
 		static char buffer[bufferSize];
 		while(locked) { }
 		locked = true;
-		stbsp_vsnprintf(buffer, bufferSize, format, va);
+		const int length = stbsp_vsnprintf(buffer, bufferSize, format, va);
 		buffer[bufferSize - 1] = '\0';
 		vae_print(level, buffer);
-		// VAE_PROFILER_MESSAGE_L(buffer)
+		VAE_PROFILER_MESSAGE(buffer, length)
 		locked = false;
 	}
 
@@ -59,11 +60,11 @@ void vae_print(vae::LogLevel level, const char* message);
 		locked = true;
 
 		switch (level) {
-			case vae::LogLevel::Debug:		stbsp_snprintf(buffer, bufferSize, "DEBUG\t| %s:%i \t| %s", path, line, format); break;
-			case vae::LogLevel::Info:		stbsp_snprintf(buffer, bufferSize,  "INFO\t| %s:%i \t| %s", path, line, format); break;
-			case vae::LogLevel::Warn:		stbsp_snprintf(buffer, bufferSize,  "WARN\t| %s:%i \t| %s", path, line, format); break;
-			case vae::LogLevel::Error:		stbsp_snprintf(buffer, bufferSize, "ERROR\t| %s:%i \t| %s", path, line, format); break;
-			case vae::LogLevel::Ciritical:	stbsp_snprintf(buffer, bufferSize,  "CRIT\t| %s:%i \t| %s", path, line, format); break;
+			case vae::LogLevel::Debug:		stbsp_snprintf(buffer, bufferSize, "DEBUG | %s:%i \t| %s", path, line, format); break;
+			case vae::LogLevel::Info:		stbsp_snprintf(buffer, bufferSize, " INFO | %s:%i \t| %s", path, line, format); break;
+			case vae::LogLevel::Warn:		stbsp_snprintf(buffer, bufferSize, " WARN | %s:%i \t| %s", path, line, format); break;
+			case vae::LogLevel::Error:		stbsp_snprintf(buffer, bufferSize, "ERROR | %s:%i \t| %s", path, line, format); break;
+			case vae::LogLevel::Ciritical:	stbsp_snprintf(buffer, bufferSize, " CRIT | %s:%i \t| %s", path, line, format); break;
 			default: break;
 		}
 

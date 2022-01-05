@@ -140,7 +140,7 @@ namespace vae { namespace core {
 					}
 					currentPeak *= mMasterVolume; // pretend we already applied the master volume
 					mLimiterLastPeak = std::max(mLimiterLastPeak, currentPeak);
-					mLimiterLastPeak += 0.05; // add a little extra so we really stay away from clipping
+					mLimiterLastPeak += Sample(0.05); // add a little extra so we really stay away from clipping
 				}
 				const Sample gain = mMasterVolume / mLimiterLastPeak; // this can be higher than 1 one but the result can't
 				VAE_PROFILER_PLOT("Limited Master Volume", int64_t(gain * 1000));
