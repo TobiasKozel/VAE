@@ -1,63 +1,107 @@
 #ifndef _VAE_LOGGER
 #define _VAE_LOGGER
 
-#define VAE_FORCE_LOG
-
-#ifndef VAE_PRINT
-	#ifdef VAE_NO_STDIO
-		#pragma error "Please define VAE_PRINT(...)"
-	#else
-		#include <stdio.h>
-		#define VAE_PRINT(...) printf(__VA_ARGS__);
-	#endif
-#endif
+#include "../../include/vae/vae.hpp"
 
 
-#if !defined(VAE_RELEASE) || defined(VAE_FORCE_LOG)
-	#ifdef _VAE_LOG_CONST_EXPR_FILEPATH
-		namespace vae { namespace core { namespace log {
-			using cstr = const char* const;
-			static constexpr cstr past_last_slash(cstr str, cstr last_slash) {
-				return
-					*str == '\0' ? last_slash :
-					*str == '/'  ? past_last_slash(str + 1, str + 1) :
-					past_last_slash(str + 1, last_slash);
-			}
+void vae_print(vae::LogLevel level, const char* message);
 
-			static constexpr cstr past_last_slash(cstr str) {
-				return past_last_slash(str, str);
-			}
-		} } }
-		#include <stdio.h>
-		#define __FILENAME__ ({ constexpr ::vae::core::log::cstr sf__ {::vae::core::log::past_last_slash(__FILE__)}; sf__; })
-	#else
-		#include <cstring>
-		#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-	#endif // _VAE_LOG_CONST_EXPR_FILEPATH
-
-	#define VAE_DEBUG(msg, ...) VAE_PRINT("DEBUG\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__); VAE_PROFILER_MESSAGE_L("DEBUG\t" msg)
-	#define VAE_INFO(msg, ...)  VAE_PRINT( "INFO\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__); VAE_PROFILER_MESSAGE_L("INFO\t"  msg)
-	#define VAE_WARN(msg, ...)  VAE_PRINT( "WARN\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__); VAE_PROFILER_MESSAGE_L("WARN\t"  msg)
-	#define VAE_ERROR(msg, ...) VAE_PRINT("ERROR\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__); VAE_PROFILER_MESSAGE_L("ERROR\t" msg)
-
-	#ifdef VAE_LOG_VOICES
-		#define VAE_DEBUG_VOICES(msg, ...) VAE_PRINT("VOICE\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
-	#else
-		#define VAE_DEBUG_VOICES(msg, ...) ;
-	#endif // VAE_LOG_VOICES
-
-	#ifdef VAE_LOG_EVENTS
-		#define VAE_DEBUG_EVENT(msg, ...) VAE_PRINT("EVENT\t| %s:%i \t| " msg "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);
-	#else
-		#define VAE_DEBUG_EVENT(msg, ...) ;
-	#endif // VAE_LOG_EVENTS
+#ifdef VAE_NO_LOG
+	VAE_DEBUG(msg, ...)
+	VAE_INFO(msg, ...)
+	VAE_WARN(msg, ...)
+	VAE_ERROR(msg, ...)
+	VAE_DEBUG_EVENT(msg, ...)
+	VAE_DEBUG_VOICES(msg, ...)
 #else
-	#define VAE_DEBUG(msg, ...) ;
-	#define VAE_INFO(msg, ...)  ;
-	#define VAE_WARN(msg, ...)  ;
-	#define VAE_ERROR(msg, ...) VAE_PRINT("ERROR\t| %s:%i \t| " msg "\n", __FILE__, __LINE__, ## __VA_ARGS__);
-	#define VAE_DEBUG_EVENT(msg, ...) ;
-	#define VAE_DEBUG_VOICES(msg, ...) ;
-#endif // _NDEBUG
+	#ifndef VAE_NO_STDIO
+		#include <stdio.h>
+		void vae_print(vae::LogLevel level, const char* message) {
+			printf(message);
+			printf("\n");
+		}
+	#endif
+
+	#include <stdarg.h>
+	#include <cstring>
+	#define STB_SPRINTF_IMPLEMENTATION
+	#include "../../external/headeronly/stb_sprintf.h"
+
+	void vae_print_va(vae::LogLevel level, const char* format, va_list va) {
+		constexpr int bufferSize = 1024;
+		static bool locked = false;
+		static char buffer[bufferSize];
+		while(locked) { }
+		locked = true;
+		stbsp_vsnprintf(buffer, bufferSize, format, va);
+		buffer[bufferSize - 1] = '\0';
+		vae_print(level, buffer);
+		// VAE_PROFILER_MESSAGE_L(buffer)
+		locked = false;
+	}
+
+	void vae_print_path(vae::LogLevel level, const char* path, int line, const char* format, ...) {
+		if (path == nullptr) { return; }
+		if (format == nullptr) { return; }
+
+		constexpr int bufferSize = 1024;
+		constexpr int fixedPathLength = 16;
+		static bool locked = false;
+		static char buffer[bufferSize];
+
+		// Make all paths the same length so log is less messy
+		int pathLength = strlen(path);
+		if (fixedPathLength < pathLength) {
+			path += (pathLength - fixedPathLength);
+		}
+
+		while(locked) { }
+		locked = true;
+
+		switch (level) {
+			case vae::LogLevel::Debug:		stbsp_snprintf(buffer, bufferSize, "DEBUG\t| %s:%i \t| %s", path, line, format); break;
+			case vae::LogLevel::Info:		stbsp_snprintf(buffer, bufferSize,  "INFO\t| %s:%i \t| %s", path, line, format); break;
+			case vae::LogLevel::Warn:		stbsp_snprintf(buffer, bufferSize,  "WARN\t| %s:%i \t| %s", path, line, format); break;
+			case vae::LogLevel::Error:		stbsp_snprintf(buffer, bufferSize, "ERROR\t| %s:%i \t| %s", path, line, format); break;
+			case vae::LogLevel::Ciritical:	stbsp_snprintf(buffer, bufferSize,  "CRIT\t| %s:%i \t| %s", path, line, format); break;
+			default: break;
+		}
+
+		va_list va;
+		va_start(va, format);
+		vae_print_va(level, buffer, va);
+		va_end(va);
+
+		locked = false;
+	}
+
+	// As long as logging is enabled, error will be printed
+	#define VAE_ERROR(msg, ...) vae_print_path(vae::LogLevel::Error, __FILE__, __LINE__, msg, ## __VA_ARGS__);
+
+	#if !defined(VAE_RELEASE) || defined(VAE_FORCE_LOG)
+		#define VAE_DEBUG(msg, ...) vae_print_path(vae::LogLevel::Debug, __FILE__, __LINE__, msg, ## __VA_ARGS__);
+		#define VAE_INFO(msg, ...)  vae_print_path(vae::LogLevel::Info,  __FILE__, __LINE__, msg, ## __VA_ARGS__);
+		#define VAE_WARN(msg, ...)  vae_print_path(vae::LogLevel::Warn,  __FILE__, __LINE__, msg, ## __VA_ARGS__);
+
+		#ifdef VAE_LOG_VOICES
+			#define VAE_DEBUG_VOICES(msg, ...) vae_print_path(vae::LogLevel::Debug, __FILE__, __LINE__, msg, ## __VA_ARGS__);
+		#else
+			#define VAE_DEBUG_VOICES(msg, ...)
+		#endif // VAE_LOG_VOICES
+
+		#ifdef VAE_LOG_EVENTS
+			#define VAE_DEBUG_EVENT(msg, ...) vae_print_path(vae::LogLevel::Debug, "__FILE__, __LINE__, msg, ## __VA_ARGS__);
+		#else
+			#define VAE_DEBUG_EVENT(msg, ...)
+		#endif // VAE_LOG_EVENTS
+	#else
+		#define VAE_DEBUG(msg, ...)
+		#define VAE_INFO(msg, ...)
+		#define VAE_WARN(msg, ...)
+		#define VAE_DEBUG_EVENT(msg, ...)
+		#define VAE_DEBUG_VOICES(msg, ...)
+	#endif // _NDEBUG
+
+#endif
 
 #endif // _VAE_LOGGER

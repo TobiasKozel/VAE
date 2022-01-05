@@ -36,6 +36,9 @@ echo "Updating httplib"
 rm ./httplib.h
 curl -LO https://raw.githubusercontent.com/yhirose/cpp-httplib/master/httplib.h
 
+echo "sprintf"
+rm ./stb_sprintf.h
+curl -LO https://raw.githubusercontent.com/nothings/stb/master/stb_sprintf.h
 
 echo "Updating json"
 rm ./json.c

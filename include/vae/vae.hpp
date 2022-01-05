@@ -88,6 +88,14 @@ namespace vae {
 		InvalidEmitter				///< Emitter probably wasn't registered
 	};
 
+	enum class LogLevel {
+		Debug = 0,
+		Info,
+		Warn,
+		Error,
+		Ciritical
+	};
+
 	/**
 	 * @brief Basic struct describing a audio device
 	 */

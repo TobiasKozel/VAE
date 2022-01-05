@@ -1,3 +1,5 @@
+#define VAE_FORCE_LOG
+
 #include "vae/vae.hpp" // harmless public vae header
 #include <cstdlib>
 #include <stdio.h>
