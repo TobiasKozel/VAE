@@ -91,7 +91,7 @@ void vae_print(vae::LogLevel level, const char* message);
 		#endif // VAE_LOG_VOICES
 
 		#ifdef VAE_LOG_EVENTS
-			#define VAE_DEBUG_EVENT(msg, ...) vae_print_path(vae::LogLevel::Debug, "__FILE__, __LINE__, msg, ## __VA_ARGS__);
+			#define VAE_DEBUG_EVENT(msg, ...) vae_print_path(vae::LogLevel::Debug, __FILE__, __LINE__, msg, ## __VA_ARGS__);
 		#else
 			#define VAE_DEBUG_EVENT(msg, ...)
 		#endif // VAE_LOG_EVENTS
