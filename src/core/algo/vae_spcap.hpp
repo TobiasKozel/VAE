@@ -36,7 +36,7 @@ namespace vae { namespace core {
 				for (i = 0; i < N; i++) {
 					for (Size j = 0; j < N; j++) {
 						// Calculate the effective number of speakers according to (2)
-						// Can be done in adavnce and ideally at compiletime
+						// Can be done in advance and ideally at compiletime
 						// since the positions of the speakers will not change
 						mSpeakers[i].effective +=
 							Sample(0.5) * (Sample(1.0) + glm::dot(mSpeakers[i].dir, mSpeakers[j].dir));
@@ -91,22 +91,22 @@ namespace vae { namespace core {
 	 */
 
 	const SPCAP::SPCAPConfig<1> SPCAP::MonoSPCAP = {
-		{  0, +1, 0}					// Center
+		{  0, 0, -1}					// Center
 	};
 	const SPCAP::SPCAPConfig<2> SPCAP::HeadphoneSPCAP = {
 		{ -1, 0, 0}, { +1, 0, 0}		// LR Side
 	};
 	const SPCAP::SPCAPConfig<2> SPCAP::StereroSPCAP = {
-		{ -1, +1, 0}, { +1, +1, 0}		// LR Front
+		{ -1, 0, -1}, { +1, 0, -1}		// LR Front
 	};
 	const SPCAP::SPCAPConfig<4> SPCAP::QuadSPCAP = {
-		{ -1, +1, 0}, { +1, +1, 0},		// LR Front
-		{ -1, -1, 0}, { +1, -1, 0}		// LR Back
+		{ -1, 0, -1}, { +1, 0, -1},		// LR Front
+		{ -1, 0, +1}, { +1, 0, +1}		// LR Back
 	};
 	const SPCAP::SPCAPConfig<5> SPCAP::SuroundSPCAP = {
-		{ -1, +1, 0}, { +1, +1, 0},		// LR Front
-		{ -1, -1, 0}, { +1, -1, 0},		// LR Back
-		{  0, +1, 0}					// Center
+		{ -1, 0, -1}, { +1, 0, -1},		// LR Front
+		{ -1, 0, +1}, { +1, 0, +1},		// LR Back
+		{  0, 0, -1}					// Center
 	};
 } } // core::vae
 
