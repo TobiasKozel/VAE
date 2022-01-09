@@ -12,6 +12,7 @@
 *.vcxproj
 *.vcxproj.*
 .cache
+hrtf.json
 
 # cmake bullshit
 build

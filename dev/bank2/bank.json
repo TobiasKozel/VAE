@@ -43,7 +43,7 @@
 			"id": 0, "name": "Bank Master"
 		},
 		{
-			"id": 1, "name": "Ambience", "gain": 0.2
+			"id": 1, "name": "Ambience", "gain": 0.03
 		}
 	],
 	"events": [

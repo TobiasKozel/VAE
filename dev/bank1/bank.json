@@ -69,7 +69,8 @@
 			"id": 9,
 			"name": "Engine",
 			"path": "engine.wav",
-			"format": "wav"
+			"format": "wav",
+			"gain": 0.7
 		}
 	],
 	"mixers": [
@@ -195,7 +196,8 @@
 			"source": 9,
 			"loop": true,
 			"spatial": true,
-			"hrtf": true
+			"hrtf": true,
+			"mixer": 2
 		}
 	]
 }
