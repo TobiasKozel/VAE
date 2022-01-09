@@ -66,6 +66,8 @@ Using the pimpl api is optional but the better option since it won't pull in the
 - Fix click at end of sounds for speex reampled sounds
 - Streaming
 - Split up pod data and internal data structures so they can be exposed to the public API as well.
+- LFE Channel
+- Emitter emittsion patterns
 - More generic parameter controls and smoothing
 - Send Mixer effects
 - progress virtual voices and kill them so they don't pile up

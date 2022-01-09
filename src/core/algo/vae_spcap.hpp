@@ -27,10 +27,10 @@ namespace vae { namespace core {
 			 * https://www.researchgate.net/publication/235080603_A_Novel_Multichannel_Panning_Method_for_Standard_and_Arbitrary_Loudspeaker_Configurations
 			 * @param positions Speaker positions, will be normalized.
 			 */
-			SPCAPConfig(const std::initializer_list<Vec3>& positions) {
+			SPCAPConfig(const std::initializer_list<Vector3>& positions) {
 				Size i = 0;
 				for (const auto& speaker : positions) {
-					mSpeakers[i] = { glm::normalize(speaker), Sample(0) };
+					mSpeakers[i] = { glm::normalize(Vec3(speaker.x, speaker.y, speaker.z)), Sample(0) };
 					i++;
 				}
 				for (i = 0; i < N; i++) {
@@ -91,22 +91,22 @@ namespace vae { namespace core {
 	 */
 
 	const SPCAP::SPCAPConfig<1> SPCAP::MonoSPCAP = {
-		{  0, 0, -1}					// Center
+		StaticConfig::Speakers::center
 	};
 	const SPCAP::SPCAPConfig<2> SPCAP::HeadphoneSPCAP = {
-		{ -1, 0, 0}, { +1, 0, 0}		// LR Side
+		StaticConfig::Speakers::left, StaticConfig::Speakers::right
 	};
 	const SPCAP::SPCAPConfig<2> SPCAP::StereroSPCAP = {
-		{ -1, 0, -1}, { +1, 0, -1}		// LR Front
+		StaticConfig::Speakers::frontLeft, StaticConfig::Speakers::frontRight
 	};
 	const SPCAP::SPCAPConfig<4> SPCAP::QuadSPCAP = {
-		{ -1, 0, -1}, { +1, 0, -1},		// LR Front
-		{ -1, 0, +1}, { +1, 0, +1}		// LR Back
+		StaticConfig::Speakers::frontLeft, StaticConfig::Speakers::frontRight,
+		StaticConfig::Speakers::rearLeft, StaticConfig::Speakers::rearRight
 	};
 	const SPCAP::SPCAPConfig<5> SPCAP::SuroundSPCAP = {
-		{ -1, 0, -1}, { +1, 0, -1},		// LR Front
-		{ -1, 0, +1}, { +1, 0, +1},		// LR Back
-		{  0, 0, -1}					// Center
+		StaticConfig::Speakers::frontLeft, StaticConfig::Speakers::frontRight,
+		StaticConfig::Speakers::rearLeft, StaticConfig::Speakers::rearRight,
+		StaticConfig::Speakers::center
 	};
 } } // core::vae
 
