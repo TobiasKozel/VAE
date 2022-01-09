@@ -8,7 +8,7 @@ Minimal example to play some sound
 #include "./vae_def.hpp"		// generated bank names from json (generate_bank_defines.py)
 
 int main() {
-	vae::EnginePimpl e = vae::EnginePimpl::create();
+	auto e = vae::EnginePimpl::create();
 	e->init();	// Uses default settings and default audio device
 	e->start();	// Starts audio
 	auto result = e->loadBank("bank1"); // open ./bank1/bank.json
@@ -64,16 +64,17 @@ Using the pimpl api is optional but the better option since it won't pull in the
 
 ## TODOs
 - Fix click at end of sounds for speex reampled sounds
+- Streaming
 - Split up pod data and internal data structures so they can be exposed to the public API as well.
-- Parameter controls and smoothing
+- More generic parameter controls and smoothing
+- Send Mixer effects
 - progress virtual voices and kill them so they don't pile up
 - Event queue for synchronized playback
-- State
+- State to alter parameters/events
 - Automation
 - Faster HRTF (currently in time domain and about 80 times slower than a normal voice)
-- HRTF interoplation
-- streaming
-- some sort of basic authoring tool
+- HRTF interoplation needed for fast movements
+- Some sort of basic authoring tool
 - Geometry and material system for obstruction and reverb zones
 
 ## Features
