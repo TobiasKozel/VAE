@@ -159,6 +159,22 @@ namespace vae { namespace core {
 			return InvalidListenerHandle;
 		}
 
+		Result setListenerConfiguration(
+			ListenerHandle listener,
+			SpeakerConfiguration config
+		) {
+			VAE_PROFILER_SCOPE()
+			if (StaticConfig::MaxListeners <= listener) {
+				VAE_WARN("Accessed invalid listener %i", listener)
+				return Result::ValidHandleRequired;
+			}
+			auto& l = mListeners[listener];
+			if (l.id == InvalidListenerHandle) {
+				return Result::ValidHandleRequired;
+			}
+			l.configuration = config;
+		}
+
 		Result setListener(
 			ListenerHandle listener,
 			const LocationOrientation& locOr
@@ -169,7 +185,7 @@ namespace vae { namespace core {
 				return Result::ValidHandleRequired;
 			}
 			auto& l = mListeners[listener];
-			if (l.id == InvalidBankHandle) {
+			if (l.id == InvalidListenerHandle) {
 				return Result::ValidHandleRequired;
 			}
 			l.position = { locOr.position.x, locOr.position.y, locOr.position.z };

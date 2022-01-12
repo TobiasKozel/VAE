@@ -760,6 +760,13 @@ namespace vae { namespace core {
 			return mSpatialManager.setListener(listener, locOr);
 		}
 
+		Result setListenerConfiguration(
+			ListenerHandle listener,
+			SpeakerConfiguration config
+		) {
+			return mSpatialManager.setListenerConfiguration(listener, config);
+		}
+
 		Result _VAE_PUBLIC_API loadHRTF(const char* path, Size size = 0) {
 			return mSpatialProcessor.loadHRTF(
 				path, size, mConfig.rootPath,

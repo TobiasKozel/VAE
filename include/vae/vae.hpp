@@ -97,6 +97,19 @@ namespace vae {
 	};
 
 	/**
+	 * @brief Speaker setup for a listener
+	 *
+	 */
+	enum class SpeakerConfiguration {
+		Mono = 0,
+		Headphones,
+		Stereo,
+		HRTF,
+		Quadrophonic,
+		Suround
+	};
+
+	/**
 	 * @brief Basic struct describing a audio device
 	 */
 	struct DeviceInfo {
@@ -132,7 +145,7 @@ namespace vae {
 	 */
 	struct LocationOrientation {
 		Vector3 position	= { 0.f, 0.f,  0.f };
-		Vector3 front		= { 0.f, 0.f, -1.f };	///< -z front
+		Vector3 front		= { 0.f, 0.f, -1.f };	///< -z front @attention There's something weird going on since speakers are positve z front
 		Vector3 up			= { 0.f, 1.f,  0.f };	///< Y up
 	};
 
@@ -317,11 +330,11 @@ namespace vae {
 			constexpr Vector3 left			= { -1, 0,  0 };	///< Used in 7.1 and Headphones
 			constexpr Vector3 right			= { +1, 0,  0 };	///< Used in 7.1 and Headphones
 
-			constexpr Vector3 frontLeft		= { +1, 0, -1 };	///< Stereo and suround setups
-			constexpr Vector3 frontRight	= { +1, 0, -1 };	///< Stereo and suround setups
+			constexpr Vector3 frontLeft		= { -1, 0, +1 };	///< Stereo and suround setups @attention this should be negative but isn't, needs some investigation
+			constexpr Vector3 frontRight	= { +1, 0, +1 };	///< Stereo and suround setups
 
-			constexpr Vector3 rearLeft		= { +1, 0, +1 };	///< Sourund setups
-			constexpr Vector3 rearRight		= { +1, 0, +1 };	///< Sourund setups
+			constexpr Vector3 rearLeft		= { -1, 0, -1 };	///< Sourund setups
+			constexpr Vector3 rearRight		= { +1, 0, -1 };	///< Sourund setups
 		}
 	}
 } // namespace vae

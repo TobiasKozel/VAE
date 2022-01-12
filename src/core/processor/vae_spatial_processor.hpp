@@ -198,7 +198,7 @@ namespace vae { namespace core {
 					}
 				}
 
-				if (l.configuration == Listener::Configuration::HRTF && v.HRTF && mHRTF.rate) {
+				if (l.configuration == SpeakerConfiguration::HRTF && v.HRTF && mHRTF.rate) {
 					// * HRTF Panning
 					VAE_ASSERT(vi < mVoiceHRTFs.size()) // only the lower voice can use hrtfs
 					VAE_PROFILER_SCOPE_NAMED("Render HRTF")
@@ -259,12 +259,12 @@ namespace vae { namespace core {
 					};
 
 					switch (l.configuration) {
-						case Listener::Configuration::HRTF:
-						case Listener::Configuration::Headphones:	pan(SPCAP::HeadphoneSPCAP);	break;
-						case Listener::Configuration::Stereo:		pan(SPCAP::StereroSPCAP);	break;
-						case Listener::Configuration::Suround:		pan(SPCAP::SuroundSPCAP);	break;
-						case Listener::Configuration::Quadrophonic:	pan(SPCAP::QuadSPCAP);		break;
-						case Listener::Configuration::Mono:			pan(SPCAP::MonoSPCAP);		break;
+						case SpeakerConfiguration::HRTF:
+						case SpeakerConfiguration::Headphones:		pan(SPCAP::HeadphoneSPCAP);	break;
+						case SpeakerConfiguration::Stereo:			pan(SPCAP::StereroSPCAP);	break;
+						case SpeakerConfiguration::Suround:			pan(SPCAP::SuroundSPCAP);	break;
+						case SpeakerConfiguration::Quadrophonic:	pan(SPCAP::QuadSPCAP);		break;
+						case SpeakerConfiguration::Mono:			pan(SPCAP::MonoSPCAP);		break;
 					}
 
 					lastPan = std::move(currentPan);
