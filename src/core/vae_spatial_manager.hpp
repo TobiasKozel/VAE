@@ -113,7 +113,7 @@ namespace vae { namespace core {
 		) {
 			VAE_PROFILER_SCOPE()
 			if (!hasEmitter(emitter)) {
-				VAE_DEBUG("Accessed invalid emitter %i", emitter)
+				// VAE_DEBUG("Accessed invalid emitter %i", emitter)
 				return Result::ElementNotFound;
 			}
 			auto& e = getEmitter(emitter);
