@@ -121,7 +121,7 @@ namespace vae { namespace core {
 				if (0 < channelsIn) {
 					// we get full device buffersize for these buffers
 					mWorker.resamplerFromDevice.init(
-						sampleRate, mConfig.internalSampleRate, bufferSize
+						sampleRate, mConfig.internalSampleRate, bufferSize, channelsIn
 					);
 					mWorker.resampleBufferFromdevice.resize(
 						mWorker.resamplerFromDevice.calculateBufferSize(bufferSize),
@@ -134,7 +134,7 @@ namespace vae { namespace core {
 				if (0 < channelsOut) {
 					// But only DSP max block size in this direction
 					mResamplerToDevice.init(
-						mConfig.internalSampleRate, sampleRate, StaticConfig::MaxBlock
+						mConfig.internalSampleRate, sampleRate, StaticConfig::MaxBlock, channelsOut
 					);
 					mResamplerBufferToDevice.resize(
 						mResamplerToDevice.calculateBufferSize(StaticConfig::MaxBlock),

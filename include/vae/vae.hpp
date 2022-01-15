@@ -278,6 +278,7 @@ namespace vae {
 	namespace StaticConfig {
 		/**
 		 * @brief Maximum channel count used to pre allocate buffers
+		 * @attention 5.1 Suround needs six channels but hasn't been testet since the reverb effect is only stereo
 		 */
 		constexpr unsigned char MaxChannels = 2;
 

@@ -198,6 +198,16 @@
 			"spatial": true,
 			"hrtf": true,
 			"mixer": 2
+		},
+		{
+			"id": 12,
+			"name": "engine",
+			"action": "start",
+			"source": 9,
+			"loop": true,
+			"spatial": true,
+			"hrtf": false,
+			"mixer": 2
 		}
 	]
 }
