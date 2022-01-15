@@ -177,6 +177,7 @@ namespace vae {
 		 * @brief Samplerate requested from device.
 		 * @details If it doesn't support it, a resampler is used.
 		 * Most of the audio samples used should be in this rate.
+		 * @todo If it's 0 it should use the preferred device samplerate
 		 */
 		Size internalSampleRate = 48000;
 

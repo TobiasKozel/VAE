@@ -59,7 +59,7 @@ namespace vae { namespace core {
 		ScratchBuffer mScratchBuffer;		///< used to combine the signal from all banks and push it to the device
 		SampleIndex mTime = 0;			///< Global engine time in samples
 		Time mTimeFract = 0;			///< Global engine time in seconds
-		Sample mLimiterLastPeak = 1.0;	///< Master limiter last peak
+		Sample mLimiterLastPeak = 10.0;	///< Master limiter last peak, initialized high to create a ramp up on initial start
 		Sample mMasterVolume = 1.0;		///< Master Colume applied after limiting
 
 	#ifndef VAE_NO_AUDIO_DEVICE
