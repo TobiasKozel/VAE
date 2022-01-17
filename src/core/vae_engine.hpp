@@ -91,6 +91,8 @@ namespace vae { namespace core {
 
 			const Time step = 1.0 / Time(sampleRate);
 
+			if (mScratchBuffer.size() == 0) { return; } // Shouldn't happen, but the buffer gets resized after the device is opened
+
 			// process until device can't take any more audio
 			while (true) {
 				// ! this is an underestimate when resampling so we don't have any leftovers
@@ -231,7 +233,6 @@ namespace vae { namespace core {
 			VAE_PROFILER_SCOPE_NAMED("Engine init")
 			VAE_DEBUG("Initializing engine...")
 			mConfig = config;
-			mScratchBuffer.resize(StaticConfig::MaxBlock, StaticConfig::MaxChannels);
 			mScratchBuffer.set(0);
 			mScratchBuffer.sampleRate = mConfig.internalSampleRate;
 			mVoiceManager.init(mConfig);
@@ -273,7 +274,13 @@ namespace vae { namespace core {
 			}
 			{
 				VAE_PROFILER_SCOPE_NAMED("Device Instance")
-				return mDevice->openDevice() ? Result::Success : Result::DeviceError;
+				if (mDevice->openDevice()) {
+					// This isn't pretty but we don't know the channel count
+					const auto channels = std::max(mDevice->getChannelsIn(), mDevice->getChannelsOut());
+					mScratchBuffer.resize(StaticConfig::MaxBlock, channels);
+					return Result::Success;
+				}
+				return Result::DeviceError;
 			}
 		#endif // !VAE_NO_AUDIO_DEVICE
 			return Result::GenericFailure;
