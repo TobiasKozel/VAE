@@ -351,6 +351,7 @@ namespace vae { namespace core {
 
 #define VAE_NO_AUDIO_DEVICE
 	#ifdef VAE_NO_AUDIO_DEVICE
+		// TODO merge this with the private process function
 		template <typename T>
 		void process(const SampleIndex frames, T* output, int channels) {
 			SampleIndex time = 0;
@@ -406,6 +407,8 @@ namespace vae { namespace core {
 				return Result::InvalidEmitter;
 			}
 
+			auto& emitter = mSpatialManager.getEmitter(emitterHandle);
+
 			if (!mBankManager.has(bankHandle)) {
 				VAE_ERROR("Fired event %i on unloaded bank %i", eventHandle, bankHandle)
 				return Result::InvalidBank;
@@ -430,13 +433,13 @@ namespace vae { namespace core {
 						// Spatialized sounds will play for every listener
 						result = mSpatialManager.forListeners(listenerHandle, [&](Listener& l) {
 							return mVoiceManager.play(
-								event, bankHandle, gain, emitterHandle, l.id, mixerHandle
+								event, bankHandle, gain, emitterHandle, emitter, l.id, mixerHandle
 							);
 						});
 					} else {
 						// non spatialized sounds just once
 						result = mVoiceManager.play(
-							event, bankHandle, gain, emitterHandle, listenerHandle, mixerHandle
+							event, bankHandle, gain, emitterHandle, emitter, listenerHandle, mixerHandle
 						);
 					}
 				}
@@ -487,6 +490,7 @@ namespace vae { namespace core {
 					VAE_DEBUG_EVENT("Event %i:%i stops voices in mixer %i", eventHandle, bankHandle, event.mixer)
 					mVoiceManager.stop(event.mixer, &Voice::mixer, emitterHandle);
 				}
+				emitter.autoplaying = false;
 			}
 
 			else if (event.action == Event::Action::emit) {

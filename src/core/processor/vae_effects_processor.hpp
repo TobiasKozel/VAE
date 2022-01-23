@@ -19,7 +19,7 @@ namespace vae { namespace core {
 			mScratchBuffer.set(buffer);
 			mScratchBuffer.setValidSize(buffer.validSize());
 			VAE_ASSERT(effect.effect->getNumInputs() == effect.effect->getNumOutputs())
-			VAE_ASSERT(buffer.channels() <= effect.effect->getNumInputs())
+			// VAE_ASSERT(buffer.channels() <= effect.effect->getNumInputs())
 			effect.effect->process(effect, mScratchBuffer, buffer);
 		}
 	}; // EffectsProcessor

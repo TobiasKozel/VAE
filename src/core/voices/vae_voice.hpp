@@ -32,6 +32,18 @@ namespace vae { namespace core {
 		ListenerHandle listener;					///< If it's spatialized it's rendered for this listener
 		Sample gain = 1.0;							///< Volume of the voice
 		SampleIndex time = 0;						///< Current time in samples
+
+		Voice() {
+			spatialized = false;
+			chainedEvents = false;
+			started = false;
+			audible = false;
+			HRTF = false;
+			loop = false;
+			filtered = false;
+			critical = false;
+			attenuate = false;
+		}
 	};
 
 	constexpr int _VAE_VOICE_SIZE = sizeof(Voice);

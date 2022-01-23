@@ -214,9 +214,10 @@ namespace vae { namespace core {
 				for (auto& emitter : mEmitters) {
 					auto& e = emitter.second;
 					// TODO seperate auto emitter somehow
-					if (e.bank == InvalidBankHandle) { continue; } // means it wants to auto emit
+					if (e.bank == InvalidBankHandle) { continue; }
+					// means it wants to auto emit
 					if (e.autoplaying) { continue; }
-					// only trigger sounds which haven't been auto triggered
+					// only trigger sounds which haven't been auto triggered already to avoid duplicates
 					const auto distance = glm::distance(l.position, e.position);
 					if (distance < e.maxDist) {
 						mEmitters[emitter.first].autoplaying = true;

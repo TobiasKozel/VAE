@@ -18,13 +18,13 @@
 
 #include "./pod/vae_source.hpp"
 #include "./pod/vae_event.hpp"
+#include "./pod/vae_emitter.hpp"
 
 #include "./../../include/vae/vae.hpp"
 #include "./voices/vae_voice.hpp"
 #include "./voices/vae_voice_filter.hpp"
 #include "./voices/vae_voice_pan.hpp"
 #include "./voices/vae_voice_hrtf.hpp"
-
 
 namespace vae { namespace core {
 	/**
@@ -127,7 +127,7 @@ namespace vae { namespace core {
 		 */
 		Result play(
 			Event& event, const BankHandle bank,
-			const Sample gain, const EmitterHandle emitter,
+			const Sample gain, const EmitterHandle& emitterHandle, const Emitter& emitter,
 			const ListenerHandle listener, const MixerHandle mixer
 		) {
 			VAE_PROFILER_SCOPE()
@@ -186,7 +186,7 @@ namespace vae { namespace core {
 
 					// find out if voice should trigger events on end
 					// if not killing the voice is easier so this gets a flag
-					v.chainedEvents = v.chainedEvents || (event.on_end != InvalidEventHandle);
+					v.chainedEvents = v.chainedEvents || (event.on_end != InvalidEventHandle) || emitter.bank != InvalidBankHandle;
 
 					if (mixer != InvalidMixerHandle && !event.force_mixer) {
 						// Only use the mixer provided if it's valid
@@ -205,7 +205,7 @@ namespace vae { namespace core {
 						mVoiceFiltered[i] = { };
 					}
 
-					v.emitter = emitter;
+					v.emitter = emitterHandle;
 					v.spatialized = event.spatial;
 					mVoicePans[i] = { };	// Always clear this since non spatial use this for manual panning
 					v.HRTF = event.HRTF;
