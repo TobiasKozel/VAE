@@ -72,9 +72,14 @@ Result EnginePimpl::fireGlobalEvent (
 	);
 }
 
-int EnginePimpl::getActiveVoiceCount () {
+Size EnginePimpl::getActiveVoiceCount () {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.getActiveVoiceCount();
+}
+
+Size EnginePimpl::getStreamTime () {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.getStreamTime();
 }
 
 void EnginePimpl::setMasterVolume (

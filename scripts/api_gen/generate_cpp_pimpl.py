@@ -2,93 +2,27 @@
 
 import os
 import sys
-token = "_VAE_PUBLIC_API"
+from api_gen_util_vae import loadApiDescription
+
 className = "EnginePimpl"
-engineFile = os.path.dirname(os.path.realpath(__file__)) + "/../src/core/vae_engine.hpp"
-pimplHeader = os.path.dirname(os.path.realpath(__file__)) + "/../include/vae/vae_pimpl.hpp"
-pimplSource = os.path.dirname(os.path.realpath(__file__)) + "/../src/api/vae_pimpl.cpp"
+jsonDescription = os.path.dirname(os.path.realpath(__file__)) + "/public_api.json"
+pimplHeader = os.path.dirname(os.path.realpath(__file__)) + "/../../include/vae/vae_pimpl.hpp"
+pimplSource = os.path.dirname(os.path.realpath(__file__)) + "/../../src/api/vae_pimpl.cpp"
 
-class Param:
-	def __init__(self):
-		self.name = ""
-		self.typename = ""
-		self.default = False
-
-class Func:
-	def __init__(self):
-		self.name = ""
-		self.returns = ""
-		self.text = ""
-		self.parameters = []
-		self.docblock = []
-
+print(f"Loading {jsonDescription}")
+structs = loadApiDescription(jsonDescription).structs
 functions = []
 
+for i in structs:
+	if i.name == "Engine":
+		functions = i.functions
 
-#####
-##### Parse core::Engine
-#####
-
-file = open(engineFile, "r")
-
-lines = file.readlines()
-
-for i in range(len(lines)):
-	line = lines[i]
-	func = Func()
-	if line.find(token) == -1 or line.find("#define") != -1:
-		continue
-
-	for j in range(i, i + 20):
-			func.text += lines[j]
-			if line.find(")") != -1:
-				# function head end found
-				break
-
-	if (lines[i - 1].find("*/") != -1):
-		# has docblock
-		commentStartLine = i - 1
-		# search the previous 20 line for block start
-		while ((i - 20) < commentStartLine):
-			l = lines[commentStartLine].replace("\t", "")
-			func.docblock.append(l)
-			if (l.find("/**") != -1):
-				func.docblock.reverse()
-				# found the start
-				break
-			commentStartLine -= 1
-
-	parts = func.text.split()
-	func.returns = parts[0]
-	nameParts = parts[2].split("(")
-	func.name = nameParts[0]
-	if (nameParts[1] == ")"):
-		functions.append(func)
-		continue # done
-	parameterText = func.text.split("(")[1]
-	parameterText = parameterText.split(")")[0]
-	parameterPairs = parameterText.split(",")
-	for p in parameterPairs:
-		param = Param()
-		p = p.strip()
-		defaultSplit = p.split("=")
-		if (len(defaultSplit) == 2):
-			param.default = defaultSplit[1].strip()
-		paramTypeSplit = defaultSplit[0].split()
-		for j in range(len(paramTypeSplit) - 1):
-			param.typename += " " + paramTypeSplit[j]
-		param.typename = param.typename.strip()
-		param.name = paramTypeSplit[len(paramTypeSplit) - 1]
-		func.parameters.append(param)
-
-	functions.append(func)
-
-file.close()
 
 #####
 ##### Generate header file
 #####
 
+print(f"Writing {pimplHeader}")
 file = open(pimplHeader, "w")
 file.write("""
 #ifndef _VAE_GEN_PIMPL
@@ -137,7 +71,7 @@ for func in functions:
 	for i in range(len(func.parameters)):
 		param = func.parameters[i]
 		text += f"\n\t\t{param.typename} {param.name}"
-		if (param.default):
+		if (param.default != None):
 			text += f" = {param.default}"
 		if (i < len(func.parameters) - 1):
 			text += ","
@@ -158,6 +92,7 @@ file.close()
 ##### Generate source file
 #####
 
+print(f"Writing {pimplSource}")
 file = open(pimplSource, "w")
 
 file.write("""

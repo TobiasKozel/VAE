@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Small script to decode sofa files and write them into a simpler format
+# Small script to decode sofa files and write them into a simpler format used by the engine
 
 from pysofaconventions import *
 import os
@@ -60,9 +60,8 @@ for i in range(0, positions):
 	position["x"] = round(sourcePositions[i][0], 4)
 	position["y"] = round(sourcePositions[i][1], 4)
 	position["z"] = round(sourcePositions[i][2], 4)
-	if coordinateType == "cartesian":
-		# radius = math.sqrt(x * x + y * y + z * z)
-		# todo the rest
+	if coordinateType != "cartesian":
+		# todo other cases should be converted
 		pass
 
 	ir = irs[i, :, :]

@@ -108,7 +108,9 @@ public:
 	/**
 	 * @brief Get the number of currently playing Voices
 	 */
-	int _VAE_API_EXPORT getActiveVoiceCount ();
+	Size _VAE_API_EXPORT getActiveVoiceCount ();
+
+	Size _VAE_API_EXPORT getStreamTime ();
 
 	/**
 	 * @brief Set the global output volume before the limiter.
