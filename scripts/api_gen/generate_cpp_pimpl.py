@@ -62,15 +62,18 @@ public:
 
 """%((className,) * 6))
 
+def getTypeString(param):
+	return f"""{"const " if param.const else ""}{param.typename}{"&" if param.reference else ""}{" " + param.name if param.name else ""}"""
+
 for func in functions:
 	text = ""
 	for doc in func.docblock:
 		text += f"\t{doc}"
 
-	text += f"\t{func.returns} _VAE_API_EXPORT {func.name} ("
+	text += f"\t{getTypeString(func.returns)} _VAE_API_EXPORT {func.name} ("
 	for i in range(len(func.parameters)):
 		param = func.parameters[i]
-		text += f"\n\t\t{param.typename} {param.name}"
+		text += f"\n\t\t{getTypeString(param)}"
 		if (param.default != None):
 			text += f" = {param.default}"
 		if (i < len(func.parameters) - 1):
@@ -113,10 +116,10 @@ void %s::destroy() {
 
 for func in functions:
 	text = ""
-	text += f"{func.returns} {className}::{func.name} ("
+	text += f"{getTypeString(func.returns)} {className}::{func.name} ("
 	for i in range(len(func.parameters)):
 		param = func.parameters[i]
-		text += f"\n\t{param.typename} {param.name}"
+		text += f"\n\t{getTypeString(param)}"
 		if (i < len(func.parameters) - 1):
 			text += ","
 		else:

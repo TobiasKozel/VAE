@@ -7,15 +7,48 @@ from api_gen_util_vae import *
 
 # Small script to analyze the c++ api code and write it to a json
 
-token = "_VAE_PUBLIC_API"
-engineFile = os.path.dirname(os.path.realpath(__file__)) + "/../../src/core/vae_engine.hpp"
-enumFile = os.path.dirname(os.path.realpath(__file__)) + "/../../include/vae/vae_enums.hpp"
-structFile = os.path.dirname(os.path.realpath(__file__)) + "/../../include/vae/vae_structs.hpp"
+def abs_path(path):
+	return os.path.dirname(os.path.realpath(__file__)) + path
 
-jsonDescription = os.path.dirname(os.path.realpath(__file__)) + "/public_api.json"
+token = "_VAE_PUBLIC_API"
+engineFile = abs_path("/../../src/core/vae_engine.hpp")
+enumFile = abs_path("/../../include/vae/vae_enums.hpp")
+structFile = abs_path("/../../include/vae/vae_structs.hpp")
+typeDefsFile = abs_path("/../../include/vae/vae_type_defs.hpp")
+jsonDescription = abs_path("/public_api.json")
 
 enums = []
 structs = []
+types = []
+
+def resolve_type(name):
+	for i in types:
+		if i.alias == name:
+			return i.typename
+
+	return name
+
+#####
+##### Parse types
+#####
+
+print(f"Opening types {typeDefsFile}")
+file = open(typeDefsFile, "r")
+lines = file.readlines()
+
+for i in range(len(lines)):
+	line = lines[i]
+	if (line.find("using") == -1):
+		continue # look for type definition
+
+	line = line.split("using ")[1]
+	line = line.split(";")[0]
+	parts = line.split("=")
+	typ = Type()
+	typ.alias = parts[0].strip()
+	typ.typename = parts[1].strip()
+	types.append(typ)
+
 
 #####
 ##### Parse enums
@@ -35,17 +68,25 @@ for i in range(len(lines)):
 	enum.name = line.split(" ")[2]
 
 	j = i + 1
+	index = 0
 	while (1):
 		line = lines[j]
 		if line.find("};") != -1:
 			break
+
+		if index != 0 and line.find("=") != -1:
+			print("Error: enum values not implemented")
+			sys.exit()
+
 		enumValue = EnumValue()
 		enumValue.name = line.split(",")[0]
-		enumValue.name = line.split("//")[0]
+		enumValue.name = enumValue.name.split("//")[0]
 		enumValue.name = enumValue.name.split("=")[0]
 		enumValue.name = enumValue.name.strip()
-		enum.values.append(enumValue)
+		enumValue.index = index
+		enum.children.append(enumValue)
 		j += 1
+		index += 1
 
 	enums.append(enum)
 	i = j + 1
@@ -82,29 +123,15 @@ for i in range(len(lines)):
 			j += 1
 			continue # skip function pointer
 
+		if line.find("[") != -1:
+			j += 1
+			continue # skip array types
+
 		prop = Property()
 
 		line = line.split(";")[0]
-
-		if line.find("=") != -1:
-			parts = line.split("=")
-			prop.default = parts[1].strip()
-			line = parts[0].strip()
-		else:
-			prop.default = None
-
-		if line.find("const") != -1:
-			prop.const = True
-			line = line.split("const")[1]
-
-		line = line.strip()
-		line = line.split(" ")
-		prop.name = line[-1]
-		line[-1] = ""
-		for k in line:
-			prop.typename = prop.typename + k + " "
-
-		prop.typename = prop.typename.strip()
+		prop.fromString(line)
+		prop.realtype = resolve_type(prop.typename)
 		struct.properties.append(prop)
 		j += 1
 
@@ -117,6 +144,7 @@ for i in range(len(lines)):
 #####
 
 engine = Struct()
+engine.namespace = "vae::core"
 engine.name = "Engine"
 print(f"Opening core::Engine file {engineFile}")
 file = open(engineFile, "r")
@@ -149,7 +177,10 @@ for i in range(len(lines)):
 			commentStartLine -= 1
 
 	parts = func.text.split()
-	func.returns = parts[0]
+	func.returns = Property()
+	func.returns.fromReturnString(parts[0])
+	func.returns.realtype = resolve_type(func.returns.typename)
+
 	nameParts = parts[2].split("(")
 	func.name = nameParts[0]
 	if (nameParts[1] == ")"):
@@ -159,16 +190,9 @@ for i in range(len(lines)):
 	parameterText = parameterText.split(")")[0]
 	parameterPairs = parameterText.split(",")
 	for p in parameterPairs:
-		param = Param()
-		p = p.strip()
-		defaultSplit = p.split("=")
-		if (len(defaultSplit) == 2):
-			param.default = defaultSplit[1].strip()
-		paramTypeSplit = defaultSplit[0].split()
-		for j in range(len(paramTypeSplit) - 1):
-			param.typename += " " + paramTypeSplit[j]
-		param.typename = param.typename.strip()
-		param.name = paramTypeSplit[len(paramTypeSplit) - 1]
+		param = Property()
+		param.fromString(p)
+		param.realtype = resolve_type(param.typename)
 		func.parameters.append(param)
 
 	engine.functions.append(func)
@@ -190,6 +214,7 @@ class CustomEncoder(json.JSONEncoder):
 with open(jsonDescription, "w") as outfile:
 	out = {
 		"enums": enums,
-		"structs": structs
+		"structs": structs,
+		"types": types
 	}
 	json.dump(out, outfile, cls=CustomEncoder, indent=4)

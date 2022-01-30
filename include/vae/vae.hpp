@@ -38,7 +38,6 @@ namespace vae {
 	 * @brief Since 0 is a valid handle, these are used to identify invalid ones.
 	 * Seems a little odd but means they can be used to direcly address array elements.
 	 */
-	constexpr GenericHandle InvalidHandle			= ~0;
 	constexpr EventHandle InvalidEventHandle		= ~0;
 	constexpr SourceHandle InvalidSourceHandle		= ~0;
 	constexpr BankHandle InvalidBankHandle			= ~0;
