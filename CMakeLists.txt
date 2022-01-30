@@ -11,7 +11,6 @@ project(
 )
 
 option(VAE_BUILD_SHARED_LIBS "Build shared lib" OFF)	# if this is on vae_dev doesn't compile :/
-option(VAE_BUILD_PIMPL "Build PIMPL API" OFF)			# On if shared libs are built, otherwise vae isn't useable beacuse it has no compile units
 option(VAE_PROFILER "Use profiler" OFF)
 option(VAE_BACKEND_PORTAUDIO "Compile with port audio" OFF)
 option(VAE_BACKEND_RTAUDIO "Compile with RtAudio" ON)
@@ -26,7 +25,8 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 #################            add main lib             #################
 
-file(GLOB PIMPL_API "src/api/*.cpp")
+file(GLOB PIMPL_API "src/api/vae_pimpl.cpp")
+file(GLOB C_API "src/api/vae_c_api.cpp")
 file(GLOB SRC_CORE "src/core/*.hpp")
 file(GLOB SRC_WRAPPED "src/wrapped/*.cpp")
 file(GLOB SRC_DEVICE "src/core/device/*.hpp")
@@ -49,22 +49,17 @@ function(VAE_ADD_SHARED)
 			${SRC_CORE}
 			${SRC_WRAPPED}
 			${SRC_DEVICE}
-			${PIMPL_API}
 	)
 	list(APPEND VAE_DEFINES "VAE_DLL_EXPORT")
 endfunction()
 
 function(VAE_ADD_STATIC)
 	message("VAE: static build")
-	if(NOT VAE_BUILD_PIMPL)
-		UNSET(PIMPL_API)
-	endif()
 	add_library(vae
 		STATIC
 			${SRC_CORE}
 			${SRC_WRAPPED}
 			${SRC_DEVICE}
-			${PIMPL_API}
 	)
 endfunction()
 
@@ -156,3 +151,25 @@ target_link_libraries(vae PRIVATE ${VAE_DEPS})
 
 # for developing
 add_subdirectory(dev)
+
+add_library(vae_pimpl
+	SHARED
+		${SRC_CORE}
+		${SRC_WRAPPED}
+		${SRC_DEVICE}
+		${PIMPL_API}
+)
+target_include_directories(vae_pimpl PRIVATE vae)
+target_link_libraries(vae_pimpl PRIVATE vae)
+
+add_library(vae_c_api
+	SHARED
+		${SRC_CORE}
+		${SRC_WRAPPED}
+		${SRC_DEVICE}
+		${C_API}
+)
+target_include_directories(vae_c_api PRIVATE vae)
+target_link_libraries(vae_c_api PRIVATE vae)
+
+
