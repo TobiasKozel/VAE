@@ -25,8 +25,8 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 #################            add main lib             #################
 
-file(GLOB PIMPL_API "src/api/vae_pimpl.cpp")
-file(GLOB C_API "src/api/vae_c_api.cpp")
+file(GLOB SRC_PIMPL_API "src/api/vae_pimpl.cpp")
+file(GLOB SRC_C_API "src/api/vae_c_api.cpp")
 file(GLOB SRC_CORE "src/core/*.hpp")
 file(GLOB SRC_WRAPPED "src/wrapped/*.cpp")
 file(GLOB SRC_DEVICE "src/core/device/*.hpp")
@@ -152,12 +152,13 @@ target_link_libraries(vae PRIVATE ${VAE_DEPS})
 # for developing
 add_subdirectory(dev)
 
+
 add_library(vae_pimpl
 	SHARED
 		${SRC_CORE}
 		${SRC_WRAPPED}
 		${SRC_DEVICE}
-		${PIMPL_API}
+		${SRC_PIMPL_API}
 )
 target_include_directories(vae_pimpl PRIVATE vae)
 target_link_libraries(vae_pimpl PRIVATE vae)
@@ -167,7 +168,7 @@ add_library(vae_c_api
 		${SRC_CORE}
 		${SRC_WRAPPED}
 		${SRC_DEVICE}
-		${C_API}
+		${SRC_C_API}
 )
 target_include_directories(vae_c_api PRIVATE vae)
 target_link_libraries(vae_c_api PRIVATE vae)
