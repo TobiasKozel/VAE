@@ -76,8 +76,10 @@ def makeConstructor(clas):
 		}}
 
 		{makeExternal(f"void {dtor}(IntPtr obj)")}
-		~{clas}() {{
+		public void Dispose() {{
 			if (owned) {{ {dtor}(ptr); }}
+			Dispose();
+			GC.SuppressFinalize(this);
 		}}
 """
 
@@ -136,12 +138,12 @@ for i in desc.structs:
 
 		funcs += f"""
 		{makeExternal(f"{retyp} {cfunc}(IntPtr obj{paramsForC})")}
-		{retyp} {j.name}({paramsForCs}) {{
+		public {retyp} {j.name}({paramsForCs}) {{
 			return {cfunc}(ptr{forwardParams});
 		}}"""
 
 	clas = f"""
-	public class {i.name} {{
+	public class {i.name} : IDisposable {{
 		{funcs}
 	}}"""
 	classes += clas
