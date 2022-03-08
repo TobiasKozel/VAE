@@ -247,7 +247,7 @@ Result EnginePimpl::setListener (
 }
 
 Result EnginePimpl::loadHRTF (
-	const char* path,
+	CString path,
 	Size size
 ) {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
@@ -258,7 +258,7 @@ Result EnginePimpl::loadHRTF (
 }
 
 Result EnginePimpl::loadBank (
-	const char* path,
+	CString path,
 	Size size
 ) {
 	auto& e = *reinterpret_cast<core::Engine*>(this);

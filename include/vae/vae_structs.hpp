@@ -9,7 +9,7 @@ namespace vae {
 	 * to EventCallback provided in the EngineConfig.
 	 */
 	struct EventCallbackData {
-		void* context;			///< Can point to custom context data also provided when setting the callback, ! not context based on event!
+		Pointer context;			///< Can point to custom context data also provided when setting the callback, ! not context based on event!
 		BankHandle bank;		///< Which bank the event is from
 		EventHandle event;		///< Which event
 		EmitterHandle emitter;	///< Which emitter
@@ -23,7 +23,7 @@ namespace vae {
 		/**
 		 * @brief Path where the bank files are located, needs to end with a trailing /
 		 */
-		const char* rootPath = "./";
+		CString rootPath = "./";
 
 		/**
 		 * @brief Samplerate requested from device.
@@ -43,7 +43,7 @@ namespace vae {
 		 * @brief Custom data that can be accached to the EventCallback
 		 * to maintain context
 		 */
-		void* eventCallbackContext = nullptr;
+		Pointer eventCallbackContext = nullptr;
 
 		/**
 		 * @brief How many emitters to allocate upfront.
@@ -125,10 +125,10 @@ namespace vae {
 	 */
 	struct DeviceInfo {
 		int id;							///< Negative values for invalid device.
-		Size sampleRate = 0;	///< TODO not used?
+		Size sampleRate = 0;			///< TODO not used?
 		char name[255];					///< Device name reported from backend
 		char api[4];					///< API abbreviation
-		Size bufferSize = 0;	///< desired bufferSize
+		Size bufferSize = 0;			///< desired bufferSize
 		unsigned char channelsIn = 0;
 		unsigned char channelsOut = 0;
 	};

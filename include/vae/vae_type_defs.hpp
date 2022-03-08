@@ -16,6 +16,9 @@ namespace vae {
 	using GlobalEventHandle		= unsigned int;		///< Used to globally address events, holds space for BankHandle and EventHandle
 	using GlobalMixerHandle		= unsigned short;	///< TODO Allow user to address a mixer with a composite handle (bank+mixer).
 	using GlobalParameterHandle = unsigned int;		///< TODO Allow user to address Effect parameter with a composite handle (bank+mixer+effectslot+effectparam)
+
+	using Pointer				= void*;			///< Pointer type
+	using CString				= const char*;		///<
 }
 
 #endif // _VAE_PUBLIC_TYPES

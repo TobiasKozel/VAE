@@ -2,12 +2,13 @@
 
 import os
 import sys
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from api_gen_util_vae import loadApiDescription
 
 className = "EnginePimpl"
-jsonDescription = os.path.dirname(os.path.realpath(__file__)) + "/public_api.json"
-pimplHeader = os.path.dirname(os.path.realpath(__file__)) + "/../../include/vae/vae_pimpl.hpp"
-pimplSource = os.path.dirname(os.path.realpath(__file__)) + "/../../src/api/vae_pimpl.cpp"
+jsonDescription = os.path.dirname(os.path.realpath(__file__)) + "/../public_api.json"
+pimplHeader = os.path.dirname(os.path.realpath(__file__)) + "/../../../include/vae/vae_pimpl.hpp"
+pimplSource = os.path.dirname(os.path.realpath(__file__)) + "/../../../src/api/vae_pimpl.cpp"
 
 print(f"Loading {jsonDescription}")
 structs = loadApiDescription(jsonDescription).structs

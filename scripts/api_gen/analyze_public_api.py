@@ -5,17 +5,17 @@ import sys
 import json
 from api_gen_util_vae import *
 
-# Small script to analyze the c++ api code and write it to a json
+# Primitive script to analyze the c++ api code and write it to a json
 
 def abs_path(path):
 	return os.path.dirname(os.path.realpath(__file__)) + path
 
-token = "_VAE_PUBLIC_API"
-engineFile = abs_path("/../../src/core/vae_engine.hpp")
-enumFile = abs_path("/../../include/vae/vae_enums.hpp")
-structFile = abs_path("/../../include/vae/vae_structs.hpp")
-typeDefsFile = abs_path("/../../include/vae/vae_type_defs.hpp")
-jsonDescription = abs_path("/public_api.json")
+token = "_VAE_PUBLIC_API"										# token to look for when exporting member functions
+engineFile = abs_path("/../../src/core/vae_engine.hpp")			# only functions will be parsed
+enumFile = abs_path("/../../include/vae/vae_enums.hpp")			# only enums will be parsed
+structFile = abs_path("/../../include/vae/vae_structs.hpp")		# only members of structs will be parsed
+typeDefsFile = abs_path("/../../include/vae/vae_type_defs.hpp")	# only type definitions/alias will be parsed
+jsonDescription = abs_path("/public_api.json")					# result file
 
 enums = []
 structs = []

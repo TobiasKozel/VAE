@@ -1,5 +1,5 @@
-
 #include "../core/vae_engine.hpp"
+// #include "../../../src/core/vae_engine.hpp"
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 	#define _VAE_API_EXPORT __declspec(dllexport)
@@ -7,549 +7,599 @@
 	#define _VAE_API_EXPORT __attribute__((visibility("default")))
 #endif
 
+using namespace vae;
+using namespace core;
+
 extern "C"
 {
-
-	_VAE_API_EXPORT void* vae_create_EventCallbackData() {
-		return new vae::EventCallbackData();
+	////////////// EventCallbackData
+	_VAE_API_EXPORT Pointer vae_create_EventCallbackData() {
+		return new EventCallbackData();
 	}
 
-	_VAE_API_EXPORT void vae_destroy_EventCallbackData(void* obj) {
-		delete reinterpret_cast<vae::EventCallbackData*>(obj);
-	}
-	
-	_VAE_API_EXPORT void vae_EventCallbackData_set_context(void* obj, void* value) {
-		reinterpret_cast<vae::EventCallbackData*>(obj)->context = value;
+	_VAE_API_EXPORT void vae_destroy_EventCallbackData(Pointer obj) {
+		delete reinterpret_cast<EventCallbackData*>(obj);
 	}
 
-	_VAE_API_EXPORT void* vae_EventCallbackData_get_context(void* obj) {
-		return reinterpret_cast<vae::EventCallbackData*>(obj)->context;
-	}
-		
-	_VAE_API_EXPORT void vae_EventCallbackData_set_bank(void* obj, unsigned char value) {
-		reinterpret_cast<vae::EventCallbackData*>(obj)->bank = value;
+		///// EventCallbackData.context
+		_VAE_API_EXPORT void vae_EventCallbackData_set_context(Pointer obj, Pointer value) {
+			reinterpret_cast<EventCallbackData*>(obj)->context = value;
+		}
+		_VAE_API_EXPORT Pointer vae_EventCallbackData_get_context(Pointer obj) {
+			return reinterpret_cast<EventCallbackData*>(obj)->context;
+		}
+		///// EventCallbackData.bank
+		_VAE_API_EXPORT void vae_EventCallbackData_set_bank(Pointer obj, BankHandle value) {
+			reinterpret_cast<EventCallbackData*>(obj)->bank = value;
+		}
+		_VAE_API_EXPORT BankHandle vae_EventCallbackData_get_bank(Pointer obj) {
+			return reinterpret_cast<EventCallbackData*>(obj)->bank;
+		}
+		///// EventCallbackData.event
+		_VAE_API_EXPORT void vae_EventCallbackData_set_event(Pointer obj, EventHandle value) {
+			reinterpret_cast<EventCallbackData*>(obj)->event = value;
+		}
+		_VAE_API_EXPORT EventHandle vae_EventCallbackData_get_event(Pointer obj) {
+			return reinterpret_cast<EventCallbackData*>(obj)->event;
+		}
+		///// EventCallbackData.emitter
+		_VAE_API_EXPORT void vae_EventCallbackData_set_emitter(Pointer obj, EmitterHandle value) {
+			reinterpret_cast<EventCallbackData*>(obj)->emitter = value;
+		}
+		_VAE_API_EXPORT EmitterHandle vae_EventCallbackData_get_emitter(Pointer obj) {
+			return reinterpret_cast<EventCallbackData*>(obj)->emitter;
+		}
+
+	////////////// EngineConfig
+	_VAE_API_EXPORT Pointer vae_create_EngineConfig() {
+		return new EngineConfig();
 	}
 
-	_VAE_API_EXPORT unsigned char vae_EventCallbackData_get_bank(void* obj) {
-		return reinterpret_cast<vae::EventCallbackData*>(obj)->bank;
-	}
-		
-	_VAE_API_EXPORT void vae_EventCallbackData_set_event(void* obj, unsigned short value) {
-		reinterpret_cast<vae::EventCallbackData*>(obj)->event = value;
+	_VAE_API_EXPORT void vae_destroy_EngineConfig(Pointer obj) {
+		delete reinterpret_cast<EngineConfig*>(obj);
 	}
 
-	_VAE_API_EXPORT unsigned short vae_EventCallbackData_get_event(void* obj) {
-		return reinterpret_cast<vae::EventCallbackData*>(obj)->event;
-	}
-		
-	_VAE_API_EXPORT void vae_EventCallbackData_set_emitter(void* obj, unsigned int value) {
-		reinterpret_cast<vae::EventCallbackData*>(obj)->emitter = value;
+		///// EngineConfig.rootPath
+		_VAE_API_EXPORT void vae_EngineConfig_set_rootPath(Pointer obj, CString value) {
+			reinterpret_cast<EngineConfig*>(obj)->rootPath = value;
+		}
+		_VAE_API_EXPORT CString vae_EngineConfig_get_rootPath(Pointer obj) {
+			return reinterpret_cast<EngineConfig*>(obj)->rootPath;
+		}
+		///// EngineConfig.internalSampleRate
+		_VAE_API_EXPORT void vae_EngineConfig_set_internalSampleRate(Pointer obj, Size value) {
+			reinterpret_cast<EngineConfig*>(obj)->internalSampleRate = value;
+		}
+		_VAE_API_EXPORT Size vae_EngineConfig_get_internalSampleRate(Pointer obj) {
+			return reinterpret_cast<EngineConfig*>(obj)->internalSampleRate;
+		}
+		///// EngineConfig.eventCallbackContext
+		_VAE_API_EXPORT void vae_EngineConfig_set_eventCallbackContext(Pointer obj, Pointer value) {
+			reinterpret_cast<EngineConfig*>(obj)->eventCallbackContext = value;
+		}
+		_VAE_API_EXPORT Pointer vae_EngineConfig_get_eventCallbackContext(Pointer obj) {
+			return reinterpret_cast<EngineConfig*>(obj)->eventCallbackContext;
+		}
+		///// EngineConfig.preAllocatedEmitters
+		_VAE_API_EXPORT void vae_EngineConfig_set_preAllocatedEmitters(Pointer obj, Size value) {
+			reinterpret_cast<EngineConfig*>(obj)->preAllocatedEmitters = value;
+		}
+		_VAE_API_EXPORT Size vae_EngineConfig_get_preAllocatedEmitters(Pointer obj) {
+			return reinterpret_cast<EngineConfig*>(obj)->preAllocatedEmitters;
+		}
+		///// EngineConfig.voices
+		_VAE_API_EXPORT void vae_EngineConfig_set_voices(Pointer obj, Size value) {
+			reinterpret_cast<EngineConfig*>(obj)->voices = value;
+		}
+		_VAE_API_EXPORT Size vae_EngineConfig_get_voices(Pointer obj) {
+			return reinterpret_cast<EngineConfig*>(obj)->voices;
+		}
+		///// EngineConfig.hrtfVoices
+		_VAE_API_EXPORT void vae_EngineConfig_set_hrtfVoices(Pointer obj, Size value) {
+			reinterpret_cast<EngineConfig*>(obj)->hrtfVoices = value;
+		}
+		_VAE_API_EXPORT Size vae_EngineConfig_get_hrtfVoices(Pointer obj) {
+			return reinterpret_cast<EngineConfig*>(obj)->hrtfVoices;
+		}
+		///// EngineConfig.virtualVoices
+		_VAE_API_EXPORT void vae_EngineConfig_set_virtualVoices(Pointer obj, Size value) {
+			reinterpret_cast<EngineConfig*>(obj)->virtualVoices = value;
+		}
+		_VAE_API_EXPORT Size vae_EngineConfig_get_virtualVoices(Pointer obj) {
+			return reinterpret_cast<EngineConfig*>(obj)->virtualVoices;
+		}
+		///// EngineConfig.finishedVoiceQueueSize
+		_VAE_API_EXPORT void vae_EngineConfig_set_finishedVoiceQueueSize(Pointer obj, Size value) {
+			reinterpret_cast<EngineConfig*>(obj)->finishedVoiceQueueSize = value;
+		}
+		_VAE_API_EXPORT Size vae_EngineConfig_get_finishedVoiceQueueSize(Pointer obj) {
+			return reinterpret_cast<EngineConfig*>(obj)->finishedVoiceQueueSize;
+		}
+		///// EngineConfig.preferredBufferSize
+		_VAE_API_EXPORT void vae_EngineConfig_set_preferredBufferSize(Pointer obj, Size value) {
+			reinterpret_cast<EngineConfig*>(obj)->preferredBufferSize = value;
+		}
+		_VAE_API_EXPORT Size vae_EngineConfig_get_preferredBufferSize(Pointer obj) {
+			return reinterpret_cast<EngineConfig*>(obj)->preferredBufferSize;
+		}
+		///// EngineConfig.bufferPeriods
+		_VAE_API_EXPORT void vae_EngineConfig_set_bufferPeriods(Pointer obj, Size value) {
+			reinterpret_cast<EngineConfig*>(obj)->bufferPeriods = value;
+		}
+		_VAE_API_EXPORT Size vae_EngineConfig_get_bufferPeriods(Pointer obj) {
+			return reinterpret_cast<EngineConfig*>(obj)->bufferPeriods;
+		}
+		///// EngineConfig.updateInAudioThread
+		_VAE_API_EXPORT void vae_EngineConfig_set_updateInAudioThread(Pointer obj, Pointer value) {
+			reinterpret_cast<EngineConfig*>(obj)->updateInAudioThread =
+				*reinterpret_cast<bool*>(value);
+		}
+		_VAE_API_EXPORT Pointer vae_EngineConfig_get_updateInAudioThread(Pointer obj) {
+			return &reinterpret_cast<EngineConfig*>(obj)->updateInAudioThread;
+		}
+		///// EngineConfig.processInBufferSwitch
+		_VAE_API_EXPORT void vae_EngineConfig_set_processInBufferSwitch(Pointer obj, Pointer value) {
+			reinterpret_cast<EngineConfig*>(obj)->processInBufferSwitch =
+				*reinterpret_cast<bool*>(value);
+		}
+		_VAE_API_EXPORT Pointer vae_EngineConfig_get_processInBufferSwitch(Pointer obj) {
+			return &reinterpret_cast<EngineConfig*>(obj)->processInBufferSwitch;
+		}
+
+	////////////// DeviceInfo
+	_VAE_API_EXPORT Pointer vae_create_DeviceInfo() {
+		return new DeviceInfo();
 	}
 
-	_VAE_API_EXPORT unsigned int vae_EventCallbackData_get_emitter(void* obj) {
-		return reinterpret_cast<vae::EventCallbackData*>(obj)->emitter;
-	}
-		
-	_VAE_API_EXPORT void* vae_create_EngineConfig() {
-		return new vae::EngineConfig();
+	_VAE_API_EXPORT void vae_destroy_DeviceInfo(Pointer obj) {
+		delete reinterpret_cast<DeviceInfo*>(obj);
 	}
 
-	_VAE_API_EXPORT void vae_destroy_EngineConfig(void* obj) {
-		delete reinterpret_cast<vae::EngineConfig*>(obj);
-	}
-	
-	_VAE_API_EXPORT void vae_EngineConfig_set_rootPath(void* obj, const char* value) {
-		reinterpret_cast<vae::EngineConfig*>(obj)->rootPath = value;
+		///// DeviceInfo.id
+		_VAE_API_EXPORT void vae_DeviceInfo_set_id(Pointer obj, Pointer value) {
+			reinterpret_cast<DeviceInfo*>(obj)->id =
+				*reinterpret_cast<int*>(value);
+		}
+		_VAE_API_EXPORT Pointer vae_DeviceInfo_get_id(Pointer obj) {
+			return &reinterpret_cast<DeviceInfo*>(obj)->id;
+		}
+		///// DeviceInfo.sampleRate
+		_VAE_API_EXPORT void vae_DeviceInfo_set_sampleRate(Pointer obj, Size value) {
+			reinterpret_cast<DeviceInfo*>(obj)->sampleRate = value;
+		}
+		_VAE_API_EXPORT Size vae_DeviceInfo_get_sampleRate(Pointer obj) {
+			return reinterpret_cast<DeviceInfo*>(obj)->sampleRate;
+		}
+		///// DeviceInfo.bufferSize
+		_VAE_API_EXPORT void vae_DeviceInfo_set_bufferSize(Pointer obj, Size value) {
+			reinterpret_cast<DeviceInfo*>(obj)->bufferSize = value;
+		}
+		_VAE_API_EXPORT Size vae_DeviceInfo_get_bufferSize(Pointer obj) {
+			return reinterpret_cast<DeviceInfo*>(obj)->bufferSize;
+		}
+		///// DeviceInfo.channelsIn
+		_VAE_API_EXPORT void vae_DeviceInfo_set_channelsIn(Pointer obj, Pointer value) {
+			reinterpret_cast<DeviceInfo*>(obj)->channelsIn =
+				*reinterpret_cast<unsigned char*>(value);
+		}
+		_VAE_API_EXPORT Pointer vae_DeviceInfo_get_channelsIn(Pointer obj) {
+			return &reinterpret_cast<DeviceInfo*>(obj)->channelsIn;
+		}
+		///// DeviceInfo.channelsOut
+		_VAE_API_EXPORT void vae_DeviceInfo_set_channelsOut(Pointer obj, Pointer value) {
+			reinterpret_cast<DeviceInfo*>(obj)->channelsOut =
+				*reinterpret_cast<unsigned char*>(value);
+		}
+		_VAE_API_EXPORT Pointer vae_DeviceInfo_get_channelsOut(Pointer obj) {
+			return &reinterpret_cast<DeviceInfo*>(obj)->channelsOut;
+		}
+
+	////////////// Vector3
+	_VAE_API_EXPORT Pointer vae_create_Vector3() {
+		return new Vector3();
 	}
 
-	_VAE_API_EXPORT const char* vae_EngineConfig_get_rootPath(void* obj) {
-		return reinterpret_cast<vae::EngineConfig*>(obj)->rootPath;
-	}
-		
-	_VAE_API_EXPORT void vae_EngineConfig_set_internalSampleRate(void* obj, unsigned int value) {
-		reinterpret_cast<vae::EngineConfig*>(obj)->internalSampleRate = value;
+	_VAE_API_EXPORT void vae_destroy_Vector3(Pointer obj) {
+		delete reinterpret_cast<Vector3*>(obj);
 	}
 
-	_VAE_API_EXPORT unsigned int vae_EngineConfig_get_internalSampleRate(void* obj) {
-		return reinterpret_cast<vae::EngineConfig*>(obj)->internalSampleRate;
-	}
-		
-	_VAE_API_EXPORT void vae_EngineConfig_set_eventCallbackContext(void* obj, void* value) {
-		reinterpret_cast<vae::EngineConfig*>(obj)->eventCallbackContext = value;
+		///// Vector3.x
+		_VAE_API_EXPORT void vae_Vector3_set_x(Pointer obj, Pointer value) {
+			reinterpret_cast<Vector3*>(obj)->x =
+				*reinterpret_cast<float*>(value);
+		}
+		_VAE_API_EXPORT Pointer vae_Vector3_get_x(Pointer obj) {
+			return &reinterpret_cast<Vector3*>(obj)->x;
+		}
+		///// Vector3.y
+		_VAE_API_EXPORT void vae_Vector3_set_y(Pointer obj, Pointer value) {
+			reinterpret_cast<Vector3*>(obj)->y =
+				*reinterpret_cast<float*>(value);
+		}
+		_VAE_API_EXPORT Pointer vae_Vector3_get_y(Pointer obj) {
+			return &reinterpret_cast<Vector3*>(obj)->y;
+		}
+		///// Vector3.z
+		_VAE_API_EXPORT void vae_Vector3_set_z(Pointer obj, Pointer value) {
+			reinterpret_cast<Vector3*>(obj)->z =
+				*reinterpret_cast<float*>(value);
+		}
+		_VAE_API_EXPORT Pointer vae_Vector3_get_z(Pointer obj) {
+			return &reinterpret_cast<Vector3*>(obj)->z;
+		}
+
+	////////////// LocationDirection
+	_VAE_API_EXPORT Pointer vae_create_LocationDirection() {
+		return new LocationDirection();
 	}
 
-	_VAE_API_EXPORT void* vae_EngineConfig_get_eventCallbackContext(void* obj) {
-		return reinterpret_cast<vae::EngineConfig*>(obj)->eventCallbackContext;
-	}
-		
-	_VAE_API_EXPORT void vae_EngineConfig_set_preAllocatedEmitters(void* obj, unsigned int value) {
-		reinterpret_cast<vae::EngineConfig*>(obj)->preAllocatedEmitters = value;
+	_VAE_API_EXPORT void vae_destroy_LocationDirection(Pointer obj) {
+		delete reinterpret_cast<LocationDirection*>(obj);
 	}
 
-	_VAE_API_EXPORT unsigned int vae_EngineConfig_get_preAllocatedEmitters(void* obj) {
-		return reinterpret_cast<vae::EngineConfig*>(obj)->preAllocatedEmitters;
-	}
-		
-	_VAE_API_EXPORT void vae_EngineConfig_set_voices(void* obj, unsigned int value) {
-		reinterpret_cast<vae::EngineConfig*>(obj)->voices = value;
+		///// LocationDirection.position
+		_VAE_API_EXPORT void vae_LocationDirection_set_position(Pointer obj, Pointer value) {
+			reinterpret_cast<LocationDirection*>(obj)->position =
+				*reinterpret_cast<Vector3*>(value);
+		}
+		_VAE_API_EXPORT Pointer vae_LocationDirection_get_position(Pointer obj) {
+			return &reinterpret_cast<LocationDirection*>(obj)->position;
+		}
+		///// LocationDirection.direction
+		_VAE_API_EXPORT void vae_LocationDirection_set_direction(Pointer obj, Pointer value) {
+			reinterpret_cast<LocationDirection*>(obj)->direction =
+				*reinterpret_cast<Vector3*>(value);
+		}
+		_VAE_API_EXPORT Pointer vae_LocationDirection_get_direction(Pointer obj) {
+			return &reinterpret_cast<LocationDirection*>(obj)->direction;
+		}
+
+	////////////// LocationOrientation
+	_VAE_API_EXPORT Pointer vae_create_LocationOrientation() {
+		return new LocationOrientation();
 	}
 
-	_VAE_API_EXPORT unsigned int vae_EngineConfig_get_voices(void* obj) {
-		return reinterpret_cast<vae::EngineConfig*>(obj)->voices;
-	}
-		
-	_VAE_API_EXPORT void vae_EngineConfig_set_hrtfVoices(void* obj, unsigned int value) {
-		reinterpret_cast<vae::EngineConfig*>(obj)->hrtfVoices = value;
+	_VAE_API_EXPORT void vae_destroy_LocationOrientation(Pointer obj) {
+		delete reinterpret_cast<LocationOrientation*>(obj);
 	}
 
-	_VAE_API_EXPORT unsigned int vae_EngineConfig_get_hrtfVoices(void* obj) {
-		return reinterpret_cast<vae::EngineConfig*>(obj)->hrtfVoices;
-	}
-		
-	_VAE_API_EXPORT void vae_EngineConfig_set_virtualVoices(void* obj, unsigned int value) {
-		reinterpret_cast<vae::EngineConfig*>(obj)->virtualVoices = value;
+
+	////////////// Engine
+	_VAE_API_EXPORT Pointer vae_create_Engine() {
+		return new Engine();
 	}
 
-	_VAE_API_EXPORT unsigned int vae_EngineConfig_get_virtualVoices(void* obj) {
-		return reinterpret_cast<vae::EngineConfig*>(obj)->virtualVoices;
-	}
-		
-	_VAE_API_EXPORT void vae_EngineConfig_set_finishedVoiceQueueSize(void* obj, unsigned int value) {
-		reinterpret_cast<vae::EngineConfig*>(obj)->finishedVoiceQueueSize = value;
+	_VAE_API_EXPORT void vae_destroy_Engine(Pointer obj) {
+		delete reinterpret_cast<Engine*>(obj);
 	}
 
-	_VAE_API_EXPORT unsigned int vae_EngineConfig_get_finishedVoiceQueueSize(void* obj) {
-		return reinterpret_cast<vae::EngineConfig*>(obj)->finishedVoiceQueueSize;
-	}
-		
-	_VAE_API_EXPORT void vae_EngineConfig_set_preferredBufferSize(void* obj, unsigned int value) {
-		reinterpret_cast<vae::EngineConfig*>(obj)->preferredBufferSize = value;
-	}
 
-	_VAE_API_EXPORT unsigned int vae_EngineConfig_get_preferredBufferSize(void* obj) {
-		return reinterpret_cast<vae::EngineConfig*>(obj)->preferredBufferSize;
-	}
-		
-	_VAE_API_EXPORT void vae_EngineConfig_set_bufferPeriods(void* obj, unsigned int value) {
-		reinterpret_cast<vae::EngineConfig*>(obj)->bufferPeriods = value;
-	}
+		///// Engine.init
+		_VAE_API_EXPORT Result vae_Engine_init(
+			Pointer obj,
+			Pointer config
 
-	_VAE_API_EXPORT unsigned int vae_EngineConfig_get_bufferPeriods(void* obj) {
-		return reinterpret_cast<vae::EngineConfig*>(obj)->bufferPeriods;
-	}
-		
-	_VAE_API_EXPORT void vae_EngineConfig_set_updateInAudioThread(void* obj, bool value) {
-		reinterpret_cast<vae::EngineConfig*>(obj)->updateInAudioThread = value;
-	}
+		) {
+			return reinterpret_cast<Engine*>(obj)->init(
+				*reinterpret_cast<EngineConfig*>(config)
+			);
+		}
 
-	_VAE_API_EXPORT bool vae_EngineConfig_get_updateInAudioThread(void* obj) {
-		return reinterpret_cast<vae::EngineConfig*>(obj)->updateInAudioThread;
-	}
-		
-	_VAE_API_EXPORT void vae_EngineConfig_set_processInBufferSwitch(void* obj, bool value) {
-		reinterpret_cast<vae::EngineConfig*>(obj)->processInBufferSwitch = value;
-	}
+		///// Engine.start
+		_VAE_API_EXPORT Result vae_Engine_start(
+			Pointer obj
+		) {
+			return reinterpret_cast<Engine*>(obj)->start(
+			);
+		}
 
-	_VAE_API_EXPORT bool vae_EngineConfig_get_processInBufferSwitch(void* obj) {
-		return reinterpret_cast<vae::EngineConfig*>(obj)->processInBufferSwitch;
-	}
-		
-	_VAE_API_EXPORT void* vae_create_DeviceInfo() {
-		return new vae::DeviceInfo();
-	}
+		///// Engine.stop
+		_VAE_API_EXPORT Result vae_Engine_stop(
+			Pointer obj
+		) {
+			return reinterpret_cast<Engine*>(obj)->stop(
+			);
+		}
 
-	_VAE_API_EXPORT void vae_destroy_DeviceInfo(void* obj) {
-		delete reinterpret_cast<vae::DeviceInfo*>(obj);
-	}
-	
-	_VAE_API_EXPORT void vae_DeviceInfo_set_id(void* obj, int value) {
-		reinterpret_cast<vae::DeviceInfo*>(obj)->id = value;
-	}
+		///// Engine.update
+		_VAE_API_EXPORT void vae_Engine_update(
+			Pointer obj
+		) {
+			return reinterpret_cast<Engine*>(obj)->update(
+			);
+		}
 
-	_VAE_API_EXPORT int vae_DeviceInfo_get_id(void* obj) {
-		return reinterpret_cast<vae::DeviceInfo*>(obj)->id;
-	}
-		
-	_VAE_API_EXPORT void vae_DeviceInfo_set_sampleRate(void* obj, unsigned int value) {
-		reinterpret_cast<vae::DeviceInfo*>(obj)->sampleRate = value;
-	}
+		///// Engine.fireEvent
+		_VAE_API_EXPORT Result vae_Engine_fireEvent(
+			Pointer obj,
+			BankHandle bankHandle,
+			EventHandle eventHandle,
+			EmitterHandle emitterHandle,
+			Sample gain,
+			MixerHandle mixerHandle,
+			ListenerHandle listenerHandle
+		) {
+			return reinterpret_cast<Engine*>(obj)->fireEvent(
+				bankHandle,
+				eventHandle,
+				emitterHandle,
+				gain,
+				mixerHandle,
+				listenerHandle
+			);
+		}
 
-	_VAE_API_EXPORT unsigned int vae_DeviceInfo_get_sampleRate(void* obj) {
-		return reinterpret_cast<vae::DeviceInfo*>(obj)->sampleRate;
-	}
-		
-	_VAE_API_EXPORT void vae_DeviceInfo_set_bufferSize(void* obj, unsigned int value) {
-		reinterpret_cast<vae::DeviceInfo*>(obj)->bufferSize = value;
-	}
+		///// Engine.fireGlobalEvent
+		_VAE_API_EXPORT Result vae_Engine_fireGlobalEvent(
+			Pointer obj,
+			GlobalEventHandle globalHandle,
+			EmitterHandle emitterHandle,
+			Sample gain,
+			MixerHandle mixerHandle,
+			ListenerHandle listenerHandle
+		) {
+			return reinterpret_cast<Engine*>(obj)->fireGlobalEvent(
+				globalHandle,
+				emitterHandle,
+				gain,
+				mixerHandle,
+				listenerHandle
+			);
+		}
 
-	_VAE_API_EXPORT unsigned int vae_DeviceInfo_get_bufferSize(void* obj) {
-		return reinterpret_cast<vae::DeviceInfo*>(obj)->bufferSize;
-	}
-		
-	_VAE_API_EXPORT void vae_DeviceInfo_set_channelsIn(void* obj, unsigned char value) {
-		reinterpret_cast<vae::DeviceInfo*>(obj)->channelsIn = value;
-	}
+		///// Engine.getActiveVoiceCount
+		_VAE_API_EXPORT Size vae_Engine_getActiveVoiceCount(
+			Pointer obj
+		) {
+			return reinterpret_cast<Engine*>(obj)->getActiveVoiceCount(
+			);
+		}
 
-	_VAE_API_EXPORT unsigned char vae_DeviceInfo_get_channelsIn(void* obj) {
-		return reinterpret_cast<vae::DeviceInfo*>(obj)->channelsIn;
-	}
-		
-	_VAE_API_EXPORT void vae_DeviceInfo_set_channelsOut(void* obj, unsigned char value) {
-		reinterpret_cast<vae::DeviceInfo*>(obj)->channelsOut = value;
-	}
+		///// Engine.getStreamTime
+		_VAE_API_EXPORT Size vae_Engine_getStreamTime(
+			Pointer obj
+		) {
+			return reinterpret_cast<Engine*>(obj)->getStreamTime(
+			);
+		}
 
-	_VAE_API_EXPORT unsigned char vae_DeviceInfo_get_channelsOut(void* obj) {
-		return reinterpret_cast<vae::DeviceInfo*>(obj)->channelsOut;
-	}
-		
-	_VAE_API_EXPORT void* vae_create_Vector3() {
-		return new vae::Vector3();
-	}
+		///// Engine.setMasterVolume
+		_VAE_API_EXPORT void vae_Engine_setMasterVolume(
+			Pointer obj,
+			Sample volume
+		) {
+			return reinterpret_cast<Engine*>(obj)->setMasterVolume(
+				volume
+			);
+		}
 
-	_VAE_API_EXPORT void vae_destroy_Vector3(void* obj) {
-		delete reinterpret_cast<vae::Vector3*>(obj);
-	}
-	
-	_VAE_API_EXPORT void vae_Vector3_set_x(void* obj, float value) {
-		reinterpret_cast<vae::Vector3*>(obj)->x = value;
-	}
+		///// Engine.checkVersion
+		_VAE_API_EXPORT bool vae_Engine_checkVersion(
+			Pointer obj,
+			Pointer major
+,
+			Pointer minor
+,
+			Pointer patch
 
-	_VAE_API_EXPORT float vae_Vector3_get_x(void* obj) {
-		return reinterpret_cast<vae::Vector3*>(obj)->x;
-	}
-		
-	_VAE_API_EXPORT void vae_Vector3_set_y(void* obj, float value) {
-		reinterpret_cast<vae::Vector3*>(obj)->y = value;
-	}
+		) {
+			return reinterpret_cast<Engine*>(obj)->checkVersion(
+				*reinterpret_cast<int*>(major),
+				*reinterpret_cast<int*>(minor),
+				*reinterpret_cast<int*>(patch)
+			);
+		}
 
-	_VAE_API_EXPORT float vae_Vector3_get_y(void* obj) {
-		return reinterpret_cast<vae::Vector3*>(obj)->y;
-	}
-		
-	_VAE_API_EXPORT void vae_Vector3_set_z(void* obj, float value) {
-		reinterpret_cast<vae::Vector3*>(obj)->z = value;
-	}
+		///// Engine.createEmitter
+		_VAE_API_EXPORT EmitterHandle vae_Engine_createEmitter(
+			Pointer obj
+		) {
+			return reinterpret_cast<Engine*>(obj)->createEmitter(
+			);
+		}
 
-	_VAE_API_EXPORT float vae_Vector3_get_z(void* obj) {
-		return reinterpret_cast<vae::Vector3*>(obj)->z;
-	}
-		
-	_VAE_API_EXPORT void* vae_create_LocationDirection() {
-		return new vae::LocationDirection();
-	}
+		///// Engine.createAutoEmitter
+		_VAE_API_EXPORT EmitterHandle vae_Engine_createAutoEmitter(
+			Pointer obj,
+			BankHandle bank,
+			EventHandle event,
+			Pointer maxDist
+,
+			Pointer locDir
+,
+			Pointer spread
 
-	_VAE_API_EXPORT void vae_destroy_LocationDirection(void* obj) {
-		delete reinterpret_cast<vae::LocationDirection*>(obj);
-	}
-	
-	_VAE_API_EXPORT void vae_LocationDirection_set_position(void* obj, void* value) {
-		reinterpret_cast<vae::LocationDirection*>(obj)->position = *reinterpret_cast<vae::Vector3*>(value);
-	}
+		) {
+			return reinterpret_cast<Engine*>(obj)->createAutoEmitter(
+				bank,
+				event,
+				*reinterpret_cast<float*>(maxDist),
+				*reinterpret_cast<LocationDirection*>(locDir),
+				*reinterpret_cast<float*>(spread)
+			);
+		}
 
-	_VAE_API_EXPORT void* vae_LocationDirection_get_position(void* obj) {
-		return &reinterpret_cast<vae::LocationDirection*>(obj)->position;
-	}
-		
-	_VAE_API_EXPORT void vae_LocationDirection_set_direction(void* obj, void* value) {
-		reinterpret_cast<vae::LocationDirection*>(obj)->direction = *reinterpret_cast<vae::Vector3*>(value);
-	}
+		///// Engine.addEmitter
+		_VAE_API_EXPORT Result vae_Engine_addEmitter(
+			Pointer obj,
+			EmitterHandle h
+		) {
+			return reinterpret_cast<Engine*>(obj)->addEmitter(
+				h
+			);
+		}
 
-	_VAE_API_EXPORT void* vae_LocationDirection_get_direction(void* obj) {
-		return &reinterpret_cast<vae::LocationDirection*>(obj)->direction;
-	}
-		
-	_VAE_API_EXPORT void* vae_create_LocationOrientation() {
-		return new vae::LocationOrientation();
-	}
+		///// Engine.removeEmitter
+		_VAE_API_EXPORT Result vae_Engine_removeEmitter(
+			Pointer obj,
+			EmitterHandle h
+		) {
+			return reinterpret_cast<Engine*>(obj)->removeEmitter(
+				h
+			);
+		}
 
-	_VAE_API_EXPORT void vae_destroy_LocationOrientation(void* obj) {
-		delete reinterpret_cast<vae::LocationOrientation*>(obj);
-	}
-	
-	_VAE_API_EXPORT void* vae_create_Engine() {
-		return new vae::core::Engine();
-	}
+		///// Engine.setEmitter
+		_VAE_API_EXPORT Result vae_Engine_setEmitter(
+			Pointer obj,
+			EmitterHandle emitter,
+			Pointer locDir
+,
+			Pointer spread
 
-	_VAE_API_EXPORT void vae_destroy_Engine(void* obj) {
-		delete reinterpret_cast<vae::core::Engine*>(obj);
-	}
-	
-	_VAE_API_EXPORT int vae_Engine_init(
-		void* obj,
-		void* config
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->init(
-			*reinterpret_cast<vae::EngineConfig*>(config)
-		);
-	}
+		) {
+			return reinterpret_cast<Engine*>(obj)->setEmitter(
+				emitter,
+				*reinterpret_cast<LocationDirection*>(locDir),
+				*reinterpret_cast<float*>(spread)
+			);
+		}
 
-	_VAE_API_EXPORT int vae_Engine_start(
-		void* obj
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->start();
-	}
+		///// Engine.stopEmitter
+		_VAE_API_EXPORT Result vae_Engine_stopEmitter(
+			Pointer obj,
+			EmitterHandle emitter
+		) {
+			return reinterpret_cast<Engine*>(obj)->stopEmitter(
+				emitter
+			);
+		}
 
-	_VAE_API_EXPORT int vae_Engine_stop(
-		void* obj
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->stop();
-	}
+		///// Engine.setVolume
+		_VAE_API_EXPORT void vae_Engine_setVolume(
+			Pointer obj,
+			EmitterHandle emitter,
+			Sample gain
+		) {
+			return reinterpret_cast<Engine*>(obj)->setVolume(
+				emitter,
+				gain
+			);
+		}
 
-	_VAE_API_EXPORT void vae_Engine_update(
-		void* obj
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->update();
-	}
+		///// Engine.seek
+		_VAE_API_EXPORT void vae_Engine_seek(
+			Pointer obj,
+			EmitterHandle emitter,
+			Size time
+		) {
+			return reinterpret_cast<Engine*>(obj)->seek(
+				emitter,
+				time
+			);
+		}
 
-	_VAE_API_EXPORT int vae_Engine_fireEvent(
-		void* obj,
-		unsigned char bankHandle,
-		unsigned short eventHandle,
-		unsigned int emitterHandle,
-		float gain,
-		unsigned char mixerHandle,
-		unsigned char listenerHandle
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->fireEvent(
-			bankHandle,
-			eventHandle,
-			emitterHandle,
-			gain,
-			mixerHandle,
-			listenerHandle
-		);
-	}
+		///// Engine.setSpeed
+		_VAE_API_EXPORT void vae_Engine_setSpeed(
+			Pointer obj,
+			EmitterHandle emitter,
+			Pointer speed
 
-	_VAE_API_EXPORT int vae_Engine_fireGlobalEvent(
-		void* obj,
-		unsigned int globalHandle,
-		unsigned int emitterHandle,
-		float gain,
-		unsigned char mixerHandle,
-		unsigned char listenerHandle
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->fireGlobalEvent(
-			globalHandle,
-			emitterHandle,
-			gain,
-			mixerHandle,
-			listenerHandle
-		);
-	}
+		) {
+			return reinterpret_cast<Engine*>(obj)->setSpeed(
+				emitter,
+				*reinterpret_cast<float*>(speed)
+			);
+		}
 
-	_VAE_API_EXPORT unsigned int vae_Engine_getActiveVoiceCount(
-		void* obj
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->getActiveVoiceCount();
-	}
+		///// Engine.setLowpass
+		_VAE_API_EXPORT void vae_Engine_setLowpass(
+			Pointer obj,
+			EmitterHandle emitter,
+			Pointer cutoff
 
-	_VAE_API_EXPORT unsigned int vae_Engine_getStreamTime(
-		void* obj
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->getStreamTime();
-	}
+		) {
+			return reinterpret_cast<Engine*>(obj)->setLowpass(
+				emitter,
+				*reinterpret_cast<float*>(cutoff)
+			);
+		}
 
-	_VAE_API_EXPORT void vae_Engine_setMasterVolume(
-		void* obj,
-		float volume
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->setMasterVolume(
-			volume
-		);
-	}
+		///// Engine.setHighpass
+		_VAE_API_EXPORT void vae_Engine_setHighpass(
+			Pointer obj,
+			EmitterHandle emitter,
+			Pointer cutoff
 
-	_VAE_API_EXPORT bool vae_Engine_checkVersion(
-		void* obj,
-		int major,
-		int minor,
-		int patch
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->checkVersion(
-			major,
-			minor,
-			patch
-		);
-	}
+		) {
+			return reinterpret_cast<Engine*>(obj)->setHighpass(
+				emitter,
+				*reinterpret_cast<float*>(cutoff)
+			);
+		}
 
-	_VAE_API_EXPORT unsigned int vae_Engine_createEmitter(
-		void* obj
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->createEmitter();
-	}
+		///// Engine.createListener
+		_VAE_API_EXPORT ListenerHandle vae_Engine_createListener(
+			Pointer obj
+		) {
+			return reinterpret_cast<Engine*>(obj)->createListener(
+			);
+		}
 
-	_VAE_API_EXPORT unsigned int vae_Engine_createAutoEmitter(
-		void* obj,
-		unsigned char bank,
-		unsigned short event,
-		float maxDist,
-		void* locDir,
-		float spread
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->createAutoEmitter(
-			bank,
-			event,
-			maxDist,
-			*reinterpret_cast<vae::LocationDirection*>(locDir),
-			spread
-		);
-	}
+		///// Engine.removeListener
+		_VAE_API_EXPORT Result vae_Engine_removeListener(
+			Pointer obj,
+			ListenerHandle listener
+		) {
+			return reinterpret_cast<Engine*>(obj)->removeListener(
+				listener
+			);
+		}
 
-	_VAE_API_EXPORT int vae_Engine_addEmitter(
-		void* obj,
-		unsigned int h
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->addEmitter(
-			h
-		);
-	}
+		///// Engine.setListener
+		_VAE_API_EXPORT Result vae_Engine_setListener(
+			Pointer obj,
+			ListenerHandle listener,
+			Pointer locOr
 
-	_VAE_API_EXPORT int vae_Engine_removeEmitter(
-		void* obj,
-		unsigned int h
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->removeEmitter(
-			h
-		);
-	}
+		) {
+			return reinterpret_cast<Engine*>(obj)->setListener(
+				listener,
+				*reinterpret_cast<LocationOrientation*>(locOr)
+			);
+		}
 
-	_VAE_API_EXPORT int vae_Engine_setEmitter(
-		void* obj,
-		unsigned int emitter,
-		void* locDir,
-		float spread
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->setEmitter(
-			emitter,
-			*reinterpret_cast<vae::LocationDirection*>(locDir),
-			spread
-		);
-	}
+		///// Engine.loadHRTF
+		_VAE_API_EXPORT Result vae_Engine_loadHRTF(
+			Pointer obj,
+			CString path,
+			Size size
+		) {
+			return reinterpret_cast<Engine*>(obj)->loadHRTF(
+				path,
+				size
+			);
+		}
 
-	_VAE_API_EXPORT int vae_Engine_stopEmitter(
-		void* obj,
-		unsigned int emitter
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->stopEmitter(
-			emitter
-		);
-	}
+		///// Engine.loadBank
+		_VAE_API_EXPORT Result vae_Engine_loadBank(
+			Pointer obj,
+			CString path,
+			Size size
+		) {
+			return reinterpret_cast<Engine*>(obj)->loadBank(
+				path,
+				size
+			);
+		}
 
-	_VAE_API_EXPORT void vae_Engine_setVolume(
-		void* obj,
-		unsigned int emitter,
-		float gain
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->setVolume(
-			emitter,
-			gain
-		);
-	}
+		///// Engine.unloadBankFromId
+		_VAE_API_EXPORT Result vae_Engine_unloadBankFromId(
+			Pointer obj,
+			BankHandle bankHandle
+		) {
+			return reinterpret_cast<Engine*>(obj)->unloadBankFromId(
+				bankHandle
+			);
+		}
 
-	_VAE_API_EXPORT void vae_Engine_seek(
-		void* obj,
-		unsigned int emitter,
-		unsigned int time
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->seek(
-			emitter,
-			time
-		);
-	}
+		///// Engine.unloadAllBanks
+		_VAE_API_EXPORT void vae_Engine_unloadAllBanks(
+			Pointer obj
+		) {
+			return reinterpret_cast<Engine*>(obj)->unloadAllBanks(
+			);
+		}
 
-	_VAE_API_EXPORT void vae_Engine_setSpeed(
-		void* obj,
-		unsigned int emitter,
-		float speed
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->setSpeed(
-			emitter,
-			speed
-		);
-	}
-
-	_VAE_API_EXPORT void vae_Engine_setLowpass(
-		void* obj,
-		unsigned int emitter,
-		float cutoff
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->setLowpass(
-			emitter,
-			cutoff
-		);
-	}
-
-	_VAE_API_EXPORT void vae_Engine_setHighpass(
-		void* obj,
-		unsigned int emitter,
-		float cutoff
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->setHighpass(
-			emitter,
-			cutoff
-		);
-	}
-
-	_VAE_API_EXPORT unsigned char vae_Engine_createListener(
-		void* obj
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->createListener();
-	}
-
-	_VAE_API_EXPORT int vae_Engine_removeListener(
-		void* obj,
-		unsigned char listener
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->removeListener(
-			listener
-		);
-	}
-
-	_VAE_API_EXPORT int vae_Engine_setListener(
-		void* obj,
-		unsigned char listener,
-		void* locOr
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->setListener(
-			listener,
-			*reinterpret_cast<vae::LocationOrientation*>(locOr)
-		);
-	}
-
-	_VAE_API_EXPORT int vae_Engine_loadHRTF(
-		void* obj,
-		char* path,
-		unsigned int size
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->loadHRTF(
-			path,
-			size
-		);
-	}
-
-	_VAE_API_EXPORT int vae_Engine_loadBank(
-		void* obj,
-		char* path,
-		unsigned int size
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->loadBank(
-			path,
-			size
-		);
-	}
-
-	_VAE_API_EXPORT int vae_Engine_unloadBankFromId(
-		void* obj,
-		unsigned char bankHandle
-	) {
-		return (int) reinterpret_cast<vae::core::Engine*>(obj)->unloadBankFromId(
-			bankHandle
-		);
-	}
-
-	_VAE_API_EXPORT void vae_Engine_unloadAllBanks(
-		void* obj
-	) {
-		return reinterpret_cast<vae::core::Engine*>(obj)->unloadAllBanks();
-	}
 
 } // extern "C"

@@ -19,6 +19,7 @@
 #include "../../external/tklb/src/util/TMath.hpp"
 #include "./vae_logger.hpp"
 #include "./voices/vae_voice_filter.hpp"
+#include "vae/vae_type_defs.hpp"
 
 
 #ifndef VAE_NO_AUDIO_DEVICE
@@ -778,7 +779,7 @@ namespace vae { namespace core {
 			return mSpatialManager.setListenerConfiguration(listener, config);
 		}
 
-		Result _VAE_PUBLIC_API loadHRTF(const char* path, Size size = 0) {
+		Result _VAE_PUBLIC_API loadHRTF(CString path, Size size = 0) {
 			return mSpatialProcessor.loadHRTF(
 				path, size, mConfig.rootPath,
 				mConfig.internalSampleRate
@@ -801,7 +802,7 @@ namespace vae { namespace core {
 		 * @param path
 		 * @return Result
 		 */
-		Result _VAE_PUBLIC_API loadBank(const char* path, Size size = 0) {
+		Result _VAE_PUBLIC_API loadBank(CString path, Size size = 0) {
 			return mBankManager.load(path, size, mConfig.rootPath, mConfig.internalSampleRate);
 		}
 
