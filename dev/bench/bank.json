@@ -1,0 +1,28 @@
+{
+	"id": 0,
+	"name": "Bank1",
+	"sources": [
+		{
+			"id": 0,
+			"name": "Engine",
+			"path": "../bank1/engine.wav",
+			"format": "wav"
+		}
+	],
+	"mixers": [
+		{
+			"id": 0, "name": "Bank Master"
+		}
+	],
+	"events": [
+		{
+			"id": 0,
+			"name": "engine",
+			"action": "start",
+			"source": 0,
+			"loop": true,
+			"spatial": true,
+			"hrtf": false
+		}
+	]
+}

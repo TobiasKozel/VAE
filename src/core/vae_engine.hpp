@@ -19,7 +19,6 @@
 #include "../../external/tklb/src/util/TMath.hpp"
 #include "./vae_logger.hpp"
 #include "./voices/vae_voice_filter.hpp"
-#include "vae/vae_type_defs.hpp"
 
 
 #ifndef VAE_NO_AUDIO_DEVICE
@@ -283,7 +282,11 @@ namespace vae { namespace core {
 				}
 				return Result::DeviceError;
 			}
+		#else  // !VAE_NO_AUDIO_DEVICE
+			mScratchBuffer.resize(StaticConfig::MaxBlock, StaticConfig::MaxChannels);
 		#endif // !VAE_NO_AUDIO_DEVICE
+			mScratchBuffer.set(0);
+			mScratchBuffer.sampleRate = mConfig.internalSampleRate;
 			return Result::GenericFailure;
 		}
 
@@ -358,7 +361,7 @@ namespace vae { namespace core {
 			SampleIndex time = 0;
 			while (time < frames) {
 				// clamp to max processable size, the preallocated scratch buffers can't take any larger blocks
-				SampleIndex remaining = std::min(remaining, StaticConfig::MaxBlock);
+				SampleIndex remaining = std::min(frames, StaticConfig::MaxBlock);
 
 				mScratchBuffer.setValidSize(remaining);
 
@@ -540,6 +543,13 @@ namespace vae { namespace core {
 		 */
 		Size _VAE_PUBLIC_API getActiveVoiceCount() const {
 			return mVoiceManager.getActiveVoiceCount();
+		}
+
+		/**
+		 * @brief Get the number of currently playing virtual Voices
+		 */
+		Size _VAE_PUBLIC_API getInactiveVoiceCount() const {
+			return mVoiceManager.getInactiveVoiceCount();
 		}
 
 		Size _VAE_PUBLIC_API getStreamTime() const  {

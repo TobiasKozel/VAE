@@ -71,6 +71,10 @@ namespace vae { namespace core {
 			return mActiveVoices;
 		}
 
+		Size getInactiveVoiceCount() const {
+			return mInactiveVoices;
+		}
+
 		/**
 		 * @brief Callback provided to iterate voices, needs to return
 		 * a bool to indicate when a voice needs to be stopped.
