@@ -24,11 +24,11 @@ rm -rf ./glm
 mv ./glm-master ./glm
 
 echo "Updating tracey"
-curl -LO https://github.com/wolfpld/tracy/archive/refs/tags/v0.7.8.zip
-unzip ./v0.7.8.zip > /dev/null 2>&1
-rm ./v0.7.8.zip
+curl -LO https://github.com/wolfpld/tracy/archive/refs/tags/v0.8.1.zip
+unzip ./v0.8.1.zip > /dev/null 2>&1
+rm ./v0.8.1.zip
 rm -rf ./tracy
-mv ./tracy-0.7.8 ./tracy
+mv ./tracy-0.8.1 ./tracy
 
 cd headeronly
 

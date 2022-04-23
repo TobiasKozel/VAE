@@ -2,6 +2,125 @@ Note: There is no guarantee that version mismatched client and server will
 be able to talk with each other. Network protocol breakages won't be listed
 here.
 
+v0.8.1 (2022-04-21)
+-------------------
+
+- Support for pre-0.7 traces has been dropped.
+- Update utility can now scan for source files missing in the trace cache,
+  if the '-c' parameter is given. Found files will be added to the cache.
+- Added high-priority queue for fast queries to bypass slow symbol queries.
+- Fixed Android documentation to show how to enable context switch tracing.
+- Workaround MSVC 2015 stupidity which prevented compilation as C++11.
+- Added support for showing branch cost data for CPUs that don't report
+  branch retirement events (but do report branch misses).
+- The right-click context menu available for jump arrows in the symbol view
+  window will now additionally display jump context, i.e. jump sources and
+  jump target source code fragments.
+- Added freedesktop.org compliant desktop entry and MIME type definition.
+- The call stack column in list of messages will now be only displayed when
+  at least one message on the list has call stack data.
+- File dialogs on Unix will be now native to the desktop environment you are
+  using. Note that this relies on xdg-desktop-portal and dbus.
+
+
+v0.8.0 (2022-03-28)
+-------------------
+
+- Support for Cygwin has been dropped. It was not working for a very long
+  time and nobody had complained about it.
+- Mingw is deprecated due to lack of interest.
+- Added TRACY_NO_CALLSTACK_INLINES macro to disable inline functions
+  resolution in call stacks on Windows.
+- Improved function matching algorithm in compare traces view.
+- Added CMake integration.
+- Reworked rpmalloc initialization.
+- Fixed display of messages with newlines on messages list.
+- Excluded some uninteresting wrapper functions from call stacks (for
+  example SIMD pass-through intrinsics to the compiler built-ins).
+- Adjusted coloring of instruction hotness in symbol view.
+- Properly handle rare cases when sampling on Linux is momentary not able to
+  resolve time stamps.
+- Added Rocket Lake microarchitectural data.
+- Updated CPU identifier lists.
+- Implemented GPU timer overflow handling heuristics.
+- Assembly instructions are now assigned to inline symbols.
+  - You can not only see the assembly source file and line, but also the
+    originating function.
+  - If symbol view is restricted to a single inline function, all assembly
+    instructions not in this context will be dimmed out.
+  - Likewise, the navigation in assembly code will be limited just to the
+    inline context, if a single function is selected.
+- Kernel call stacks will be now properly captured and displayed in the
+  profiler. Kernel functions are marked with the red color.
+- The CPU hardware performance counters can be now sampled on Linux.
+  - Three inferred statistics are displayed for lines in both source and
+    assembly code in the symbol view window:
+    - Instructions executed per cycle.
+    - Branch miss rate.
+    - Cache miss rate.
+  - Instruction cost estimation method is no longer tied to software call
+    stack sampling.
+- The image name filter entry field is now providing a list of available
+  images.
+- Reentrant function calls may be now excluded from calculations in the
+  statistics view.
+- Crash handler is now properly removed during profiler destruction.
+- Repeatedly right-clicking on the same source line in the symbol view
+  window will now cycle through assembly blocks associated with this source
+  line.
+- Vulkan headers must be now explicitly included before including
+  TracyVulkan.hpp.
+- The capture utility may now limit capture time to a specified number of
+  seconds.
+- Fixed message thread assignment in the import-chrome utility.
+- Sampling data can be now also found in the find zone menu.
+- Instrumentation failures may now display their context, e.g. the zone text
+  that was to be set.
+- A warning is now displayed when sampling data is out-of-order.
+- Average value for plots can be now viewed.
+- Moved symbol resolution to a separate thread. Profiling will no longer be
+  stuck when there is a large number of symbols to resolve. This not only
+  improves user experience, but also prevents buildup of data (and memory
+  consumption) on the client side.
+- Android device name will be now reported.
+- Added support for capturing fibers.
+  - Fibers require additional processing, which has to be enabled by adding
+    the TRACY_FIBERS define on the client side.
+  - Client code requires additional instrumentation using the new macros
+    TracyFiberEnter and TracyFiberLeave (or the corresponding C API
+    variants).
+  - Fibers are represented in traces as separate threads, and are
+    distinguished by green color. Faux context switch regions are used to
+    indicate when a fiber is being run by the worker thread.
+- Continuous frame marks no longer need to be issued from a single thread.
+- Context switch call stacks are now captured on Windows and Linux.
+  - Hovering the context switch wait region will now display wait stack,
+    which may provide additional insight into why the switch happened.
+  - Wait stacks inspection can be performed in a new view.
+    - Stacks can be limited to certain threads and to a selected time range.
+    - Stacks are presented either as a sorted list, or as a bottom-up and
+      top-down trees.
+- Entry call stacks can be now also viewed as a bottom-up and top-down
+  trees.
+- Updated project build files to MSVC 2022.
+- Call stack tooltips now also show the executable image name.
+- Playback frames can be now changed by interacting with the frame image
+  slider using the mouse wheel.
+- Signal used to handle crashes on Linux can be now redefined.
+- Various DPI scaling improvements.
+- User interface can be now scaled in run time.
+- Symbol code retrieval now also supports kernel on Windows.
+- Added low-level C API interface for GPU zones.
+- Symbol child calls can be now listed.
+- Replaced "restrict time" in memory window with a proper time range limit.
+- Added Alder Lake microarchitectural data.
+- Added GPU zone statistics.
+- Universal Windows Platform support.
+- All call stack related functionality can be now disabled with the
+  TRACY_NO_CALLSTACK macro.
+- Added ability to add full-view annotations from the annotations list
+  window.
+
 
 v0.7.8 (2021-05-19)
 -------------------

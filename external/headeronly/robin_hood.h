@@ -36,7 +36,7 @@
 // see https://semver.org/
 #define ROBIN_HOOD_VERSION_MAJOR 3  // for incompatible API changes
 #define ROBIN_HOOD_VERSION_MINOR 11 // for adding functionality in a backwards-compatible manner
-#define ROBIN_HOOD_VERSION_PATCH 4  // for backwards-compatible bug fixes
+#define ROBIN_HOOD_VERSION_PATCH 5  // for backwards-compatible bug fixes
 
 #include <algorithm>
 #include <cstdlib>
@@ -1837,8 +1837,7 @@ public:
     }
 
     template <typename... Args>
-    iterator try_emplace(const_iterator hint, const key_type& key,
-                                          Args&&... args) {
+    iterator try_emplace(const_iterator hint, const key_type& key, Args&&... args) {
         (void)hint;
         return try_emplace_impl(key, std::forward<Args>(args)...).first;
     }
@@ -1860,8 +1859,7 @@ public:
     }
 
     template <typename Mapped>
-    iterator insert_or_assign(const_iterator hint, const key_type& key,
-                                               Mapped&& obj) {
+    iterator insert_or_assign(const_iterator hint, const key_type& key, Mapped&& obj) {
         (void)hint;
         return insertOrAssignImpl(key, std::forward<Mapped>(obj)).first;
     }
@@ -2324,13 +2322,14 @@ private:
 
         auto const numElementsWithBuffer = calcNumElementsWithBuffer(max_elements);
 
-        // calloc also zeroes everything
+        // malloc & zero mInfo. Faster than calloc everything.
         auto const numBytesTotal = calcNumBytesTotal(numElementsWithBuffer);
         ROBIN_HOOD_LOG("std::calloc " << numBytesTotal << " = calcNumBytesTotal("
                                       << numElementsWithBuffer << ")")
         mKeyVals = reinterpret_cast<Node*>(
-            detail::assertNotNull<std::bad_alloc>(std::calloc(1, numBytesTotal)));
+            detail::assertNotNull<std::bad_alloc>(std::malloc(numBytesTotal)));
         mInfo = reinterpret_cast<uint8_t*>(mKeyVals + numElementsWithBuffer);
+        std::memset(mInfo, 0, numBytesTotal - numElementsWithBuffer * sizeof(Node));
 
         // set sentinel
         mInfo[numElementsWithBuffer] = 1;
