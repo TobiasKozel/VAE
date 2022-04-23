@@ -379,7 +379,7 @@ namespace vae { namespace core {
 				});
 
 				mScratchBuffer.multiply(mMasterVolume);
-				mScratchBuffer.putInterleaved(output + time * channels, remaining);
+				mScratchBuffer.putInterleaved(output + time * channels, remaining, 0, channels);
 				mScratchBuffer.set(0);
 				mTime += remaining;
 				time += remaining;
