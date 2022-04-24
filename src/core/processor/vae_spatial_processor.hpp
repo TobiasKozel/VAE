@@ -146,15 +146,18 @@ namespace vae { namespace core {
 						// Linear interpolation between two samples
 						position = v.time + (s * speed) + fd.timeFract;
 						const Real lastPosition = std::floor(position);
-						const Size lastIndex = (Size) lastPosition;
-						const Size nextIndex = (Size) lastPosition + 1;
+
+						Size lastIndex = (Size) lastPosition;
+						Size nextIndex = (Size) lastIndex + 1;
+						// TODO this kills vectorization
+						if (signalLength <= lastIndex) { lastIndex = 0; }
+						if (signalLength <= nextIndex) { nextIndex = 0; }
 
 						Real mix = position - lastPosition;
-						// mix = 0.5 * (1.0 - cos((mix) * 3.1416)); // cosine interpolation, introduces new harmonics somehow
+						// mix = 0.5 * (1.0 - cos((mix) * 3.1416)); // cosine interpolation, introduces new harmonics, not really better than linear
 
-						// TODO 30% of the time in here is spent on the modulo
-						const Sample last = signal[0][lastIndex % signalLength];
-						const Sample next = signal[0][nextIndex % signalLength];
+						const Sample last = signal[0][lastIndex];
+						const Sample next = signal[0][nextIndex];
 						// linear resampling, sounds alright enough
 						const Sample in = (last + mix * (next - last)) * gain;
 
@@ -177,15 +180,19 @@ namespace vae { namespace core {
 				} else {
 					VAE_PROFILER_SCOPE_NAMED("Non filtered Voice")
 					if (v.loop) {
+						VAE_PROFILER_SCOPE_NAMED("Loop")
 						// put the looped signal in scratch buffer eventhough we're not filtering
 						// so panning doesn't need to worry about looping
-						for (SampleIndex s = 0; s < frames; s++) {
-							mScratchBuffer[0][s] = signal[0][(v.time + s) % signalLength];
+						for (SampleIndex s = 0, i = v.time; s < frames; s++, i++) {
+							// reached the end so reset index, this is slighlty faster than modulo
+							if (signalLength <= i) { i = 0; }
+							mScratchBuffer[0][s] = signal[0][i];
 						}
 						v.time = (v.time + frames);	// progress the time
 						in = mScratchBuffer[0];		// set buffer for panning
 						finished = false;			// never stop the voice
 					} else {
+						VAE_PROFILER_SCOPE_NAMED("No Loop")
 						// Not filtering or looping
 						// Means we can use the original signal buffer but need to
 						// set the remaining samples so we don't run over the signal end
@@ -233,7 +240,7 @@ namespace vae { namespace core {
 					*/
 					const auto pan = [&](const auto& panner) {
 						// This is actually constexpr but not according to clangd
-						constexpr Size channels = std::min(Size(StaticConfig::MaxChannels), panner.speakers);
+						constexpr Size channels = Size(StaticConfig::MaxChannels);
 						panner.pan(
 							relativeDirection, currentVolumes,
 							distanceAttenuated, emitter.spread
@@ -245,14 +252,15 @@ namespace vae { namespace core {
 								lastVolumes[c] = currentVolumes[c];
 							}
 						}
-
+						VAE_PROFILER_SCOPE_NAMED("Apply SPCAP")
 						Sample t = 0;
 						for (SampleIndex s = 0; s < remaining; s++) {
 							const Sample sample = in[s];
 							// lerp between last and current channel volumes
 							// Not correct in terms of power convservation, but easy and efficient
 							for (Size c = 0; c < channels; c++) {
-								target[c][s] += sample * (lastVolumes[c] + t * (currentVolumes[c] - lastVolumes[c]));
+								// target[c][s] += sample * (lastVolumes[c] + t * (currentVolumes[c] - lastVolumes[c]));
+								target[c][s] += sample * currentVolumes[c];
 							}
 							t += Sample(1) / Sample(frames);
 						}
