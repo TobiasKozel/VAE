@@ -56,7 +56,7 @@ namespace vae { namespace core {
 			 * @param spread Value from 0-1 controlling "wideness" of the sound
 			 */
 			inline void pan(const Vec3& direction, Sample result[N], Sample attenuation, Sample spread) const {
-				VAE_PROFILER_SCOPE_NAMED("SPCAP Pan")
+				TKLB_PROFILER_SCOPE_NAMED("SPCAP Pan")
 				// TODO make spread change based on distance and use something like radius instead
 				Sample sumGains = 0.0;
 				// const Sample tightness = (Sample(1) - spread) * Sample(10) + Sample(0.05);

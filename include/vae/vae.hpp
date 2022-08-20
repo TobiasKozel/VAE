@@ -1,6 +1,6 @@
 /**
  * @file vae.hpp
- * @author Tobias Kozel (t.kozel@pm.me)
+ * @author Tobias Kozel
  * @brief Contains all public API types for VAE
  * @version 0.1
  * @date 2021-11-27

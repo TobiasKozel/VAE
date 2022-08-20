@@ -1,6 +1,6 @@
 /**
  * @file vae_types.hpp
- * @author Tobias Kozel (t.kozel@pm.me)
+ * @author Tobias Kozel
  * @brief Internal types used across VAE
  * @version 0.1
  * @date 2021-11-29
@@ -12,28 +12,10 @@
 #ifndef _VAE_TYPES
 #define _VAE_TYPES
 
-/**
- * @brief Forward these to tklb
- * TODO find a better place for this
- *
- */
-#ifdef VAE_NO_SIMD
-	#define TKLB_NO_SIMD
-#endif
-
-#ifdef VAE_NO_STDIO
-	#define TKLB_NO_STDIO
-#endif
-
-
 #include "../../include/vae/vae.hpp"
-#include "../wrapped/vae_profiler.hpp"
 #include "./vae_config.hpp"
-#include "../../external/glm/glm/glm.hpp"
-#include "../../external/tklb/src/types/audio/TAudioBuffer.hpp"
-#include "../../external/tklb/src/types/audio/TAudioRingBuffer.hpp"
-#include "../../external/tklb/src/types/TString.hpp"
 #include "./vae_allocators.hpp"
+#include "../wrapped/vae_tklb.hpp"
 
 #ifndef VAE_NO_AUDIO_THREAD
 	#include <mutex>
@@ -44,7 +26,6 @@
 namespace vae { namespace core {
 	using Uchar = unsigned char;
 	using Uint = unsigned int;
-	using Vec3 = glm::vec3;
 	using Real = float;
 	#ifndef VAE_USE_PROFILER
 		// vae_profiler.hpp provides wrapped versions for tracking
@@ -57,15 +38,12 @@ namespace vae { namespace core {
 		#endif // !#ifndef VAE_NO_AUDIO_THREAD
 	#endif // !VAE_USE_PROFILER
 
-	// Buffer used for internal packed structs like Event, Bank Voice etc
-	template <class T> using HeapBuffer = tklb::HeapBuffer<T, 0, memory::AllocatorMain<unsigned char>>;
-
 	/**
 	 * @brief Buffer type to hold all the audio data meant for playback
 	 */
 	using AudioBuffer = tklb::AudioBufferTpl<
 		Sample, tklb::HeapBuffer<
-			Sample, tklb::DEFAULT_ALIGNMENT, memory::AllocatorAudio<unsigned char>
+			Sample, memory::DEFAULT_ALIGNMENT, memory::AllocatorAudio<unsigned char>
 		>
 	>;
 
@@ -74,13 +52,13 @@ namespace vae { namespace core {
 	 */
 	using ScratchBuffer = tklb::AudioBufferTpl<
 		Sample, tklb::HeapBuffer<
-			Sample, tklb::DEFAULT_ALIGNMENT, memory::AllocatorScratch<unsigned char>
+			Sample, memory::DEFAULT_ALIGNMENT, memory::AllocatorScratch<unsigned char>
 		>
 	>;
 
 	using RingBuffer = tklb::AudioRingBufferTpl<
 		Sample, tklb::HeapBuffer<
-			Sample, tklb::DEFAULT_ALIGNMENT, memory::AllocatorScratch<unsigned char>
+			Sample, memory::DEFAULT_ALIGNMENT, memory::AllocatorScratch<unsigned char>
 		>
 	>;
 

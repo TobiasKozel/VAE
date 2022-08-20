@@ -1,3 +1,14 @@
+/**
+ * @file vae_fs.hpp
+ * @author Tobias Kozel
+ * @brief Wrap stdlib file operations
+ * @version 0.1
+ * @date 2022-08-15
+ *
+ * @copyright Copyright (c) 2022
+ *
+ */
+
 #ifndef _VAE_FS
 #define _VAE_FS
 
@@ -16,25 +27,27 @@ size_t vae_file_read(char* dest, size_t size, int, void* file);
 size_t vae_file_close(void* file);
 
 
-#ifndef VAE_NO_STDIO
+#if !defined(VAE_NO_STDIO)
 	#include <stdio.h>
-	void* vae_file_open(const char* path, const char* mode) {
-		return fopen(path, mode);
-	}
+	#if defined(VAE_IMPL)
+		void* vae_file_open(const char* path, const char* mode) {
+			return fopen(path, mode);
+		}
 
-	size_t vae_file_seek(void* file, size_t offset, int seek) {
-		fseek((FILE*) file, offset, seek);
-		return ftell((FILE*) file);
-	}
+		size_t vae_file_seek(void* file, size_t offset, int seek) {
+			fseek((FILE*) file, offset, seek);
+			return ftell((FILE*) file);
+		}
 
-	size_t vae_file_read(char* dest, size_t size, int, void* file) {
-		return fread(dest, size, 1, (FILE*) file);
-	}
+		size_t vae_file_read(char* dest, size_t size, int, void* file) {
+			return fread(dest, size, 1, (FILE*) file);
+		}
 
-	size_t vae_file_close(void* file) {
-		return fclose((FILE*) file);
-	}
-#endif
+		size_t vae_file_close(void* file) {
+			return fclose((FILE*) file);
+		}
+	#endif // VAE_IMPL
+#endif // VAE_NO_STDIO
 
 namespace vae { namespace core { namespace fs {
 	class File {

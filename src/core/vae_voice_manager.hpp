@@ -1,6 +1,6 @@
 /**
  * @file vae_voice_manager.hpp
- * @author Tobias Kozel (t.kozel@pm.me)
+ * @author Tobias Kozel
  * @brief Holds all voices and starts/stops them
  * @version 0.1
  * @date 2021-11-28
