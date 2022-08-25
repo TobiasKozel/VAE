@@ -20,11 +20,13 @@ namespace vae { namespace core { namespace memory {
 	struct MainAllocatorName	{ static constexpr const char* Name = "Main Allocator";		};
 	struct AudioAllocatorName	{ static constexpr const char* Name = "Audio Allocator";	};
 	struct ScratchAllocatorName	{ static constexpr const char* Name = "Scratch Allocator";	};
+	struct AllocatorEmitterName	{ static constexpr const char* Name = "Emitter Allocator";	};
 
-	template <class T> using AllocatorFS		= DefaultAllocator<T, FsAllocatorName>;
-	template <class T> using AllocatorMain		= DefaultAllocator<T, MainAllocatorName>;
-	template <class T> using AllocatorAudio		= DefaultAllocator<T, AudioAllocatorName>;
-	template <class T> using AllocatorScratch	= DefaultAllocator<T, ScratchAllocatorName>;
+	template <class T = unsigned char> using AllocatorFS		= DefaultAllocator<T, FsAllocatorName>;
+	template <class T = unsigned char> using AllocatorMain		= DefaultAllocator<T, MainAllocatorName>;
+	template <class T = unsigned char> using AllocatorAudio		= DefaultAllocator<T, AudioAllocatorName>;
+	template <class T = unsigned char> using AllocatorScratch	= DefaultAllocator<T, ScratchAllocatorName>;
+	template <class T = unsigned char> using AllocatorEmitter	= DefaultAllocator<T, AllocatorEmitterName>;
 } } } // vae::core::memory
 
 #endif // _VAE_ALLOCATORS

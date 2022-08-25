@@ -29,7 +29,7 @@ namespace vae { namespace core { namespace effect {
 				i = { name, constructor };
 				return;
 			}
-			VAE_ASSERT(false)// can't add effect
+			TKLB_ASSERT(false)// can't add effect
 		}
 	};
 } } } // vae::core::faust

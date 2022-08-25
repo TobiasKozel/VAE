@@ -9,7 +9,6 @@ Compilation options: -a C:\dev\git\master\VAEG\VAE\src\core\dsp\vae_faust_arch.h
 
 
 #include "../vae_faust_common.hpp"
-#include "../../../wrapped/vae_profiler.hpp"
 // We prevent namespace problems by including theses before the namsapces
 // below. the includes inside from faust shouldn't cause any trouble then.
 #include <algorithm>
@@ -1413,7 +1412,7 @@ class VAEReverb : public FaustBase {
 struct RegisterVAEReverb {
 	static EffectBase* create() {
 		auto ptr = new VAEReverb();
-		VAE_PROFILER_MALLOC_L(ptr, sizeof(VAEReverb), vae::core::profiler::dspAllocator)
+		TKLB_PROFILER_MALLOC_L(ptr, sizeof(VAEReverb), vae::core::profiler::dspAllocator)
 		return ptr;
 	}
 	RegisterVAEReverb() {

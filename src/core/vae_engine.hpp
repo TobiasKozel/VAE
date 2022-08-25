@@ -17,7 +17,6 @@
 #include "./vae_bank_manager.hpp"
 
 #include "../../external/tklb/src/util/TMath.hpp"
-#include "./vae_logger.hpp"
 #include "./voices/vae_voice_filter.hpp"
 
 
@@ -84,8 +83,8 @@ namespace vae { namespace core {
 		 * The bank however needs to be locks which happens in the bankmanager
 		 */
 		void process() {
-			VAE_PROFILER_FRAME_MARK_START(profiler::audioFrame)
-			VAE_PROFILER_SCOPE_NAMED("Engine Process")
+			TKLB_PROFILER_FRAME_MARK_START(profiler::audioFrame)
+			TKLB_PROFILER_SCOPE_NAMED("Engine Process")
 			auto& d = *mDevice;
 			auto sampleRate = mConfig.internalSampleRate;
 
@@ -125,12 +124,12 @@ namespace vae { namespace core {
 					bankMaster.set(0);
 				});
 
-				VAE_PROFILER_PLOT("Rendered Normal Voices", int64_t(renderedNormal));
-				VAE_PROFILER_PLOT("Rendered Spatial Voices", int64_t(renderedSpatial));
-				VAE_PROFILER_PLOT("Rendered Total Voices", int64_t(renderedSpatial + renderedNormal));
+				TKLB_PROFILER_PLOT("Rendered Normal Voices", int64_t(renderedNormal));
+				TKLB_PROFILER_PLOT("Rendered Spatial Voices", int64_t(renderedSpatial));
+				TKLB_PROFILER_PLOT("Rendered Total Voices", int64_t(renderedSpatial + renderedNormal));
 
 				{
-					VAE_PROFILER_SCOPE_NAMED("Peak limiting")
+					TKLB_PROFILER_SCOPE_NAMED("Peak limiting")
 					// Shitty peak limiter
 					mLimiterLastPeak *= Sample(0.99); // return to normal slowly
 					mLimiterLastPeak = std::max(Sample(1.0), mLimiterLastPeak);
@@ -145,15 +144,15 @@ namespace vae { namespace core {
 					mLimiterLastPeak += Sample(0.05); // add a little extra so we really stay away from clipping
 				}
 				const Sample gain = mMasterVolume / mLimiterLastPeak; // this can be higher than 1 one but the result can't
-				VAE_PROFILER_PLOT("Limited Master Volume", int64_t(gain * 1000));
+				TKLB_PROFILER_PLOT("Limited Master Volume", int64_t(gain * 1000));
 				mScratchBuffer.multiply(gain); // apply the master volume and limiter
 				d.push(mScratchBuffer);
 				mScratchBuffer.set(0);
 				mTime += remaining;
 				mTimeFract += step * remaining;
 			}
-			VAE_PROFILER_FRAME_MARK_END(profiler::audioFrame)
-			VAE_PROFILER_FRAME_MARK()
+			TKLB_PROFILER_FRAME_MARK_END(profiler::audioFrame)
+			TKLB_PROFILER_FRAME_MARK()
 			if (mConfig.updateInAudioThread) { update(); }
 		}
 
@@ -175,7 +174,7 @@ namespace vae { namespace core {
 		 *
 		 */
 		void threadedProcess() {
-			VEA_PROFILER_THREAD_NAME("Audio thread")
+			TKLB_PROFILER_THREAD_NAME("Audio thread")
 			while(mAudioThreadRunning) {
 				process();	// Process one block in advance so there's no underrun
 				std::unique_lock<std::mutex> l(mMutex);
@@ -209,10 +208,10 @@ namespace vae { namespace core {
 		Engine& operator= (Engine&&) = delete;
 
 		~Engine() {
-			VAE_PROFILER_SCOPE_NAMED("Destroy Engine")
+			TKLB_PROFILER_SCOPE_NAMED("Destroy Engine")
 			stop();
 			unloadAllBanks();
-			VAE_INFO("Engine destructed")
+			TKLB_INFO("Engine destructed")
 		}
 
 		/** @name Engine Controls
@@ -230,8 +229,8 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API init(const EngineConfig& config = {}) {
-			VAE_PROFILER_SCOPE_NAMED("Engine init")
-			VAE_DEBUG("Initializing engine...")
+			TKLB_PROFILER_SCOPE_NAMED("Engine init")
+			TKLB_DEBUG("Initializing engine...")
 			mConfig = config;
 			mScratchBuffer.set(0);
 			mScratchBuffer.sampleRate = mConfig.internalSampleRate;
@@ -240,7 +239,7 @@ namespace vae { namespace core {
 			mSpatialProcessor.init(mConfig.voices);
 			mMixerProcessor.init();
 			mBankManager.init(mConfig.rootPath, mConfig.internalSampleRate);
-			VAE_DEBUG("Engine initialized")
+			TKLB_DEBUG("Engine initialized")
 			return Result::Success;
 		}
 
@@ -251,29 +250,29 @@ namespace vae { namespace core {
 		 */
 		Result _VAE_PUBLIC_API start() {
 		#ifndef VAE_NO_AUDIO_DEVICE
-			VEA_PROFILER_THREAD_NAME("Application Thread")
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_THREAD_NAME("Application Thread")
+			TKLB_PROFILER_SCOPE()
 			{
-				VAE_PROFILER_SCOPE_NAMED("Device Instance")
+				TKLB_PROFILER_SCOPE_NAMED("Device Instance")
 				Backend& backend = DefaultBackend::instance();
 				mDevice = backend.createDevice(mConfig);
 			}
 			if (mConfig.processInBufferSwitch) {
 				mDevice->setCallback(TKLB_DELEGATE(&Engine::onBufferSwap, *this));
-				VAE_DEBUG("Mixing in buffer switch")
+				TKLB_DEBUG("Mixing in buffer switch")
 			} else {
 			#ifndef VAE_NO_AUDIO_THREAD
 				mDevice->setCallback(TKLB_DELEGATE(&Engine::onThreadedBufferSwap, *this));
 				mAudioThreadRunning = true;
-				VAE_PROFILER_SCOPE_NAMED("Start audio thread")
+				TKLB_PROFILER_SCOPE_NAMED("Start audio thread")
 				mAudioThread = new Thread(&Engine::threadedProcess, this);
-				VAE_DEBUG("Mixing in seperate thread")
+				TKLB_DEBUG("Mixing in seperate thread")
 			#else
 				VAE_ERROR("Can't mix in audio thread since it's disabled via VAE_NO_AUDIO_THREAD")
 			#endif // !VAE_NO_AUDIO_THREAD
 			}
 			{
-				VAE_PROFILER_SCOPE_NAMED("Device Instance")
+				TKLB_PROFILER_SCOPE_NAMED("Device Instance")
 				if (mDevice->openDevice()) {
 					// This isn't pretty but we don't know the channel count
 					const auto channels = std::max(mDevice->getChannelsIn(), mDevice->getChannelsOut());
@@ -296,7 +295,7 @@ namespace vae { namespace core {
 		 */
 		Result _VAE_PUBLIC_API stop() {
 		#ifndef VAE_NO_AUDIO_DEVICE
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			#ifndef VAE_NO_AUDIO_THREAD
 			if (mAudioThreadRunning) {
 				mAudioThreadRunning = false;
@@ -304,9 +303,9 @@ namespace vae { namespace core {
 				if(mAudioThread->joinable()) {
 					mAudioThread->join();
 					delete mAudioThread;
-					VAE_DEBUG("Audio thread stopped")
+					TKLB_DEBUG("Audio thread stopped")
 				} else {
-					VAE_ERROR("Can't join audio thread")
+					TKLB_ERROR("Can't join audio thread")
 				}
 			}
 			#endif // !VAE_NO_AUDIO_THREAD
@@ -326,8 +325,8 @@ namespace vae { namespace core {
 		 * @see EngineConfig::updateInAudioThread
 		 */
 		void _VAE_PUBLIC_API update() {
-			VAE_PROFILER_FRAME_MARK_START(profiler::audioFrame)
-			VAE_PROFILER_SCOPE_NAMED("Engine Update")
+			TKLB_PROFILER_FRAME_MARK_START(profiler::audioFrame)
+			TKLB_PROFILER_SCOPE_NAMED("Engine Update")
 			// Update emitters and start voices nearby
 			mBankManager.lock();
 			mSpatialManager.update(
@@ -350,7 +349,7 @@ namespace vae { namespace core {
 				return true;
 			});
 			mBankManager.unlock();
-			VAE_PROFILER_FRAME_MARK_END(profiler::audioFrame)
+			TKLB_PROFILER_FRAME_MARK_END(profiler::audioFrame)
 		}
 
 #define VAE_NO_AUDIO_DEVICE
@@ -361,7 +360,7 @@ namespace vae { namespace core {
 			SampleIndex time = 0;
 			while (time < frames) {
 				// clamp to max processable size, the preallocated scratch buffers can't take any larger blocks
-				SampleIndex remaining = std::min(frames, StaticConfig::MaxBlock);
+				SampleIndex remaining = tklb::min(frames, StaticConfig::MaxBlock);
 
 				mScratchBuffer.setValidSize(remaining);
 
@@ -405,23 +404,23 @@ namespace vae { namespace core {
 			MixerHandle mixerHandle = InvalidMixerHandle,
 			ListenerHandle listenerHandle = AllListeners
 		) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			if (emitterHandle != InvalidEmitterHandle && !mSpatialManager.hasEmitter(emitterHandle)) {
-				VAE_ERROR("No emitter %u registered", emitterHandle)
+				TKLB_ERROR("No emitter %u registered", emitterHandle)
 				return Result::InvalidEmitter;
 			}
 
 			auto& emitter = mSpatialManager.getEmitter(emitterHandle);
 
 			if (!mBankManager.has(bankHandle)) {
-				VAE_ERROR("Fired event %i on unloaded bank %i", eventHandle, bankHandle)
+				TKLB_ERROR("Fired event %i on unloaded bank %i", eventHandle, bankHandle)
 				return Result::InvalidBank;
 			}
 
 			auto& bank = mBankManager.get(bankHandle);
 
 			if (bank.events.size() <= eventHandle) {
-				VAE_WARN("Fired missing event %i on bank %i", eventHandle, bankHandle)
+				TKLB_WARN("Fired missing event %i on bank %i", eventHandle, bankHandle)
 				return Result::ValidHandleRequired;
 			}
 
@@ -611,17 +610,6 @@ namespace vae { namespace core {
 		}
 
 		/**
-		 * @brief Adds an emitter with a custom handle, can be an internal ID for example
-		 * @details migt be desireable to make EmitterHandle the same size as a pointer
-		 * so this can simply be the pointer of the entity that is associated with it.
-		 * @param h
-		 * @return Result
-		 */
-		Result _VAE_PUBLIC_API addEmitter(EmitterHandle h) {
-			return mSpatialManager.addEmitter(h);
-		}
-
-		/**
 		 * @brief Unregister a emiter an kill all its voices
 		 * @param h
 		 * @return Result
@@ -739,7 +727,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result setMixerEffectParameter(BankHandle bank, MixerHandle mixer, Size index, Size param, Sample value) {
-			VAE_PROFILER_SCOPE_NAMED("Set Mixer Effect");
+			TKLB_PROFILER_SCOPE_NAMED("Set Mixer Effect");
 			// TODO this is garbage but needs a event queue anyways
 			auto& b = mBankManager.get(bank);
 			auto& m = b.mixers[mixer];
@@ -862,8 +850,8 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API unloadBankFromId(BankHandle bankHandle) {
-			VAE_PROFILER_SCOPE()
-			VAE_INFO("Start Unload bank %i", bankHandle)
+			TKLB_PROFILER_SCOPE()
+			TKLB_INFO("Start Unload bank %i", bankHandle)
 			mVoiceManager.stop(bankHandle, &Voice::bank);
 			return mBankManager.unloadFromId(bankHandle);
 		}
@@ -872,8 +860,8 @@ namespace vae { namespace core {
 		 * @brief Unload every bank and data associated with it
 		 */
 		void _VAE_PUBLIC_API unloadAllBanks() {
-			VAE_PROFILER_SCOPE()
-			VAE_INFO("Start unloading all banks")
+			TKLB_PROFILER_SCOPE()
+			TKLB_INFO("Start unloading all banks")
 			mBankManager.unloadAll();
 		}
 

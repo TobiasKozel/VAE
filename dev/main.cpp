@@ -26,7 +26,7 @@ LocationDirection randomVec() {
 	return {{ x, y, z }, {} };
 }
 
-void sleep(double ms) {
+void sleepMs(double ms) {
 	std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(ms));
 }
 
@@ -35,7 +35,7 @@ void sleep(double ms) {
 void benchmarkBasicVoice(vae::core::Engine& engine) {
 	auto emitter = engine.createEmitter();
 	for (int i = 0; i < 2000; i++) {
-		sleep(1);
+		sleepMs(1);
 		engine.fireGlobalEvent(vaeb::Bank1::JumpRand, emitter);
 		engine.update();
 	}
@@ -52,7 +52,7 @@ void benchmark(vae::core::Engine& engine) {
 		engine.setEmitter(i, randomVec(), spread);
 	}
 	for (int i = 0; i < 2000; i++) {
-		sleep(2);
+		sleepMs(2);
 		float t = i * 0.1;
 		engine.setEmitter(emitters[rand() % emitterCount], randomVec(), 0.5);
 		engine.fireGlobalEvent(vaeb::Bank1::JumpRand, emitters[rand() % emitterCount]);
@@ -70,7 +70,7 @@ void filterTest(vae::core::Engine& engine) {
 	engine.fireGlobalEvent(vaeb::Bank2::Music, emitter2);
 	// engine.fireGlobalEvent(vaeb::Bank1::ShortSineLoop, emitter, 0.3);
 	for (int i = 0; i < 2000; i++) {
-		sleep(30);
+		sleepMs(30);
 		// engine.setHighpass(emitter, sin(i * 0.1) * 0.5 + 0.5);
 		engine.setSpeed(emitter, sin(i * 0.3) * 0.2 + 1.0);
 		if (i % 100 == 0) {

@@ -17,20 +17,20 @@ namespace vae { namespace core {
 		bool mInitialized = false;
 
 		void cleanUp() {
-			VAE_PROFILER_SCOPE_NAMED("Cleanup portaudio")
+			TKLB_PROFILER_SCOPE_NAMED("Cleanup portaudio")
 			if (!mInitialized || mStream == nullptr) {
 				return;
 			}
 
 			{
-				VAE_PROFILER_SCOPE_NAMED("Stop portaudio stream")
+				TKLB_PROFILER_SCOPE_NAMED("Stop portaudio stream")
 				PaError err = Pa_StopStream(mStream);
-				VAE_ASSERT(err == paNoError)
+				TKLB_ASSERT(err == paNoError)
 			}
 			{
-				VAE_PROFILER_SCOPE_NAMED("Close portaudio stream")
+				TKLB_PROFILER_SCOPE_NAMED("Close portaudio stream")
 				PaError err = Pa_CloseStream(mStream);
-				VAE_ASSERT(err == paNoError)
+				TKLB_ASSERT(err == paNoError)
 			}
 			mInitialized = false;
 		}
@@ -57,7 +57,7 @@ namespace vae { namespace core {
 		}
 
 	public:
-		VAE_PROFILER_OVERLOAD_NEW()
+		TKLB_PROFILER_OVERLOAD_NEW()
 
 		DevicePortaudio(
 			Backend& backend, const EngineConfig& config
@@ -69,7 +69,7 @@ namespace vae { namespace core {
 			const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(device.id);
 
 			if (deviceInfo == nullptr) {
-				VAE_ASSERT(false)
+				TKLB_ASSERT(false)
 				return false;
 			}
 
@@ -81,7 +81,7 @@ namespace vae { namespace core {
 			inputParameters.sampleFormat = paFloat32;
 			inputParameters.suggestedLatency = deviceInfo->defaultLowInputLatency;
 			inputParameters.hostApiSpecificStreamInfo = NULL;
-			VAE_ASSERT(device.channelsIn <= Uint(deviceInfo->maxInputChannels))
+			TKLB_ASSERT(device.channelsIn <= Uint(deviceInfo->maxInputChannels))
 			inputParameters.channelCount = device.channelsIn;
 
 			PaStreamParameters outputParameters;
@@ -89,7 +89,7 @@ namespace vae { namespace core {
 			outputParameters.sampleFormat = paFloat32;
 			outputParameters.suggestedLatency = deviceInfo->defaultLowOutputLatency;
 			outputParameters.hostApiSpecificStreamInfo = NULL;
-			VAE_ASSERT(device.channelsOut <= Uint(deviceInfo->maxOutputChannels))
+			TKLB_ASSERT(device.channelsOut <= Uint(deviceInfo->maxOutputChannels))
 			outputParameters.channelCount = device.channelsOut;
 
 			if (device.bufferSize == 0) {
@@ -98,7 +98,7 @@ namespace vae { namespace core {
 
 			PaError err;
 			{
-				VAE_PROFILER_SCOPE_NAMED("Open stream portaudio")
+				TKLB_PROFILER_SCOPE_NAMED("Open stream portaudio")
 				err = Pa_OpenStream(
 					&mStream,
 					0 < inputParameters.channelCount ? &inputParameters : NULL,
@@ -113,7 +113,7 @@ namespace vae { namespace core {
 			}
 
 			if (err != paNoError) {
-				VAE_ASSERT(false)
+				TKLB_ASSERT(false)
 				cleanUp();
 				return false;
 			}
@@ -123,7 +123,7 @@ namespace vae { namespace core {
 			);
 
 			if (err != paNoError) {
-				VAE_ASSERT(false)
+				TKLB_ASSERT(false)
 				cleanUp();
 				return false;
 			}
@@ -137,12 +137,12 @@ namespace vae { namespace core {
 			);
 
 			{
-				VAE_PROFILER_SCOPE_NAMED("Start stream portaudio")
+				TKLB_PROFILER_SCOPE_NAMED("Start stream portaudio")
 				err = Pa_StartStream(mStream);
 			}
 
 			if (err != paNoError) {
-				VAE_ASSERT(false)
+				TKLB_ASSERT(false)
 				cleanUp();
 				return false;
 			}
@@ -169,7 +169,7 @@ namespace vae { namespace core {
 			PaUtil_SetDebugPrintFunction(&debugLog);
 			PaError err = Pa_Initialize();
 			if (err != paNoError) {
-				VAE_ASSERT(false)
+				TKLB_ASSERT(false)
 				return;
 			}
 		}
@@ -190,7 +190,7 @@ namespace vae { namespace core {
 		DeviceInfo getDevice(unsigned int index) override {
 			const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(index);
 			if (deviceInfo == nullptr) {
-				VAE_ASSERT(false)
+				TKLB_ASSERT(false)
 				return DeviceInfo();
 			}
 			DeviceInfo info;

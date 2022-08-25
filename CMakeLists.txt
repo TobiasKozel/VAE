@@ -31,7 +31,6 @@ file(GLOB SRC_CORE "src/core/*.hpp")
 file(GLOB SRC_WRAPPED "src/wrapped/*.cpp")
 file(GLOB SRC_DEVICE "src/core/device/*.hpp")
 
-set(VAE_DEPS tklb)	# Things to link against
 set(VAE_DEFINES)	# Preprocessor info about stuff being built
 
 
@@ -96,9 +95,6 @@ source_group("core" FILES ${SRC_CORE})
 
 #################            find third party libs             #################
 
-find_package(tklb REQUIRED)
-
-
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -147,6 +143,7 @@ target_compile_definitions(
 		${VAE_DEFINES}
 )
 target_link_libraries(vae PRIVATE ${VAE_DEPS})
+set_target_properties(vae PROPERTIES LINKER_LANGUAGE CXX)
 
 
 # for developing

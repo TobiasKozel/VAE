@@ -47,7 +47,7 @@ namespace vae { namespace core {
 			size_t streamTime = 0;			// device time without regard of underruns and overruns
 			Size underruns = 0;				// Happens when the sound card needs more data than queueToDevice provides
 			Size overruns = 0;				// Happens when the sound card emites more data than queueFromDevice fits
-			VAE_PROFILER_MUTEX(Mutex, mutex, "Device mutex")	// Lock the queues
+			TKLB_PROFILER_MUTEX(Mutex, mutex, "Device mutex")	// Lock the queues
 			Uchar channelsOut = 0;
 			Uchar channelsIn = 0;
 
@@ -62,8 +62,8 @@ namespace vae { namespace core {
 			 */
 			template <typename T>
 			void swapBufferInterleaved(const T* from, T* to, Size frames) {
-				VAE_PROFILER_SCOPE()
-				VEA_PROFILER_THREAD_NAME("Device Thread")
+				TKLB_PROFILER_SCOPE()
+				TKLB_PROFILER_THREAD_NAME("Device Thread")
 				if (from != nullptr) {
 					convertBuffer.setFromInterleaved(from, frames, channelsIn);
 					if (resamplerFromDevice.isInitialized()) {
@@ -92,8 +92,8 @@ namespace vae { namespace core {
 					convertBuffer.putInterleaved(to, popped);
 				}
 				streamTime += frames;
-				VAE_PROFILER_PLOT(profiler::deviceUnderruns, int64_t(underruns));
-				// VAE_PROFILER_PLOT(profiler::deviceOverruns, int64_t(overruns)); // don't track them since they're not getting drained for now
+				TKLB_PROFILER_PLOT(profiler::deviceUnderruns, int64_t(underruns));
+				// TKLB_PROFILER_PLOT(profiler::deviceOverruns, int64_t(overruns)); // don't track them since they're not getting drained for now
 			}
 		};
 
@@ -112,7 +112,7 @@ namespace vae { namespace core {
 		 * @param bufferSize The amount of frames a callback will provide/request
 		 */
 		void init(Size sampleRate, Uchar channelsIn, Uchar channelsOut, Size bufferSize) {
-			VAE_PROFILER_SCOPE_NAMED("Init Device")
+			TKLB_PROFILER_SCOPE_NAMED("Init Device")
 			mWorker.channelsIn  = channelsIn;
 			mWorker.channelsOut = channelsOut;
 			mRealSampleRate  = sampleRate;
@@ -169,14 +169,14 @@ namespace vae { namespace core {
 		}
 
 		void postInit() {
-			VAE_DEBUG("Opened Audio Device on %s with samplerate %i", mBackend.getName(), mRealSampleRate)
+			TKLB_DEBUG("Opened Audio Device on %s with samplerate %i", mBackend.getName(), mRealSampleRate)
 			if (mRealSampleRate != mSampleRate) {
-				VAE_DEBUG("Audio Device resamples to %i", mSampleRate)
+				TKLB_DEBUG("Audio Device resamples to %i", mSampleRate)
 			}
 		}
 
 	public:
-		VAE_PROFILER_OVERLOAD_NEW()
+		TKLB_PROFILER_OVERLOAD_NEW()
 
 		/**
 		 * @brief Only a Backend can construct a Device
@@ -186,7 +186,7 @@ namespace vae { namespace core {
 		) : mBackend(backend), mConfig(config) { }
 
 		virtual ~Device() {
-			VAE_DEBUG(
+			TKLB_DEBUG(
 				"Device destructed. Underruns: %i %i Overruns:%i %i",
 				mWorker.underruns, mUnderruns,
 				mWorker.overruns, mOverruns
@@ -196,7 +196,7 @@ namespace vae { namespace core {
 		void setCallback(Callback callback) {
 			mWorker.device = this;
 			mWorker.callback = callback;
-			VAE_DEBUG("Device uses sync callback")
+			TKLB_DEBUG("Device uses sync callback")
 		}
 
 		/**
@@ -226,10 +226,10 @@ namespace vae { namespace core {
 		 * @param buffer Pushes the amount of valid samples
 		 */
 		Size push(const ScratchBuffer& buffer) {
-			VAE_PROFILER_SCOPE()
-			VAE_ASSERT(0 < mWorker.channelsOut)
+			TKLB_PROFILER_SCOPE()
+			TKLB_ASSERT(0 < mWorker.channelsOut)
 			const auto frames = buffer.validSize();
-			VAE_ASSERT(frames != 0) // need to have valid frames
+			TKLB_ASSERT(frames != 0) // need to have valid frames
 			if (mResamplerToDevice.isInitialized()) {
 				mResamplerToDevice.process(buffer, mResamplerBufferToDevice);
 				Lock lock(mWorker.mutex);
@@ -242,7 +242,7 @@ namespace vae { namespace core {
 				mOverruns += (frames - pushed);
 				return pushed;
 			}
-			VAE_PROFILER_PLOT(profiler::engineOverruns, int64_t(mOverruns));
+			TKLB_PROFILER_PLOT(profiler::engineOverruns, int64_t(mOverruns));
 			return 0;
 		}
 
@@ -252,7 +252,7 @@ namespace vae { namespace core {
 		 * @return Size
 		 */
 		Size canPush() const {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			auto remaining = mWorker.queueToDevice.remaining();
 			if (mResamplerToDevice.isInitialized()) {
 				return mResamplerToDevice.estimateNeed(remaining);
@@ -265,14 +265,14 @@ namespace vae { namespace core {
 		 * @param buffer Gets the amount of valid samples, might actualy get less
 		 */
 		void pop(ScratchBuffer& buffer) {
-			VAE_PROFILER_SCOPE()
-			VAE_ASSERT(0 < mWorker.channelsIn)
+			TKLB_PROFILER_SCOPE()
+			TKLB_ASSERT(0 < mWorker.channelsIn)
 			auto frames = buffer.validSize();
-			VAE_ASSERT(frames != 0) // need to have valid frames
+			TKLB_ASSERT(frames != 0) // need to have valid frames
 			Lock lock(mWorker.mutex);
 			const auto popped = mWorker.queueFromDevice.pop(buffer, frames);
 			mUnderruns += (frames - popped);
-			VAE_PROFILER_PLOT(profiler::engineUnderruns, int64_t(mOverruns));
+			TKLB_PROFILER_PLOT(profiler::engineUnderruns, int64_t(mOverruns));
 		}
 
 		Size canPop() const {

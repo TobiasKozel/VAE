@@ -15,7 +15,7 @@ namespace vae { namespace core { namespace effect {
 struct Registermydsp {
 	static EffectBase* create() {
 		auto ptr = new mydsp();
-		VAE_PROFILER_MALLOC_L(ptr, sizeof(mydsp), vae::core::profiler::dspAllocator)
+		TKLB_PROFILER_MALLOC_L(ptr, sizeof(mydsp), vae::core::profiler::dspAllocator)
 		return ptr;
 	}
 	Registermydsp() {

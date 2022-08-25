@@ -15,11 +15,11 @@ namespace vae { namespace core {
 		}
 		void mix(Effect& effect, ScratchBuffer& buffer) {
 			if (effect.effect == nullptr || effect.bypassed) { return; }
-			VAE_PROFILER_SCOPE_NAMED("Process Effect")
+			TKLB_PROFILER_SCOPE_NAMED("Process Effect")
 			mScratchBuffer.set(buffer);
 			mScratchBuffer.setValidSize(buffer.validSize());
-			VAE_ASSERT(effect.effect->getNumInputs() == effect.effect->getNumOutputs())
-			// VAE_ASSERT(buffer.channels() <= effect.effect->getNumInputs())
+			TKLB_ASSERT(effect.effect->getNumInputs() == effect.effect->getNumOutputs())
+			// TKLB_ASSERT(buffer.channels() <= effect.effect->getNumInputs())
 			effect.effect->process(effect, mScratchBuffer, buffer);
 		}
 	}; // EffectsProcessor

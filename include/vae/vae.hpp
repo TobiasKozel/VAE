@@ -17,9 +17,9 @@
 #include "./vae_structs.hpp"
 
 // see https://semver.org/
-#define VAE_VERSION_MAJOR 0		//< for incompatible API changes
-#define VAE_VERSION_MINOR 0		//< for adding functionality in a backwards-compatible manner
-#define VAE_VERSION_PATCH 1		//< for backwards-compatible bug fixes
+#define VAE_VERSION_MAJOR 0		///< for incompatible API changes
+#define VAE_VERSION_MINOR 0		///< for adding functionality in a backwards-compatible manner
+#define VAE_VERSION_PATCH 1		///< for backwards-compatible bug fixes
 
 /**
  * @brief Contains generated Event ids using generate_bank_defines.py
@@ -92,6 +92,10 @@ namespace vae {
 		 */
 		constexpr Size MaxMixerEffects = 4;
 
+		/**
+		 * @brief How many parameters a effect can have (reverb decay, etc.)
+		 * @see vae::core::Mixer::effects
+		 */
 		constexpr Size MaxEffectsParameter = 4;
 
 		/**
@@ -101,7 +105,7 @@ namespace vae {
 		constexpr Size MaxChainedEvents = 4;
 
 		/**
-		 * @brief Minimum volume before sounds will skip rendering
+		 * @brief Minimum volume before sounds will skip rendering (accounting for panning and attenuation).
 		 */
 		constexpr Sample MinVolume  = 0.01f;
 
@@ -111,7 +115,7 @@ namespace vae {
 		 * The subwoofer has no placement.
 		 */
 		namespace Speakers {
-			constexpr Vector3 center		= {  0, 0, -1 };	///< Used for mono and souround setups (except quadrophonic)
+			constexpr Vector3 center		= {  0, 0, +1 };	///< Used for mono and souround setups (except quadrophonic)
 
 			constexpr Vector3 left			= { -1, 0,  0 };	///< Used in 7.1 and Headphones
 			constexpr Vector3 right			= { +1, 0,  0 };	///< Used in 7.1 and Headphones

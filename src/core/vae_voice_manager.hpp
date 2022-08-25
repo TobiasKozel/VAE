@@ -49,7 +49,7 @@ namespace vae { namespace core {
 		Size mStoppedQueueOverflow = 0;			///< Voice which did not fit mFinishedVoiceQueue and could not triggered chained events
 	public:
 		Result init(const EngineConfig& config) {
-			VAE_PROFILER_SCOPE_NAMED("Voicemanager Init")
+			TKLB_PROFILER_SCOPE_NAMED("Voicemanager Init")
 			mVoices.resize(config.voices);
 			mFinishedVoiceQueue.resize(config.finishedVoiceQueueSize);
 			mVoicePans.resize(config.voices);
@@ -83,7 +83,7 @@ namespace vae { namespace core {
 		 */
 		template <class Func>
 		void forEachVoice(const Func&& func) {
-			VAE_PROFILER_SCOPE_NAMED("Foreach Voice")
+			TKLB_PROFILER_SCOPE_NAMED("Foreach Voice")
 			for (Size index = 0; index <= mHighestVoice; index++) {
 				auto& i = mVoices[index];
 				if (i.source == InvalidSourceHandle) { continue; }
@@ -91,14 +91,14 @@ namespace vae { namespace core {
 					stop(i); // stop the voice if callback returns false
 				}
 			}
-			VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
-			VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
-			VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
+			TKLB_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+			TKLB_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+			TKLB_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
 		}
 
 		template <class Func>
 		void forEachFinishedVoice(const Func&& func) {
-			VAE_PROFILER_SCOPE_NAMED("Foreach Finished Voice")
+			TKLB_PROFILER_SCOPE_NAMED("Foreach Finished Voice")
 			for (Size i = 0; i <= mHighestFinishedVoice; i++) {
 				auto& v = mFinishedVoiceQueue[i];
 				if (v.source == InvalidSourceHandle) { continue; }
@@ -106,10 +106,10 @@ namespace vae { namespace core {
 				mFinishedPending--;
 				v.source = InvalidSourceHandle; // now the finished voice is handled
 			}
-			VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
-			VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
-			VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
-			VAE_PROFILER_PLOT(profiler::voiceFinishedCount, int64_t(mFinishedPending));
+			TKLB_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+			TKLB_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+			TKLB_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
+			TKLB_PROFILER_PLOT(profiler::voiceFinishedCount, int64_t(mFinishedPending));
 		}
 
 		VoicePan& getVoicePan(Size index) {
@@ -134,7 +134,7 @@ namespace vae { namespace core {
 			const Sample gain, const EmitterHandle& emitterHandle, const Emitter& emitter,
 			const ListenerHandle listener, const MixerHandle mixer
 		) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 
 			Size searchStartIndex;
 			Size searchEndIndex;
@@ -152,7 +152,7 @@ namespace vae { namespace core {
 
 			// No voices left, find one to virtualize
 			if(starved) {
-				VAE_PROFILER_SCOPE_NAMED("Search killable Voice")
+				TKLB_PROFILER_SCOPE_NAMED("Search killable Voice")
 				Size potentialVirtual = ~0;
 				Sample lowestGain = 10;
 				for (Size i = searchStartIndex; i < searchEndIndex; i++) {
@@ -180,7 +180,7 @@ namespace vae { namespace core {
 
 			// Find a free voice
 			for (Size i = searchStartIndex; i < searchEndIndex; i++) {
-				VAE_PROFILER_SCOPE_NAMED("Search Free Voice")
+				TKLB_PROFILER_SCOPE_NAMED("Search Free Voice")
 				auto& v = mVoices[i];
 				if(v.source == InvalidSourceHandle) {
 					v = { }; // re init object resets time and so on
@@ -219,10 +219,10 @@ namespace vae { namespace core {
 					} else {
 						mActiveVoices++;
 					}
-					VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
-					VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
-					VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
-					mHighestVoice = std::max(i, mHighestVoice);
+					TKLB_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+					TKLB_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+					TKLB_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
+					mHighestVoice = tklb::max(i, mHighestVoice);
 					VAE_DEBUG_VOICES("Started voice slot %i from event %i:%i\tactive: %i",
 						i, event.id, bank, mActiveVoices
 					)
@@ -233,7 +233,7 @@ namespace vae { namespace core {
 			mHighestVoice = (Size) mVoices.size() - 1;
 
 			mStarvedVoices++;
-			VAE_PROFILER_PLOT(profiler::starvedVoiceCount, int64_t(mStarvedVoices));
+			TKLB_PROFILER_PLOT(profiler::starvedVoiceCount, int64_t(mStarvedVoices));
 
 			VAE_DEBUG_VOICES("Voice starvation. Can't start voice from event %i:%i", event.id, bank)
 
@@ -246,7 +246,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result makeVirtual(Voice& v) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			for (Size i = 0; i < mVirtualVoices.size(); i++) {
 				auto& slot = mVirtualVoices[i];
 				if (slot.source != InvalidSourceHandle) { continue; }
@@ -258,9 +258,9 @@ namespace vae { namespace core {
 				} else {
 					mActiveVoices--;
 				}
-				VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
-				VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
-				VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
+				TKLB_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+				TKLB_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+				TKLB_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
 
 				VAE_DEBUG_VOICES("Virtualized voice from event %i:%i\tactive: %i\tincative: %i",
 					v.event, v.bank, mActiveVoices, mInactiveVoices
@@ -278,7 +278,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result stop(Voice& v) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			if (v.source == InvalidSourceHandle) { return Result::Success; }
 
 			if (!v.chainedEvents) {
@@ -295,9 +295,9 @@ namespace vae { namespace core {
 							VAE_DEBUG_VOICES("Revived voice from event %i:%i\tactive: %i\tincative: %i",
 								v.event, v.bank, mActiveVoices, mInactiveVoices
 							)
-							VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
-							VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
-							VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
+							TKLB_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+							TKLB_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+							TKLB_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
 							return Result::Success;
 						}
 					}
@@ -308,9 +308,9 @@ namespace vae { namespace core {
 				} else {
 					mActiveVoices--;
 				}
-				VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
-				VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
-				VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
+				TKLB_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+				TKLB_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+				TKLB_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
 				return Result::Success;
 			}
 
@@ -326,7 +326,7 @@ namespace vae { namespace core {
 			for (Size i = 0; i < mFinishedVoiceQueue.size(); i++) {
 				auto& f = mFinishedVoiceQueue[i];
 				if (f.source == InvalidSourceHandle) {
-					mHighestFinishedVoice = std::max(mHighestFinishedVoice, i);
+					mHighestFinishedVoice = tklb::max(mHighestFinishedVoice, i);
 					finished = true;
 					f = v;
 					// // This is set last since it marks the
@@ -351,14 +351,14 @@ namespace vae { namespace core {
 				// Event will be discarded
 				VAE_DEBUG_VOICES("finishedVoiceQueue is full. Stop Event %i in bank %i discarded", v.event, v.bank)
 				mStoppedQueueOverflow++;
-				VAE_PROFILER_PLOT(profiler::stoppedVoiceOverflow, int64_t(mStoppedQueueOverflow));
+				TKLB_PROFILER_PLOT(profiler::stoppedVoiceOverflow, int64_t(mStoppedQueueOverflow));
 			} else {
 				mFinishedPending++;
 			}
-			VAE_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
-			VAE_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
-			VAE_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
-			VAE_PROFILER_PLOT(profiler::voiceFinishedCount, int64_t(mFinishedPending));
+			TKLB_PROFILER_PLOT(profiler::voiceCount, int64_t(mActiveVoices));
+			TKLB_PROFILER_PLOT(profiler::voiceHRTFCount, int64_t(mActiveHRTFVoices));
+			TKLB_PROFILER_PLOT(profiler::voiceVirtualCount, int64_t(mInactiveVoices));
+			TKLB_PROFILER_PLOT(profiler::voiceFinishedCount, int64_t(mFinishedPending));
 			return Result::Success;
 		}
 
@@ -373,7 +373,7 @@ namespace vae { namespace core {
 		 */
 		template <typename T>
 		Result stop(T handle, T Voice::*member, const EmitterHandle emitter = InvalidEmitterHandle) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			// Kill all the virtual voices first
 			for (auto& v : mVirtualVoices) {
 				if (v.source == InvalidSourceHandle) { continue; }
@@ -395,7 +395,7 @@ namespace vae { namespace core {
 
 		template <typename T>
 		void setVoiceProperty(EmitterHandle emitter, T Voice::*member, const T& value) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			for (auto& v : mVoices) {
 				if(v.emitter == emitter) {
 					(&v)->*member = value;
@@ -405,7 +405,7 @@ namespace vae { namespace core {
 
 		template <typename T>
 		void setVoiceProperty(EmitterHandle emitter, T VoiceFilter::*member, const T& value) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			for (Size i = 0; i < mVoices.size(); i++) {
 				auto& v = mVoices[i];
 				if(v.emitter == emitter) {

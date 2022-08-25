@@ -13,17 +13,17 @@ namespace vae { namespace core {
 		RtAudio mAudio; // Rt Device instance
 
 		bool cleanUp() {
-			VAE_PROFILER_SCOPE_NAMED("Cleanup RtAudio")
+			TKLB_PROFILER_SCOPE_NAMED("Cleanup RtAudio")
 			if (mAudio.isStreamRunning()) {
-				VAE_PROFILER_SCOPE_NAMED("Stop RtAudio Stream")
+				TKLB_PROFILER_SCOPE_NAMED("Stop RtAudio Stream")
 				auto result = mAudio.stopStream();
 				if (result != RTAUDIO_NO_ERROR) {
-					VAE_ASSERT(false)
+					TKLB_ASSERT(false)
 					return false;
 				}
 			}
 			if (mAudio.isStreamOpen()) {
-				VAE_PROFILER_SCOPE_NAMED("Close RtAudio Stream")
+				TKLB_PROFILER_SCOPE_NAMED("Close RtAudio Stream")
 				mAudio.closeStream();
 			}
 			return true;
@@ -57,7 +57,7 @@ namespace vae { namespace core {
 
 		bool openDevice(DeviceInfo& device) override {
 			if (mBackend.getDeviceCount() < Size(device.id)) {
-				VAE_ERROR("Failed to open deivce with index out of bounds")
+				TKLB_ERROR("Failed to open deivce with index out of bounds")
 				return false;
 			}
 			device.channelsIn = tklb::clamp<int>(device.channelsIn, 0, StaticConfig::MaxChannels);
@@ -73,7 +73,7 @@ namespace vae { namespace core {
 
 			RtAudioErrorType result;
 			{
-				VAE_PROFILER_SCOPE_NAMED("Open RtAudio stream")
+				TKLB_PROFILER_SCOPE_NAMED("Open RtAudio stream")
 				result = mAudio.openStream(
 					outParams.nChannels ? &outParams : nullptr,
 					inParams.nChannels  ? &inParams  : nullptr,
@@ -83,7 +83,7 @@ namespace vae { namespace core {
 			}
 
 			if (result != RTAUDIO_NO_ERROR) {
-				VAE_ERROR("Failed to open RtAudio device with code %i", result)
+				TKLB_ERROR("Failed to open RtAudio device with code %i", result)
 				return false;
 			}
 
@@ -96,12 +96,12 @@ namespace vae { namespace core {
 				device.bufferSize // RtAudio writes back to this on openStream
 			);
 			{
-				VAE_PROFILER_SCOPE_NAMED("Start RtAudio stream")
+				TKLB_PROFILER_SCOPE_NAMED("Start RtAudio stream")
 				result = mAudio.startStream();
 			}
 
 			if (result != RTAUDIO_NO_ERROR) {
-				VAE_ERROR("Failed to open RtAudio device with code %i", result)
+				TKLB_ERROR("Failed to open RtAudio device with code %i", result)
 				cleanUp();
 				return false;
 			}
@@ -120,7 +120,7 @@ namespace vae { namespace core {
 
 		~BackendRtAudio() { }
 	public:
-		VAE_PROFILER_OVERLOAD_NEW()
+		TKLB_PROFILER_OVERLOAD_NEW()
 		static BackendRtAudio& instance() {
 			static BackendRtAudio backend;
 			return backend;

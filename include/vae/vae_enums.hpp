@@ -20,7 +20,8 @@ namespace vae {
 		DeviceError,				///< Can't open audio device
 		DuplicateEmitter,			///< Trying to register emitter twice
 		InvalidBank,				///< Valid bank handle needed
-		InvalidEmitter				///< Emitter probably wasn't registered
+		InvalidEmitter,				///< Emitter probably wasn't registered
+		FeatureNotCompiled			///< Codec or other feature not included in binary
 	};
 
 	enum class LogLevel {

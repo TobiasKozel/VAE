@@ -40,11 +40,11 @@ namespace vae { namespace core {
 			SampleIndex frames, Size sampleRate
 		) {
 			Size actuallyRendered = 0;
-			VAE_PROFILER_SCOPE_NAMED("Default Processor")
+			TKLB_PROFILER_SCOPE_NAMED("Default Processor")
 			manager.forEachVoice([&](Voice& v, Size index) {
 				if (v.bank != bank.id) { return true; }
 				if (v.spatialized) { return true; }
-				VAE_PROFILER_SCOPE_NAMED("Default Voice")
+				TKLB_PROFILER_SCOPE_NAMED("Default Voice")
 
 				auto& source = bank.sources[v.source];
 				auto& signal = source.signal;
@@ -72,10 +72,10 @@ namespace vae { namespace core {
 				target.setValidSize(frames); // mark mixer as active
 
 				if (!v.filtered) {
-					VAE_PROFILER_SCOPE_NAMED("Render Voice Basic")
+					TKLB_PROFILER_SCOPE_NAMED("Render Voice Basic")
 					// Basic rendering to all output channels w/o any effects
 					v.started = true;
-					const SampleIndex needed = v.loop ? frames : std::min(frames, SampleIndex(signalLength - v.time));
+					const SampleIndex needed = v.loop ? frames : tklb::min(frames, SampleIndex(signalLength - v.time));
 
 					if (v.loop) {
 						for (int c = 0; c < targetChannels; c++) {
@@ -103,7 +103,7 @@ namespace vae { namespace core {
 
 				// Filtered voice processing
 				{
-					VAE_PROFILER_SCOPE_NAMED("Render filtered Voice")
+					TKLB_PROFILER_SCOPE_NAMED("Render filtered Voice")
 					auto& fd = manager.getVoiceFilter(index);
 
 					if (!v.started) {
@@ -120,7 +120,7 @@ namespace vae { namespace core {
 
 					// Playback speed taking samplerate into account
 					const Real speed = fd.speed * (Sample(signal.sampleRate) / Sample(sampleRate));
-					const SampleIndex needed = v.loop ? frames : std::min(
+					const SampleIndex needed = v.loop ? frames : tklb::min(
 						frames, SampleIndex(std::floor((signalLength - v.time) / speed - fd.timeFract))
 					);
 

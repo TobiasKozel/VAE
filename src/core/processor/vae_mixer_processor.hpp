@@ -25,8 +25,8 @@ namespace vae { namespace core {
 		void mix(
 			VoiceManger& manager, Bank& bank, SampleIndex frames
 		) {
-			VAE_PROFILER_SCOPE_NAMED("Bank Mixer Processor")
-			VAE_ASSERT(!bank.mixers.empty()) // can't happen
+			TKLB_PROFILER_SCOPE_NAMED("Bank Mixer Processor")
+			TKLB_ASSERT(!bank.mixers.empty()) // can't happen
 
 			/**
 			 * mix all non master mixers
@@ -34,7 +34,7 @@ namespace vae { namespace core {
 			 * a lower id than themselves to avoid recursion
 			 */
 			for (Uint i = Uint(bank.mixers.size()) - 1; 0 < i; i--) {
-				VAE_PROFILER_SCOPE_NAMED("Process Mixer Channel")
+				TKLB_PROFILER_SCOPE_NAMED("Process Mixer Channel")
 				auto& sourceMixer = bank.mixers[i];
 				// skip inactive mixers
 				if (sourceMixer.buffer.validSize() == 0) { continue; }

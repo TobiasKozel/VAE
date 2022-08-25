@@ -29,6 +29,7 @@ build/compile_commands.json
 lib
 *.blend1
 
+*.pyc
 *.sofa
 **/doc/*
 docs/doxygen

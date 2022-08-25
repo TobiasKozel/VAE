@@ -3,7 +3,6 @@
 
 #include "../vae_types.hpp"
 #include "../pod/vae_effect.hpp"
-#include "../../wrapped/vae_profiler.hpp"
 
 namespace vae { namespace core { namespace effect {
 	/**
@@ -18,7 +17,7 @@ namespace vae { namespace core { namespace effect {
 		virtual void process(Effect& effect, const ScratchBuffer& in, ScratchBuffer& out) = 0;
 		EffectBase() { }
 		virtual ~EffectBase() {
-			VAE_PROFILER_FREE_L(this, vae::core::profiler::dspAllocator)
+			// TKLB_PROFILER_FREE_L(this, vae::core::profiler::dspAllocator)
 		}
 	};
 

@@ -14,17 +14,17 @@ namespace vae { namespace core {
 	 */
 	class BankManager {
 		HeapBuffer<Bank> mBanks;		// All the currently loaded banks
-		VAE_PROFILER_MUTEX(Mutex, mMutex, "Bank Manager mutex")
+		TKLB_PROFILER_MUTEX(Mutex, mMutex, "Bank Manager mutex")
 		BankLoader mBankLoader;
 
 		void initMixer(Mixer& mixer, Size sampleRate) {
-			VAE_PROFILER_SCOPE_NAMED("Mixer Init")
+			TKLB_PROFILER_SCOPE_NAMED("Mixer Init")
 			mixer.buffer.resize(StaticConfig::MaxBlock, StaticConfig::MaxChannels);
 			for (auto& i : mixer.effects) {
 				if (i.name.empty()) { continue; }
 				i.effect = effect::EffectsFactory::create(i.name);
 				if (i.effect == nullptr) {
-					VAE_ERROR("Effect %s could not be loaded.", i.name.c_str())
+					TKLB_ERROR("Effect %s could not be loaded.", i.name.c_str())
 					continue;
 				}
 				i.effect->init(sampleRate);
@@ -38,7 +38,7 @@ namespace vae { namespace core {
 		 * @param sampleRate
 		 */
 		void init(const char* rootPath, int sampleRate) {
-			VAE_PROFILER_SCOPE_NAMED("Bankmanager Init")
+			TKLB_PROFILER_SCOPE_NAMED("Bankmanager Init")
 			for (auto& i : mBanks) {
 				if (i.id != InvalidBankHandle) { continue; }
 				unloadFromId(i.id);
@@ -63,7 +63,7 @@ namespace vae { namespace core {
 		 */
 		template <class Func>
 		void forEach(const Func&& func) {
-			VAE_PROFILER_SCOPE_NAMED("Foreach Bank")
+			TKLB_PROFILER_SCOPE_NAMED("Foreach Bank")
 			Lock l(mMutex);
 			for (auto& i : mBanks) {
 				if (i.id == InvalidBankHandle) { continue; }
@@ -72,19 +72,19 @@ namespace vae { namespace core {
 		}
 
 		Result load(const char* path, Size size, const char* rootPath, int sampleRate) {
-			VAE_PROFILER_SCOPE()
-			VAE_INFO("Loading bank from file %s%s", rootPath, path)
+			TKLB_PROFILER_SCOPE()
+			TKLB_INFO("Loading bank from file %s%s", rootPath, path)
 			Bank bank;
 			auto result = mBankLoader.load(path, size, rootPath, bank);
 			if (result != Result::Success) {
-				VAE_ERROR("Failed to load bank from file %s%s", rootPath, path)
+				TKLB_ERROR("Failed to load bank from file %s%s", rootPath, path)
 				return result;
 			}
 			return load(bank, sampleRate);
 		}
 
 		Result load(Bank& bank, int sampleRate) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			// TODO init mixer effects
 
 			if (bank.mixers.empty()) {
@@ -99,7 +99,7 @@ namespace vae { namespace core {
 			}
 
 			{
-				VAE_PROFILER_SCOPE_NAMED("Offline resampling")
+				TKLB_PROFILER_SCOPE_NAMED("Offline resampling")
 				for (auto& s : bank.sources) {
 					if (s.resample && s.signal.sampleRate && s.signal.sampleRate != sampleRate) {
 						tklb::ResamplerTpl<Sample, AudioBuffer>::resample(s.signal, sampleRate);
@@ -114,12 +114,12 @@ namespace vae { namespace core {
 				}
 				mBanks[bank.id] = std::move(bank);
 			}
-			VAE_INFO("Bank %s loaded.", mBanks[bank.id].name.c_str())
+			TKLB_INFO("Bank %s loaded.", mBanks[bank.id].name.c_str())
 			return Result::Success;
 		}
 
 		Result addSource(BankHandle bankHandle, Source& source, int sampleRate) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			if (source.resample && source.signal.sampleRate && source.signal.sampleRate != sampleRate) {
 				tklb::ResamplerTpl<Sample, AudioBuffer>::resample(source.signal, sampleRate);
 			}
@@ -133,7 +133,7 @@ namespace vae { namespace core {
 		}
 
 		Result addEvent(BankHandle bankHandle, Event& event) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			auto& bank = mBanks[bankHandle];
 			Lock l(mMutex);
 			if (bank.events.size() <= event.id) {
@@ -144,7 +144,7 @@ namespace vae { namespace core {
 		}
 
 		Result addMixer(BankHandle bankHandle, Mixer& mixer) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			// TODO init mixer effects
 			mixer.buffer.resize(StaticConfig::MaxBlock, StaticConfig::MaxChannels);
 			Lock l(mMutex);
@@ -165,15 +165,15 @@ namespace vae { namespace core {
 		}
 
 		Result unloadFromId(BankHandle bankHandle) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			Lock l(mMutex);
 			if (mBanks.size() <= bankHandle) {
-				VAE_WARN("Could not unload bank with handle %i", bankHandle)
+				TKLB_WARN("Could not unload bank with handle %i", bankHandle)
 				return Result::ElementNotFound;
 			}
 			auto& bank = mBanks[bankHandle];
-			VAE_ASSERT(bank.id == bankHandle)
-			VAE_INFO("Unloading bank %s", bank.name.c_str())
+			TKLB_ASSERT(bank.id == bankHandle)
+			TKLB_INFO("Unloading bank %s", bank.name.c_str())
 			// TODO use a smart pointer or something
 			for (auto& m : bank.mixers) {
 				for (auto& e : m.effects) {
@@ -187,7 +187,7 @@ namespace vae { namespace core {
 		}
 
 		void unloadAll() {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 			for (auto& i : mBanks) {
 				if (i.id == InvalidBankHandle) { continue; }
 				unloadFromId(i.id);

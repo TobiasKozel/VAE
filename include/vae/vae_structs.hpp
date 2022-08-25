@@ -115,7 +115,6 @@ namespace vae {
 		 * @brief If enabled, all processing and mixing will happen in the audio callback.
 		 * @details This results in lower latency and one less thread running, but this
 		 * isn't good practice apparently.
-		 *
 		 */
 		bool processInBufferSwitch = false;
 	};
@@ -137,14 +136,14 @@ namespace vae {
 	 * @brief Public vae Vector 3 type
 	 */
 	struct Vector3 {
-		float x;
-		float y;
-		float z;
+		float x;		///< Right
+		float y;		///< Up
+		float z;		///< Front
 	};
 
 	/**
 	 * @brief Emitters have a position and direction vector
-	 * @details The direction vector isn't used since source can only emit unidirectional
+	 * @details The direction vector isn't used at the moment, since there are no directional sources
 	 */
 	struct LocationDirection {
 		Vector3 position;
@@ -152,7 +151,7 @@ namespace vae {
 	};
 
 	/**
-	 * @brief Listener uses additional up vector.
+	 * @brief Listener uses additional up vector like a normal camera.
 	 * This is the default coordinate system orientation.
 	 * @attention Technically the can be changed but the speaker placements in vae::StaticConfig::Speakers need to be changed accordingly.
 	 * @see vae::StaticConfig::Speakers
@@ -160,10 +159,9 @@ namespace vae {
 	 */
 	struct LocationOrientation {
 		Vector3 position	= { 0.f, 0.f,  0.f };
-		Vector3 front		= { 0.f, 0.f, -1.f };	///< -z front @attention There's something weird going on since speakers are positve z front
+		Vector3 front		= { 0.f, 0.f, +1.f };	///< -z front @attention There's something weird going on since speakers are positve z front
 		Vector3 up			= { 0.f, 1.f,  0.f };	///< Y up
 	};
-
 }
 
 #endif // _VAE_STRUCTS

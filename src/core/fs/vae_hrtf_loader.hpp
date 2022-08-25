@@ -34,7 +34,7 @@ namespace vae { namespace core {
 		}
 	public:
 		Result load(const char* path, Size length, const char* rootPath, const Size sampleRate, HRTF& hrtf) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 
 			/**
 			 *					Open file and decode json
@@ -44,8 +44,8 @@ namespace vae { namespace core {
 			String jsonText;
 			if (length == 0) { // length 0 indicates the file is on disk
 			#ifndef VAE_NO_STDIO
-				VAE_DEBUG("Started loading HRTF %s", path)
-				VAE_PROFILER_SCOPE_NAMED("HRTF IO")
+				TKLB_DEBUG("Started loading HRTF %s", path)
+				TKLB_PROFILER_SCOPE_NAMED("HRTF IO")
 				PathString folder;
 				folder = rootPath;
 				folder.append(path);
@@ -71,11 +71,11 @@ namespace vae { namespace core {
 
 			json_value* json;
 			{
-				VAE_PROFILER_SCOPE_NAMED("HRTF Parse")
+				TKLB_PROFILER_SCOPE_NAMED("HRTF Parse")
 				json = json_parse_ex(&settings, encoded, length, 0);
 			}
 			if (json == nullptr) {
-				VAE_ERROR("Failed to parse HRTF")
+				TKLB_ERROR("Failed to parse HRTF")
 				return Result::BankFormatError;
 			}
 			json_value& data = (*json);
@@ -116,13 +116,13 @@ namespace vae { namespace core {
 			const bool needsResample = hrtf.originalRate != sampleRate;
 			if (needsResample) {
 				// TODO
-				VAE_ERROR("Can't open HRTF, resampling needed!")
+				TKLB_ERROR("Can't open HRTF, resampling needed!")
 				return Result::GenericFailure;
 			}
 
 			Size maxIrLength = 0;
 			{
-				VAE_PROFILER_SCOPE_NAMED("HRTF Convert")
+				TKLB_PROFILER_SCOPE_NAMED("HRTF Convert")
 				for (Size i = 0; i < positionCount; i++) {
 					HRTF::Position& p = hrtf.positions[i];
 					auto& pi = *positions.values[i];
@@ -130,7 +130,7 @@ namespace vae { namespace core {
 					p.pos = matchCoord * pos;
 					json_value irSamples[2] = { pi["left"], pi["right"]};
 					const Size irLength = irSamples[0].u.array.length;
-					maxIrLength = std::max(maxIrLength, irLength);
+					maxIrLength = tklb::max(maxIrLength, irLength);
 					for (int c = 0; c < 2; c++) {
 						p.ir[c].resize(irLength, 1);
 						for (Size j = 0; j < irLength; j++) {
@@ -142,11 +142,11 @@ namespace vae { namespace core {
 
 			hrtf.irLength = maxIrLength;
 			{
-				VAE_PROFILER_SCOPE_NAMED("HRTF Dealloc")
+				TKLB_PROFILER_SCOPE_NAMED("HRTF Dealloc")
 				json_value_free_ex(&settings, json);
 			}
 
-			VAE_DEBUG("Finished loading HRTF %s", path)
+			TKLB_DEBUG("Finished loading HRTF %s", path)
 
 			return Result::Success;
 		}

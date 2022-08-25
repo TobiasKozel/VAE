@@ -42,7 +42,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result load(const char* path, Size length, const char* rootPath, Bank& bank) {
-			VAE_PROFILER_SCOPE()
+			TKLB_PROFILER_SCOPE()
 
 			/**
 			 *					Open file and decode json
@@ -53,8 +53,8 @@ namespace vae { namespace core {
 			String jsonText;
 
 			if (length == 0) { // length 0 indicates the file is on disk
-				VAE_DEBUG("Started loading bank %s", path)
-				VAE_PROFILER_SCOPE_NAMED("BankFile IO")
+				TKLB_DEBUG("Started loading bank %s", path)
+				TKLB_PROFILER_SCOPE_NAMED("BankFile IO")
 				folder = rootPath;
 				folder.append(path);
 				folder.append("/");
@@ -63,7 +63,7 @@ namespace vae { namespace core {
 				fs::File file(json.c_str());
 				jsonText.resize(file.size());
 				if (!file.readAll(jsonText.data())) {
-					VAE_DEBUG("Failed to read file")
+					TKLB_DEBUG("Failed to read file")
 					return Result::FileOpenError;
 				}
 				length = jsonText.size();
@@ -78,7 +78,7 @@ namespace vae { namespace core {
 
 			json_value* json;
 			{
-				VAE_PROFILER_SCOPE_NAMED("BankFile Parsing")
+				TKLB_PROFILER_SCOPE_NAMED("BankFile Parsing")
 				json = json_parse_ex(&settings, encoded, length, 0);
 			}
 			if (json == nullptr) { return Result::BankFormatError; }
@@ -93,7 +93,7 @@ namespace vae { namespace core {
 			 */
 			auto sources = data["sources"];
 			if (sources.type == json_array) {
-				VAE_PROFILER_SCOPE_NAMED("Deserialize sources")
+				TKLB_PROFILER_SCOPE_NAMED("Deserialize sources")
 				bank.sources.resize(sources.u.array.length);
 				for (auto& iraw : sources.u.array) {
 					auto& i = *iraw;
@@ -105,7 +105,7 @@ namespace vae { namespace core {
 
 					Source& s = bank.sources[id];
 					if (s.id != InvalidSourceHandle) {
-						VAE_ERROR("Duplicate Source id %i in bank %i", s.id, bank.id)
+						TKLB_ERROR("Duplicate Source id %i in bank %i", s.id, bank.id)
 						return Result::BankFormatDuplicateIndex;
 					}
 					s.id		= id;
@@ -123,7 +123,7 @@ namespace vae { namespace core {
 
 					auto result = mSourceLoader.load(s, folder.c_str());
 					if (result != Result::Success) {
-						VAE_ERROR("Failed to load source %s", s.path.c_str())
+						TKLB_ERROR("Failed to load source %s", s.path.c_str())
 					}
 				}
 			}
@@ -133,7 +133,7 @@ namespace vae { namespace core {
 			 */
 			auto mixers = data["mixers"];
 			if (mixers.type == json_array) {
-				VAE_PROFILER_SCOPE_NAMED("Deserialize mixers")
+				TKLB_PROFILER_SCOPE_NAMED("Deserialize mixers")
 				bank.mixers.resize(mixers.u.array.length);
 				for (auto& iraw : mixers.u.array) {
 					auto& i = *iraw;
@@ -141,14 +141,14 @@ namespace vae { namespace core {
 					MixerHandle id = (json_int_t) i["id"];
 
 					if (mixers.u.array.length <= id) {
-						VAE_ERROR("Mixer %i:%i id out of bounds.", id, bank.id);
+						TKLB_ERROR("Mixer %i:%i id out of bounds.", id, bank.id);
 						return Result::BankFormatIndexError;
 					}
 
 					auto& m = bank.mixers[id];
 
 					if (m.id != InvalidMixerHandle) {
-						VAE_ERROR("Duplicate Mixer id %i in bank %i", m.id, bank.id)
+						TKLB_ERROR("Duplicate Mixer id %i in bank %i", m.id, bank.id)
 						return Result::BankFormatDuplicateIndex;
 					}
 
@@ -161,7 +161,7 @@ namespace vae { namespace core {
 					if (m.id != Mixer::MasterMixerHandle && m.id <= m.parent) {
 						// Mixer can only write to mixers with lower ids than themselves
 						// this avoids recursion and makes mixing easier
-						VAE_ERROR("Mixer %i:%i tried to mix to %i. ", id, bank.id, m.parent);
+						TKLB_ERROR("Mixer %i:%i tried to mix to %i. ", id, bank.id, m.parent);
 						return Result::BankFormatBadMixHirarchy;
 					}
 
@@ -190,21 +190,21 @@ namespace vae { namespace core {
 
 			auto events = data["events"];
 			{
-				VAE_PROFILER_SCOPE_NAMED("Deserialize events")
+				TKLB_PROFILER_SCOPE_NAMED("Deserialize events")
 				bank.events.resize(events.u.array.length);
 				for (auto& iraw : events.u.array) {
 					auto& i = *iraw;
 					EventHandle id = (json_int_t) i["id"];
 
 					if (events.u.array.length <= id) {
-						VAE_ERROR("Event %i:%i id out of bounds.", id, bank.id)
+						TKLB_ERROR("Event %i:%i id out of bounds.", id, bank.id)
 						return Result::BankFormatIndexError;
 					}
 
 					Event& e = bank.events[id];
 
 					if (e.id != InvalidEventHandle) {
-						VAE_ERROR("Duplicate Event id %i in bank %i", e.id, bank.id)
+						TKLB_ERROR("Duplicate Event id %i in bank %i", e.id, bank.id)
 						return Result::BankFormatDuplicateIndex;
 					}
 
@@ -231,7 +231,7 @@ namespace vae { namespace core {
 					if (i["chained_events"].type == json_array) {
 						auto onStart = i["chained_events"].u.array;
 						if (StaticConfig::MaxChainedEvents < onStart.length) {
-							VAE_ERROR("Event %i:%i has too many chained chained_events events.", id, bank.id)
+							TKLB_ERROR("Event %i:%i has too many chained chained_events events.", id, bank.id)
 							return Result::TooManyRecords;
 						}
 						for (size_t j = 0; j < onStart.length; j++) {

@@ -9,7 +9,9 @@
 #ifndef VAE_NO_WAV
 	#include "../../../external/tklb/src/types/audio/TWaveFile.hpp"
 #endif
-#include "../../../external/tklb/src/types/audio/TOggFile.hpp"
+#ifndef VAE_NO_OGG
+	#include "../../../external/tklb/src/types/audio/TOggFile.hpp"
+#endif // VAE_NO_OGG
 
 #include "../../wrapped/vae_fs.hpp"
 
@@ -43,16 +45,20 @@ namespace vae { namespace core {
 			if (!s.stream) {
 				if (s.format == Source::Format::wav) {
 				#ifdef VAE_NO_WAV
-					return Result::GenericFailure;
+					return Result::FeatureNotCompiled;
 				#else
-					VAE_PROFILER_SCOPE_NAMED("Load wav")
+					TKLB_PROFILER_SCOPE_NAMED("Load wav")
 					bool success = tklb::wave::load<Sample, AudioBuffer>(data, s.signal, length);
 					return success ? Result::Success : Result::GenericFailure;
 				#endif
 				} else if (s.format == Source::Format::ogg) {
-					VAE_PROFILER_SCOPE_NAMED("Load ogg")
+				#ifdef VAE_NO_OGG
+					return Result::FeatureNotCompiled;
+				#else
+					TKLB_PROFILER_SCOPE_NAMED("Load ogg")
 					auto result = tklb::ogg::load<Sample, AudioBuffer>(data, s.signal, length);
 					return result ? Result::Success : Result::GenericFailure;
+				#endif
 				}
 				return Result::GenericFailure; // what format is this?
 			}

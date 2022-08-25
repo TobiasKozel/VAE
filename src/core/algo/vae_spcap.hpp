@@ -3,6 +3,7 @@
 
 #include "../vae_types.hpp"
 #include "../vae_util.hpp"
+#include <array>
 
 namespace vae { namespace core {
 	/**
@@ -27,7 +28,7 @@ namespace vae { namespace core {
 			 * https://www.researchgate.net/publication/235080603_A_Novel_Multichannel_Panning_Method_for_Standard_and_Arbitrary_Loudspeaker_Configurations
 			 * @param positions Speaker positions, will be normalized.
 			 */
-			SPCAPConfig(const std::initializer_list<Vector3>& positions) {
+			constexpr SPCAPConfig(const std::array<Vector3, N>&& positions) {
 				Size i = 0;
 				for (const auto& speaker : positions) {
 					mSpeakers[i] = { glm::normalize(Vec3(speaker.x, speaker.y, speaker.z)), Sample(0) };
@@ -61,7 +62,9 @@ namespace vae { namespace core {
 				Sample sumGains = 0.0;
 				// const Sample tightness = (Sample(1) - spread) * Sample(10) + Sample(0.05);
 				const Sample tightness = 1.0;
-				std::fill_n(result, N, Sample(0));
+				for (Size i = 0; i < N; i++) {
+					result[i] = Sample(0);
+				}
 				for (Size i = 0; i < N; i++) {
 					Sample gain = glm::dot(mSpeakers[i].dir, direction) + Sample(1.0); // (1)
 					gain  = powf(gain, tightness);	// (9)
@@ -90,24 +93,24 @@ namespace vae { namespace core {
 	 * TODO there's probably a smart  way to make this all constexpr
 	 */
 
-	const SPCAP::SPCAPConfig<1> SPCAP::MonoSPCAP = {
-		StaticConfig::Speakers::center
-	};
-	const SPCAP::SPCAPConfig<2> SPCAP::HeadphoneSPCAP = {
+	const SPCAP::SPCAPConfig<1> SPCAP::MonoSPCAP = {{
+						StaticConfig::Speakers::center
+	}};
+	const SPCAP::SPCAPConfig<2> SPCAP::HeadphoneSPCAP = {{
 		StaticConfig::Speakers::left, StaticConfig::Speakers::right
-	};
-	const SPCAP::SPCAPConfig<2> SPCAP::StereroSPCAP = {
+	}};
+	const SPCAP::SPCAPConfig<2> SPCAP::StereroSPCAP = {{
 		StaticConfig::Speakers::frontLeft, StaticConfig::Speakers::frontRight
-	};
-	const SPCAP::SPCAPConfig<4> SPCAP::QuadSPCAP = {
+	}};
+	const SPCAP::SPCAPConfig<4> SPCAP::QuadSPCAP = {{
 		StaticConfig::Speakers::frontLeft, StaticConfig::Speakers::frontRight,
-		StaticConfig::Speakers::rearLeft, StaticConfig::Speakers::rearRight
-	};
-	const SPCAP::SPCAPConfig<5> SPCAP::SuroundSPCAP = {
+		StaticConfig::Speakers::rearLeft,  StaticConfig::Speakers::rearRight
+	}};
+	const SPCAP::SPCAPConfig<5> SPCAP::SuroundSPCAP = {{
 		StaticConfig::Speakers::frontLeft, StaticConfig::Speakers::frontRight,
-		StaticConfig::Speakers::rearLeft, StaticConfig::Speakers::rearRight,
-		StaticConfig::Speakers::center
-	};
+		StaticConfig::Speakers::rearLeft,  StaticConfig::Speakers::rearRight,
+						StaticConfig::Speakers::center
+	}};
 } } // core::vae
 
 #endif // _VAE_SPCAP

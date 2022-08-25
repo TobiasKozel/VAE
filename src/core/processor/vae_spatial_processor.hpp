@@ -27,7 +27,7 @@ namespace vae { namespace core {
 		ScratchBuffer mScratchBuffer;
 	public:
 		Result init(Size hrtfVoices) {
-			VAE_PROFILER_SCOPE_NAMED("Spatial Processor Init")
+			TKLB_PROFILER_SCOPE_NAMED("Spatial Processor Init")
 			mVoiceHRTFs.resize(hrtfVoices);
 			mScratchBuffer.resize(StaticConfig::MaxBlock);
 			return Result::Success;
@@ -48,13 +48,13 @@ namespace vae { namespace core {
 			SampleIndex frames, Size sampleRate
 		) {
 			Size actuallyRendered = 0;
-			VAE_PROFILER_SCOPE_NAMED("Spatial Processor")
+			TKLB_PROFILER_SCOPE_NAMED("Spatial Processor")
 			manager.forEachVoice([&](Voice& v, Size vi) {
 				if (v.bank != bank.id) { return true; }		// wrong bank
 				if (!v.spatialized) { return true; }		// not spatialized
-				VAE_PROFILER_SCOPE_NAMED("Spatial Voice")
+				TKLB_PROFILER_SCOPE_NAMED("Spatial Voice")
 				if (!spatial.hasEmitter(v.emitter)) {
-					VAE_DEBUG("Spatial voice is missing emitter")
+					TKLB_DEBUG("Spatial voice is missing emitter")
 					return false; // ! needs emitter
 				}
 
@@ -68,7 +68,7 @@ namespace vae { namespace core {
 				v.time = v.time % signalLength;		// Keep signal in bounds before starting
 
 				if (signal.sampleRate != sampleRate) {
-					// VAE_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
+					TKLB_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
 					v.filtered = true; // implicitly filter to resample
 				}
 
@@ -81,7 +81,7 @@ namespace vae { namespace core {
 				Vec3 relativeDirection;
 				// * Attenuation calculation
 				{
-					VAE_PROFILER_SCOPE_NAMED("Attenuation calculation")
+					TKLB_PROFILER_SCOPE_NAMED("Attenuation calculation")
 					// samething as graphics, make the world rotate round the listener
 					// TODO this should be possible without a 4x4 matrix?
 					glm::mat4x4 lookAt = glm::lookAt(l.position, l.position + l.front, l.up);
@@ -89,12 +89,12 @@ namespace vae { namespace core {
 					relativeDirection = (lookAt * glm::vec4(emitter.position, 1.f));
 
 
-					const Real distance = std::max(glm::length(relativeDirection), 0.1f);
+					const Real distance = tklb::max(glm::length(relativeDirection), 0.1f);
 					relativeDirection /= distance;
 
 					if (v.attenuate) {
 						distanceAttenuated = distance;
-						distanceAttenuated = std::max(distanceAttenuated, Real(1)); // we don't want to get louder than 1
+						distanceAttenuated = tklb::max(distanceAttenuated, Real(1)); // we don't want to get louder than 1
 						distanceAttenuated = Real(1) / distanceAttenuated;
 					} else {
 						distanceAttenuated = 1.0;
@@ -119,7 +119,7 @@ namespace vae { namespace core {
 				bool finished = false; 			// the return value of this function stops the voice
 
 				if (v.filtered) {
-					VAE_PROFILER_SCOPE_NAMED("Voice Filter")
+					TKLB_PROFILER_SCOPE_NAMED("Voice Filter")
 					auto& fd = manager.getVoiceFilter(vi);
 
 					if (!v.started) {
@@ -133,7 +133,7 @@ namespace vae { namespace core {
 
 					if (!v.loop) {
 						// If we're not looping, end time calculation is a bit more complex
-						remaining = std::min(
+						remaining = tklb::min(
 							frames,
 							SampleIndex(std::floor((signalLength - v.time) / speed - fd.timeFract))
 						);
@@ -178,9 +178,9 @@ namespace vae { namespace core {
 					v.time = v.time;					// set index back
 					in = mScratchBuffer[0];				// set the buffer to use for panning
 				} else {
-					VAE_PROFILER_SCOPE_NAMED("Non filtered Voice")
+					TKLB_PROFILER_SCOPE_NAMED("Non filtered Voice")
 					if (v.loop) {
-						VAE_PROFILER_SCOPE_NAMED("Loop")
+						TKLB_PROFILER_SCOPE_NAMED("Loop")
 						// put the looped signal in scratch buffer eventhough we're not filtering
 						// so panning doesn't need to worry about looping
 						for (SampleIndex s = 0, i = v.time; s < frames; s++, i++) {
@@ -192,11 +192,11 @@ namespace vae { namespace core {
 						in = mScratchBuffer[0];		// set buffer for panning
 						finished = false;			// never stop the voice
 					} else {
-						VAE_PROFILER_SCOPE_NAMED("No Loop")
+						TKLB_PROFILER_SCOPE_NAMED("No Loop")
 						// Not filtering or looping
 						// Means we can use the original signal buffer but need to
 						// set the remaining samples so we don't run over the signal end
-						remaining = std::min(
+						remaining = tklb::min(
 							frames, SampleIndex(signalLength - v.time
 						));
 						in = signal[0] + v.time;
@@ -207,8 +207,8 @@ namespace vae { namespace core {
 
 				if (l.configuration == SpeakerConfiguration::HRTF && v.HRTF && mHRTF.rate) {
 					// * HRTF Panning
-					VAE_ASSERT(vi < mVoiceHRTFs.size()) // only the lower voice can use hrtfs
-					VAE_PROFILER_SCOPE_NAMED("Render HRTF")
+					TKLB_ASSERT(vi < mVoiceHRTFs.size()) // only the lower voice can use hrtfs
+					TKLB_PROFILER_SCOPE_NAMED("Render HRTF")
 
 					Size closestIndex = HRTFUtil::closest(mHRTF, relativeDirection);
 
@@ -227,7 +227,7 @@ namespace vae { namespace core {
 					);
 
 				} else {
-					VAE_PROFILER_SCOPE_NAMED("Render SPCAP")
+					TKLB_PROFILER_SCOPE_NAMED("Render SPCAP")
 					// * Normal SPCAP panning
 					auto& lastPan = manager.getVoicePan(vi);
 					VoicePan currentPan;
@@ -252,7 +252,7 @@ namespace vae { namespace core {
 								lastVolumes[c] = currentVolumes[c];
 							}
 						}
-						VAE_PROFILER_SCOPE_NAMED("Apply SPCAP")
+						TKLB_PROFILER_SCOPE_NAMED("Apply SPCAP")
 						Sample t = 0;
 						for (SampleIndex s = 0; s < remaining; s++) {
 							const Sample sample = in[s];

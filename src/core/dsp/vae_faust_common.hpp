@@ -60,7 +60,7 @@ namespace vae { namespace core { namespace effect {
 		void process(Effect& effect, const ScratchBuffer& in, ScratchBuffer& out) override {
 			// Update DSP values
 			{
-				VAE_PROFILER_SCOPE_NAMED("Update Faust DSP")
+				TKLB_PROFILER_SCOPE_NAMED("Update Faust DSP")
 				UI ui = { effect };
 				buildUserInterface(&ui);
 			}
@@ -73,7 +73,7 @@ namespace vae { namespace core { namespace effect {
 
 			// Do the thing
 			{
-				VAE_PROFILER_SCOPE_NAMED("Faust DSP")
+				TKLB_PROFILER_SCOPE_NAMED("Faust DSP")
 				compute(in.validSize(), const_cast<Sample**>(ain), aout);
 			}
 		}
