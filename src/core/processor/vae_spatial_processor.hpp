@@ -6,21 +6,25 @@
 #include "../pod/vae_bank.hpp"
 #include "../voices/vae_voice.hpp"
 #include "../voices/vae_voice_filter.hpp"
-#include "../voices/vae_voice_pan.hpp"
 #include "../voices/vae_voice_hrtf.hpp"
+#include "../voices/vae_voice_pan.hpp"
 #include "../vae_voice_manager.hpp"
 #include "../vae_spatial_manager.hpp"
 #include "../algo/vae_spcap.hpp"
-#include "../algo/vae_hrtf_util.hpp"
 
-#include "../fs/vae_hrtf_loader.hpp"
-#include "../../../external/glm/glm/gtc/matrix_transform.hpp"
+#ifndef VAE_NO_HRTF
+	#include "../algo/vae_hrtf_util.hpp"
+	#include "../fs/vae_hrtf_loader.hpp"
+#endif
 
 namespace vae { namespace core {
 	class SpatialProcessor {
-		HRTF mHRTF;								///< Currently loaded HRTF, there can only be one
-		HRTFLoader mHRTFLoader;					///< Struct to decode the hrtf
-		HeapBuffer<VoiceHRTF> mVoiceHRTFs;		///< Working data for convolution
+		#ifndef VAE_NO_HRTF
+			HRTF mHRTF;								///< Currently loaded HRTF, there can only be one
+			HRTFLoader mHRTFLoader;					///< Struct to decode the hrtf
+			HeapBuffer<VoiceHRTF> mVoiceHRTFs;		///< Working data for convolution
+		#endif
+
 		/**
 		 * @brief Temporary filtered/looped signal TODO this will not work with parallel bank processing
 		 */
@@ -28,7 +32,9 @@ namespace vae { namespace core {
 	public:
 		Result init(Size hrtfVoices) {
 			TKLB_PROFILER_SCOPE_NAMED("Spatial Processor Init")
-			mVoiceHRTFs.resize(hrtfVoices);
+			#ifndef VAE_NO_HRTF
+				mVoiceHRTFs.resize(hrtfVoices);
+			#endif
 			mScratchBuffer.resize(StaticConfig::MaxBlock);
 			return Result::Success;
 		}
@@ -52,9 +58,11 @@ namespace vae { namespace core {
 			manager.forEachVoice([&](Voice& v, Size vi) {
 				if (v.bank != bank.id) { return true; }		// wrong bank
 				if (!v.spatialized) { return true; }		// not spatialized
+
 				TKLB_PROFILER_SCOPE_NAMED("Spatial Voice")
+
 				if (!spatial.hasEmitter(v.emitter)) {
-					TKLB_DEBUG("Spatial voice is missing emitter")
+					TKLB_WARN("Spatial voice is missing emitter")
 					return false; // ! needs emitter
 				}
 
@@ -78,19 +86,20 @@ namespace vae { namespace core {
 				auto& l = spatial.getListeners()[v.listener];
 
 				Real distanceAttenuated;
-				Vec3 relativeDirection;
+				vector::Vec3 relativeDirection;
 				// * Attenuation calculation
 				{
 					TKLB_PROFILER_SCOPE_NAMED("Attenuation calculation")
 					// samething as graphics, make the world rotate round the listener
 					// TODO this should be possible without a 4x4 matrix?
-					glm::mat4x4 lookAt = glm::lookAt(l.position, l.position + l.front, l.up);
+					const auto& lookAt = vector::lookAt(
+						l.position, vector::add(l.position, l.front), l.up);
 					// listener is the world origin now
-					relativeDirection = (lookAt * glm::vec4(emitter.position, 1.f));
+					relativeDirection = vector::multiply(lookAt, emitter.position);
 
-
-					const Real distance = tklb::max(glm::length(relativeDirection), 0.1f);
-					relativeDirection /= distance;
+					// Distance with "near plane" at 0.1
+					const Real distance = tklb::max(vector::length(relativeDirection), 0.1f);
+					relativeDirection = vector::divide(relativeDirection, distance);
 
 					if (v.attenuate) {
 						distanceAttenuated = distance;
@@ -135,7 +144,7 @@ namespace vae { namespace core {
 						// If we're not looping, end time calculation is a bit more complex
 						remaining = tklb::min(
 							frames,
-							SampleIndex(std::floor((signalLength - v.time) / speed - fd.timeFract))
+							SampleIndex((signalLength - v.time) / speed - fd.timeFract)
 						);
 						finished = remaining != frames;	// we might have reached the end
 					}
@@ -145,7 +154,7 @@ namespace vae { namespace core {
 					for (SampleIndex s = 0; s < frames; s++) {
 						// Linear interpolation between two samples
 						position = v.time + (s * speed) + fd.timeFract;
-						const Real lastPosition = std::floor(position);
+						const Real lastPosition = SampleIndex(position);
 
 						Size lastIndex = (Size) lastPosition;
 						Size nextIndex = (Size) lastIndex + 1;
@@ -173,7 +182,7 @@ namespace vae { namespace core {
 						mScratchBuffer[0][s] = (lpd - hpd);
 					}
 					position += speed; 					// step to next sample
-					v.time = (SampleIndex) std::floor(position);		// split the signal in normal sample position
+					v.time = SampleIndex(position);	// split the signal in normal sample position
 					fd.timeFract = position - v.time;	// and fractional time for the next block
 					v.time = v.time;					// set index back
 					in = mScratchBuffer[0];				// set the buffer to use for panning
@@ -204,7 +213,7 @@ namespace vae { namespace core {
 						v.time += remaining;			// progress time in voice
 					}
 				}
-
+				#ifndef VAE_NO_HRTF
 				if (l.configuration == SpeakerConfiguration::HRTF && v.HRTF && mHRTF.rate) {
 					// * HRTF Panning
 					TKLB_ASSERT(vi < mVoiceHRTFs.size()) // only the lower voice can use hrtfs
@@ -225,8 +234,9 @@ namespace vae { namespace core {
 						mHRTF.positions[closestIndex],
 						hrtfVoice, remaining, target, in, distanceAttenuated
 					);
-
-				} else {
+				} else
+				#endif // !VAE_NO_HRTF
+				{
 					TKLB_PROFILER_SCOPE_NAMED("Render SPCAP")
 					// * Normal SPCAP panning
 					auto& lastPan = manager.getVoicePan(vi);
@@ -288,13 +298,17 @@ namespace vae { namespace core {
 		}
 
 		Result loadHRTF(const char* path, Size length, const char* rootPath, Size sampleRate) {
-			Result result = mHRTFLoader.load(path, length, rootPath, sampleRate, mHRTF);
-			if (result != Result::Success) { return result; }
-			for (auto& i : mVoiceHRTFs) {
-				i.convolutionBuffer.resize(mHRTF.irLength);
-				i.convolutionBuffer.set();
-			}
-			return Result::Success;
+			#ifndef VAE_NO_HRTF
+				Result result = mHRTFLoader.load(path, length, rootPath, sampleRate, mHRTF);
+				if (result != Result::Success) { return result; }
+				for (auto& i : mVoiceHRTFs) {
+					i.convolutionBuffer.resize(mHRTF.irLength);
+					i.convolutionBuffer.set();
+				}
+				return Result::Success;
+			#else
+				return Result::FeatureNotCompiled;
+			#endif
 		}
 	};
 

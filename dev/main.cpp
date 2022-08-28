@@ -1,4 +1,6 @@
+#include "vae/vae_type_defs.hpp"
 #define VAE_FORCE_LOG
+#define VAE_IMPL
 
 #include "vae/vae.hpp" // harmless public vae header
 #include <cstdlib>
@@ -15,8 +17,8 @@ void eventTriggered(const EventCallbackData* data) {
 
 
 constexpr int test = sizeof(core::Engine);
-// constexpr int rate = 48000;
-constexpr int rate = 44100;
+constexpr int rate = 48000;
+// constexpr int rate = 44100;
 const double step = 1.0 / double(rate);
 
 LocationDirection randomVec() {
@@ -68,16 +70,48 @@ void filterTest(vae::core::Engine& engine) {
 	auto emitter = engine.createEmitter();
 	auto emitter2 = engine.createEmitter();
 	engine.fireGlobalEvent(vaeb::Bank2::Music, emitter2);
-	// engine.fireGlobalEvent(vaeb::Bank1::ShortSineLoop, emitter, 0.3);
+	engine.fireGlobalEvent(vaeb::Bank1::ShortSineLoop, emitter, 0.3);
 	for (int i = 0; i < 2000; i++) {
 		sleepMs(30);
-		// engine.setHighpass(emitter, sin(i * 0.1) * 0.5 + 0.5);
+		engine.setHighpass(emitter, sin(i * 0.1) * 0.5 + 0.5);
 		engine.setSpeed(emitter, sin(i * 0.3) * 0.2 + 1.0);
 		if (i % 100 == 0) {
-			// engine.fireGlobalEvent(vaeb::Bank1::JumpRand, emitter);
+			engine.fireGlobalEvent(vaeb::Bank1::JumpRand, emitter);
 		}
 		engine.setMixerEffectParameter(0, 3, 0, 3, sin(i) * 0.45 + 0.5);
 	}
+}
+
+void test3d(vae::core::Engine& engine, vae::ListenerHandle listener) {
+	auto emitter = engine.createEmitter();
+	engine.fireEvent(1, 6, emitter);
+
+	const float spread = 0.2;
+	const float distance = 0.2;
+
+	TKLB_INFO("front")
+	engine.setEmitter(emitter, {{ 0, distance, 0 }, {}}, spread);
+	sleepMs(2000);
+
+	TKLB_INFO("Left")
+	// engine.setListener(listener, {{ 1, 0, 0 }, { 0, 0, 1 }, { 0, 1, 0 }});
+	engine.setEmitter(emitter, {{ -distance, 0, 0}, {}}, spread);
+	sleepMs(2000);
+
+	TKLB_INFO("right")
+	// engine.setListener(listener, {{ -1, 0, 0 }, { 0, 0, 1 }, { 0, 1, 0 }});
+	engine.setEmitter(emitter, {{ +distance, 0, 0}, {}}, spread);
+	sleepMs(2000);
+
+	TKLB_INFO("front right")
+	engine.setEmitter(emitter, {{ +distance, distance, 0}, {}}, spread);
+	sleepMs(2000);
+
+	TKLB_INFO("front left")
+	engine.setEmitter(emitter, {{ -distance, distance, 0}, {}}, spread);
+	sleepMs(2000);
+
+	engine.stopEmitter(emitter);
 }
 
 int main() {
@@ -89,6 +123,7 @@ int main() {
 	#endif
 	config.eventCallback = &eventTriggered;
 	config.internalSampleRate = rate;
+	config.processInBufferSwitch = true;
 
 	/**
 	 * @brief very low settings
@@ -106,19 +141,28 @@ int main() {
 	engine.setMasterVolume(4);
 
 	auto listener = engine.createListener();
-	engine.setListener(listener, {});
-	auto hrtf = engine.loadHRTF("hrtf.json");
-	engine.start();
+	engine.setListenerConfiguration(listener, SpeakerConfiguration::Headphones);
+	// engine.setListener(listener, {
+	// 	{ 0, 0,  0 },
+	// 	{ 0, 0, +1 },
+	// 	{ 0, +1,  0 }
+	// });
+
+	// auto hrtf = engine.loadHRTF("hrtf.json");
 
 	auto result = engine.loadBank("bank1");
 	if (result != Result::Success) { return 1; }
 	result = engine.loadBank("bank2");
 	if (result != Result::Success) { return 1; }
 
+	engine.start();
+
 	// benchmarkBasicVoice(engine);
 	// benchmark(engine);
-	filterTest(engine);
-	engine.unloadBankFromId(0);
+	// filterTest(engine);
+	test3d(engine, listener);
+
+	engine.unloadBank("bank1");
 
 	engine.stop();
 

@@ -56,10 +56,6 @@ namespace vae { namespace core {
 		}
 
 		bool openDevice(DeviceInfo& device) override {
-			if (mBackend.getDeviceCount() < Size(device.id)) {
-				TKLB_ERROR("Failed to open deivce with index out of bounds")
-				return false;
-			}
 			device.channelsIn = tklb::clamp<int>(device.channelsIn, 0, StaticConfig::MaxChannels);
 			device.channelsOut = tklb::clamp<int>(device.channelsOut, 0, StaticConfig::MaxChannels);
 			RtAudio::StreamParameters inParams, outParams;
@@ -71,6 +67,9 @@ namespace vae { namespace core {
 				device.bufferSize = mConfig.preferredBufferSize;
 			}
 
+			RtAudio::StreamOptions options;
+			options.streamName = mConfig.applicationName;
+
 			RtAudioErrorType result;
 			{
 				TKLB_PROFILER_SCOPE_NAMED("Open RtAudio stream")
@@ -78,7 +77,10 @@ namespace vae { namespace core {
 					outParams.nChannels ? &outParams : nullptr,
 					inParams.nChannels  ? &inParams  : nullptr,
 					RTAUDIO_FLOAT32, device.sampleRate,
-					&device.bufferSize, &AudioCallback, &mWorker
+					&device.bufferSize,
+					&AudioCallback,
+					&mWorker,
+					&options
 				);
 			}
 
@@ -114,13 +116,14 @@ namespace vae { namespace core {
 		bool closeDevice() override { return cleanUp(); }
 	};
 
+	constexpr int __DeviceRtaudioSize = sizeof(DeviceRtaudio);
+
 	class BackendRtAudio final : public Backend {
 		RtAudio mAudio; // This instance is only used for probing
 		BackendRtAudio() { }
 
 		~BackendRtAudio() { }
 	public:
-		TKLB_PROFILER_OVERLOAD_NEW()
 		static BackendRtAudio& instance() {
 			static BackendRtAudio backend;
 			return backend;
@@ -132,7 +135,6 @@ namespace vae { namespace core {
 
 		DeviceInfo getDevice(unsigned int index) override {
 			const auto rtInfo = mAudio.getDeviceInfo(index);
-			TKLB_ASSERT(rtInfo.probed) // device needs to be probed
 
 			DeviceInfo info;
 			info.id = index;

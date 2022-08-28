@@ -53,7 +53,7 @@ namespace vae { namespace core {
 
 				if (signalLength == 0) { return false; }
 				if (signal.sampleRate != sampleRate) {
-					// VAE_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
+					// TKLB_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
 					v.filtered = true; // implicitly filter to resample
 				}
 
@@ -121,7 +121,7 @@ namespace vae { namespace core {
 					// Playback speed taking samplerate into account
 					const Real speed = fd.speed * (Sample(signal.sampleRate) / Sample(sampleRate));
 					const SampleIndex needed = v.loop ? frames : tklb::min(
-						frames, SampleIndex(std::floor((signalLength - v.time) / speed - fd.timeFract))
+						frames, SampleIndex((signalLength - v.time) / speed - fd.timeFract)
 					);
 
 					for (int c = 0; c < target.channels(); c++) {
@@ -129,7 +129,7 @@ namespace vae { namespace core {
 						const int channel = c % signal.channels();
 							// Linear interpolation between two samples
 							position = v.time + (s * speed) + fd.timeFract;
-							const Real lastPosition = std::floor(position);
+							const Real lastPosition = SampleIndex(position);
 							const Size lastIndex = (Size) lastPosition;
 							const Size nextIndex = (Size) lastPosition + 1;
 
@@ -154,15 +154,17 @@ namespace vae { namespace core {
 							target[c][s] += (lpd - hpd) * pan.volumes[c];
 						}
 					}
-					position += speed; 								// step to next sample
-					v.time = (SampleIndex) std::floor(position);	// split the signal in normal sample position
-					fd.timeFract = position - v.time;				// and fractional time for the next block
-					return needed == frames;						// we might have reached the end;					// is only true when exceeding signalLength and not looping
+					position += speed; 					// step to next sample
+					v.time = SampleIndex(position);		// split the signal in normal sample position
+					fd.timeFract = position - v.time;	// and fractional time for the next block
+					return needed == frames;			// we might have reached the end;					// is only true when exceeding signalLength and not looping
 				}
 			});
 			return actuallyRendered;
 		}
 	};
+
+	constexpr int __ProcessorSize = sizeof(Processor);
 
 } } // vae::core
 

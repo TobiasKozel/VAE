@@ -100,6 +100,7 @@ print(f"Writing {pimplSource}")
 file = open(pimplSource, "w")
 
 file.write("""
+#define VAE_IMPL
 #include "../../include/vae/vae_pimpl.hpp"
 #include "../core/vae_engine.hpp"
 using namespace vae;

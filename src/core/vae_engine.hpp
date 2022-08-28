@@ -5,8 +5,6 @@
 #include "./vae_util.hpp"
 #include "./vae_config.hpp"
 
-
-
 #include "./pod/vae_listener.hpp"
 #include "./pod/vae_emitter.hpp"
 #include "./vae_voice_manager.hpp"
@@ -16,15 +14,21 @@
 #include "./processor/vae_mixer_processor.hpp"
 #include "./vae_bank_manager.hpp"
 
-#include "../../external/tklb/src/util/TMath.hpp"
 #include "./voices/vae_voice_filter.hpp"
 
-
-#ifndef VAE_NO_AUDIO_DEVICE
+#ifdef VAE_NO_AUDIO_DEVICE
+	#define VAE_NO_AUDIO_THREAD // no need for autdio thread
+#else
 	#include "./device/vae_default_backend.hpp"
-#endif // !VAE_NO_AUDIO_DEVICE
+#endif // VAE_NO_AUDIO_DEVICE
+
+#ifdef VAE_NO_STDLIB
+	// No stdlib means no threading for now
+	#define VAE_NO_AUDIO_THREAD
+#endif // !VAE_NO_STDLIB
 
 #ifndef VAE_NO_AUDIO_THREAD
+	// TODO wrap these
 	#include <mutex>
 	#include <thread>				// mAudioThread
 	#include <condition_variable>	// mAudioConsumed
@@ -37,7 +41,6 @@
  */
 #define _VAE_PUBLIC_API
 
-
 namespace vae { namespace core {
 	/**
 	 * @brief Central class handling all outside communication.
@@ -45,24 +48,24 @@ namespace vae { namespace core {
 	 */
 
 	class Engine {
-		EngineConfig mConfig;			///< Config object provided at initlalization
+		EngineConfig mConfig;				///< Config object provided at initlalization
 
-		VoiceManger mVoiceManager;		///< Holds and handle voices
-		SpatialManager mSpatialManager;	///< Holds and manages spatial emitters
-		BankManager mBankManager;		///< Holds and manages banks
+		VoiceManger mVoiceManager;			///< Holds and handle voices
+		SpatialManager mSpatialManager;		///< Holds and manages spatial emitters
+		BankManager mBankManager;			///< Holds and manages banks
 
 		Processor mProcessor;				///< Default Voice processor
 		MixerProcessor mMixerProcessor;		///< Mixer channel processor
 		SpatialProcessor mSpatialProcessor;	///< Spatial voice processor
 
 		ScratchBuffer mScratchBuffer;		///< used to combine the signal from all banks and push it to the device
-		SampleIndex mTime = 0;			///< Global engine time in samples
-		Time mTimeFract = 0;			///< Global engine time in seconds
-		Sample mLimiterLastPeak = 10.0;	///< Master limiter last peak, initialized high to create a ramp up on initial start
-		Sample mMasterVolume = 1.0;		///< Master Colume applied after limiting
+		SampleIndex mTime = 0;				///< Global engine time in samples
+		Time mTimeFract = 0;				///< Global engine time in seconds
+		Sample mLimiterLastPeak = 10.0;		///< Master limiter last peak, initialized high to create a ramp up on initial start
+		Sample mMasterVolume = 1.0;			///< Master Colume applied after limiting
 
 	#ifndef VAE_NO_AUDIO_DEVICE
-		Device* mDevice = nullptr;		///< Output device
+		Device* mDevice = nullptr;			///< Output device
 	#endif //
 
 	#ifndef VAE_NO_AUDIO_THREAD
@@ -184,7 +187,7 @@ namespace vae { namespace core {
 
 		/**
 		 * @brief Called from audio device when using seperate audio thread.
-		 * This will only notify the adio thread to do work.
+		 *        This will only notify the adio thread to do work.
 		 * @param device
 		 */
 		void onThreadedBufferSwap(Device* device) {
@@ -199,7 +202,7 @@ namespace vae { namespace core {
 		Engine() = default;
 
 		/**
-		 * Don't allow any kind of move of copy of the object
+		 * Don't allow any kind of move or copy of the object
 		 */
 		Engine(const Engine&) = delete;
 		Engine(const Engine*) = delete;
@@ -222,8 +225,8 @@ namespace vae { namespace core {
 		/**
 		 * @brief Initializes the engine and does most of the upfront allocations. Run this before start !
 		 * @details Everything will be allocated according to the provided config.
-		 * Loading a Bank will still cause an allocation.
-		 * If there are already banks loaded, they will be reloaded to have the correct samplerate.
+		 *          Loading a Bank will still cause an allocation.
+		 *          If there are already banks loaded, they will be reloaded to have the correct samplerate.
 		 * @see start
 		 * @param config Optional config to setup the internals.
 		 * @return Result
@@ -236,7 +239,7 @@ namespace vae { namespace core {
 			mScratchBuffer.sampleRate = mConfig.internalSampleRate;
 			mVoiceManager.init(mConfig);
 			mSpatialManager.init(mConfig.preAllocatedEmitters);
-			mSpatialProcessor.init(mConfig.voices);
+			mSpatialProcessor.init(mConfig.hrtfVoices);
 			mMixerProcessor.init();
 			mBankManager.init(mConfig.rootPath, mConfig.internalSampleRate);
 			TKLB_DEBUG("Engine initialized")
@@ -268,7 +271,7 @@ namespace vae { namespace core {
 				mAudioThread = new Thread(&Engine::threadedProcess, this);
 				TKLB_DEBUG("Mixing in seperate thread")
 			#else
-				VAE_ERROR("Can't mix in audio thread since it's disabled via VAE_NO_AUDIO_THREAD")
+				TKLB_ERROR("Can't mix in audio thread since it's disabled via VAE_NO_AUDIO_THREAD")
 			#endif // !VAE_NO_AUDIO_THREAD
 			}
 			{
@@ -294,26 +297,26 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API stop() {
-		#ifndef VAE_NO_AUDIO_DEVICE
-			TKLB_PROFILER_SCOPE()
-			#ifndef VAE_NO_AUDIO_THREAD
-			if (mAudioThreadRunning) {
-				mAudioThreadRunning = false;
-				mAudioConsumed.notify_one(); // make sure the audio thread knows it's time to go
-				if(mAudioThread->joinable()) {
-					mAudioThread->join();
-					delete mAudioThread;
-					TKLB_DEBUG("Audio thread stopped")
-				} else {
-					TKLB_ERROR("Can't join audio thread")
+			#ifndef VAE_NO_AUDIO_DEVICE
+				TKLB_PROFILER_SCOPE()
+				#ifndef VAE_NO_AUDIO_THREAD
+					if (mAudioThreadRunning) {
+						mAudioThreadRunning = false;
+						mAudioConsumed.notify_one(); // make sure the audio thread knows it's time to go
+						if(mAudioThread->joinable()) {
+							mAudioThread->join();
+							delete mAudioThread;
+							TKLB_DEBUG("Audio thread stopped")
+						} else {
+							TKLB_ERROR("Can't join audio thread")
+						}
+					}
+				#endif // !VAE_NO_AUDIO_THREAD
+				if (mDevice != nullptr) {
+					delete mDevice;
+					mDevice = nullptr;
 				}
-			}
-			#endif // !VAE_NO_AUDIO_THREAD
-			if (mDevice != nullptr) {
-				delete mDevice;
-				mDevice = nullptr;
-			}
-	#endif // !VAE_NO_AUDIO_DEVICE
+			#endif // !VAE_NO_AUDIO_DEVICE
 			return Result::Success;
 		}
 
@@ -352,7 +355,6 @@ namespace vae { namespace core {
 			TKLB_PROFILER_FRAME_MARK_END(profiler::audioFrame)
 		}
 
-#define VAE_NO_AUDIO_DEVICE
 	#ifdef VAE_NO_AUDIO_DEVICE
 		// TODO merge this with the private process function
 		template <typename T>
@@ -394,26 +396,28 @@ namespace vae { namespace core {
 		 * @param emitterHandle handle of the emitter, needed for spatial audio or controlling the voice
 		 * @param gain optional volume factor
 		 * @param mixerHandle optional id of mixer channel sound will be routed to, this will override the one set in the event
-		 * @param listenerHandle For which listener this event will be adible for, default to all
+		 * @param listenerHandle For which listener this event will be audible for, default to all
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API fireEvent(
-			BankHandle bankHandle, EventHandle eventHandle,
+			BankHandle bankHandle,
+			EventHandle eventHandle,
 			EmitterHandle emitterHandle,
 			Sample gain = 1.0,
 			MixerHandle mixerHandle = InvalidMixerHandle,
 			ListenerHandle listenerHandle = AllListeners
 		) {
 			TKLB_PROFILER_SCOPE()
+
 			if (emitterHandle != InvalidEmitterHandle && !mSpatialManager.hasEmitter(emitterHandle)) {
-				TKLB_ERROR("No emitter %u registered", emitterHandle)
+				TKLB_WARN("No emitter %u registered", emitterHandle)
 				return Result::InvalidEmitter;
 			}
 
 			auto& emitter = mSpatialManager.getEmitter(emitterHandle);
 
 			if (!mBankManager.has(bankHandle)) {
-				TKLB_ERROR("Fired event %i on unloaded bank %i", eventHandle, bankHandle)
+				TKLB_WARN("Fired event %i on unloaded bank %i", eventHandle, bankHandle)
 				return Result::InvalidBank;
 			}
 
@@ -464,7 +468,7 @@ namespace vae { namespace core {
 			}
 
 			else if (event.action == Event::Action::random) {
-				for (int index = rand() % StaticConfig::MaxChainedEvents; 0 <= index; index--) {
+				for (int index = mTime % StaticConfig::MaxChainedEvents; 0 <= index; index--) {
 					auto& i = event.chained_events[index];
 					if (i == InvalidEventHandle) { continue; }
 					VAE_DEBUG_EVENT("Event %i:%i starts random event %i", eventHandle, bankHandle, i)
@@ -623,7 +627,7 @@ namespace vae { namespace core {
 		 * @brief Set the Emitter position, orientation and spread
 		 * @param emitter The emitter
 		 * @param locDir The desired location
-		 * @param spread The width of the panning (if it's spatial and not HRTF)
+		 * @param spread The width of the panning 0.5 is the default (only non hrtf voices)
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API setEmitter(
@@ -796,7 +800,7 @@ namespace vae { namespace core {
 		/**
 		 * @brief Load bank from filesystem.
 		 * @details This operation might take a little time but won't lock the audio thread
-		 * until the bank is inserted. This should be safe to do at any time.
+		 *          until the bank is inserted. This should be safe to do at any time.
 		 * @param path
 		 * @return Result
 		 */
@@ -854,6 +858,15 @@ namespace vae { namespace core {
 			TKLB_INFO("Start Unload bank %i", bankHandle)
 			mVoiceManager.stop(bankHandle, &Voice::bank);
 			return mBankManager.unloadFromId(bankHandle);
+		}
+
+		/**
+		 * @brief Unloadbank by path
+		 * @param path path used to load the bank
+		 * @return Result
+		 */
+		Result _VAE_PUBLIC_API unloadBank(CString path) {
+			return mBankManager.unloadBank(path);
 		}
 
 		/**

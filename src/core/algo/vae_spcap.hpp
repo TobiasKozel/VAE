@@ -3,7 +3,8 @@
 
 #include "../vae_types.hpp"
 #include "../vae_util.hpp"
-#include <array>
+#include "./vae_vec.hpp"
+#include <array>			// used for constructor parameter, easily replaceable
 
 namespace vae { namespace core {
 	/**
@@ -17,7 +18,7 @@ namespace vae { namespace core {
 		template <Size N>
 		class SPCAPConfig {
 			struct Speaker {
-				Vec3 dir;			///< Position of the speaker on a unit sphere
+				vector::Vec3 dir;	///< Position of the speaker on a unit sphere
 				Sample effective;	//
 			};
 			Speaker mSpeakers[N];
@@ -31,7 +32,7 @@ namespace vae { namespace core {
 			constexpr SPCAPConfig(const std::array<Vector3, N>&& positions) {
 				Size i = 0;
 				for (const auto& speaker : positions) {
-					mSpeakers[i] = { glm::normalize(Vec3(speaker.x, speaker.y, speaker.z)), Sample(0) };
+					mSpeakers[i] = { vector::normalize(speaker), Sample(0) };
 					i++;
 				}
 				for (i = 0; i < N; i++) {
@@ -40,7 +41,7 @@ namespace vae { namespace core {
 						// Can be done in advance and ideally at compiletime
 						// since the positions of the speakers will not change
 						mSpeakers[i].effective +=
-							Sample(0.5) * (Sample(1.0) + glm::dot(mSpeakers[i].dir, mSpeakers[j].dir));
+							Sample(0.5) * (Sample(1.0) + vector::dot(mSpeakers[i].dir, mSpeakers[j].dir));
 					}
 				}
 			}
@@ -56,7 +57,7 @@ namespace vae { namespace core {
 			 * @param attenuation Distance attenuation multiplied on the result
 			 * @param spread Value from 0-1 controlling "wideness" of the sound
 			 */
-			inline void pan(const Vec3& direction, Sample result[N], Sample attenuation, Sample spread) const {
+			inline void pan(const vector::Vec3& direction, Sample result[N], Sample attenuation, Sample spread) const {
 				TKLB_PROFILER_SCOPE_NAMED("SPCAP Pan")
 				// TODO make spread change based on distance and use something like radius instead
 				Sample sumGains = 0.0;
@@ -66,7 +67,7 @@ namespace vae { namespace core {
 					result[i] = Sample(0);
 				}
 				for (Size i = 0; i < N; i++) {
-					Sample gain = glm::dot(mSpeakers[i].dir, direction) + Sample(1.0); // (1)
+					Sample gain = vector::dot(mSpeakers[i].dir, direction) + Sample(1.0); // (1)
 					gain  = powf(gain, tightness);	// (9)
 					gain *= Sample(0.5);			// (1)
 					gain /= mSpeakers[i].effective;	// (3)
@@ -76,7 +77,7 @@ namespace vae { namespace core {
 				}
 
 				for (Size i = 0; i < N; i++) {
-					result[i] = sqrtf(result[i] / sumGains) * attenuation; // (8)
+					result[i] = tklb::sqrt(result[i] / sumGains) * attenuation; // (8)
 				}
 			}
 		};
@@ -93,24 +94,26 @@ namespace vae { namespace core {
 	 * TODO there's probably a smart  way to make this all constexpr
 	 */
 
-	const SPCAP::SPCAPConfig<1> SPCAP::MonoSPCAP = {{
-						StaticConfig::Speakers::center
-	}};
-	const SPCAP::SPCAPConfig<2> SPCAP::HeadphoneSPCAP = {{
-		StaticConfig::Speakers::left, StaticConfig::Speakers::right
-	}};
-	const SPCAP::SPCAPConfig<2> SPCAP::StereroSPCAP = {{
-		StaticConfig::Speakers::frontLeft, StaticConfig::Speakers::frontRight
-	}};
-	const SPCAP::SPCAPConfig<4> SPCAP::QuadSPCAP = {{
-		StaticConfig::Speakers::frontLeft, StaticConfig::Speakers::frontRight,
-		StaticConfig::Speakers::rearLeft,  StaticConfig::Speakers::rearRight
-	}};
-	const SPCAP::SPCAPConfig<5> SPCAP::SuroundSPCAP = {{
-		StaticConfig::Speakers::frontLeft, StaticConfig::Speakers::frontRight,
-		StaticConfig::Speakers::rearLeft,  StaticConfig::Speakers::rearRight,
-						StaticConfig::Speakers::center
-	}};
+	#ifdef VAE_IMPL
+		const SPCAP::SPCAPConfig<1> SPCAP::MonoSPCAP = {{
+							StaticConfig::Speakers::center
+		}};
+		const SPCAP::SPCAPConfig<2> SPCAP::HeadphoneSPCAP = {{
+			StaticConfig::Speakers::left, StaticConfig::Speakers::right
+		}};
+		const SPCAP::SPCAPConfig<2> SPCAP::StereroSPCAP = {{
+			StaticConfig::Speakers::frontLeft, StaticConfig::Speakers::frontRight
+		}};
+		const SPCAP::SPCAPConfig<4> SPCAP::QuadSPCAP = {{
+			StaticConfig::Speakers::frontLeft, StaticConfig::Speakers::frontRight,
+			StaticConfig::Speakers::rearLeft,  StaticConfig::Speakers::rearRight
+		}};
+		const SPCAP::SPCAPConfig<5> SPCAP::SuroundSPCAP = {{
+			StaticConfig::Speakers::frontLeft, StaticConfig::Speakers::frontRight,
+			StaticConfig::Speakers::rearLeft,  StaticConfig::Speakers::rearRight,
+							StaticConfig::Speakers::center
+		}};
+	#endif // VAE_IMPL
 } } // core::vae
 
 #endif // _VAE_SPCAP

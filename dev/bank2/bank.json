@@ -106,6 +106,16 @@
 			"name": "MusicStop",
 			"action": "stop",
 			"chained_events": [4]
+		},
+		{
+			"id": 6,
+			"name": "MusicTest",
+			"action": "start",
+			"source": 0,
+			"gain": 1.0,
+			"loop": true,
+			"spatial": true,
+			"critical": true
 		}
 	]
 }

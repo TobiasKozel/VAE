@@ -7,6 +7,7 @@
 #include "./fs/vae_bank_loader.hpp"
 #include "../../external/tklb/src/types/audio/resampler/TResampler.hpp"
 #include "./dsp/vae_effects_factory.hpp"
+
 namespace vae { namespace core {
 	/**
 	 * @brief Holds all the banks
@@ -162,6 +163,16 @@ namespace vae { namespace core {
 			}
 			mBanks[bank.id] = std::move(bank);
 			return Result::Success;
+		}
+
+		Result unloadBank(const char* path) {
+			for (auto& b : mBanks) {
+				if (b.id != InvalidBankHandle && b.path == path) {
+					return unloadFromId(b.id);
+				}
+			}
+			TKLB_WARN("Could not unload bank with name %s", path);
+			return Result::ElementNotFound;
 		}
 
 		Result unloadFromId(BankHandle bankHandle) {

@@ -16,18 +16,11 @@ rm ./master.zip
 rm -rf ./rtaudio
 mv ./rtaudio-master ./rtaudio
 
-echo "Updating glm"
-curl -LO https://github.com/g-truc/glm/archive/refs/heads/master.zip
-unzip ./master.zip > /dev/null 2>&1
-rm ./master.zip
-rm -rf ./glm
-mv ./glm-master ./glm
-
 cd headeronly
 
-echo "Updating httplib"
-rm ./httplib.h
-curl -LO https://raw.githubusercontent.com/yhirose/cpp-httplib/master/httplib.h
+# echo "Updating httplib"
+# rm ./httplib.h
+# curl -LO https://raw.githubusercontent.com/yhirose/cpp-httplib/master/httplib.h
 
 echo "Updating json"
 rm ./json.c

@@ -7,7 +7,7 @@
 #include "./vae_util.hpp"
 #include "./vae_types.hpp"
 #include "./pod/vae_listener.hpp"
-
+#include "./algo/vae_vec.hpp"
 
 namespace vae { namespace core {
 
@@ -16,7 +16,7 @@ namespace vae { namespace core {
 			Emitter, EmitterHandle, memory::AllocatorEmitter<>
 		> mEmitters;
 
-		Listeners mListeners;					// All Listeners
+		Listeners mListeners;	// All Listeners
 
 	public:
 		Result init(Size emitterCount) {
@@ -110,10 +110,11 @@ namespace vae { namespace core {
 			for (ListenerHandle index = 0; index < StaticConfig::MaxListeners; index++) {
 				auto& i = mListeners[index];
 				if (i.id == InvalidListenerHandle) {
+					LocationOrientation reference; // The up and front vector are default values here
 					i.id = index;
-					i.position	= { 0.f, 0.f,  0.f };
-					i.front		= { 0.f, 0.f, -1.f };
-					i.up		= { 0.f, 1.f,  0.f };
+					i.position	= reference.position;
+					i.front		= reference.front;
+					i.up		= reference.up;
 					return index;
 				}
 			}
@@ -180,7 +181,8 @@ namespace vae { namespace core {
 					// means it wants to auto emit
 					if (e.autoplaying) { return; }
 					// only trigger sounds which haven't been auto triggered already to avoid duplicates
-					const auto distance = glm::distance(l.position, e.position);
+					const auto distance = vector::distance(l.position, e.position);
+
 					if (distance < e.maxDist) {
 						e.autoplaying = true;
 						callback(e.event, e.bank, handle);

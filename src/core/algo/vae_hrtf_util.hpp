@@ -5,6 +5,8 @@
 #include "../vae_util.hpp"
 #include "../pod/vae_hrtf.hpp"
 #include "../voices/vae_voice_hrtf.hpp"
+#include "./vae_vec.hpp"
+#include "./vae_vec.hpp"
 #include <limits>
 
 namespace vae { namespace core {
@@ -16,14 +18,14 @@ namespace vae { namespace core {
 		 * @param direction
 		 * @return Size
 		 */
-		static inline Size closest(const HRTF& hrtf, const Vec3& direction) {
+		static inline Size closest(const HRTF& hrtf, const vector::Vec3& direction) {
 			// TODO this is obviously bad
 			TKLB_PROFILER_SCOPE_NAMED("Search HRTF")
-			Sample closest = std::numeric_limits<Sample>::max();
+			Position closest = std::numeric_limits<Position>::max();
 			Size closestIndex = ~0;
 			for (Size i = 0; i < hrtf.positions.size(); i++) {
 				const auto& pos = hrtf.positions[i];
-				const Sample dist = glm::distance(pos.pos, direction);
+				const Position dist = vector::distance(pos.pos, direction);
 				if (dist < closest) {
 					closestIndex = i;
 					closest = dist;

@@ -14,16 +14,36 @@
 
 #include <stddef.h>
 
+/**
+ * @brief Open a file handle
+ * @param path
+ * @param mode Read mode "r", "w", "rw" like normal fopen
+ * @return void* The handle to the file
+ */
+
 void* vae_file_open(const char* path, const char* mode);
 /**
  * @brief Seek and return current position
- *
  * @param file
  * @param seek
- * @return size_t
+ * @return size_t TODO bytes read head moved?
  */
 size_t vae_file_seek(void* file, size_t, int seek);
+
+/**
+ * @brief Read number of bytes from current position into buffer
+ * @param dest
+ * @param size
+ * @param file File handle
+ * @return size_t TODO bytes read?
+ */
 size_t vae_file_read(char* dest, size_t size, int, void* file);
+
+/**
+ * @brief Close file
+ * @param file File Handle
+ * @return size_t TODO Success code
+ */
 size_t vae_file_close(void* file);
 
 

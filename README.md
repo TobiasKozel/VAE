@@ -1,6 +1,9 @@
 # VAE Readme
 Virtual Audio Engine is a fairly WIP 3D software-audio-renderer.
 
+[Try out a demo integration in Godot](https://github.com/TobiasKozel/VAEG/releases/)
+
+
 Minimal example to play some sound
 ```C++
 #include <thread>
@@ -16,10 +19,18 @@ int main() {
 	// see /dev/bank1/ and /dev/bank2/ for examples
 
 	if (result != Result::Success) { return 1; }
+
+	// emitters are used to control the sounds over it's lifetime
 	auto emitter = e->createEmitter();
-	auto listener = e->createListener(); // only needed for spatialized sounds
-	e->fireGlobalEvent(vaeb::Bank1::Music, emitter); // fire named event
-	e->setSpeed(emitter, 0.6); // slow the music
+
+	// Only needed for 3d sound
+	auto listener = e->createListener();
+
+	// fire named event
+	e->fireGlobalEvent(vaeb::Bank1::Music, emitter);
+
+	// slow the music (as in all sounds currently playing with this emitter)
+	e->setSpeed(emitter, 0.6);
 
 	// let it run for a little
 	for (int i = 0; i < 2000, i++) {
@@ -39,12 +50,12 @@ int main() {
 
 ```
 
-It aims to be a fairly small and data driven Engine with a focus on performance.
+It aims to be a fairly small and data driven Engine with focus on performance and portability.
 Its design is mostly data oriented and tries to avoid inhertance and preallocates
-almost all memory upfront and while loading banks.
+almost all memory upfront or while loading banks.
 
-Most of it inside one single compilation unit, so the compiler can go on it's way and inline
-whatever it wants to.
+Most the engine lives inside a single compilation unit(aka header only),
+so integrating it into a project should be painless regardless of the buildsystem used.
 This also means extending it is done directly in source and not via interfaces or other common mechanisms (besides AudioDevice and EffectBase which are interfaces).
 
 The easiest way to get started is to compile a shared library with
@@ -56,9 +67,7 @@ make
 ```
 And then use the vae::EnginePimpl class in include/vae/vae_pimpl.hpp while linking against the shared libvae.so/dll library.
 
-
-Alternatively you can add the whole thing as a subproject and static link against it.
-Using the pimpl api is optional but the better option since it won't pull in the whole thing.
+Alternatively you can add it as subproject to CMAKE and statically link the engine.
 
 [doxygen page](https://tobiaskozel.github.io/VAE-Docs/)
 
@@ -66,7 +75,7 @@ Using the pimpl api is optional but the better option since it won't pull in the
 - Fix click at end of sounds for speex reampled sounds
 - Streaming
 - Split up pod data and internal data structures so they can be exposed to the public API as well.
-- LFE Channel
+- LFE (Subwoofer) Channel
 - Emitter emittsion patterns
 - More generic parameter controls and smoothing
 - Send Mixer effects
@@ -110,7 +119,7 @@ Using the pimpl api is optional but the better option since it won't pull in the
 - Strips the name from structs
 - Disables assertions
 ### VAE_LOG_EVENTS
-Logs all events
+Logs all events TODO
 
 ### VAE_LOG_VOICES
 Logs voices starting and stopping
@@ -135,11 +144,21 @@ Tries to disable exceptions in third party libs, should build with -fno-exceptio
 Disables SIMD
 
 ### VAE_NO_STDIO
-Tries to get rid of most stdio, hash map currently still depends on it
+Tries to get rid of most stdio
 
 File reading and writing need to be provided by defining the functions vae_fs.hpp
 
 Also requires VAE_PRINT to be defined
+
+### VAE_NO_STDLIB
+In addition to VAE_NO_STDIO will also get rid of malloc/free
+
+TODO there's still a bunch of standard lib stuff in vae and the depencies.
+
+
+### VAE_NO_SMALL_STRUCTS
+Disables tight packing of structs to reduce memory usage.
+Might increase performance, needs testing.
 
 ### VAE_PRINT
 

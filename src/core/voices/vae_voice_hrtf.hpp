@@ -3,7 +3,6 @@
 
 #include "../vae_types.hpp"
 #include "../vae_config.hpp"
-#include <limits>
 
 namespace vae { namespace core {
 	/**

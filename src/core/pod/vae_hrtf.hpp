@@ -3,11 +3,12 @@
 
 #include "../vae_types.hpp"
 #include "../vae_config.hpp"
+#include "../algo/vae_vec.hpp"
 
 namespace vae { namespace core {
 	struct HRTF {
 		struct Position {
-			Vec3 pos;
+			vector::Vec3 pos;
 			AudioBuffer ir[2];	///< Impulse response needed for the convolution
 		};
 		HeapBuffer<Position> positions;

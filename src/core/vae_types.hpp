@@ -15,13 +15,24 @@
 #include "../../include/vae/vae.hpp"
 #include "./vae_config.hpp"
 #include "../wrapped/vae_tklb.hpp"
-#include "../wrapped/vae_glm.hpp"
 #include "./vae_allocators.hpp"
+
+
+/**
+ * @brief To reduce the size of structs, bool flags and enums are reduced to a single bit.
+ *        Depending on the bittesting capabilities of a cpu this might have a performance
+ *        impact not worth the decrease in memory usage.
+ */
+#ifndef VAE_NO_SMALL_STRUCTS
+	#define _VAE_SMALL(bits) :bits
+#else
+	#define _VAE_SMALL(bits)
+#endif // !VAE_NO_SMALL_BOOL
 
 namespace vae { namespace core {
 	using Uchar = unsigned char;
 	using Uint = unsigned int;
-	using Real = float;				///< The engine needs
+	using Real = float;				///< Used for lerps and other things which need floating point
 
 	/**
 	 * @brief Buffer type to hold all the audio data meant for playback

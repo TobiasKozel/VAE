@@ -176,7 +176,6 @@ namespace vae { namespace core {
 		}
 
 	public:
-		TKLB_PROFILER_OVERLOAD_NEW()
 
 		/**
 		 * @brief Only a Backend can construct a Device
@@ -300,6 +299,14 @@ namespace vae { namespace core {
 
 		Size getOverruns() const { return mWorker.overruns; }
 		Size getUnderruns() const { return mWorker.underruns; }
+
+		void* operator new(size_t size) {
+			return tklb_malloc(size);
+		}
+
+		void operator delete(void * p) {
+			tklb_free(p);
+		}
 	}; // class Device
 
 	// TODO VAE this seems a bit excessive

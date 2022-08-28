@@ -5,6 +5,7 @@
 #include "../vae_util.hpp"
 #include "../vae_config.hpp"
 #include "../pod/vae_hrtf.hpp"
+#include "../algo/vae_vec.hpp"
 
 #include "../../wrapped/vae_fs.hpp"
 
@@ -13,7 +14,6 @@
 	#include "../../../external/headeronly/json.c"
 #endif
 
-#include "../../../external/glm/glm/gtc/matrix_transform.hpp"
 // #include "../../../external/tklb/src/types/audio/resampler/TResampler.hpp"
 // #include "../../../external/tklb/src/types/audio/fft/TOouraFFT.hpp"
 
@@ -62,9 +62,6 @@ namespace vae { namespace core {
 			#endif
 			}
 
-
-
-
 			json_settings settings = { };
 			settings.mem_alloc = allocate;
 			settings.mem_free = deallocate;
@@ -83,30 +80,30 @@ namespace vae { namespace core {
 			hrtf.rate = sampleRate;
 			hrtf.originalRate = (json_int_t) data["samplerate"];
 
-			Vec3 up = {
+			vector::Vec3 up = {
 				float((double) data["up"][0]),
 				float((double) data["up"][1]),
 				float((double) data["up"][2]),
 			};
 
-			Vec3 front = {
+			vector::Vec3 front = {
 				float((double) data["front"][0]),
 				float((double) data["front"][1]),
 				float((double) data["front"][2]),
 			};
 
 			LocationOrientation ref;
-			Vec3 frontNeed = Vec3(ref.front.x, ref.front.y, ref.front.z);
-			Vec3 upNeed = Vec3(ref.up.x, ref.up.y, ref.up.z);
+			vector::Vec3 frontNeed = { ref.front.x, ref.front.y, ref.front.z };
+			vector::Vec3 upNeed = { ref.up.x, ref.up.y, ref.up.z };
 
-			glm::mat4x4 matchCoord = glm::lookAt(
-				Vec3(0.f, 0.f, 0.f),
+			vector::Mat4x4 matchCoord = vector::lookAt(
+				{ 0, 0, 0 },
 				front,
 				up
 			);
 
-			Vec3 up1 = (matchCoord * glm::vec4(up, 1.f));
-			Vec3 front1 = (matchCoord * glm::vec4(front, 1.f));
+			vector::Vec3 up1 = vector::multiply(matchCoord, up);
+			vector::Vec3 front1 = vector::multiply(matchCoord, front);
 			// These should match upNeed
 
 			auto& positions = data["positions"].u.array;
@@ -126,8 +123,8 @@ namespace vae { namespace core {
 				for (Size i = 0; i < positionCount; i++) {
 					HRTF::Position& p = hrtf.positions[i];
 					auto& pi = *positions.values[i];
-					glm::vec4 pos((double) pi["x"], (double)pi["y"], (double)pi["z"], 1.0);
-					p.pos = matchCoord * pos;
+					vector::Vec3 pos((double) pi["x"], (double)pi["y"], (double)pi["z"]);
+					p.pos = vector::multiply(matchCoord, pos);
 					json_value irSamples[2] = { pi["left"], pi["right"]};
 					const Size irLength = irSamples[0].u.array.length;
 					maxIrLength = tklb::max(maxIrLength, irLength);

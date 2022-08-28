@@ -3,14 +3,15 @@
 
 #include "../vae_types.hpp"
 #include "../vae_config.hpp"
+#include "../algo/vae_vec.hpp"
 
 
 namespace vae { namespace core {
 
 	struct Listener {
-		Vec3 position;
-		Vec3 front;
-		Vec3 up;
+		vector::Vec3 position;
+		vector::Vec3 front;
+		vector::Vec3 up;
 		ListenerHandle id = InvalidListenerHandle;
 		/**
 		 * ! Listeners all mix to the same mixer channels and have the same configuration

@@ -57,7 +57,6 @@ namespace vae { namespace core {
 		}
 
 	public:
-		TKLB_PROFILER_OVERLOAD_NEW()
 
 		DevicePortaudio(
 			Backend& backend, const EngineConfig& config
@@ -158,7 +157,7 @@ namespace vae { namespace core {
 
 	class BackendPortAudio final : public Backend {
 		static void debugLog(const char* message) {
-			VAE_DEBUG("PortAudio: %s", message)
+			TKLB_DEBUG("PortAudio: %s", message)
 		}
 
 		BackendPortAudio() {
