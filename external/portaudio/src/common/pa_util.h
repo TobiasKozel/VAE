@@ -124,11 +124,14 @@ void PaUtil_SetLastHostErrorInfo( PaHostApiTypeId hostApiType, long errorCode,
  .c file
 */
 
-/** Allocate size bytes, guaranteed to be aligned to a FIXME byte boundary */
-void *PaUtil_AllocateMemory( long size );
+/** Allocate size bytes of zero-initialized memory.
+Guaranteed to be aligned to a FIXME byte boundary.
+*/
+void *PaUtil_AllocateZeroInitializedMemory( long size );
 
 
-/** Release block if non-NULL. block may be NULL */
+/** Release block allocated by PaUtil_AllocateZeroInitializedMemory()
+if block is non-NULL. block may be NULL */
 void PaUtil_FreeMemory( void *block );
 
 

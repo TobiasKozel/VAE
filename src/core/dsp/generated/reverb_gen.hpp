@@ -170,7 +170,6 @@ class VAEReverb : public FaustBase {
 	void metadata(Meta* m) {
 		m->declare("basics.lib/name", "Faust Basic Element Library");
 		m->declare("basics.lib/version", "0.1");
-		m->declare("compile_options", "-a C:\dev\git\master\VAEG\VAE\src\core\dsp\vae_faust_arch.hpp -lang cpp -cm -mapp -es 1 -exp10 -vec -lv 0 -vs 32 -single -ftz 0 -mcd 16");
 		m->declare("delays.lib/name", "Faust Delay Library");
 		m->declare("delays.lib/version", "0.1");
 		m->declare("filename", "reverb.dsp");

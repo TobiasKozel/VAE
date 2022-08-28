@@ -1242,7 +1242,7 @@ static EWindowsVersion GetWindowsVersion()
                 dwMinorVersion = ver.dwMinorVersion;
                 dwBuild        = ver.dwBuildNumber;
             }
-            
+
             PRINT(("WASAPI: getting Windows version with RtlGetVersion(): major=%d, minor=%d, build=%d\n", dwMajorVersion, dwMinorVersion, dwBuild));
         }
 
@@ -1263,7 +1263,7 @@ static EWindowsVersion GetWindowsVersion()
 
                 if (dwVersion < 0x80000000)
                     dwBuild = (DWORD)(HIWORD(dwVersion));
-                
+
                 PRINT(("WASAPI: getting Windows version with GetVersion(): major=%d, minor=%d, build=%d\n", dwMajorVersion, dwMinorVersion, dwBuild));
             }
         }
@@ -1662,11 +1662,11 @@ static HRESULT (STDMETHODCALLTYPE PaActivateAudioInterfaceCompletionHandler_Acti
 
 static IActivateAudioInterfaceCompletionHandler *CreateActivateAudioInterfaceCompletionHandler(const IID *iid, void **client)
 {
-    PaActivateAudioInterfaceCompletionHandler *handler = PaUtil_AllocateMemory(sizeof(PaActivateAudioInterfaceCompletionHandler));
+    PaActivateAudioInterfaceCompletionHandler *handler = PaUtil_AllocateZeroInitializedMemory(sizeof(PaActivateAudioInterfaceCompletionHandler));
 
     memset(handler, 0, sizeof(*handler));
 
-    handler->parent.lpVtbl = PaUtil_AllocateMemory(sizeof(*handler->parent.lpVtbl));
+    handler->parent.lpVtbl = PaUtil_AllocateZeroInitializedMemory(sizeof(*handler->parent.lpVtbl));
     handler->parent.lpVtbl->QueryInterface    = &PaActivateAudioInterfaceCompletionHandler_QueryInterface;
     handler->parent.lpVtbl->AddRef            = &PaActivateAudioInterfaceCompletionHandler_AddRef;
     handler->parent.lpVtbl->Release           = &PaActivateAudioInterfaceCompletionHandler_Release;
@@ -1825,7 +1825,7 @@ static void FillBaseDeviceInfo(PaDeviceInfo *deviceInfo, PaHostApiIndex hostApiI
 static PaError FillInactiveDeviceInfo(PaWasapiHostApiRepresentation *paWasapi, PaDeviceInfo *deviceInfo)
 {
     if (deviceInfo->name == NULL)
-        deviceInfo->name = (char *)PaUtil_GroupAllocateMemory(paWasapi->allocations, 1);
+        deviceInfo->name = (char *)PaUtil_GroupAllocateZeroInitializedMemory(paWasapi->allocations, 1);
 
     if (deviceInfo->name != NULL)
     {
@@ -1894,7 +1894,7 @@ static PaError FillDeviceInfo(PaWasapiHostApiRepresentation *paWasapi, void *pEn
             hr = IPropertyStore_GetValue(pProperty, &PKEY_Device_FriendlyName, &value);
             IF_FAILED_INTERNAL_ERROR_JUMP(hr, result, error);
 
-            if ((deviceInfo->name = (char *)PaUtil_GroupAllocateMemory(paWasapi->allocations, PA_WASAPI_DEVICE_NAME_LEN)) == NULL)
+            if ((deviceInfo->name = (char *)PaUtil_GroupAllocateZeroInitializedMemory(paWasapi->allocations, PA_WASAPI_DEVICE_NAME_LEN)) == NULL)
             {
                 result = paInsufficientMemory;
                 PropVariantClear(&value);
@@ -1959,7 +1959,7 @@ static PaError FillDeviceInfo(PaWasapiHostApiRepresentation *paWasapi, void *pEn
     wcsncpy(wasapiDeviceInfo->deviceId, listEntry->info->id, PA_WASAPI_DEVICE_ID_LEN - 1);
 
     // Set device name
-    if ((deviceInfo->name = (char *)PaUtil_GroupAllocateMemory(paWasapi->allocations, PA_WASAPI_DEVICE_NAME_LEN)) == NULL)
+    if ((deviceInfo->name = (char *)PaUtil_GroupAllocateZeroInitializedMemory(paWasapi->allocations, PA_WASAPI_DEVICE_NAME_LEN)) == NULL)
     {
         result = paInsufficientMemory;
         goto error;
@@ -2080,12 +2080,12 @@ static PaDeviceInfo *AllocateDeviceListMemory(PaWasapiHostApiRepresentation *paW
     PaUtilHostApiRepresentation *hostApi = (PaUtilHostApiRepresentation *)paWasapi;
     PaDeviceInfo *deviceInfoArray = NULL;
 
-    if ((paWasapi->devInfo = (PaWasapiDeviceInfo *)PaUtil_GroupAllocateMemory(paWasapi->allocations,
+    if ((paWasapi->devInfo = (PaWasapiDeviceInfo *)PaUtil_GroupAllocateZeroInitializedMemory(paWasapi->allocations,
         sizeof(PaWasapiDeviceInfo) * deviceCount)) == NULL)
     {
         return NULL;
     }
-    memset(paWasapi->devInfo, 0, sizeof(PaWasapiDeviceInfo) * deviceCount);
+    /* NOTE: we depend on all paWasapi->devInfo elements being zero-initialized */
 
     if (deviceCount != 0)
     {
@@ -2095,7 +2095,7 @@ static PaDeviceInfo *AllocateDeviceListMemory(PaWasapiHostApiRepresentation *paW
             deviceCount = PA_WASAPI_MAX_CONST_DEVICE_COUNT;
     #endif
 
-        if ((hostApi->deviceInfos = (PaDeviceInfo **)PaUtil_GroupAllocateMemory(paWasapi->allocations,
+        if ((hostApi->deviceInfos = (PaDeviceInfo **)PaUtil_GroupAllocateZeroInitializedMemory(paWasapi->allocations,
             sizeof(PaDeviceInfo *) * deviceCount)) == NULL)
         {
             return NULL;
@@ -2104,12 +2104,12 @@ static PaDeviceInfo *AllocateDeviceListMemory(PaWasapiHostApiRepresentation *paW
             hostApi->deviceInfos[i] = NULL;
 
         // Allocate all device info structs in a contiguous block
-        if ((deviceInfoArray = (PaDeviceInfo *)PaUtil_GroupAllocateMemory(paWasapi->allocations,
+        if ((deviceInfoArray = (PaDeviceInfo *)PaUtil_GroupAllocateZeroInitializedMemory(paWasapi->allocations,
             sizeof(PaDeviceInfo) * deviceCount)) == NULL)
         {
             return NULL;
         }
-        memset(deviceInfoArray, 0, sizeof(PaDeviceInfo) * deviceCount);
+        /* NOTE: we depend on all deviceInfoArray elements being zero-initialized */
     }
 
     return deviceInfoArray;
@@ -2152,7 +2152,7 @@ error:
     return 0;
 }
 #else
-static UINT32 GetDeviceListDeviceCount(const PaWasapiHostApiRepresentation *paWasapi, 
+static UINT32 GetDeviceListDeviceCount(const PaWasapiHostApiRepresentation *paWasapi,
     const PaWasapiWinrtDeviceListContext *deviceListContext, EDataFlow filterFlow)
 {
     UINT32 i, ret = 0;
@@ -2177,7 +2177,7 @@ static BOOL FillLooopbackDeviceInfo(PaWasapiHostApiRepresentation *paWasapi, PaD
 
     // Append loopback device name identificator to the device name to provide possibility to find
     // loopback device by its name for some external projects
-    loopbackDeviceInfo->name = (char *)PaUtil_GroupAllocateMemory(paWasapi->allocations, PA_WASAPI_DEVICE_NAME_LEN + 1);
+    loopbackDeviceInfo->name = (char *)PaUtil_GroupAllocateZeroInitializedMemory(paWasapi->allocations, PA_WASAPI_DEVICE_NAME_LEN + 1);
     if (loopbackDeviceInfo->name == NULL)
         return FALSE;
     _snprintf((char *)loopbackDeviceInfo->name, PA_WASAPI_DEVICE_NAME_LEN - 1,
@@ -2455,13 +2455,15 @@ PaError PaWasapi_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiInd
     }
 #endif
 
-    paWasapi = (PaWasapiHostApiRepresentation *)PaUtil_AllocateMemory(sizeof(PaWasapiHostApiRepresentation));
+    paWasapi = (PaWasapiHostApiRepresentation *)PaUtil_AllocateZeroInitializedMemory(sizeof(PaWasapiHostApiRepresentation));
     if (paWasapi == NULL)
     {
         result = paInsufficientMemory;
         goto error;
     }
-    memset(paWasapi, 0, sizeof(PaWasapiHostApiRepresentation)); /* ensure all fields are zeroed. especially paWasapi->allocations */
+
+    /* NOTE: we depend on PaUtil_AllocateZeroInitializedMemory() ensuring that all
+       fields are set to zero. especially paWasapi->allocations */
 
     // Initialize COM subsystem
     result = PaWinUtil_CoInitialize(paWASAPI, &paWasapi->comInitializationResult);
@@ -3913,7 +3915,7 @@ static PaError OpenStream( struct PaUtilHostApiRepresentation *hostApi,
     }
 
     // Allocate memory for PaWasapiStream
-    if ((stream = (PaWasapiStream *)PaUtil_AllocateMemory(sizeof(PaWasapiStream))) == NULL)
+    if ((stream = (PaWasapiStream *)PaUtil_AllocateZeroInitializedMemory(sizeof(PaWasapiStream))) == NULL)
     {
         LogPaError(result = paInsufficientMemory);
         goto error;
@@ -4056,15 +4058,14 @@ static PaError OpenStream( struct PaUtilHostApiRepresentation *hostApi,
             UINT32 frameSize    = stream->in.wavex.Format.nBlockAlign;
 
             // buffer
-            if ((stream->in.tailBuffer = PaUtil_AllocateMemory(sizeof(PaUtilRingBuffer))) == NULL)
+            if ((stream->in.tailBuffer = PaUtil_AllocateZeroInitializedMemory(sizeof(PaUtilRingBuffer))) == NULL)
             {
                 LogPaError(result = paInsufficientMemory);
                 goto error;
             }
-            memset(stream->in.tailBuffer, 0, sizeof(PaUtilRingBuffer));
 
             // buffer memory region
-            stream->in.tailBufferMemory = PaUtil_AllocateMemory(frameSize * bufferFrames);
+            stream->in.tailBufferMemory = PaUtil_AllocateZeroInitializedMemory(frameSize * bufferFrames);
             if (stream->in.tailBufferMemory == NULL)
             {
                 LogPaError(result = paInsufficientMemory);

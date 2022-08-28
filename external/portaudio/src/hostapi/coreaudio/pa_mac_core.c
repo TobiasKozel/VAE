@@ -357,7 +357,7 @@ static PaError gatherDeviceInfo(PaMacAUHAL *auhalHostApi)
     VDBUG( ( "Found %ld device(s).\n", auhalHostApi->devCount ) );
 
     /* -- copy the device IDs -- */
-    auhalHostApi->devIds = (AudioDeviceID *)PaUtil_GroupAllocateMemory(
+    auhalHostApi->devIds = (AudioDeviceID *)PaUtil_GroupAllocateZeroInitializedMemory(
                                auhalHostApi->allocations,
                                propsize );
     if( !auhalHostApi->devIds )
@@ -596,7 +596,7 @@ static PaError GetChannelInfo( PaMacAUHAL *auhalHostApi,
     if (err)
         return err;
 
-    buflist = PaUtil_AllocateMemory(propSize);
+    buflist = PaUtil_AllocateZeroInitializedMemory(propSize);
     if( !buflist )
         return paInsufficientMemory;
     err = ERR(PaMacCore_AudioDeviceGetProperty(macCoreDeviceId, 0, isInput, kAudioDevicePropertyStreamConfiguration, &propSize, buflist));
@@ -675,7 +675,7 @@ static PaError InitializeDeviceInfo( PaMacAUHAL *auhalHostApi,
         if (err)
             return err;
 
-        name = PaUtil_GroupAllocateMemory(auhalHostApi->allocations,propSize+1);
+        name = PaUtil_GroupAllocateZeroInitializedMemory(auhalHostApi->allocations,propSize+1);
         if ( !name )
             return paInsufficientMemory;
         err = ERR(PaMacCore_AudioDeviceGetProperty(macCoreDeviceId, 0, 0, kAudioDevicePropertyDeviceName, &propSize, name));
@@ -686,7 +686,7 @@ static PaError InitializeDeviceInfo( PaMacAUHAL *auhalHostApi,
     {
         /* valid CFString so we just allocate a c string big enough to contain the data */
         propSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(nameRef), kCFStringEncodingUTF8);
-        name = PaUtil_GroupAllocateMemory(auhalHostApi->allocations, propSize+1);
+        name = PaUtil_GroupAllocateZeroInitializedMemory(auhalHostApi->allocations, propSize+1);
         if ( !name )
         {
             CFRelease(nameRef);
@@ -740,7 +740,7 @@ PaError PaMacCore_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIn
         return UNIX_ERR(unixErr);
     }
 
-    auhalHostApi = (PaMacAUHAL*)PaUtil_AllocateMemory( sizeof(PaMacAUHAL) );
+    auhalHostApi = (PaMacAUHAL*)PaUtil_AllocateZeroInitializedMemory( sizeof(PaMacAUHAL) );
     if( !auhalHostApi )
     {
         result = paInsufficientMemory;
@@ -774,7 +774,7 @@ PaError PaMacCore_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIn
 
     if( auhalHostApi->devCount > 0 )
     {
-        (*hostApi)->deviceInfos = (PaDeviceInfo**)PaUtil_GroupAllocateMemory(
+        (*hostApi)->deviceInfos = (PaDeviceInfo**)PaUtil_GroupAllocateZeroInitializedMemory(
                 auhalHostApi->allocations, sizeof(PaDeviceInfo*) * auhalHostApi->devCount);
         if( !(*hostApi)->deviceInfos )
         {
@@ -783,7 +783,7 @@ PaError PaMacCore_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIn
         }
 
         /* allocate all device info structs in a contiguous block */
-        deviceInfoArray = (PaDeviceInfo*)PaUtil_GroupAllocateMemory(
+        deviceInfoArray = (PaDeviceInfo*)PaUtil_GroupAllocateZeroInitializedMemory(
                 auhalHostApi->allocations, sizeof(PaDeviceInfo) * auhalHostApi->devCount );
         if( !deviceInfoArray )
         {
@@ -1770,20 +1770,19 @@ static PaError OpenStream( struct PaUtilHostApiRepresentation *hostApi,
     if( (streamFlags & paPlatformSpecificFlags) != 0 )
         return paInvalidFlag; /* unexpected platform specific flag */
 
-    stream = (PaMacCoreStream*)PaUtil_AllocateMemory( sizeof(PaMacCoreStream) );
+    stream = (PaMacCoreStream*)PaUtil_AllocateZeroInitializedMemory( sizeof(PaMacCoreStream) );
     if( !stream )
     {
         result = paInsufficientMemory;
         goto error;
     }
 
-    /* If we fail after this point, we my be left in a bad state, with
-       some data structures setup and others not. So, first thing we
-       do is initialize everything so that if we fail, we know what hasn't
-       been touched.
+    /* NOTE: If we fail after this point, we my be left in a bad state, with
+       some data structures setup and others not. So, we critically depend on all
+       stream fields being zero-initialized so that if we fail, we know what
+       hasn't been touched. Zero-initialization is guaranteed by
+       PaUtil_AllocateZeroInitializedMemory().
      */
-    bzero( stream, sizeof( PaMacCoreStream ) );
-
     /*
     stream->blio.inputRingBuffer.buffer = NULL;
     stream->blio.outputRingBuffer.buffer = NULL;
@@ -2807,6 +2806,7 @@ static PaError StopStream( PaStream *s )
         paErr = waitUntilBlioWriteBufferIsEmpty( &stream->blio, stream->sampleRate,
                 maxHostFrames );
         VDBUG( ( "waitUntilBlioWriteBufferIsEmpty returned %d\n", paErr ) );
+        (void) paErr; /* Prevent "unused variable" warnings. */
     }
     return FinishStoppingStream( stream );
 }
