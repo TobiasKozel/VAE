@@ -17,7 +17,7 @@ int main() {
 
 	if (result != Result::Success) { return 1; }
 	auto emitter = e->createEmitter();
-	auto listener = e->createListener(); // only needed for spatialized sounds
+	auto listener = e->createListener();
 	e->fireGlobalEvent(vaeb::Bank1::Music, emitter); // fire named event
 	e->setSpeed(emitter, 0.6); // slow the music
 
@@ -62,6 +62,19 @@ Using the pimpl api is optional but the better option since it won't pull in the
 
 [doxygen page](https://tobiaskozel.github.io/VAE-Docs/)
 
+## Features
+- 3D SPCAP or HRTF panning (slow implementation)
+- Event driven sound system
+- Simple json bank format
+- upfront .wav and .ogg loading, no streaming
+- Simple mixer hirachry
+- Fixed mixrate with high quality resampler for deviceoutput (speex)
+- High quality resampling when loading audio
+- Realtime linear resampling otherwise
+- Per voice variable speed playback and high/lowpass filters
+- Multiple Listeners, no individual output devices however and not tested at all
+- Integration for the profiler tracy which can give nice insights on memory consumtion and cpu times
+
 ## TODOs
 - Fix click at end of sounds for speex reampled sounds
 - Streaming
@@ -79,24 +92,11 @@ Using the pimpl api is optional but the better option since it won't pull in the
 - Some sort of basic authoring tool
 - Geometry and material system for obstruction and reverb zones
 
-## Features
-- 3D SPCAP or HRTF panning (slow implementation)
-- Event driven sound system
-- Simple json bank format
-- upfront .wav and .ogg loading, no streaming
-- Simple mixer hirachry
-- Fixed mixrate with high quality resampler for deviceoutput (speex)
-- High quality resampling when loading audio
-- Realtime linear resampling otherwise
-- Per voice variable speed playback and high/lowpass filters
-- Multiple Listeners, no individual output devices however and not tested at all
-- Integration for the profiler tracy which can give nice insights on memory consumtion and cpu times
-
-## Performance
+### Performance
 - Figure out why SPCAP voices are faster than Default voices, test mono and stereo.
 - deduplicate audio rendering code
 
-## Nice to haves
+### Low priority
 - signal generators
 - Inject audio stream at runtime (e.g. for VoiP)
 - Voice priority system (got unkillable voice at least)
@@ -104,44 +104,15 @@ Using the pimpl api is optional but the better option since it won't pull in the
 - Seperate Audio device per listener
 
 ## Defines
-
-### VAE_RELEASE
-- Disables all log levels except error
-- Strips the name from structs
-- Disables assertions
-### VAE_LOG_EVENTS
-Logs all events
-
-### VAE_LOG_VOICES
-Logs voices starting and stopping
-
-### VAE_DLL_EXPORT
-Only relevant for the PIMPL Api, will add __declspec to all funcitons
-
-### VAE_NO_AUDIO_THREAD
-Does remove ability to render audio in a seperate thread if vae::EngineConfig::processInBufferSwitch is false
-the processing function has to be called manually (TODO)
-
-### VAE_NO_AUDIO_DEVICE
-Only makessense with VAE_NO_AUDIO_THREAD to drive the engine from the outside.
-Will expose vae::core::Engine::process which can be called from a custom callback.
-
-Not pretty and goes against the device abstraction idea
-
-### VAE_NO_EXCEPT
-Tries to disable exceptions in third party libs, should build with -fno-exceptions
-
-### VAE_NO_SIMD
-Disables SIMD
-
-### VAE_NO_STDIO
-Tries to get rid of most stdio, hash map currently still depends on it
-
-File reading and writing need to be provided by defining the functions vae_fs.hpp
-
-Also requires VAE_PRINT to be defined
-
-### VAE_PRINT
-
-Can be defined to redirect logging, same interface as printf
+- VAE_RELEASE Disables all log levels except error, Strips the name from structs, Disables assertions
+- VAE_LOG_EVENTS Logs all events
+- VAE_LOG_VOICES Logs voices starting and stopping
+- VAE_DLL_EXPORT Only relevant for the PIMPL Api, will add __declspec to all funcitons
+- VAE_NO_AUDIO_THREAD Does remove ability to render audio in a seperate thread if vae::EngineConfig::processInBufferSwitch is false the processing function has to be called manually (TODO)
+- VAE_NO_AUDIO_DEVICE Only makessense with VAE_NO_AUDIO_THREAD to drive the engine from the outside. Will expose vae::core::Engine::process which can be called from a custom callback.
+- Not pretty and goes against the device abstraction idea
+- VAE_NO_EXCEPT Tries to disable exceptions in third party libs, should build with -fno-exceptions
+- VAE_NO_SIMD Disables explicit SIMD
+- VAE_NO_STDIO Tries to get rid of most stdio, hash map currently still depends on it File reading and writing need to be provided by defining the functions vae_fs.hpp
+- VAE_PRINT Can be defined to redirect logging, same interface as printf
 
