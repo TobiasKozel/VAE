@@ -76,7 +76,7 @@ namespace vae { namespace core {
 				v.time = v.time % signalLength;		// Keep signal in bounds before starting
 
 				if (signal.sampleRate != sampleRate) {
-					TKLB_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
+					// TKLB_DEBUG("Spatial Voice samplerate mismatch. Enabled filter.")
 					v.filtered = true; // implicitly filter to resample
 				}
 
@@ -90,12 +90,18 @@ namespace vae { namespace core {
 				// * Attenuation calculation
 				{
 					TKLB_PROFILER_SCOPE_NAMED("Attenuation calculation")
+
 					// samething as graphics, make the world rotate round the listener
 					// TODO this should be possible without a 4x4 matrix?
 					const auto& lookAt = vector::lookAt(
 						l.position, vector::add(l.position, l.front), l.up);
 					// listener is the world origin now
 					relativeDirection = vector::multiply(lookAt, emitter.position);
+
+					printf("%f\t%f\t%f\n",
+						l.position.x - emitter.position.x,
+						l.position.y - emitter.position.y,
+						l.position.z - emitter.position.z);
 
 					// Distance with "near plane" at 0.1
 					const Real distance = tklb::max(vector::length(relativeDirection), 0.1f);
@@ -289,7 +295,7 @@ namespace vae { namespace core {
 				}
 				v.started = true;
 				if (finished) {
-					emitter.autoplaying = false;
+					emitter.started = false;
 					return false;
 				}
 				return true;

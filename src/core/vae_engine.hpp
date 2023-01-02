@@ -342,7 +342,7 @@ namespace vae { namespace core {
 			// Handle finished voices and their events
 			mVoiceManager.forEachFinishedVoice([&](Voice& v) {
 				if (v.emitter != InvalidEmitterHandle) {
-					mSpatialManager.getEmitter(v.emitter).autoplaying = false;
+					mSpatialManager.getEmitter(v.emitter).started = false;
 					// Make sure the event can be triggered again by that emitter
 				}
 				auto onEnd = mBankManager.get(v.bank).events[v.event].on_end;
@@ -432,7 +432,8 @@ namespace vae { namespace core {
 
 			Result result;
 
-			if (event.action == Event::Action::start) {
+			switch (event.action) {
+			case Event::Action::start:
 				if (event.source != InvalidSourceHandle) {
 					VAE_DEBUG_EVENT("Event %i:%i starts source %i", eventHandle, bankHandle, event.source)
 					// Has source attached
@@ -465,22 +466,9 @@ namespace vae { namespace core {
 					VAE_DEBUG_EVENT("Event %i:%i failed to start voices", eventHandle, bankHandle)
 					return result; // ! someting went wrong
 				}
-			}
+				break;
 
-			else if (event.action == Event::Action::random) {
-				for (int index = mTime % StaticConfig::MaxChainedEvents; 0 <= index; index--) {
-					auto& i = event.chained_events[index];
-					if (i == InvalidEventHandle) { continue; }
-					VAE_DEBUG_EVENT("Event %i:%i starts random event %i", eventHandle, bankHandle, i)
-					result = fireEvent(
-						bankHandle, i, emitterHandle, gain,
-						mixerHandle, listenerHandle
-					);
-					break;
-				}
-			}
-
-			else if (event.action == Event::Action::stop) {
+			case Event::Action::stop:
 				// TODO test stopping
 				if (event.source != InvalidSourceHandle) {
 					VAE_DEBUG_EVENT("Event %i:%i stops source %i", eventHandle, bankHandle, event.source)
@@ -497,10 +485,10 @@ namespace vae { namespace core {
 					VAE_DEBUG_EVENT("Event %i:%i stops voices in mixer %i", eventHandle, bankHandle, event.mixer)
 					mVoiceManager.stop(event.mixer, &Voice::mixer, emitterHandle);
 				}
-				emitter.autoplaying = false;
-			}
+				emitter.started = false;
+				break;
 
-			else if (event.action == Event::Action::emit) {
+			case Event::Action::emit:
 				VAE_DEBUG_EVENT("Event %i:%i emits event", eventHandle, bankHandle)
 				if (mConfig.eventCallback != nullptr) {
 					EventCallbackData data;
@@ -511,6 +499,20 @@ namespace vae { namespace core {
 					data.emitter = emitterHandle;
 					mConfig.eventCallback(&data);
 				}
+				break;
+
+			case Event::Action::random:
+				for (int index = mTime % StaticConfig::MaxChainedEvents; 0 <= index; index--) {
+					auto& i = event.chained_events[index];
+					if (i == InvalidEventHandle) { continue; }
+					VAE_DEBUG_EVENT("Event %i:%i starts random event %i", eventHandle, bankHandle, i)
+					result = fireEvent(
+						bankHandle, i, emitterHandle, gain,
+						mixerHandle, listenerHandle
+					);
+					break;
+				}
+				break;
 			}
 
 			return Result::Success;

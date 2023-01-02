@@ -6,13 +6,17 @@
 #include "../vae_config.hpp"
 
 namespace vae { namespace core {
+	/**
+	 * @brief Mixer channel
+	 *        TODO this object takes up a little much space
+	 */
 	struct Mixer {
 		/**
 		 * @brief This is the master mixer for a bank
 		 */
 		static constexpr MixerHandle MasterMixerHandle = 0;
-		Sample gain;
-		MixerHandle parent;
+		Sample gain = 1.0;
+		MixerHandle parent = MasterMixerHandle;
 		/**
 		 * @brief The handle of the mixer the signal will be routed to.
 		 * 0 is always the bank master and the default.
@@ -21,14 +25,7 @@ namespace vae { namespace core {
 		Effect effects[StaticConfig::MaxMixerEffects];
 		ScratchBuffer buffer; // not very POD
 		NameString name; // name for debugging
-
-		Mixer() {
-			gain = 1.0;
-			parent = MasterMixerHandle;
-		}
 	};
-
-	constexpr int _VAE_MIXER_SIZE = sizeof(Mixer);
 } } // vae::core
 
 #endif // _VAE_MIXER

@@ -12,9 +12,7 @@
 namespace vae { namespace core {
 
 	class SpatialManager {
-		memory::HandleBuffer<
-			Emitter, EmitterHandle, memory::AllocatorEmitter<>
-		> mEmitters;
+		memory::HandleBuffer<Emitter, EmitterHandle, memory::AllocatorEmitter<>> mEmitters;
 
 		Listeners mListeners;	// All Listeners
 
@@ -177,14 +175,14 @@ namespace vae { namespace core {
 			forListeners(AllListeners, [&](Listener& l) {
 				mEmitters.iterate([&](Emitter& e, const EmitterHandle handle) {
 					// TODO seperate auto emitter somehow
-					if (e.bank == InvalidBankHandle) { return; }
-					// means it wants to auto emit
-					if (e.autoplaying) { return; }
+					if (e.bank == InvalidBankHandle) { return; } // means it wants to auto emit
+
+					if (e.started) { return; }
 					// only trigger sounds which haven't been auto triggered already to avoid duplicates
 					const auto distance = vector::distance(l.position, e.position);
 
 					if (distance < e.maxDist) {
-						e.autoplaying = true;
+						e.started = true;
 						callback(e.event, e.bank, handle);
 					}
 				});

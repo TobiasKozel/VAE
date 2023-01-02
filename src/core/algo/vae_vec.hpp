@@ -59,12 +59,12 @@ namespace vae { namespace core { namespace vector {
 		inline const Vec4& operator[](const int index) const { return rows[index]; }
 
 		static Mat4x4 identity() {
-			return {{
+			return { {
 				{ 1, 0, 0, 0 },
 				{ 0, 1, 0, 0 },
 				{ 0, 0, 1, 0 },
 				{ 0, 0, 0, 1 },
-			}};
+			} };
 		}
 	};
 
@@ -134,7 +134,7 @@ namespace vae { namespace core { namespace vector {
 			{ xaxis.x,	xaxis.y,	xaxis.z,	-dot(xaxis,from) },
 			{ yaxis.x,	yaxis.y,	yaxis.z,	-dot(yaxis,from) },
 			{ zaxis.x,	zaxis.y,	zaxis.z,	-dot(zaxis,from) },
-			{ 0,		0,			0,			1 					 }
+			{ 0,		0,			0,			1 					  }
 		}};
 	}
 

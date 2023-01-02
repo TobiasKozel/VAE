@@ -171,9 +171,9 @@ namespace vae {
 	 * @see vae::core::HRTFLoader
 	 */
 	struct LocationOrientation {
-		Vector3 position	= { 0, 0,  0 };
-		Vector3 front		= { 0, 0, +1 };	///< +z front
-		Vector3 up			= { 0, 1,  0 };	///< Y up
+		Vector3 position	= { 0,  0,  0 };
+		Vector3 front		= { 0,  0, +1 };	///< +z front
+		Vector3 up			= { 0, +1,  0 };	///< +y up
 	};
 }
 

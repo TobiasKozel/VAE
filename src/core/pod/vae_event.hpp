@@ -29,14 +29,13 @@ namespace vae { namespace core {
 		MixerHandle mixer = Mixer::MasterMixerHandle;				///< Mixer the source gets written to
 		SourceHandle source = InvalidSourceHandle;					///< Handle to a source
 		EventHandle id = InvalidEventHandle;						///< Own id
-		Sample gain;												///< Volume applied to triggered voice
+		Sample gain = 1.0;												///< Volume applied to triggered voice
 		EventHandle chained_events[StaticConfig::MaxChainedEvents];	///< Events called when the source starts playing
 		EventHandle on_end;											///< Event fired once the source is finished, not called when there's no source
 		NameString name;											///< Name for debugging
 
 		/**
-		 * TODO this isn't exactly pod style but the arrays need to be
-		 * initialized properly since 0 is a valid event handle
+		 * TODO this isn't exactly pod style but bit fields and arrays need to be initialized
 		 */
 		Event() {
 			force_mixer = false;
@@ -45,9 +44,9 @@ namespace vae { namespace core {
 			spatial = true;
 			attenuate = true;
 			critical = false;
-			gain = 1.0;
 			for (auto& i : chained_events) { i = InvalidEventHandle; }
 			on_end = InvalidEventHandle;
+			action = Action::start;
 		}
 	};
 } } // namespace vae::vore
