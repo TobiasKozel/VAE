@@ -11,7 +11,6 @@ namespace vae { namespace core {
 		 * @brief This is the master mixer for a bank
 		 */
 		static constexpr MixerHandle MasterMixerHandle = 0;
-		ScratchBuffer buffer; // not very POD
 		Sample gain;
 		MixerHandle parent;
 		/**
@@ -20,6 +19,7 @@ namespace vae { namespace core {
 		 */
 		MixerHandle id = InvalidMixerHandle;
 		Effect effects[StaticConfig::MaxMixerEffects];
+		ScratchBuffer buffer; // not very POD
 		NameString name; // name for debugging
 
 		Mixer() {

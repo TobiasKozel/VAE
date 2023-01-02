@@ -1,4 +1,5 @@
 
+#define VAE_IMPL
 #include "../../include/vae/vae_pimpl.hpp"
 #include "../core/vae_engine.hpp"
 using namespace vae;
@@ -77,6 +78,11 @@ Size EnginePimpl::getActiveVoiceCount () {
 	return e.getActiveVoiceCount();
 }
 
+Size EnginePimpl::getInactiveVoiceCount () {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.getInactiveVoiceCount();
+}
+
 Size EnginePimpl::getStreamTime () {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.getStreamTime();
@@ -123,15 +129,6 @@ EmitterHandle EnginePimpl::createAutoEmitter (
 		maxDist,
 		locDir,
 		spread
-	);
-}
-
-Result EnginePimpl::addEmitter (
-	EmitterHandle h
-) {
-	auto& e = *reinterpret_cast<core::Engine*>(this);
-	return e.addEmitter(
-		h
 	);
 }
 
@@ -274,6 +271,15 @@ Result EnginePimpl::unloadBankFromId (
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.unloadBankFromId(
 		bankHandle
+	);
+}
+
+Result EnginePimpl::unloadBank (
+	CString path
+) {
+	auto& e = *reinterpret_cast<core::Engine*>(this);
+	return e.unloadBank(
+		path
 	);
 }
 

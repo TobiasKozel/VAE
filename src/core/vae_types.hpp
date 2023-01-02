@@ -24,10 +24,10 @@
  *        impact not worth the decrease in memory usage.
  */
 #ifndef VAE_NO_SMALL_STRUCTS
-	#define _VAE_SMALL(bits) :bits
+	#define VAE_SMALL(bits) :bits
 #else
-	#define _VAE_SMALL(bits)
-#endif // !VAE_NO_SMALL_BOOL
+	#define VAE_SMALL(bits)
+#endif // !VAE_NO_SMALL_STRUCTS
 
 namespace vae { namespace core {
 	using Uchar = unsigned char;
@@ -73,7 +73,7 @@ namespace vae { namespace core {
 
 	using String = tklb::String<HeapBuffer<char>>;
 	using PathString = tklb::String<HeapBuffer<char>>;	///< Non optional string used for locations, maybe replaceable with a unique_ptr or something
-	using IdString = tklb::StackString<16>;				///< Non optional string used to id things
+	using IdString = tklb::StackString<12>;				///< Non optional string used to id things
 
 } } // namespace vae::core
 

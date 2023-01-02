@@ -15,6 +15,7 @@ namespace vae { namespace core { namespace effect {
 				if (i.name.empty()) { continue; }
 				if (id == i.name.c_str()) { return i.construtor(); }
 			}
+			TKLB_ASSERT(false)
 			return nullptr;
 		}
 	};

@@ -17,13 +17,14 @@ namespace vae { namespace core {
 			stop,			///< Stops a source if defined and stops every voice started from a event in chained_events
 			emit,			///< Emits an event to the EventCallback defined in the engine config
 			random			///< triggers one random chained_events event
-		} action _VAE_SMALL(3);
-		bool force_mixer _VAE_SMALL(1);	///< Prevents overriding the mixer from chained events or fireEvent
-		bool loop _VAE_SMALL(1);			///< gapless looping
-		bool HRTF _VAE_SMALL(1);			///< Listener and event has to have hrtf set
-		bool spatial _VAE_SMALL(1);		///< no spatial rendering at all
-		bool attenuate _VAE_SMALL(1);		///< whether distance is taken into consideration
-		bool critical _VAE_SMALL(1);		///< wheather the voice can be killer
+		} action VAE_SMALL(3);
+
+		bool force_mixer VAE_SMALL(1);	///< Prevents overriding the mixer from chained events or fireEvent
+		bool loop VAE_SMALL(1);			///< gapless looping
+		bool HRTF VAE_SMALL(1);			///< Listener and event has to have hrtf set
+		bool spatial VAE_SMALL(1);		///< no spatial rendering at all
+		bool attenuate VAE_SMALL(1);		///< whether distance is taken into consideration
+		bool critical VAE_SMALL(1);		///< wheather the voice can be killer
 
 		MixerHandle mixer = Mixer::MasterMixerHandle;				///< Mixer the source gets written to
 		SourceHandle source = InvalidSourceHandle;					///< Handle to a source
@@ -49,8 +50,6 @@ namespace vae { namespace core {
 			on_end = InvalidEventHandle;
 		}
 	};
-
-	constexpr int _VAE_EVENT_SIZE = sizeof(Event);
 } } // namespace vae::vore
 
 #endif // _VAE_EVENT

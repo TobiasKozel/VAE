@@ -2,6 +2,7 @@
 #define _VAE_STRUCTS
 
 #include "./vae_type_defs.hpp"
+#include "./vae_enums.hpp"
 
 namespace vae {
 	/**
@@ -13,6 +14,7 @@ namespace vae {
 		BankHandle bank;		///< Which bank the event is from
 		EventHandle event;		///< Which event
 		EmitterHandle emitter;	///< Which emitter
+		EventCallbackType type;
 	};
 
 	/**
@@ -26,6 +28,14 @@ namespace vae {
 		CString rootPath = "./";
 
 		/**
+		 * @brief Samplerate requested from device.
+		 * @details If it doesn't support it, a resampler is used.
+		 *          Most of the audio samples used should be in this rate.
+		 * @todo If it's 0 it should use the preferred device samplerate
+		 */
+		Size internalSampleRate = 48000;
+
+		/**
 		 * @brief This is the name which is used to register a client
 		 *        to the OS Audio-Subsytem (PulseAudio, WASAPI, etc)
 		 *        and which will be show in the Systems audio Mixer.
@@ -33,13 +43,7 @@ namespace vae {
 		 */
 		CString applicationName = "VAE_Client";
 
-		/**
-		 * @brief Samplerate requested from device.
-		 * @details If it doesn't support it, a resampler is used.
-		 *          Most of the audio samples used should be in this rate.
-		 * @todo If it's 0 it should use the preferred device samplerate
-		 */
-		Size internalSampleRate = 48000;
+
 
 		/**
 		 * @brief Each time a event of the type emit gets triggered
@@ -126,8 +130,6 @@ namespace vae {
 		 */
 		bool processInBufferSwitch = false;
 	};
-
-	constexpr int __EngineConfigSize = sizeof(EngineConfig);
 
 	/**
 	 * @brief Basic struct describing a audio device

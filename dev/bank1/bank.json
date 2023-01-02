@@ -86,7 +86,7 @@
 				{
 					"index": 0,
 					"bypassed": false,
-					"name": "VAEReverb",
+					"name": "Reverb",
 					"parameters": [
 						["fb1", 0.3],
 						["fb2", 0.4],

@@ -37,8 +37,8 @@ public:
 	/**
 	 * @brief Initializes the engine and does most of the upfront allocations. Run this before start !
 	 * @details Everything will be allocated according to the provided config.
-	 * Loading a Bank will still cause an allocation.
-	 * If there are already banks loaded, they will be reloaded to have the correct samplerate.
+	 *          Loading a Bank will still cause an allocation.
+	 *          If there are already banks loaded, they will be reloaded to have the correct samplerate.
 	 * @see start
 	 * @param config Optional config to setup the internals.
 	 * @return Result
@@ -76,7 +76,7 @@ public:
 	 * @param emitterHandle handle of the emitter, needed for spatial audio or controlling the voice
 	 * @param gain optional volume factor
 	 * @param mixerHandle optional id of mixer channel sound will be routed to, this will override the one set in the event
-	 * @param listenerHandle For which listener this event will be adible for, default to all
+	 * @param listenerHandle For which listener this event will be audible for, default to all
 	 * @return Result
 	 */
 	Result _VAE_API_EXPORT fireEvent (
@@ -109,6 +109,11 @@ public:
 	 * @brief Get the number of currently playing Voices
 	 */
 	Size _VAE_API_EXPORT getActiveVoiceCount ();
+
+	/**
+	 * @brief Get the number of currently playing virtual Voices
+	 */
+	Size _VAE_API_EXPORT getInactiveVoiceCount ();
 
 	Size _VAE_API_EXPORT getStreamTime ();
 
@@ -156,17 +161,6 @@ public:
 	);
 
 	/**
-	 * @brief Adds an emitter with a custom handle, can be an internal ID for example
-	 * @details migt be desireable to make EmitterHandle the same size as a pointer
-	 * so this can simply be the pointer of the entity that is associated with it.
-	 * @param h
-	 * @return Result
-	 */
-	Result _VAE_API_EXPORT addEmitter (
-		EmitterHandle h
-	);
-
-	/**
 	 * @brief Unregister a emiter an kill all its voices
 	 * @param h
 	 * @return Result
@@ -179,7 +173,7 @@ public:
 	 * @brief Set the Emitter position, orientation and spread
 	 * @param emitter The emitter
 	 * @param locDir The desired location
-	 * @param spread The width of the panning (if it's spatial and not HRTF)
+	 * @param spread The width of the panning 0.5 is the default (only non hrtf voices)
 	 * @return Result
 	 */
 	Result _VAE_API_EXPORT setEmitter (
@@ -280,7 +274,7 @@ public:
 	/**
 	 * @brief Load bank from filesystem.
 	 * @details This operation might take a little time but won't lock the audio thread
-	 * until the bank is inserted. This should be safe to do at any time.
+	 *          until the bank is inserted. This should be safe to do at any time.
 	 * @param path
 	 * @return Result
 	 */
@@ -297,6 +291,15 @@ public:
 	 */
 	Result _VAE_API_EXPORT unloadBankFromId (
 		BankHandle bankHandle
+	);
+
+	/**
+	 * @brief Unloadbank by path
+	 * @param path path used to load the bank
+	 * @return Result
+	 */
+	Result _VAE_API_EXPORT unloadBank (
+		CString path
 	);
 
 	/**

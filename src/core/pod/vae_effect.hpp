@@ -3,7 +3,6 @@
 
 #include "../vae_types.hpp"
 
-
 namespace vae { namespace core {
 	namespace effect { class EffectBase; }
 	/**
@@ -14,8 +13,8 @@ namespace vae { namespace core {
 		 * @brief Represents a parameter of the DSP
 		 */
 		struct Parameter {
-			IdString name;		///< name of the parameter of the effect
 			Real value;			///< current value, always 0 to 1
+			IdString name;		///< name of the parameter of the effect
 		};
 		IdString name;			///< Name of the effect to load, not an arbitrary name
 		effect::EffectBase* effect = nullptr;						///< References the DSP

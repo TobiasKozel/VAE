@@ -14,10 +14,8 @@ namespace vae { namespace core {
 		Real maxDist = 100;				///< if event is valid, it will be emitted once the emitter is closer
 		EventHandle event;				///< Will be triggerd
 		BankHandle bank;				///< Needed to identify event
-		bool autoplaying _VAE_SMALL(1);	///< whether the event was already triggered
+		bool autoplaying VAE_SMALL(1);	///< whether the event was already triggered
 	};
-
-	constexpr int _VAE_EMITTER_SIZE = sizeof(Emitter);
 } } // vae::core
 
 #endif // _VAE_EMITTER

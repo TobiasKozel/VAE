@@ -17,7 +17,7 @@
 #include "./vae_structs.hpp"
 
 // see https://semver.org/
-#define VAE_VERSION_MAJOR 0		///< for incompatible API changes
+#define VAE_VERSION_MAJOR 0		///< for incompatible API changes or Major updates
 #define VAE_VERSION_MINOR 0		///< for adding functionality in a backwards-compatible manner
 #define VAE_VERSION_PATCH 1		///< for backwards-compatible bug fixes
 
@@ -33,10 +33,9 @@ namespace vaeb { }
  * @details The types used internally like handles or static settings can be changed, but vae::EnginePimpl needs to be recompiled.
  */
 namespace vae {
-
 	/**
 	 * @brief Since 0 is a valid handle, these are used to identify invalid ones.
-	 * Seems a little odd but means they can be used to direcly address array elements.
+	 * Means they can be used to direcly address array elements.
 	 */
 	constexpr EventHandle InvalidEventHandle		= ~0;
 	constexpr SourceHandle InvalidSourceHandle		= ~0;
@@ -53,7 +52,6 @@ namespace vae {
 		"BankHandle combined with EventHandle needs to fit in GlobalEventHandle"
 	);
 
-
 	/**
 	 * @brief Contains some fundamental Configuration needed at compile time
 	 * Dynamic settings are contained in the EngineSettings struct above.
@@ -62,7 +60,7 @@ namespace vae {
 	namespace StaticConfig {
 		/**
 		 * @brief Maximum channel count used to pre allocate buffers
-		 * @attention 5.1 Suround needs six channels but hasn't been testet since the reverb effect is only stereo
+		 * @attention 5.1 Suround needs six channels but hasn't been tested since the reverb effect is only stereo
 		 */
 		constexpr unsigned char MaxChannels = 2;
 

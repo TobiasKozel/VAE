@@ -49,6 +49,14 @@ extern "C"
 		_VAE_API_EXPORT EmitterHandle vae_EventCallbackData_get_emitter(Pointer obj) {
 			return reinterpret_cast<EventCallbackData*>(obj)->emitter;
 		}
+		///// EventCallbackData.type
+		_VAE_API_EXPORT void vae_EventCallbackData_set_type(Pointer obj, Pointer value) {
+			reinterpret_cast<EventCallbackData*>(obj)->type =
+				*reinterpret_cast<EventCallbackType*>(value);
+		}
+		_VAE_API_EXPORT Pointer vae_EventCallbackData_get_type(Pointer obj) {
+			return &reinterpret_cast<EventCallbackData*>(obj)->type;
+		}
 
 	////////////// EngineConfig
 	_VAE_API_EXPORT Pointer vae_create_EngineConfig() {
@@ -72,6 +80,13 @@ extern "C"
 		}
 		_VAE_API_EXPORT Size vae_EngineConfig_get_internalSampleRate(Pointer obj) {
 			return reinterpret_cast<EngineConfig*>(obj)->internalSampleRate;
+		}
+		///// EngineConfig.applicationName
+		_VAE_API_EXPORT void vae_EngineConfig_set_applicationName(Pointer obj, CString value) {
+			reinterpret_cast<EngineConfig*>(obj)->applicationName = value;
+		}
+		_VAE_API_EXPORT CString vae_EngineConfig_get_applicationName(Pointer obj) {
+			return reinterpret_cast<EngineConfig*>(obj)->applicationName;
 		}
 		///// EngineConfig.eventCallbackContext
 		_VAE_API_EXPORT void vae_EngineConfig_set_eventCallbackContext(Pointer obj, Pointer value) {
@@ -204,28 +219,25 @@ extern "C"
 	}
 
 		///// Vector3.x
-		_VAE_API_EXPORT void vae_Vector3_set_x(Pointer obj, Pointer value) {
-			reinterpret_cast<Vector3*>(obj)->x =
-				*reinterpret_cast<float*>(value);
+		_VAE_API_EXPORT void vae_Vector3_set_x(Pointer obj, Position value) {
+			reinterpret_cast<Vector3*>(obj)->x = value;
 		}
-		_VAE_API_EXPORT Pointer vae_Vector3_get_x(Pointer obj) {
-			return &reinterpret_cast<Vector3*>(obj)->x;
+		_VAE_API_EXPORT Position vae_Vector3_get_x(Pointer obj) {
+			return reinterpret_cast<Vector3*>(obj)->x;
 		}
 		///// Vector3.y
-		_VAE_API_EXPORT void vae_Vector3_set_y(Pointer obj, Pointer value) {
-			reinterpret_cast<Vector3*>(obj)->y =
-				*reinterpret_cast<float*>(value);
+		_VAE_API_EXPORT void vae_Vector3_set_y(Pointer obj, Position value) {
+			reinterpret_cast<Vector3*>(obj)->y = value;
 		}
-		_VAE_API_EXPORT Pointer vae_Vector3_get_y(Pointer obj) {
-			return &reinterpret_cast<Vector3*>(obj)->y;
+		_VAE_API_EXPORT Position vae_Vector3_get_y(Pointer obj) {
+			return reinterpret_cast<Vector3*>(obj)->y;
 		}
 		///// Vector3.z
-		_VAE_API_EXPORT void vae_Vector3_set_z(Pointer obj, Pointer value) {
-			reinterpret_cast<Vector3*>(obj)->z =
-				*reinterpret_cast<float*>(value);
+		_VAE_API_EXPORT void vae_Vector3_set_z(Pointer obj, Position value) {
+			reinterpret_cast<Vector3*>(obj)->z = value;
 		}
-		_VAE_API_EXPORT Pointer vae_Vector3_get_z(Pointer obj) {
-			return &reinterpret_cast<Vector3*>(obj)->z;
+		_VAE_API_EXPORT Position vae_Vector3_get_z(Pointer obj) {
+			return reinterpret_cast<Vector3*>(obj)->z;
 		}
 
 	////////////// LocationDirection
@@ -278,7 +290,6 @@ extern "C"
 		_VAE_API_EXPORT Result vae_Engine_init(
 			Pointer obj,
 			Pointer config
-
 		) {
 			return reinterpret_cast<Engine*>(obj)->init(
 				*reinterpret_cast<EngineConfig*>(config)
@@ -355,6 +366,14 @@ extern "C"
 			);
 		}
 
+		///// Engine.getInactiveVoiceCount
+		_VAE_API_EXPORT Size vae_Engine_getInactiveVoiceCount(
+			Pointer obj
+		) {
+			return reinterpret_cast<Engine*>(obj)->getInactiveVoiceCount(
+			);
+		}
+
 		///// Engine.getStreamTime
 		_VAE_API_EXPORT Size vae_Engine_getStreamTime(
 			Pointer obj
@@ -376,12 +395,9 @@ extern "C"
 		///// Engine.checkVersion
 		_VAE_API_EXPORT bool vae_Engine_checkVersion(
 			Pointer obj,
-			Pointer major
-,
-			Pointer minor
-,
+			Pointer major,
+			Pointer minor,
 			Pointer patch
-
 		) {
 			return reinterpret_cast<Engine*>(obj)->checkVersion(
 				*reinterpret_cast<int*>(major),
@@ -403,12 +419,9 @@ extern "C"
 			Pointer obj,
 			BankHandle bank,
 			EventHandle event,
-			Pointer maxDist
-,
-			Pointer locDir
-,
+			Pointer maxDist,
+			Pointer locDir,
 			Pointer spread
-
 		) {
 			return reinterpret_cast<Engine*>(obj)->createAutoEmitter(
 				bank,
@@ -416,16 +429,6 @@ extern "C"
 				*reinterpret_cast<float*>(maxDist),
 				*reinterpret_cast<LocationDirection*>(locDir),
 				*reinterpret_cast<float*>(spread)
-			);
-		}
-
-		///// Engine.addEmitter
-		_VAE_API_EXPORT Result vae_Engine_addEmitter(
-			Pointer obj,
-			EmitterHandle h
-		) {
-			return reinterpret_cast<Engine*>(obj)->addEmitter(
-				h
 			);
 		}
 
@@ -443,10 +446,8 @@ extern "C"
 		_VAE_API_EXPORT Result vae_Engine_setEmitter(
 			Pointer obj,
 			EmitterHandle emitter,
-			Pointer locDir
-,
+			Pointer locDir,
 			Pointer spread
-
 		) {
 			return reinterpret_cast<Engine*>(obj)->setEmitter(
 				emitter,
@@ -494,7 +495,6 @@ extern "C"
 			Pointer obj,
 			EmitterHandle emitter,
 			Pointer speed
-
 		) {
 			return reinterpret_cast<Engine*>(obj)->setSpeed(
 				emitter,
@@ -507,7 +507,6 @@ extern "C"
 			Pointer obj,
 			EmitterHandle emitter,
 			Pointer cutoff
-
 		) {
 			return reinterpret_cast<Engine*>(obj)->setLowpass(
 				emitter,
@@ -520,7 +519,6 @@ extern "C"
 			Pointer obj,
 			EmitterHandle emitter,
 			Pointer cutoff
-
 		) {
 			return reinterpret_cast<Engine*>(obj)->setHighpass(
 				emitter,
@@ -551,7 +549,6 @@ extern "C"
 			Pointer obj,
 			ListenerHandle listener,
 			Pointer locOr
-
 		) {
 			return reinterpret_cast<Engine*>(obj)->setListener(
 				listener,
@@ -590,6 +587,16 @@ extern "C"
 		) {
 			return reinterpret_cast<Engine*>(obj)->unloadBankFromId(
 				bankHandle
+			);
+		}
+
+		///// Engine.unloadBank
+		_VAE_API_EXPORT Result vae_Engine_unloadBank(
+			Pointer obj,
+			CString path
+		) {
+			return reinterpret_cast<Engine*>(obj)->unloadBank(
+				path
 			);
 		}
 

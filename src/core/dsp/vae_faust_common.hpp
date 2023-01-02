@@ -24,6 +24,7 @@ namespace vae { namespace core { namespace effect {
 			const char* name, Sample* prop, Sample pDefault,
 			Sample min, Sample max, Sample stepSize
 		) const {
+			// TODO not ideal, since all parameters are compared by name
 			for (auto& i : effect.parameters) {
 				if (i.name == name) {
 					*prop = i.value;
@@ -39,7 +40,7 @@ namespace vae { namespace core { namespace effect {
 		void declare(Sample*, const char*, const char*) { };
 		void addVerticalSlider(const char* name, Sample* prop, Sample pDefault, Sample min, Sample max, Sample stepSize) const { addHorizontalSlider(name, prop, pDefault, min, max, stepSize); }
 		void addCheckButton(const char* name, Sample* prop) const { addHorizontalSlider(name, prop, 0, 0, 1, 1); }
-		void addVerticalBargraph(const char* name, Sample* prop, Sample min, Sample max) const { };
+		void addVerticalBargraph(const char* name, Sample* prop, Sample min, Sample max) const { TKLB_ASSERT(false) }; // Not supported, no readbacks from DSP for now
 		void addHorizontalBargraph(const char* name, Sample* prop, Sample min, Sample max) const { addVerticalBargraph(name, prop, min, max); };
 	};
 

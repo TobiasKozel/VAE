@@ -93,7 +93,6 @@ namespace vae { namespace core {
 	/**
 	 * TODO there's probably a smart  way to make this all constexpr
 	 */
-
 	#ifdef VAE_IMPL
 		const SPCAP::SPCAPConfig<1> SPCAP::MonoSPCAP = {{
 							StaticConfig::Speakers::center

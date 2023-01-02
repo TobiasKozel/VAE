@@ -26,7 +26,7 @@ for root, dirs, files in os.walk(dspFolder):
 for source in faustSources:
 	name = Path(source).stem
 	outFile = os.path.join(outFolder, f"{name}_gen{targetExtension}")
-	command = f"{baseCommand} -o {outFile} -cn VAE{name.title()} {source}"
+	command = f"{baseCommand} -o {outFile} -cn {name.title()} {source}"
 	print(command)
 	if os.system(command) == 0:
 		pass #  success

@@ -5,9 +5,7 @@
 #include "../vae_config.hpp"
 #include "../algo/vae_vec.hpp"
 
-
 namespace vae { namespace core {
-
 	struct Listener {
 		vector::Vec3 position;
 		vector::Vec3 front;
@@ -18,7 +16,7 @@ namespace vae { namespace core {
 		 * This might change, so that's why it's stored here
 		 * Only the configuration for the first listeners is used
 		 */
-		SpeakerConfiguration configuration = SpeakerConfiguration::HRTF;
+		SpeakerConfiguration configuration VAE_SMALL(3);
 	};
 
 	using Listeners = Listener[StaticConfig::MaxListeners];

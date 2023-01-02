@@ -3,7 +3,7 @@
 
 namespace vae {
 	/**
-	 * @brief Return Types for most engine functions
+	 * @brief All of the Engine Error codes
 	 */
 	enum class Result {
 		Success = 0,				///< :)
@@ -24,6 +24,9 @@ namespace vae {
 		FeatureNotCompiled			///< Codec or other feature not included in binary
 	};
 
+	/**
+	 * @brief TODO not used at the moment
+	 */
 	enum class LogLevel {
 		Debug = 0,
 		Info,
@@ -33,8 +36,8 @@ namespace vae {
 	};
 
 	/**
-	 * @brief Speaker setup for a listener
-	 *
+	 * @brief Speaker setup for a listener.
+	 *        ! Adding to this will need all bitfields which use it adjusted !
 	 */
 	enum class SpeakerConfiguration {
 		Mono = 0,
@@ -43,6 +46,13 @@ namespace vae {
 		HRTF,
 		Quadrophonic,
 		Suround
+	};
+
+	/**
+	 * @brief TODO event type
+	 */
+	enum class EventCallbackType {
+		// TODO
 	};
 }
 

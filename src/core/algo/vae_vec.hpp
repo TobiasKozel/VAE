@@ -138,6 +138,5 @@ namespace vae { namespace core { namespace vector {
 		}};
 	}
 
-
 } } } // core::vae::vector
 #endif // _VAE_VEC

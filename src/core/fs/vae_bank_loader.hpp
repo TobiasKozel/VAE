@@ -63,7 +63,7 @@ namespace vae { namespace core {
 				fs::File file(json.c_str());
 				jsonText.resize(file.size());
 				if (!file.readAll(jsonText.data())) {
-					TKLB_DEBUG("Failed to read file")
+					TKLB_ERROR("Failed to read file")
 					return Result::FileOpenError;
 				}
 				length = jsonText.size();

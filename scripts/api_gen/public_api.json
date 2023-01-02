@@ -1,0 +1,1722 @@
+{
+    "enums": [
+        {
+            "type": "Enum",
+            "name": "Result",
+            "children": [
+                {
+                    "type": "EnumValue",
+                    "name": "Success",
+                    "index": 0
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "GenericFailure",
+                    "index": 1
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "BankFormatError",
+                    "index": 2
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "BankFormatIndexError",
+                    "index": 3
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "BankFormatDuplicateIndex",
+                    "index": 4
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "FileOpenError",
+                    "index": 5
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "VoiceStarvation",
+                    "index": 6
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "BankFormatBadMixHirarchy",
+                    "index": 7
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "ElementNotFound",
+                    "index": 8
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "ValidHandleRequired",
+                    "index": 9
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "TooManyRecords",
+                    "index": 10
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "DeviceError",
+                    "index": 11
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "DuplicateEmitter",
+                    "index": 12
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "InvalidBank",
+                    "index": 13
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "InvalidEmitter",
+                    "index": 14
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "FeatureNotCompiled",
+                    "index": 15
+                }
+            ]
+        },
+        {
+            "type": "Enum",
+            "name": "LogLevel",
+            "children": [
+                {
+                    "type": "EnumValue",
+                    "name": "Debug",
+                    "index": 0
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "Info",
+                    "index": 1
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "Warn",
+                    "index": 2
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "Error",
+                    "index": 3
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "Ciritical",
+                    "index": 4
+                }
+            ]
+        },
+        {
+            "type": "Enum",
+            "name": "SpeakerConfiguration",
+            "children": [
+                {
+                    "type": "EnumValue",
+                    "name": "Mono",
+                    "index": 0
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "Headphones",
+                    "index": 1
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "Stereo",
+                    "index": 2
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "HRTF",
+                    "index": 3
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "Quadrophonic",
+                    "index": 4
+                },
+                {
+                    "type": "EnumValue",
+                    "name": "Suround",
+                    "index": 5
+                }
+            ]
+        },
+        {
+            "type": "Enum",
+            "name": "EventCallbackType",
+            "children": [
+                {
+                    "type": "EnumValue",
+                    "name": "",
+                    "index": 0
+                }
+            ]
+        }
+    ],
+    "structs": [
+        {
+            "type": "Struct",
+            "name": "EventCallbackData",
+            "properties": [
+                {
+                    "type": "Property",
+                    "typename": "Pointer",
+                    "realtype": "void*",
+                    "name": "context",
+                    "default": null,
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "BankHandle",
+                    "realtype": "unsigned char",
+                    "name": "bank",
+                    "default": null,
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "EventHandle",
+                    "realtype": "unsigned short",
+                    "name": "event",
+                    "default": null,
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "EmitterHandle",
+                    "realtype": "unsigned int",
+                    "name": "emitter",
+                    "default": null,
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "EventCallbackType",
+                    "realtype": "EventCallbackType",
+                    "name": "type",
+                    "default": null,
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                }
+            ],
+            "functions": [],
+            "namespace": "vae"
+        },
+        {
+            "type": "Struct",
+            "name": "EngineConfig",
+            "properties": [
+                {
+                    "type": "Property",
+                    "typename": "CString",
+                    "realtype": "const char*",
+                    "name": "rootPath",
+                    "default": "\"./\"",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Size",
+                    "realtype": "unsigned int",
+                    "name": "internalSampleRate",
+                    "default": "48000",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "CString",
+                    "realtype": "const char*",
+                    "name": "applicationName",
+                    "default": "\"VAE_Client\"",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Pointer",
+                    "realtype": "void*",
+                    "name": "eventCallbackContext",
+                    "default": "nullptr",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Size",
+                    "realtype": "unsigned int",
+                    "name": "preAllocatedEmitters",
+                    "default": "16384",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Size",
+                    "realtype": "unsigned int",
+                    "name": "voices",
+                    "default": "512",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Size",
+                    "realtype": "unsigned int",
+                    "name": "hrtfVoices",
+                    "default": "16",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Size",
+                    "realtype": "unsigned int",
+                    "name": "virtualVoices",
+                    "default": "16384",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Size",
+                    "realtype": "unsigned int",
+                    "name": "finishedVoiceQueueSize",
+                    "default": "1024",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Size",
+                    "realtype": "unsigned int",
+                    "name": "preferredBufferSize",
+                    "default": "512",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Size",
+                    "realtype": "unsigned int",
+                    "name": "bufferPeriods",
+                    "default": "3",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "bool",
+                    "realtype": "bool",
+                    "name": "updateInAudioThread",
+                    "default": "false",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "bool",
+                    "realtype": "bool",
+                    "name": "processInBufferSwitch",
+                    "default": "false",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                }
+            ],
+            "functions": [],
+            "namespace": "vae"
+        },
+        {
+            "type": "Struct",
+            "name": "DeviceInfo",
+            "properties": [
+                {
+                    "type": "Property",
+                    "typename": "int",
+                    "realtype": "int",
+                    "name": "id",
+                    "default": null,
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Size",
+                    "realtype": "unsigned int",
+                    "name": "sampleRate",
+                    "default": "0",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Size",
+                    "realtype": "unsigned int",
+                    "name": "bufferSize",
+                    "default": "0",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "unsigned char",
+                    "realtype": "unsigned char",
+                    "name": "channelsIn",
+                    "default": "0",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "unsigned char",
+                    "realtype": "unsigned char",
+                    "name": "channelsOut",
+                    "default": "0",
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                }
+            ],
+            "functions": [],
+            "namespace": "vae"
+        },
+        {
+            "type": "Struct",
+            "name": "Vector3",
+            "properties": [
+                {
+                    "type": "Property",
+                    "typename": "Position",
+                    "realtype": "float",
+                    "name": "x",
+                    "default": null,
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Position",
+                    "realtype": "float",
+                    "name": "y",
+                    "default": null,
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Position",
+                    "realtype": "float",
+                    "name": "z",
+                    "default": null,
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                }
+            ],
+            "functions": [],
+            "namespace": "vae"
+        },
+        {
+            "type": "Struct",
+            "name": "LocationDirection",
+            "properties": [
+                {
+                    "type": "Property",
+                    "typename": "Vector3",
+                    "realtype": "Vector3",
+                    "name": "position",
+                    "default": null,
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                },
+                {
+                    "type": "Property",
+                    "typename": "Vector3",
+                    "realtype": "Vector3",
+                    "name": "direction",
+                    "default": null,
+                    "const": false,
+                    "static": false,
+                    "reference": false
+                }
+            ],
+            "functions": [],
+            "namespace": "vae"
+        },
+        {
+            "type": "Struct",
+            "name": "LocationOrientation",
+            "properties": [],
+            "functions": [],
+            "namespace": "vae"
+        },
+        {
+            "type": "Struct",
+            "name": "Engine",
+            "properties": [],
+            "functions": [
+                {
+                    "type": "Func",
+                    "name": "init",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API init(const EngineConfig& config = {}) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "EngineConfig",
+                            "realtype": "EngineConfig",
+                            "name": "config",
+                            "default": "{}",
+                            "const": true,
+                            "static": false,
+                            "reference": true
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Initializes the engine and does most of the upfront allocations. Run this before start !\n",
+                        " * @details Everything will be allocated according to the provided config.\n",
+                        " *          Loading a Bank will still cause an allocation.\n",
+                        " *          If there are already banks loaded, they will be reloaded to have the correct samplerate.\n",
+                        " * @see start\n",
+                        " * @param config Optional config to setup the internals.\n",
+                        " * @return Result\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "start",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API start() {\n",
+                    "parameters": [],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Tries to open default device and start audio thread. Call this after start.\n",
+                        " * @see init\n",
+                        " * @return Result\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "stop",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API stop() {\n",
+                    "parameters": [],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Stops processing and waits for audio thead to clean up\n",
+                        " * @return Result\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "update",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "void",
+                        "realtype": "void",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tvoid _VAE_PUBLIC_API update() {\n",
+                    "parameters": [],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Update function needs to be called regularly to handle outbound events and other housekeeping.\n",
+                        " * @details If this isn't called regularly events might be lost and chained events not fired.\n",
+                        " * When EngineConfig::updateInAudioThread is true, this doesn't need to be called manually.\n",
+                        " * @see EngineConfig::updateInAudioThread\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "fireEvent",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API fireEvent(\n\t\t\tBankHandle bankHandle,\n\t\t\tEventHandle eventHandle,\n\t\t\tEmitterHandle emitterHandle,\n\t\t\tSample gain = 1.0,\n\t\t\tMixerHandle mixerHandle = InvalidMixerHandle,\n\t\t\tListenerHandle listenerHandle = AllListeners\n\t\t) {\n\t\t\tTKLB_PROFILER_SCOPE()\n\n\t\t\tif (emitterHandle != InvalidEmitterHandle && !mSpatialManager.hasEmitter(emitterHandle)) {\n\t\t\t\tTKLB_WARN(\"No emitter %u registered\", emitterHandle)\n\t\t\t\treturn Result::InvalidEmitter;\n\t\t\t}\n\n\t\t\tauto& emitter = mSpatialManager.getEmitter(emitterHandle);\n\n\t\t\tif (!mBankManager.has(bankHandle)) {\n\t\t\t\tTKLB_WARN(\"Fired event %i on unloaded bank %i\", eventHandle, bankHandle)\n\t\t\t\treturn Result::InvalidBank;\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "BankHandle",
+                            "realtype": "unsigned char",
+                            "name": "bankHandle",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "EventHandle",
+                            "realtype": "unsigned short",
+                            "name": "eventHandle",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "EmitterHandle",
+                            "realtype": "unsigned int",
+                            "name": "emitterHandle",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "Sample",
+                            "realtype": "float",
+                            "name": "gain",
+                            "default": "1.0",
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "MixerHandle",
+                            "realtype": "unsigned char",
+                            "name": "mixerHandle",
+                            "default": "InvalidMixerHandle",
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "ListenerHandle",
+                            "realtype": "unsigned char",
+                            "name": "listenerHandle",
+                            "default": "AllListeners",
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Main mechanism to start and stop sounds\n",
+                        " * @see Event\n",
+                        " * @param bankHandle bank id where the event is provided\n",
+                        " * @param eventHandle id of the event\n",
+                        " * @param emitterHandle handle of the emitter, needed for spatial audio or controlling the voice\n",
+                        " * @param gain optional volume factor\n",
+                        " * @param mixerHandle optional id of mixer channel sound will be routed to, this will override the one set in the event\n",
+                        " * @param listenerHandle For which listener this event will be audible for, default to all\n",
+                        " * @return Result\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "fireGlobalEvent",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API fireGlobalEvent(\n\t\t\tGlobalEventHandle globalHandle,\n\t\t\tEmitterHandle emitterHandle,\n\t\t\tSample gain = 1.0,\n\t\t\tMixerHandle mixerHandle = InvalidMixerHandle,\n\t\t\tListenerHandle listenerHandle = AllListeners\n\t\t) {\n\t\t\tBankHandle bankHandle;\n\t\t\tEventHandle eventHandle;\n\t\t\tsplitGlobalEventHandle(globalHandle, bankHandle, eventHandle);\n\t\t\treturn fireEvent(\n\t\t\t\tbankHandle, eventHandle, emitterHandle,\n\t\t\t\tgain, mixerHandle, listenerHandle\n\t\t\t);\n\t\t}\n\n\t\t/**\n\t\t * @brief Get the number of currently playing Voices\n\t\t */\n\t\tSize _VAE_PUBLIC_API getActiveVoiceCount() const {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "GlobalEventHandle",
+                            "realtype": "unsigned int",
+                            "name": "globalHandle",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "EmitterHandle",
+                            "realtype": "unsigned int",
+                            "name": "emitterHandle",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "Sample",
+                            "realtype": "float",
+                            "name": "gain",
+                            "default": "1.0",
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "MixerHandle",
+                            "realtype": "unsigned char",
+                            "name": "mixerHandle",
+                            "default": "InvalidMixerHandle",
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "ListenerHandle",
+                            "realtype": "unsigned char",
+                            "name": "listenerHandle",
+                            "default": "AllListeners",
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Works like fireEvent but with a global Event identifier\n",
+                        " * @see fireEvent\n",
+                        " * @param globalHandle The GlobalEventHandle combines both bank and event id\n",
+                        " * @param emitterHandle optional handle of the emitter, needed for spatial audio\n",
+                        " * @param gain optional volume factor\n",
+                        " * @param mixerHandle id of mixer channel sound will be routed to, this will override the one set in the event\n",
+                        " * @return Result\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "getActiveVoiceCount",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Size",
+                        "realtype": "unsigned int",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tSize _VAE_PUBLIC_API getActiveVoiceCount() const {\n",
+                    "parameters": [],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Get the number of currently playing Voices\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "getInactiveVoiceCount",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Size",
+                        "realtype": "unsigned int",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tSize _VAE_PUBLIC_API getInactiveVoiceCount() const {\n",
+                    "parameters": [],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Get the number of currently playing virtual Voices\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "getStreamTime",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Size",
+                        "realtype": "unsigned int",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tSize _VAE_PUBLIC_API getStreamTime() const  {\n",
+                    "parameters": [],
+                    "docblock": []
+                },
+                {
+                    "type": "Func",
+                    "name": "setMasterVolume",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "void",
+                        "realtype": "void",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tvoid _VAE_PUBLIC_API setMasterVolume(Sample volume) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "Sample",
+                            "realtype": "float",
+                            "name": "volume",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Set the global output volume before the limiter.\n",
+                        " * @details The engine can't clip, but if the output is too load\n",
+                        " * the signal will be squashed in the limiter.\n",
+                        " * @param volume 1.0 is the default, not interpolated for now\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "checkVersion",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "bool",
+                        "realtype": "bool",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tbool _VAE_PUBLIC_API checkVersion(int major, int minor, int patch) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "int",
+                            "realtype": "int",
+                            "name": "major",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "int",
+                            "realtype": "int",
+                            "name": "minor",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "int",
+                            "realtype": "int",
+                            "name": "patch",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Check if the compiled version matches\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "createEmitter",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "EmitterHandle",
+                        "realtype": "unsigned int",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tEmitterHandle _VAE_PUBLIC_API createEmitter() {\n",
+                    "parameters": [],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Creates an emitter and returns the handle\n",
+                        " * @return EmitterHandle Random handle\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "createAutoEmitter",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "EmitterHandle",
+                        "realtype": "unsigned int",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tEmitterHandle _VAE_PUBLIC_API createAutoEmitter(\n\t\t\tBankHandle bank, EventHandle event, float maxDist,\n\t\t\tconst LocationDirection& locDir, float spread\n\t\t) {\n\t\t\treturn mSpatialManager.createAutoEmitter(bank, event, maxDist, locDir, spread);\n\t\t}\n\n\t\t/**\n\t\t * @brief Unregister a emiter an kill all its voices\n\t\t * @param h\n\t\t * @return Result\n\t\t */\n\t\tResult _VAE_PUBLIC_API removeEmitter(EmitterHandle h) {\n\t\t\tmVoiceManager.stop(h, &Voice::emitter);\n\t\t\treturn mSpatialManager.removeEmitter(h);\n\t\t}\n\n\t\t/**\n\t\t * @brief Set the Emitter position, orientation and spread\n\t\t * @param emitter The emitter\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "BankHandle",
+                            "realtype": "unsigned char",
+                            "name": "bank",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "EventHandle",
+                            "realtype": "unsigned short",
+                            "name": "event",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "float",
+                            "realtype": "float",
+                            "name": "maxDist",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "LocationDirection",
+                            "realtype": "LocationDirection",
+                            "name": "locDir",
+                            "default": null,
+                            "const": true,
+                            "static": false,
+                            "reference": true
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "float",
+                            "realtype": "float",
+                            "name": "spread",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Emitter which triggers an event once a listener is close enough\n",
+                        " *\n",
+                        " * @param bank\n",
+                        " * @param event\n",
+                        " * @param maxDist\n",
+                        " * @param locDir\n",
+                        " * @param spread\n",
+                        " * @return EmitterHandle Handle like a normal emitter\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "removeEmitter",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API removeEmitter(EmitterHandle h) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "EmitterHandle",
+                            "realtype": "unsigned int",
+                            "name": "h",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Unregister a emiter an kill all its voices\n",
+                        " * @param h\n",
+                        " * @return Result\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "setEmitter",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API setEmitter(\n\t\t\tEmitterHandle emitter, const LocationDirection& locDir, float spread\n\t\t) {\n\t\t\treturn mSpatialManager.setEmitter(emitter, locDir, spread);\n\t\t}\n\n\t\t/**\n\t\t * @brief Stop all voices from emitter.\n\t\t * @param emitter\n\t\t * @return Result\n\t\t */\n\t\tResult _VAE_PUBLIC_API stopEmitter(EmitterHandle emitter) {\n\t\t\treturn mVoiceManager.stop(emitter, &Voice::emitter);\n\t\t}\n\n\t\t/**\n\t\t * @brief Sets the volume of all active voices with this emitter\n\t\t * @param emitter\n\t\t * @param gain\n\t\t */\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "EmitterHandle",
+                            "realtype": "unsigned int",
+                            "name": "emitter",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "LocationDirection",
+                            "realtype": "LocationDirection",
+                            "name": "locDir",
+                            "default": null,
+                            "const": true,
+                            "static": false,
+                            "reference": true
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "float",
+                            "realtype": "float",
+                            "name": "spread",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Set the Emitter position, orientation and spread\n",
+                        " * @param emitter The emitter\n",
+                        " * @param locDir The desired location\n",
+                        " * @param spread The width of the panning 0.5 is the default (only non hrtf voices)\n",
+                        " * @return Result\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "stopEmitter",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API stopEmitter(EmitterHandle emitter) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "EmitterHandle",
+                            "realtype": "unsigned int",
+                            "name": "emitter",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Stop all voices from emitter.\n",
+                        " * @param emitter\n",
+                        " * @return Result\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "setVolume",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "void",
+                        "realtype": "void",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tvoid _VAE_PUBLIC_API setVolume(EmitterHandle emitter, Sample gain) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "EmitterHandle",
+                            "realtype": "unsigned int",
+                            "name": "emitter",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "Sample",
+                            "realtype": "float",
+                            "name": "gain",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Sets the volume of all active voices with this emitter\n",
+                        " * @param emitter\n",
+                        " * @param gain\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "seek",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "void",
+                        "realtype": "void",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tvoid _VAE_PUBLIC_API seek(EmitterHandle emitter, Size time) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "EmitterHandle",
+                            "realtype": "unsigned int",
+                            "name": "emitter",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "Size",
+                            "realtype": "unsigned int",
+                            "name": "time",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Set the current time of all voices with the emitter.\n",
+                        " * @param emitter\n",
+                        " * @param time Time in samples\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "setSpeed",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "void",
+                        "realtype": "void",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tvoid _VAE_PUBLIC_API setSpeed(EmitterHandle emitter, float speed) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "EmitterHandle",
+                            "realtype": "unsigned int",
+                            "name": "emitter",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "float",
+                            "realtype": "float",
+                            "name": "speed",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Set the playback speed\n",
+                        " * @param emitter\n",
+                        " * @param speed 1.0 is the default speed, pitch will be affected as well.\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "setLowpass",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "void",
+                        "realtype": "void",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tvoid _VAE_PUBLIC_API setLowpass(EmitterHandle emitter, float cutoff) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "EmitterHandle",
+                            "realtype": "unsigned int",
+                            "name": "emitter",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "float",
+                            "realtype": "float",
+                            "name": "cutoff",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Simple lowpass filter for the voices\n",
+                        " * @param emitter\n",
+                        " * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "setHighpass",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "void",
+                        "realtype": "void",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tvoid _VAE_PUBLIC_API setHighpass(EmitterHandle emitter, float cutoff) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "EmitterHandle",
+                            "realtype": "unsigned int",
+                            "name": "emitter",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "float",
+                            "realtype": "float",
+                            "name": "cutoff",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Simple highpass filter for the voices\n",
+                        " * @param emitter\n",
+                        " * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "createListener",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "ListenerHandle",
+                        "realtype": "unsigned char",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tListenerHandle _VAE_PUBLIC_API createListener() {\n",
+                    "parameters": [],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Create a Listener object\n",
+                        " * @details TODO make listener 0 implicit\n",
+                        " * @return ListenerHandle\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "removeListener",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API removeListener(ListenerHandle listener) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "ListenerHandle",
+                            "realtype": "unsigned char",
+                            "name": "listener",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Unregister listener\n",
+                        " * @param listener\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "setListener",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API setListener(ListenerHandle listener, const LocationOrientation& locOr) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "ListenerHandle",
+                            "realtype": "unsigned char",
+                            "name": "listener",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "LocationOrientation",
+                            "realtype": "LocationOrientation",
+                            "name": "locOr",
+                            "default": null,
+                            "const": true,
+                            "static": false,
+                            "reference": true
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Set the position of a listener\n",
+                        " * @param listener\n",
+                        " * @return Result\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "loadHRTF",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API loadHRTF(CString path, Size size = 0) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "CString",
+                            "realtype": "const char*",
+                            "name": "path",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "Size",
+                            "realtype": "unsigned int",
+                            "name": "size",
+                            "default": "0",
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": []
+                },
+                {
+                    "type": "Func",
+                    "name": "loadBank",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API loadBank(CString path, Size size = 0) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "CString",
+                            "realtype": "const char*",
+                            "name": "path",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        },
+                        {
+                            "type": "Property",
+                            "typename": "Size",
+                            "realtype": "unsigned int",
+                            "name": "size",
+                            "default": "0",
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Load bank from filesystem.\n",
+                        " * @details This operation might take a little time but won't lock the audio thread\n",
+                        " *          until the bank is inserted. This should be safe to do at any time.\n",
+                        " * @param path\n",
+                        " * @return Result\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "unloadBankFromId",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API unloadBankFromId(BankHandle bankHandle) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "BankHandle",
+                            "realtype": "unsigned char",
+                            "name": "bankHandle",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Unload bank from handle.\n",
+                        " * Locks audio thread and stops all voices from that bank.\n",
+                        " * @param bankHandle\n",
+                        " * @return Result\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "unloadBank",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "Result",
+                        "realtype": "Result",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tResult _VAE_PUBLIC_API unloadBank(CString path) {\n",
+                    "parameters": [
+                        {
+                            "type": "Property",
+                            "typename": "CString",
+                            "realtype": "const char*",
+                            "name": "path",
+                            "default": null,
+                            "const": false,
+                            "static": false,
+                            "reference": false
+                        }
+                    ],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Unloadbank by path\n",
+                        " * @param path path used to load the bank\n",
+                        " * @return Result\n",
+                        " */\n"
+                    ]
+                },
+                {
+                    "type": "Func",
+                    "name": "unloadAllBanks",
+                    "returns": {
+                        "type": "Property",
+                        "typename": "void",
+                        "realtype": "void",
+                        "name": null,
+                        "default": null,
+                        "const": false,
+                        "static": false,
+                        "reference": false
+                    },
+                    "text": "\t\tvoid _VAE_PUBLIC_API unloadAllBanks() {\n",
+                    "parameters": [],
+                    "docblock": [
+                        "/**\n",
+                        " * @brief Unload every bank and data associated with it\n",
+                        " */\n"
+                    ]
+                }
+            ],
+            "namespace": "vae::core"
+        }
+    ],
+    "types": [
+        {
+            "type": "Type",
+            "alias": "Sample",
+            "typename": "float"
+        },
+        {
+            "type": "Type",
+            "alias": "Size",
+            "typename": "unsigned int"
+        },
+        {
+            "type": "Type",
+            "alias": "Time",
+            "typename": "double"
+        },
+        {
+            "type": "Type",
+            "alias": "Position",
+            "typename": "float"
+        },
+        {
+            "type": "Type",
+            "alias": "BankHandle",
+            "typename": "unsigned char"
+        },
+        {
+            "type": "Type",
+            "alias": "EventHandle",
+            "typename": "unsigned short"
+        },
+        {
+            "type": "Type",
+            "alias": "SourceHandle",
+            "typename": "unsigned short"
+        },
+        {
+            "type": "Type",
+            "alias": "EmitterHandle",
+            "typename": "unsigned int"
+        },
+        {
+            "type": "Type",
+            "alias": "MixerHandle",
+            "typename": "unsigned char"
+        },
+        {
+            "type": "Type",
+            "alias": "ListenerHandle",
+            "typename": "unsigned char"
+        },
+        {
+            "type": "Type",
+            "alias": "GlobalEventHandle",
+            "typename": "unsigned int"
+        },
+        {
+            "type": "Type",
+            "alias": "GlobalMixerHandle",
+            "typename": "unsigned short"
+        },
+        {
+            "type": "Type",
+            "alias": "GlobalParameterHandle",
+            "typename": "unsigned int"
+        },
+        {
+            "type": "Type",
+            "alias": "Pointer",
+            "typename": "void*"
+        },
+        {
+            "type": "Type",
+            "alias": "CString",
+            "typename": "const char*"
+        }
+    ]
+}

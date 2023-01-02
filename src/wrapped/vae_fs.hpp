@@ -20,8 +20,8 @@
  * @param mode Read mode "r", "w", "rw" like normal fopen
  * @return void* The handle to the file
  */
-
 void* vae_file_open(const char* path, const char* mode);
+
 /**
  * @brief Seek and return current position
  * @param file
@@ -46,8 +46,8 @@ size_t vae_file_read(char* dest, size_t size, int, void* file);
  */
 size_t vae_file_close(void* file);
 
-
 #if !defined(VAE_NO_STDIO)
+	// Direct the calls to the cstd if allowed
 	#include <stdio.h>
 	#if defined(VAE_IMPL)
 		void* vae_file_open(const char* path, const char* mode) {

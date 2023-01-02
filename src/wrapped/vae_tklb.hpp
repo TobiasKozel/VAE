@@ -49,12 +49,7 @@ namespace vae { namespace core {
 
 		constexpr size_t DEFAULT_ALIGNMENT = tklb::DEFAULT_ALIGNMENT;
 
-		template <
-			typename T,
-			size_t ALIGNMENT,
-			class ALLOCATOR,
-			typename SIZE
-		>
+		template <typename T,size_t ALIGNMENT,class ALLOCATOR,typename SIZE>
 		using HeapBuffer = tklb::HeapBuffer<T, ALIGNMENT, ALLOCATOR, SIZE>;
 
 		template<typename T, typename Handle, class ALLOCATOR>

@@ -91,7 +91,7 @@ source_group("core" FILES ${SRC_CORE})
 
 
 #Add an alias so that library can be used inside the build tree, e.g. when testing
-# add_library(VAE::vae ALIAS vae)
+# add_library(VAE::vae ALIAS vae) # TODO needed?
 
 #################            find third party libs             #################
 
@@ -102,16 +102,23 @@ list(APPEND VAE_DEPS Threads::Threads)
 
 if(VAE_BACKEND_RTAUDIO)
 	find_package(RtAudio REQUIRED)
-
 	list(APPEND VAE_DEFINES "_VAE_HAS_RT_AUDIO")
-	message("VAE: Build with RtAudio")
 	list(APPEND VAE_DEPS rtaudio) # lower case smh
+	message("VAE: Build with RtAudio")
 endif()
 if(VAE_BACKEND_PORTAUDIO)
-	list(APPEND VAE_DEFINES "_VAE_HAS_PORT_AUDIO")
-	message("VAE: Build with portaudio")
 	find_package(PortAudio REQUIRED)
+	list(APPEND VAE_DEFINES "_VAE_HAS_PORT_AUDIO")
 	list(APPEND VAE_DEPS PortAudio)
+	message("VAE: Build with portaudio")
+endif()
+
+if (VAE_BACKEND_RTAUDIO)
+else()
+	if(VAE_BACKEND_PORTAUDIO)
+	else()
+		message("VAE: Warning building without backend")
+	endif()
 endif()
 
 # Goal is to have no public dependencies
@@ -148,7 +155,6 @@ set_target_properties(vae PROPERTIES LINKER_LANGUAGE CXX)
 
 # for developing
 add_subdirectory(dev)
-
 
 add_library(vae_pimpl
 	SHARED

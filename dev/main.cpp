@@ -118,8 +118,6 @@ int main() {
 	EngineConfig config;
 	#ifdef _MSC_VER
 		config.rootPath = "../../../dev/";
-	#else
-		config.rootPath = "../../dev/";
 	#endif
 	config.eventCallback = &eventTriggered;
 	config.internalSampleRate = rate;
