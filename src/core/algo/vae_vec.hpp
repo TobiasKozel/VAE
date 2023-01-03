@@ -103,7 +103,7 @@ namespace vae { namespace core { namespace vector {
 	}
 
 	static inline Position dot(const Vec3& a, const Vec3& b) {
-		return a.x * b.x + a.x * b.x + a.x * b.x;
+		return a.x * b.x + a.y * b.y + a.z * b.z;
 	}
 
 	static inline Vec3 cross(const Vec3& a, const Vec3& b) {

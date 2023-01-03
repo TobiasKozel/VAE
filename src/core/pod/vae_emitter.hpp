@@ -10,7 +10,7 @@ namespace vae { namespace core {
 	 */
 	struct Emitter {
 		vector::Vec3 position = { 0, 0, 0 };
-		Real spread = 0.5;						///< The width of the source, 1 means all speaker will play
+		Real separation = 1.0;					///< how much seperation between speaker will be when applying the panning law
 		Real maxDist = 100;						///< if event is valid/positive, it will be emitted once the emitter is closer
 		EventHandle event = InvalidEventHandle;	///< Will be triggerd when listener enters max dist
 		BankHandle bank = InvalidBankHandle;	///< Needed to identify event when listener enters max dist

@@ -5,7 +5,7 @@ namespace vae {
 	using Sample = float;							///< Default internal sample types used where ever possible
 	using Size = unsigned int;						///< How the elements are addressed in the heapbuffer
 	using Time = double;							///< Time in seconds
-	using Position = float;							///< Coordinates uses this type
+	using Position = float;							///< Coordinates use this type. If the game engine uses double, this might be useful to change.
 
 	using BankHandle 			= unsigned char;	///< Allows for 255 banks (unloaded or loaded)
 	using EventHandle 			= unsigned short;	///< The handle used to address events within a bank

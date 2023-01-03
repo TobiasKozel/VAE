@@ -133,6 +133,7 @@ namespace vae {
 
 	/**
 	 * @brief Basic struct describing a audio device
+	 *        TODO devices aren't exposed/functional yet
 	 */
 	struct DeviceInfo {
 		int id;							///< Negative values for invalid device.
@@ -146,11 +147,12 @@ namespace vae {
 
 	/**
 	 * @brief Public vae Vector 3 type
+	 *        OpenGL Coordinate System
 	 */
 	struct Vector3 {
 		Position x;		///< Right
 		Position y;		///< Up
-		Position z;		///< Front
+		Position z;		///< back
 	};
 
 	/**
@@ -164,15 +166,15 @@ namespace vae {
 
 	/**
 	 * @brief Listener uses additional up vector like a normal camera.
-	 *        This is the default coordinate system orientation.
-	 * @attention Technically the can be changed but the speaker placements
-	 *            in vae::StaticConfig::Speakers need to be changed accordingly.
+	 *        This is the OpenGL coordinate system orientation.
+	 * @attention Technically they can be changed but the speaker placements
+	 *            in vae::StaticConfig::Speakers need to be changed accordingly as well.
 	 * @see vae::StaticConfig::Speakers
 	 * @see vae::core::HRTFLoader
 	 */
 	struct LocationOrientation {
 		Vector3 position	= { 0,  0,  0 };
-		Vector3 front		= { 0,  0, +1 };	///< +z front
+		Vector3 front		= { 0,  0, -1 };	///< -z front
 		Vector3 up			= { 0, +1,  0 };	///< +y up
 	};
 }

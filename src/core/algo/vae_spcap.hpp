@@ -41,13 +41,12 @@ namespace vae { namespace core {
 						// Can be done in advance and ideally at compiletime
 						// since the positions of the speakers will not change
 						mSpeakers[i].effective +=
-							Sample(0.5) * (Sample(1.0) + vector::dot(mSpeakers[i].dir, mSpeakers[j].dir));
+							Sample(0.5) * (Sample(1) + vector::dot(mSpeakers[i].dir, mSpeakers[j].dir));
 					}
 				}
 			}
 
 			static constexpr Size speakers = N;
-
 
 			/**
 			 * @brief Calculate per channel volumes for a given direction
@@ -55,23 +54,19 @@ namespace vae { namespace core {
 			 * @param direction The relative and normalized direction
 			 * @param result Result array of channel volumes
 			 * @param attenuation Distance attenuation multiplied on the result
-			 * @param spread Value from 0-1 controlling "wideness" of the sound
+			 * @param seperation 0 means no panning at all, while higher values increase the seperation of speakers. 1 is usually a good value
 			 */
-			inline void pan(const vector::Vec3& direction, Sample result[N], Sample attenuation, Sample spread) const {
+			inline void pan(const vector::Vec3& direction, Sample result[N], Sample attenuation, Sample seperation) const {
 				TKLB_PROFILER_SCOPE_NAMED("SPCAP Pan")
 				// TODO make spread change based on distance and use something like radius instead
 				Sample sumGains = 0.0;
-				// const Sample tightness = (Sample(1) - spread) * Sample(10) + Sample(0.05);
-				const Sample tightness = 1.0;
+				for (Size i = 0; i < N; i++) { result[i] = Sample(0); }
 				for (Size i = 0; i < N; i++) {
-					result[i] = Sample(0);
-				}
-				for (Size i = 0; i < N; i++) {
-					Sample gain = vector::dot(mSpeakers[i].dir, direction) + Sample(1.0); // (1)
-					gain  = powf(gain, tightness);	// (9)
+					Sample gain = (Sample(1) + vector::dot(mSpeakers[i].dir, direction)); // (1)
+					gain = powf(gain, seperation);		// (9)
 					gain *= Sample(0.5);			// (1)
 					gain /= mSpeakers[i].effective;	// (3)
-					gain  = gain * gain;			// (4)
+					gain *= gain;					// (4)
 					result[i] = gain;
 					sumGains += gain;				// (4)
 				}

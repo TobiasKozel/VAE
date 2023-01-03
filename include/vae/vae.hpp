@@ -110,19 +110,19 @@ namespace vae {
 		/**
 		 * @brief Placement of the speakers around the listener used for SPCAP panning
 		 * @details Distance to the listener is not taken into account.
-		 * The subwoofer has no placement.
+		 *          The subwoofer has no position.
 		 */
 		namespace Speakers {
-			constexpr Vector3 center		= {  0, 0, +1 };	///< Used for mono and souround setups (except quadrophonic)
+			constexpr Vector3 center		= {  0, 0, -1 };	///< Used for mono and souround setups (except quadrophonic)
 
 			constexpr Vector3 left			= { -1, 0,  0 };	///< Used in 7.1 and Headphones
 			constexpr Vector3 right			= { +1, 0,  0 };	///< Used in 7.1 and Headphones
 
-			constexpr Vector3 frontLeft		= { -1, 0, +1 };	///< Stereo and suround setups @attention this should be negative but isn't, needs some investigation
-			constexpr Vector3 frontRight	= { +1, 0, +1 };	///< Stereo and suround setups
+			constexpr Vector3 frontLeft		= { -1, 0, -1 };	///< Stereo and suround setups
+			constexpr Vector3 frontRight	= { +1, 0, -1 };	///< Stereo and suround setups
 
-			constexpr Vector3 rearLeft		= { -1, 0, -1 };	///< Sourund setups
-			constexpr Vector3 rearRight		= { +1, 0, -1 };	///< Sourund setups
+			constexpr Vector3 rearLeft		= { -1, 0, +1 };	///< Sourund setups
+			constexpr Vector3 rearRight		= { +1, 0, +1 };	///< Sourund setups
 		}
 	}
 } // namespace vae

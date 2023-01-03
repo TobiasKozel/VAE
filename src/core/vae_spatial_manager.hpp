@@ -36,7 +36,7 @@ namespace vae { namespace core {
 			auto handle = createEmitter();
 			auto& e = *mEmitters.at(handle);
 			e.position = { locDir.position.x, locDir.position.y, locDir.position.z };
-			e.spread = spread;
+			e.separation = spread;
 			e.maxDist = maxDist;
 			e.bank = bank;
 			e.event = event;
@@ -69,7 +69,7 @@ namespace vae { namespace core {
 
 		Result setEmitter(
 			EmitterHandle emitter, const LocationDirection& locDir,
-			Sample spread
+			Sample separation
 		) {
 			TKLB_PROFILER_SCOPE()
 			if (!hasEmitter(emitter)) {
@@ -78,7 +78,7 @@ namespace vae { namespace core {
 			}
 			auto& e = getEmitter(emitter);
 			e.position = { locDir.position.x, locDir.position.y, locDir.position.z };
-			e.spread = spread;
+			e.separation = separation;
 			return Result::Success;
 		}
 

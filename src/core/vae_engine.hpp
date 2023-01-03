@@ -633,9 +633,9 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API setEmitter(
-			EmitterHandle emitter, const LocationDirection& locDir, float spread
+			EmitterHandle emitter, const LocationDirection& locDir, float separation
 		) {
-			return mSpatialManager.setEmitter(emitter, locDir, spread);
+			return mSpatialManager.setEmitter(emitter, locDir, separation);
 		}
 
 		/**

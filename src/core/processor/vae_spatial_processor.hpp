@@ -94,14 +94,9 @@ namespace vae { namespace core {
 					// samething as graphics, make the world rotate round the listener
 					// TODO this should be possible without a 4x4 matrix?
 					const auto& lookAt = vector::lookAt(
-						l.position, vector::add(l.position, l.front), l.up);
+						vector::add(l.position, l.front), l.position, l.up);
 					// listener is the world origin now
 					relativeDirection = vector::multiply(lookAt, emitter.position);
-
-					printf("%f\t%f\t%f\n",
-						l.position.x - emitter.position.x,
-						l.position.y - emitter.position.y,
-						l.position.z - emitter.position.z);
 
 					// Distance with "near plane" at 0.1
 					const Real distance = tklb::max(vector::length(relativeDirection), 0.1f);
@@ -122,7 +117,7 @@ namespace vae { namespace core {
 					// TODO maybe progress still progress time?
 				}
 				actuallyRendered++;
-				target.setValidSize(frames); // mark mtarget ixer as active
+				target.setValidSize(frames); // mark target mixer as active
 				v.audible = true;
 
 				// * Filtering and looping logic
@@ -259,7 +254,7 @@ namespace vae { namespace core {
 						constexpr Size channels = Size(StaticConfig::MaxChannels);
 						panner.pan(
 							relativeDirection, currentVolumes,
-							distanceAttenuated, emitter.spread
+							distanceAttenuated, emitter.separation
 						);
 
 						if (!v.started) {
