@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------
 name: "reverb"
 Code generated with Faust 2.54.9 (https://faust.grame.fr)
-Compilation options: -a /home/usr/git/sound-engine/VAEG/VAE/src/core/dsp/vae_faust_arch.hpp -lang cpp -i -cm -mapp -cn Reverb -scn FaustBase -es 1 -exp10 -mcd 16 -single -ftz 0 -vec -lv 0 -vs 32
+Compilation options: -a /home/usr/git/audio/VAEG/VAE/src/core/dsp/vae_faust_arch.hpp -lang cpp -i -cm -mapp -cn Reverb -scn FaustBase -es 1 -exp10 -mcd 16 -single -ftz 0 -vec -lv 0 -vs 32
 ------------------------------------------------------------ */
 
 #ifndef  __Reverb_H__
@@ -45,7 +45,7 @@ static float Reverb_faustpower2_f(float value) {
 	return value * value;
 }
 
-class Reverb : public FaustBase {
+class Reverb final : public FaustBase {
 	
  private:
 	
@@ -183,7 +183,7 @@ class Reverb : public FaustBase {
 	void metadata(Meta* m) { 
 		m->declare("basics.lib/name", "Faust Basic Element Library");
 		m->declare("basics.lib/version", "0.9");
-		m->declare("compile_options", "-a /home/usr/git/sound-engine/VAEG/VAE/src/core/dsp/vae_faust_arch.hpp -lang cpp -i -cm -mapp -cn Reverb -scn FaustBase -es 1 -exp10 -mcd 16 -single -ftz 0 -vec -lv 0 -vs 32");
+		m->declare("compile_options", "-a /home/usr/git/audio/VAEG/VAE/src/core/dsp/vae_faust_arch.hpp -lang cpp -i -cm -mapp -cn Reverb -scn FaustBase -es 1 -exp10 -mcd 16 -single -ftz 0 -vec -lv 0 -vs 32");
 		m->declare("delays.lib/name", "Faust Delay Library");
 		m->declare("delays.lib/version", "0.1");
 		m->declare("filename", "reverb.dsp");
@@ -220,17 +220,23 @@ class Reverb : public FaustBase {
 		m->declare("signals.lib/version", "0.3");
 	}
 
-	virtual int getNumInputs() {
+	static constexpr int getStaticNumInputs() {
 		return 2;
 	}
-	virtual int getNumOutputs() {
+	static constexpr int getStaticNumOutputs() {
+		return 2;
+	}
+	int getNumInputs() {
+		return 2;
+	}
+	int getNumOutputs() {
 		return 2;
 	}
 	
 	static void classInit(int sample_rate) {
 	}
 	
-	virtual void instanceConstants(int sample_rate) {
+	void instanceConstants(int sample_rate) {
 		fSampleRate = sample_rate;
 		float fConst0 = std::min<float>(1.92e+05f, std::max<float>(1.0f, float(fSampleRate)));
 		float fConst1 = 1.0f / std::tan(1570.7964f / fConst0);
@@ -353,14 +359,14 @@ class Reverb : public FaustBase {
 		iConst118 = int(std::min<float>(float(int(std::pow(2.0f, std::max<float>(1.0f, ((fConst116 == fConst117) ? fConst116 : ((fConst116 >= 0.0f) ? fConst117 + 1.0f : fConst117)))))), std::max<float>(0.0f, fConst111 + -1.0f)));
 	}
 	
-	virtual void instanceResetUserInterface() {
+	void instanceResetUserInterface() {
 		fVslider0 = FAUSTFLOAT(1.0f);
 		fVslider1 = FAUSTFLOAT(0.5f);
 		fVslider2 = FAUSTFLOAT(0.5f);
 		fVslider3 = FAUSTFLOAT(0.5f);
 	}
 	
-	virtual void instanceClear() {
+	void instanceClear() {
 		for (int l0 = 0; l0 < 4; l0 = l0 + 1) {
 			fRec1_perm[l0] = 0.0f;
 		}
@@ -573,25 +579,25 @@ class Reverb : public FaustBase {
 		}
 	}
 	
-	virtual void init(int sample_rate) {
+	void init(int sample_rate) {
 		classInit(sample_rate);
 		instanceInit(sample_rate);
 	}
-	virtual void instanceInit(int sample_rate) {
+	void instanceInit(int sample_rate) {
 		instanceConstants(sample_rate);
 		instanceResetUserInterface();
 		instanceClear();
 	}
 	
-	virtual Reverb* clone() {
+	Reverb* clone() {
 		return new Reverb();
 	}
 	
-	virtual int getSampleRate() {
+	int getSampleRate() {
 		return fSampleRate;
 	}
 	
-	virtual void buildUserInterface(UI* ui_interface) {
+	void buildUserInterface(UI* ui_interface) {
 		ui_interface->openVerticalBox("reverb");
 		ui_interface->addVerticalSlider("fb1", &fVslider2, FAUSTFLOAT(0.5f), FAUSTFLOAT(0.0f), FAUSTFLOAT(1.0f), FAUSTFLOAT(0.01f));
 		ui_interface->addVerticalSlider("fb2", &fVslider1, FAUSTFLOAT(0.5f), FAUSTFLOAT(0.0f), FAUSTFLOAT(1.0f), FAUSTFLOAT(0.01f));
@@ -600,7 +606,7 @@ class Reverb : public FaustBase {
 		ui_interface->closeBox();
 	}
 	
-	virtual void compute(int count, FAUSTFLOAT** RESTRICT inputs, FAUSTFLOAT** RESTRICT outputs) {
+	void compute(int count, FAUSTFLOAT** RESTRICT inputs, FAUSTFLOAT** RESTRICT outputs) {
 		FAUSTFLOAT* input0_ptr = inputs[0];
 		FAUSTFLOAT* input1_ptr = inputs[1];
 		FAUSTFLOAT* output0_ptr = outputs[0];
@@ -798,12 +804,7 @@ class Reverb : public FaustBase {
 			for (int i = 0; i < vsize; i = i + 1) {
 				fZec0[i] = std::min<float>(std::max<float>(fRec13[i], 0.02f), 0.97f);
 			}
-			/* Vectorizable loop 3 */
-			/* Compute code */
-			for (int i = 0; i < vsize; i = i + 1) {
-				fZec1[i] = std::exp(fConst8 * (fConst7 / fZec0[i]));
-			}
-			/* Recursive loop 4 */
+			/* Recursive loop 3 */
 			/* Pre code */
 			for (int j16 = 0; j16 < 4; j16 = j16 + 1) {
 				fRec19_tmp[j16] = fRec19_perm[j16];
@@ -815,6 +816,11 @@ class Reverb : public FaustBase {
 			/* Post code */
 			for (int j17 = 0; j17 < 4; j17 = j17 + 1) {
 				fRec19_perm[j17] = fRec19_tmp[vsize + j17];
+			}
+			/* Vectorizable loop 4 */
+			/* Compute code */
+			for (int i = 0; i < vsize; i = i + 1) {
+				fZec1[i] = std::exp(fConst8 * (fConst7 / fZec0[i]));
 			}
 			/* Vectorizable loop 5 */
 			/* Compute code */
@@ -864,25 +870,12 @@ class Reverb : public FaustBase {
 			for (int j1 = 0; j1 < 4; j1 = j1 + 1) {
 				fRec1_perm[j1] = fRec1_tmp[vsize + j1];
 			}
-			/* Recursive loop 13 */
-			/* Pre code */
-			for (int j18 = 0; j18 < 4; j18 = j18 + 1) {
-				fRec18_tmp[j18] = fRec18_perm[j18];
-			}
-			/* Compute code */
-			for (int i = 0; i < vsize; i = i + 1) {
-				fRec18[i] = 0.001f * fRec19[i] + 0.999f * fRec18[i - 1];
-			}
-			/* Post code */
-			for (int j19 = 0; j19 < 4; j19 = j19 + 1) {
-				fRec18_perm[j19] = fRec18_tmp[vsize + j19];
-			}
-			/* Vectorizable loop 14 */
+			/* Vectorizable loop 13 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
 				fZec2[i] = Reverb_faustpower2_f(fZec1[i]);
 			}
-			/* Recursive loop 15 */
+			/* Recursive loop 14 */
 			/* Pre code */
 			for (int j10 = 0; j10 < 4; j10 = j10 + 1) {
 				fRec17_tmp[j10] = fRec17_perm[j10];
@@ -894,6 +887,19 @@ class Reverb : public FaustBase {
 			/* Post code */
 			for (int j11 = 0; j11 < 4; j11 = j11 + 1) {
 				fRec17_perm[j11] = fRec17_tmp[vsize + j11];
+			}
+			/* Recursive loop 15 */
+			/* Pre code */
+			for (int j18 = 0; j18 < 4; j18 = j18 + 1) {
+				fRec18_tmp[j18] = fRec18_perm[j18];
+			}
+			/* Compute code */
+			for (int i = 0; i < vsize; i = i + 1) {
+				fRec18[i] = 0.001f * fRec19[i] + 0.999f * fRec18[i - 1];
+			}
+			/* Post code */
+			for (int j19 = 0; j19 < 4; j19 = j19 + 1) {
+				fRec18_perm[j19] = fRec18_tmp[vsize + j19];
 			}
 			/* Vectorizable loop 16 */
 			/* Compute code */
@@ -946,12 +952,12 @@ class Reverb : public FaustBase {
 			/* Vectorizable loop 24 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
-				fZec4[i] = 1.0f - fConst9 * fZec2[i];
+				fZec3[i] = 1.0f - fZec2[i];
 			}
 			/* Vectorizable loop 25 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
-				fZec3[i] = 1.0f - fZec2[i];
+				fZec4[i] = 1.0f - fConst9 * fZec2[i];
 			}
 			/* Recursive loop 26 */
 			/* Pre code */
@@ -1032,12 +1038,12 @@ class Reverb : public FaustBase {
 			/* Vectorizable loop 38 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
-				fZec38[i] = 1.0f - fConst9 * fZec36[i];
+				fZec37[i] = 1.0f - fZec36[i];
 			}
 			/* Vectorizable loop 39 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
-				fZec37[i] = 1.0f - fZec36[i];
+				fZec38[i] = 1.0f - fConst9 * fZec36[i];
 			}
 			/* Vectorizable loop 40 */
 			/* Compute code */
@@ -1067,12 +1073,12 @@ class Reverb : public FaustBase {
 			/* Vectorizable loop 45 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
-				fZec6[i] = fZec4[i] / fZec3[i];
+				fZec5[i] = std::sqrt(std::max<float>(0.0f, Reverb_faustpower2_f(fZec4[i]) / Reverb_faustpower2_f(fZec3[i]) + -1.0f));
 			}
 			/* Vectorizable loop 46 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
-				fZec5[i] = std::sqrt(std::max<float>(0.0f, Reverb_faustpower2_f(fZec4[i]) / Reverb_faustpower2_f(fZec3[i]) + -1.0f));
+				fZec6[i] = fZec4[i] / fZec3[i];
 			}
 			/* Vectorizable loop 47 */
 			/* Compute code */
@@ -1506,12 +1512,7 @@ class Reverb : public FaustBase {
 			for (int i = 0; i < vsize; i = i + 1) {
 				fZec0[i] = std::min<float>(std::max<float>(fRec13[i], 0.02f), 0.97f);
 			}
-			/* Vectorizable loop 3 */
-			/* Compute code */
-			for (int i = 0; i < vsize; i = i + 1) {
-				fZec1[i] = std::exp(fConst8 * (fConst7 / fZec0[i]));
-			}
-			/* Recursive loop 4 */
+			/* Recursive loop 3 */
 			/* Pre code */
 			for (int j16 = 0; j16 < 4; j16 = j16 + 1) {
 				fRec19_tmp[j16] = fRec19_perm[j16];
@@ -1523,6 +1524,11 @@ class Reverb : public FaustBase {
 			/* Post code */
 			for (int j17 = 0; j17 < 4; j17 = j17 + 1) {
 				fRec19_perm[j17] = fRec19_tmp[vsize + j17];
+			}
+			/* Vectorizable loop 4 */
+			/* Compute code */
+			for (int i = 0; i < vsize; i = i + 1) {
+				fZec1[i] = std::exp(fConst8 * (fConst7 / fZec0[i]));
 			}
 			/* Vectorizable loop 5 */
 			/* Compute code */
@@ -1572,25 +1578,12 @@ class Reverb : public FaustBase {
 			for (int j1 = 0; j1 < 4; j1 = j1 + 1) {
 				fRec1_perm[j1] = fRec1_tmp[vsize + j1];
 			}
-			/* Recursive loop 13 */
-			/* Pre code */
-			for (int j18 = 0; j18 < 4; j18 = j18 + 1) {
-				fRec18_tmp[j18] = fRec18_perm[j18];
-			}
-			/* Compute code */
-			for (int i = 0; i < vsize; i = i + 1) {
-				fRec18[i] = 0.001f * fRec19[i] + 0.999f * fRec18[i - 1];
-			}
-			/* Post code */
-			for (int j19 = 0; j19 < 4; j19 = j19 + 1) {
-				fRec18_perm[j19] = fRec18_tmp[vsize + j19];
-			}
-			/* Vectorizable loop 14 */
+			/* Vectorizable loop 13 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
 				fZec2[i] = Reverb_faustpower2_f(fZec1[i]);
 			}
-			/* Recursive loop 15 */
+			/* Recursive loop 14 */
 			/* Pre code */
 			for (int j10 = 0; j10 < 4; j10 = j10 + 1) {
 				fRec17_tmp[j10] = fRec17_perm[j10];
@@ -1602,6 +1595,19 @@ class Reverb : public FaustBase {
 			/* Post code */
 			for (int j11 = 0; j11 < 4; j11 = j11 + 1) {
 				fRec17_perm[j11] = fRec17_tmp[vsize + j11];
+			}
+			/* Recursive loop 15 */
+			/* Pre code */
+			for (int j18 = 0; j18 < 4; j18 = j18 + 1) {
+				fRec18_tmp[j18] = fRec18_perm[j18];
+			}
+			/* Compute code */
+			for (int i = 0; i < vsize; i = i + 1) {
+				fRec18[i] = 0.001f * fRec19[i] + 0.999f * fRec18[i - 1];
+			}
+			/* Post code */
+			for (int j19 = 0; j19 < 4; j19 = j19 + 1) {
+				fRec18_perm[j19] = fRec18_tmp[vsize + j19];
 			}
 			/* Vectorizable loop 16 */
 			/* Compute code */
@@ -1654,12 +1660,12 @@ class Reverb : public FaustBase {
 			/* Vectorizable loop 24 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
-				fZec4[i] = 1.0f - fConst9 * fZec2[i];
+				fZec3[i] = 1.0f - fZec2[i];
 			}
 			/* Vectorizable loop 25 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
-				fZec3[i] = 1.0f - fZec2[i];
+				fZec4[i] = 1.0f - fConst9 * fZec2[i];
 			}
 			/* Recursive loop 26 */
 			/* Pre code */
@@ -1740,12 +1746,12 @@ class Reverb : public FaustBase {
 			/* Vectorizable loop 38 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
-				fZec38[i] = 1.0f - fConst9 * fZec36[i];
+				fZec37[i] = 1.0f - fZec36[i];
 			}
 			/* Vectorizable loop 39 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
-				fZec37[i] = 1.0f - fZec36[i];
+				fZec38[i] = 1.0f - fConst9 * fZec36[i];
 			}
 			/* Vectorizable loop 40 */
 			/* Compute code */
@@ -1775,12 +1781,12 @@ class Reverb : public FaustBase {
 			/* Vectorizable loop 45 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
-				fZec6[i] = fZec4[i] / fZec3[i];
+				fZec5[i] = std::sqrt(std::max<float>(0.0f, Reverb_faustpower2_f(fZec4[i]) / Reverb_faustpower2_f(fZec3[i]) + -1.0f));
 			}
 			/* Vectorizable loop 46 */
 			/* Compute code */
 			for (int i = 0; i < vsize; i = i + 1) {
-				fZec5[i] = std::sqrt(std::max<float>(0.0f, Reverb_faustpower2_f(fZec4[i]) / Reverb_faustpower2_f(fZec3[i]) + -1.0f));
+				fZec6[i] = fZec4[i] / fZec3[i];
 			}
 			/* Vectorizable loop 47 */
 			/* Compute code */

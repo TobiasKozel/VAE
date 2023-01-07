@@ -150,9 +150,9 @@ namespace vae {
 	 *        OpenGL Coordinate System
 	 */
 	struct Vector3 {
-		Position x;		///< Right
-		Position y;		///< Up
-		Position z;		///< back
+		Position x = 0;		///< Right
+		Position y = 0;		///< Up
+		Position z = 0;		///< back
 	};
 
 	/**

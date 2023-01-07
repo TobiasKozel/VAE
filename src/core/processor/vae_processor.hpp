@@ -8,8 +8,6 @@
 #include "../voices/vae_voice_filter.hpp"
 #include "../voices/vae_voice_pan.hpp"
 #include "../vae_voice_manager.hpp"
-#include <cmath>
-#include <limits>
 
 namespace vae { namespace core {
 	/**
@@ -116,7 +114,7 @@ namespace vae { namespace core {
 					}
 
 					// fractional time, we need the value after the loop, so it's defined outside
-					Real position;
+					Real position = 0;
 
 					// Playback speed taking samplerate into account
 					const Real speed = fd.speed * (Sample(signal.sampleRate) / Sample(sampleRate));
@@ -163,8 +161,6 @@ namespace vae { namespace core {
 			return actuallyRendered;
 		}
 	};
-
-	constexpr int __ProcessorSize = sizeof(Processor);
 
 } } // vae::core
 

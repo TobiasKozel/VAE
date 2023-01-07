@@ -7,7 +7,6 @@
 #include "../voices/vae_voice_hrtf.hpp"
 #include "./vae_vec.hpp"
 #include "./vae_vec.hpp"
-#include <limits>
 
 namespace vae { namespace core {
 	struct HRTFUtil {
@@ -18,10 +17,10 @@ namespace vae { namespace core {
 		 * @param direction
 		 * @return Size
 		 */
-		static inline Size closest(const HRTF& hrtf, const vector::Vec3& direction) {
+		static inline Size closest(const HRTF& hrtf, const Vector3& direction) {
 			// TODO this is obviously bad
 			TKLB_PROFILER_SCOPE_NAMED("Search HRTF")
-			Position closest = std::numeric_limits<Position>::max();
+			Position closest = tklb::limits::max<Position>::value;
 			Size closestIndex = ~0;
 			for (Size i = 0; i < hrtf.positions.size(); i++) {
 				const auto& pos = hrtf.positions[i];

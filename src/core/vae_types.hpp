@@ -77,5 +77,4 @@ namespace vae { namespace core {
 
 } } // namespace vae::core
 
-
 #endif // _VAE_TYPES

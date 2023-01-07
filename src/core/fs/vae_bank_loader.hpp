@@ -19,16 +19,18 @@
 
 namespace vae { namespace core {
 	class BankLoader {
-		static void* allocate(size_t size, int zero, void* context) {
+		static void* allocate(SizeT size, int zero, void* context) {
+			(void) context;
 			memory::AllocatorFS<char> allocator;
-			void* ptr = reinterpret_cast<void*>(allocator.allocate(size));
+			const auto memory = allocator.allocate(size);
 			if (zero) {
-				memset(ptr, 0, size);
+				tklb::memory::set<char>(memory, size, 0);
 			}
-			return ptr;
+			return reinterpret_cast<void*>(memory);
 		}
 
 		static void deallocate(void* ptr, void* context) {
+			(void) context;
 			memory::AllocatorFS<char> allocator;
 			allocator.deallocate(reinterpret_cast<char*>(ptr), 0);
 		}
@@ -234,7 +236,7 @@ namespace vae { namespace core {
 							TKLB_ERROR("Event %i:%i has too many chained chained_events events.", id, bank.id)
 							return Result::TooManyRecords;
 						}
-						for (size_t j = 0; j < onStart.length; j++) {
+						for (SizeT j = 0; j < onStart.length; j++) {
 							e.chained_events[j] = (json_int_t) (*onStart.values[j]);
 						}
 					}

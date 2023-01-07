@@ -7,9 +7,9 @@
 
 namespace vae { namespace core {
 	struct Listener {
-		vector::Vec3 position;
-		vector::Vec3 front;
-		vector::Vec3 up;
+		Vector3 position;
+		Vector3 front;
+		Vector3 up;
 		ListenerHandle id = InvalidListenerHandle;
 		/**
 		 * ! Listeners all mix to the same mixer channels and have the same configuration

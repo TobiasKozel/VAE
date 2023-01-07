@@ -7,10 +7,10 @@
 #include "../pod/vae_source.hpp"
 
 #ifndef VAE_NO_WAV
-	#include "../../../external/tklb/src/types/audio/TWaveFile.hpp"
+	#include "../../../external/tklb/src/types/audio/TWave.hpp"
 #endif
 #ifndef VAE_NO_OGG
-	#include "../../../external/tklb/src/types/audio/TOggFile.hpp"
+	#include "../../../external/tklb/src/types/audio/TVorbis.hpp"
 #endif // VAE_NO_OGG
 
 #include "../../wrapped/vae_fs.hpp"
@@ -27,19 +27,17 @@ namespace vae { namespace core {
 			String joinedPath;
 			const char* data = s.path.c_str();
 			Size length = 0;
-			if (!s.raw) {
+			if (s.raw) {
+				length = s.path.size();
+			} else {
 				joinedPath = path;
 				joinedPath.append(s.path);
 				data = joinedPath.c_str();
-			#ifdef VAE_NO_STDIO
 				fs::File file(data);
 				length = file.size();
 				joinedPath.reserve(length);
 				if (!file.readAll(joinedPath.data())) { return Result::FileOpenError; }
 				data = joinedPath.data();
-			#endif
-			} else {
-				length = s.path.size();
 			}
 
 			if (!s.stream) {
@@ -48,7 +46,7 @@ namespace vae { namespace core {
 					return Result::FeatureNotCompiled;
 				#else
 					TKLB_PROFILER_SCOPE_NAMED("Load wav")
-					bool success = tklb::wave::load<Sample, AudioBuffer>(data, s.signal, length);
+					bool success = tklb::wave::load<Sample, AudioBuffer>(data, length, s.signal);
 					return success ? Result::Success : Result::GenericFailure;
 				#endif
 				} else if (s.format == Source::Format::ogg) {
@@ -56,11 +54,11 @@ namespace vae { namespace core {
 					return Result::FeatureNotCompiled;
 				#else
 					TKLB_PROFILER_SCOPE_NAMED("Load ogg")
-					auto result = tklb::ogg::load<Sample, AudioBuffer>(data, s.signal, length);
+					auto result = tklb::vorbis::load<Sample, AudioBuffer>(data, length, s.signal);
 					return result ? Result::Success : Result::GenericFailure;
 				#endif
 				}
-				return Result::GenericFailure; // what format is this?
+				return Result::UnsupportedFormat;
 			}
 			// TODO STREAM
 			return Result::GenericFailure;

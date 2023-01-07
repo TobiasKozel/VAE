@@ -107,7 +107,7 @@ namespace vae { namespace core {
 				}
 
 				// clamp to max processable size, the preallocated scratch buffers can't take any larger blocks
-				remaining = std::min(remaining, StaticConfig::MaxBlock);
+				remaining = tklb::min(remaining, StaticConfig::MaxBlock);
 
 				mScratchBuffer.setValidSize(remaining);
 
@@ -135,15 +135,15 @@ namespace vae { namespace core {
 					TKLB_PROFILER_SCOPE_NAMED("Peak limiting")
 					// Shitty peak limiter
 					mLimiterLastPeak *= Sample(0.99); // return to normal slowly
-					mLimiterLastPeak = std::max(Sample(1.0), mLimiterLastPeak);
+					mLimiterLastPeak = tklb::max(Sample(1.0), mLimiterLastPeak);
 					Sample currentPeak = 0;
 					for (Uchar c = 0; c < mScratchBuffer.channels(); c++) {
 						for (Size i = 0; i < remaining; i++) {
-							currentPeak = std::max(currentPeak, mScratchBuffer[c][i]);
+							currentPeak = tklb::max(currentPeak, mScratchBuffer[c][i]);
 						}
 					}
 					currentPeak *= mMasterVolume; // pretend we already applied the master volume
-					mLimiterLastPeak = std::max(mLimiterLastPeak, currentPeak);
+					mLimiterLastPeak = tklb::max(mLimiterLastPeak, currentPeak);
 					mLimiterLastPeak += Sample(0.05); // add a little extra so we really stay away from clipping
 				}
 				const Sample gain = mMasterVolume / mLimiterLastPeak; // this can be higher than 1 one but the result can't
@@ -278,7 +278,7 @@ namespace vae { namespace core {
 				TKLB_PROFILER_SCOPE_NAMED("Device Instance")
 				if (mDevice->openDevice()) {
 					// This isn't pretty but we don't know the channel count
-					const auto channels = std::max(mDevice->getChannelsIn(), mDevice->getChannelsOut());
+					const auto channels = tklb::max(mDevice->getChannelsIn(), mDevice->getChannelsOut());
 					mScratchBuffer.resize(StaticConfig::MaxBlock, channels);
 					return Result::Success;
 				}
@@ -355,10 +355,19 @@ namespace vae { namespace core {
 			TKLB_PROFILER_FRAME_MARK_END(profiler::audioFrame)
 		}
 
-	#ifdef VAE_NO_AUDIO_DEVICE
-		// TODO merge this with the private process function
+		#ifdef VAE_NO_AUDIO_DEVICE
+		/**
+		 * @brief This can be used when not using an audio device at all
+		          to directly drive the audio callback.
+		 *        TODO merge this with the private process function
+		 * @tparam T any sample type
+		 * @param frames Number of audio frames to process. Can be more than
+		 *               StaticConfig::MaxBlock since it'll break chunk it.
+		 * @param channels Number of Channels
+		 * @param output 1D array with all the audio channels interleaved
+		 */
 		template <typename T>
-		void process(const SampleIndex frames, T* output, int channels) {
+		void process(const SampleIndex frames, int channels, T* output) {
 			SampleIndex time = 0;
 			while (time < frames) {
 				// clamp to max processable size, the preallocated scratch buffers can't take any larger blocks
@@ -386,7 +395,7 @@ namespace vae { namespace core {
 				time += remaining;
 			}
 		}
-	#endif // VAE_NO_AUDIO_DEVICE
+		#endif // VAE_NO_AUDIO_DEVICE
 
 		/**
 		 * @brief Main mechanism to start and stop sounds
@@ -430,7 +439,7 @@ namespace vae { namespace core {
 
 			auto& event = bank.events[eventHandle];
 
-			Result result;
+			Result result = Result::Success;
 
 			switch (event.action) {
 			case Event::Action::start:
@@ -492,7 +501,6 @@ namespace vae { namespace core {
 				VAE_DEBUG_EVENT("Event %i:%i emits event", eventHandle, bankHandle)
 				if (mConfig.eventCallback != nullptr) {
 					EventCallbackData data;
-					constexpr int as = sizeof(data);
 					data.context = mConfig.eventCallbackContext;
 					data.bank = bankHandle;
 					data.event = eventHandle;
@@ -583,7 +591,6 @@ namespace vae { namespace core {
 
 		///@}
 
-#pragma region emitter
 
 		/** @name Emitter manipulation
 		 * Contains everything related to emitter creation and basic manipulation of voices started from them
@@ -693,7 +700,6 @@ namespace vae { namespace core {
 		}
 
 		///@}
-#pragma endregion emitter
 
 		/**
 		 * @brief Set the Mixer Volume
@@ -742,13 +748,8 @@ namespace vae { namespace core {
 			p.value = value;
 			return Result::Success;
 		}
-#pragma region mixer
 
 
-
-#pragma endregion emitter
-
-#pragma region listener
 
 		/**
 		 * @brief Create a Listener object
@@ -790,10 +791,7 @@ namespace vae { namespace core {
 			);
 		}
 
-#pragma endregion listsner
 
-
-#pragma region bank_handling
 
 		/** @name Ressource Management
 		 * Everything related to Bank and other ressource loading/unloading
@@ -881,7 +879,6 @@ namespace vae { namespace core {
 		}
 
 		///@}
-#pragma endregion bank_handling
 
 
 	}; // Engine class

@@ -3,7 +3,6 @@
 
 #include "../vae_types.hpp"
 #include "../vae_config.hpp"
-#include <limits>
 
 namespace vae { namespace core {
 	/**
@@ -45,8 +44,6 @@ namespace vae { namespace core {
 			attenuate = false;
 		}
 	};
-
-	constexpr int _VAE_VOICE_SIZE = sizeof(Voice);
 } } // core::vae
 
 #endif // _VAE_VOICE

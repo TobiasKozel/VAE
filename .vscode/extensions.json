@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "llvm-vs-code-extensions.vscode-clangd",
+        "twxs.cmake",
+        "ms-vscode.cmake-tools",
+        "vadimcn.vscode-lldb",
+        "editorconfig.editorconfig",
+        "cschlosser.doxdocgen"
+    ]
+}

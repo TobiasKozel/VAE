@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <cmath>
-
+// #include <new>
 #define VAE_IMPL
+// #define TKLB_NO_STDLIB
+// #define TKLB_NO_LOG
 #include "../src/core/algo/vae_spcap.hpp"
 
 
@@ -44,5 +46,7 @@ void testStereo() {
 int main() {
 	// testStereo();
 	test51();
+	// vae::Sample p[2];
+	// vae::core::SPCAP::StereroSPCAP.pan({ (float)sin(0.3), 0, (float)cos(0.3) }, p, 1.0, 1.0);
 	return 0;
 }

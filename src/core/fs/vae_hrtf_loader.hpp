@@ -20,6 +20,7 @@
 namespace vae { namespace core {
 	class HRTFLoader {
 		static void* allocate(size_t size, int zero, void* context) {
+			(void) context;
 			memory::AllocatorFS<char> allocator;
 			void* ptr = reinterpret_cast<void*>(allocator.allocate(size));
 			if (zero) {
@@ -29,6 +30,7 @@ namespace vae { namespace core {
 		}
 
 		static void deallocate(void* ptr, void* context) {
+			(void) context;
 			memory::AllocatorFS<char> allocator;
 			allocator.deallocate(reinterpret_cast<char*>(ptr), 0);
 		}
@@ -80,21 +82,21 @@ namespace vae { namespace core {
 			hrtf.rate = sampleRate;
 			hrtf.originalRate = (json_int_t) data["samplerate"];
 
-			vector::Vec3 up = {
+			Vector3 up = {
 				float((double) data["up"][0]),
 				float((double) data["up"][1]),
 				float((double) data["up"][2]),
 			};
 
-			vector::Vec3 front = {
+			Vector3 front = {
 				float((double) data["front"][0]),
 				float((double) data["front"][1]),
 				float((double) data["front"][2]),
 			};
 
-			LocationOrientation ref;
-			vector::Vec3 frontNeed = { ref.front.x, ref.front.y, ref.front.z };
-			vector::Vec3 upNeed = { ref.up.x, ref.up.y, ref.up.z };
+			// LocationOrientation ref;
+			// Vector3 frontNeed = { ref.front.x, ref.front.y, ref.front.z };
+			// Vector3 upNeed = { ref.up.x, ref.up.y, ref.up.z };
 
 			vector::Mat4x4 matchCoord = vector::lookAt(
 				{ 0, 0, 0 },
@@ -102,8 +104,8 @@ namespace vae { namespace core {
 				up
 			);
 
-			vector::Vec3 up1 = vector::multiply(matchCoord, up);
-			vector::Vec3 front1 = vector::multiply(matchCoord, front);
+			// Vector3 up1 = vector::multiply(matchCoord, up);
+			// Vector3 front1 = vector::multiply(matchCoord, front);
 			// These should match upNeed
 
 			auto& positions = data["positions"].u.array;
@@ -123,7 +125,11 @@ namespace vae { namespace core {
 				for (Size i = 0; i < positionCount; i++) {
 					HRTF::Position& p = hrtf.positions[i];
 					auto& pi = *positions.values[i];
-					vector::Vec3 pos((double) pi["x"], (double)pi["y"], (double)pi["z"]);
+					Vector3 pos = {
+						static_cast<Position>((double) pi["x"]),
+						static_cast<Position>((double) pi["y"]),
+						static_cast<Position>((double) pi["z"])
+					};
 					p.pos = vector::multiply(matchCoord, pos);
 					json_value irSamples[2] = { pi["left"], pi["right"]};
 					const Size irLength = irSamples[0].u.array.length;

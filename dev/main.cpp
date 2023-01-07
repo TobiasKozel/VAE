@@ -1,8 +1,7 @@
-#include "vae/vae_type_defs.hpp"
 #define VAE_FORCE_LOG
 #define VAE_IMPL
-
-#include "vae/vae.hpp" // harmless public vae header
+#define VAE_NO_SIMD
+#include "../include/vae/vae.hpp" // harmless public vae header
 #include <cstdlib>
 #include <stdio.h>
 #include <thread>
@@ -12,11 +11,11 @@
 using namespace vae;
 
 void eventTriggered(const EventCallbackData* data) {
+	(void) data;
 	// printf("callback event %ifrom bank %i\n", (int) data->event, (int) data->bank);
 }
 
 
-constexpr int test = sizeof(core::Engine);
 constexpr int rate = 48000;
 // constexpr int rate = 44100;
 const double step = 1.0 / double(rate);

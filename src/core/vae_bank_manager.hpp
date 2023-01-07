@@ -39,6 +39,8 @@ namespace vae { namespace core {
 		 * @param sampleRate
 		 */
 		void init(const char* rootPath, int sampleRate) {
+			(void) rootPath;
+			(void) sampleRate;
 			TKLB_PROFILER_SCOPE_NAMED("Bankmanager Init")
 			for (auto& i : mBanks) {
 				if (i.id != InvalidBankHandle) { continue; }
@@ -110,7 +112,7 @@ namespace vae { namespace core {
 
 			{
 				Lock l(mMutex);
-				if (mBanks.size() < bank.id + 1) {
+				if (mBanks.size() < Size(bank.id + 1)) {
 					mBanks.resize(bank.id + 1);
 				}
 				mBanks[bank.id] = std::move(bank);

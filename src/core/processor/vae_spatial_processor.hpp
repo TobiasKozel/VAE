@@ -86,7 +86,7 @@ namespace vae { namespace core {
 				auto& l = spatial.getListeners()[v.listener];
 
 				Real distanceAttenuated;
-				vector::Vec3 relativeDirection;
+				Vector3 relativeDirection;
 				// * Attenuation calculation
 				{
 					TKLB_PROFILER_SCOPE_NAMED("Attenuation calculation")
@@ -151,7 +151,7 @@ namespace vae { namespace core {
 					}
 
 					// fractional time, we need the value after the loop, so it's defined outside
-					Real position;
+					Real position = 0;
 					for (SampleIndex s = 0; s < frames; s++) {
 						// Linear interpolation between two samples
 						position = v.time + (s * speed) + fd.timeFract;
@@ -264,7 +264,6 @@ namespace vae { namespace core {
 							}
 						}
 						TKLB_PROFILER_SCOPE_NAMED("Apply SPCAP")
-						Sample t = 0;
 						for (SampleIndex s = 0; s < remaining; s++) {
 							const Sample sample = in[s];
 							// lerp between last and current channel volumes
@@ -273,17 +272,16 @@ namespace vae { namespace core {
 								// target[c][s] += sample * (lastVolumes[c] + t * (currentVolumes[c] - lastVolumes[c]));
 								target[c][s] += sample * currentVolumes[c];
 							}
-							t += Sample(1) / Sample(frames);
 						}
 					};
 
 					switch (l.configuration) {
-						case SpeakerConfiguration::HRTF:
 						case SpeakerConfiguration::Headphones:		pan(SPCAP::HeadphoneSPCAP);	break;
 						case SpeakerConfiguration::Stereo:			pan(SPCAP::StereroSPCAP);	break;
 						case SpeakerConfiguration::Suround:			pan(SPCAP::SuroundSPCAP);	break;
 						case SpeakerConfiguration::Quadrophonic:	pan(SPCAP::QuadSPCAP);		break;
 						case SpeakerConfiguration::Mono:			pan(SPCAP::MonoSPCAP);		break;
+						default: break;
 					}
 
 					lastPan = std::move(currentPan);

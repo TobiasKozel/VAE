@@ -9,7 +9,7 @@ namespace vae { namespace core {
 	 * @details Also can trigger a event if a listener is closer than maxDist.
 	 */
 	struct Emitter {
-		vector::Vec3 position = { 0, 0, 0 };
+		Vector3 position = { };
 		Real separation = 1.0;					///< how much seperation between speaker will be when applying the panning law
 		Real maxDist = 100;						///< if event is valid/positive, it will be emitted once the emitter is closer
 		EventHandle event = InvalidEventHandle;	///< Will be triggerd when listener enters max dist

@@ -3,7 +3,6 @@
 
 #include "../vae_types.hpp"
 #include "../vae_config.hpp"
-#include <limits>
 
 namespace vae { namespace core {
 	/**
@@ -26,8 +25,6 @@ namespace vae { namespace core {
 			}
 		}
 	};
-
-	constexpr int _VAE_VOICE_FILTER_FILTERED_SIZE = sizeof(VoiceFilter);
 
 } } // core::vae
 

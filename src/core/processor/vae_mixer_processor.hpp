@@ -27,7 +27,8 @@ namespace vae { namespace core {
 		) {
 			TKLB_PROFILER_SCOPE_NAMED("Bank Mixer Processor")
 			TKLB_ASSERT(!bank.mixers.empty()) // can't happen
-
+			(void) frames;
+			(void) manager;
 			/**
 			 * mix all non master mixers
 			 * start from back since mixer can only write to mixer with

@@ -15,7 +15,7 @@ option(VAE_PROFILER "Use profiler" OFF)
 option(VAE_BACKEND_PORTAUDIO "Compile with port audio" OFF)
 option(VAE_BACKEND_RTAUDIO "Compile with RtAudio" ON)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 14) # needed for constexpr math
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed for clang
@@ -80,13 +80,14 @@ endif()
 source_group("core" FILES ${SRC_CORE})
 
 # TODO there are a lot of warnings to take care of
-# if (MSVC)
-# 	# warning level 4 and all warnings as errors
-# 	add_compile_options(/W4 /WX)
-# else()
-# 	# lots of warnings and all warnings as errors
-# 	add_compile_options(-Wall -Wextra -pedantic -Werror)
-# endif()
+if (MSVC)
+	# warning level 4 and all warnings as errors
+	add_compile_options(/W4 /WX)
+else()
+	# Enable all warnings
+	# -Werror -Wextra
+	add_compile_options(-Wall  -pedantic )
+endif()
 
 
 

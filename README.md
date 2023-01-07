@@ -76,7 +76,7 @@ Alternatively you can add it as subproject to CMAKE and statically link the engi
 - Streaming
 - Split up pod data and internal data structures so they can be exposed to the public API as well.
 - LFE (Subwoofer) Channel
-- Emitter emittsion patterns
+- Emitter emission patterns(cone, etc)
 - More generic parameter controls and smoothing
 - Send Mixer effects
 - progress virtual voices and kill them so they don't pile up
@@ -85,6 +85,7 @@ Alternatively you can add it as subproject to CMAKE and statically link the engi
 - Automation
 - Faster HRTF (currently in time domain and about 80 times slower than a normal voice)
 - HRTF interoplation needed for fast movements
+- Multi device support, which needs per device mixer hirarchy
 - Some sort of basic authoring tool
 - Geometry and material system for obstruction and reverb zones
 

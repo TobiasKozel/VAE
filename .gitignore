@@ -6,7 +6,6 @@
 *.ilk
 *.exp
 *.pdb
-.vscode
 *.sln
 *.vcxproj
 *.vcxproj.*

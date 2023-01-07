@@ -169,7 +169,7 @@ namespace vae { namespace core {
 		template <class Callback>
 		void update(VoiceManger& manager, Callback callback) {
 			TKLB_PROFILER_SCOPE_NAMED("Spatial Update")
-
+			(void) manager;
 			// TODO perf maybe swap loops
 			// This triggers nearby auto emitters
 			forListeners(AllListeners, [&](Listener& l) {
@@ -190,8 +190,6 @@ namespace vae { namespace core {
 			});
 		}
 	};
-
-	constexpr int _VAE_SIZE_SPATIAL_MANAGER = sizeof(SpatialManager);
 
 } } // vae::core
 

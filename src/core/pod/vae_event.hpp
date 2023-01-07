@@ -12,7 +12,7 @@ namespace vae { namespace core {
 	 * @brief An Event is used to control most of the eingines behavior.
 	 */
 	struct Event {
-		enum class Action {
+		enum class Action : unsigned int {
 			start = 0,		///< Starts a source if defined and every Event in chained_events
 			stop,			///< Stops a source if defined and stops every voice started from a event in chained_events
 			emit,			///< Emits an event to the EventCallback defined in the engine config

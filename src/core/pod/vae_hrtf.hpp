@@ -8,7 +8,7 @@
 namespace vae { namespace core {
 	struct HRTF {
 		struct Position {
-			vector::Vec3 pos;
+			Vector3 pos = { };
 			AudioBuffer ir[2];	///< Impulse response needed for the convolution
 		};
 		HeapBuffer<Position> positions;

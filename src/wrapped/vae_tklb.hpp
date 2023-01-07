@@ -16,10 +16,6 @@
 	#define TKLB_NO_SIMD
 #endif
 
-#ifdef VAE_NO_STDIO
-	#define TKLB_NO_STDIO
-#endif
-
 #ifdef VAE_NO_STDLIB
 	#define TKLB_NO_STDLIB
 #endif
@@ -43,22 +39,21 @@
 #include "../../external/tklb/src/types/TMutex.hpp"
 
 namespace vae { namespace core {
+	using SizeT = tklb::SizeT;
+	using Lock = tklb::Mutex::Lock;
+	using Mutex = tklb::Mutex;
 	namespace memory {
 		template <class T, class NAME>
 		using DefaultAllocator = tklb::DefaultAllocator<T, NAME>;
 
-		constexpr size_t DEFAULT_ALIGNMENT = tklb::DEFAULT_ALIGNMENT;
+		constexpr SizeT DEFAULT_ALIGNMENT = tklb::DEFAULT_ALIGNMENT;
 
-		template <typename T,size_t ALIGNMENT,class ALLOCATOR,typename SIZE>
+		template <typename T,SizeT ALIGNMENT,class ALLOCATOR,typename SIZE>
 		using HeapBuffer = tklb::HeapBuffer<T, ALIGNMENT, ALLOCATOR, SIZE>;
 
 		template<typename T, typename Handle, class ALLOCATOR>
 		using HandleBuffer = tklb::HandleBuffer<T, Handle, 8, ALLOCATOR>;
-
 	}
-
-	using Lock = tklb::Mutex::Lock;
-	using Mutex = tklb::Mutex;
 
 } } // vae::core
 

@@ -21,7 +21,8 @@ namespace vae {
 		DuplicateEmitter,			///< Trying to register emitter twice
 		InvalidBank,				///< Valid bank handle needed
 		InvalidEmitter,				///< Emitter probably wasn't registered
-		FeatureNotCompiled			///< Codec or other feature not included in binary
+		FeatureNotCompiled,			///< Codec or other feature not included in binary
+		UnsupportedFormat			///< Tried to load a unknown (audio) format
 	};
 
 	/**
@@ -39,7 +40,7 @@ namespace vae {
 	 * @brief Speaker setup for a listener.
 	 *        ! Adding to this will need all bitfields which use it adjusted !
 	 */
-	enum class SpeakerConfiguration {
+	enum class SpeakerConfiguration : unsigned int {
 		Mono = 0,
 		Headphones,
 		Stereo,

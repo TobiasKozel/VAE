@@ -12,7 +12,7 @@
 #ifndef _VAE_FS
 #define _VAE_FS
 
-#include <stddef.h>
+#include "./vae_tklb.hpp"
 
 /**
  * @brief Open a file handle
@@ -25,26 +25,27 @@ void* vae_file_open(const char* path, const char* mode);
 /**
  * @brief Seek and return current position
  * @param file
+ * @param idk
  * @param seek
- * @return size_t TODO bytes read head moved?
+ * @return SizeT TODO bytes read head moved?
  */
-size_t vae_file_seek(void* file, size_t, int seek);
+vae::core::SizeT vae_file_seek(void* file, vae::core::SizeT idk, int seek);
 
 /**
  * @brief Read number of bytes from current position into buffer
  * @param dest
  * @param size
  * @param file File handle
- * @return size_t TODO bytes read?
+ * @return SizeT TODO bytes read?
  */
-size_t vae_file_read(char* dest, size_t size, int, void* file);
+vae::core::SizeT vae_file_read(char* dest, vae::core::SizeT size, int, void* file);
 
 /**
  * @brief Close file
  * @param file File Handle
- * @return size_t TODO Success code
+ * @return SizeT TODO Success code
  */
-size_t vae_file_close(void* file);
+vae::core::SizeT vae_file_close(void* file);
 
 #if !defined(VAE_NO_STDIO)
 	// Direct the calls to the cstd if allowed
@@ -54,16 +55,16 @@ size_t vae_file_close(void* file);
 			return fopen(path, mode);
 		}
 
-		size_t vae_file_seek(void* file, size_t offset, int seek) {
+		vae::core::SizeT vae_file_seek(void* file, vae::core::SizeT offset, int seek) {
 			fseek((FILE*) file, offset, seek);
 			return ftell((FILE*) file);
 		}
 
-		size_t vae_file_read(char* dest, size_t size, int, void* file) {
+		vae::core::SizeT vae_file_read(char* dest, vae::core::SizeT size, int, void* file) {
 			return fread(dest, size, 1, (FILE*) file);
 		}
 
-		size_t vae_file_close(void* file) {
+		vae::core::SizeT vae_file_close(void* file) {
 			return fclose((FILE*) file);
 		}
 	#endif // VAE_IMPL
@@ -72,7 +73,7 @@ size_t vae_file_close(void* file);
 namespace vae { namespace core { namespace fs {
 	class File {
 		void* mHandle = nullptr;
-		size_t mSize = 0;
+		SizeT mSize = 0;
 		enum class Seek {
 	#ifdef VAE_NO_STDIO
 			set = 0, cur, end
@@ -89,7 +90,7 @@ namespace vae { namespace core { namespace fs {
 
 		File(const char* path, Mode mode = Mode::Read) {
 			const char* MODES[3] = { "r", "w", "rw" };
-			mHandle = vae_file_open(path, MODES[(size_t) mode]);
+			mHandle = vae_file_open(path, MODES[(SizeT) mode]);
 			if (mHandle == 0) { return; }
 			mSize = vae_file_seek(mHandle, 0L, (int) Seek::end);
 			vae_file_seek(mHandle, 0L, (int) Seek::set);
@@ -97,7 +98,7 @@ namespace vae { namespace core { namespace fs {
 
 		bool valid() const { return mHandle != nullptr; }
 
-		size_t size() {
+		SizeT size() {
 			if (mHandle == nullptr) { return 0; }
 			return mSize;
 		}

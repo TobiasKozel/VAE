@@ -3,8 +3,6 @@
 
 #include "../vae_types.hpp"
 
-#include <stddef.h>
-
 namespace vae { namespace core {
 	/**
 	 * @brief Represents a source to play audio from
@@ -16,7 +14,7 @@ namespace vae { namespace core {
 		bool resample VAE_SMALL(1);		///< Whether the sound will be resampled when loading it
 		bool raw VAE_SMALL(1);			///< The data in path is a data buffer TODO not used
 
-		enum class Format {
+		enum class Format : unsigned int {
 			wav,			///< Uses dr_wav to decode wavs
 			ogg,			///< Uses stb_vorbis to decode oggs
 			generator		///< Not implemented
