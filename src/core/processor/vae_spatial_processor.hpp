@@ -284,7 +284,7 @@ namespace vae { namespace core {
 						default: break;
 					}
 
-					lastPan = std::move(currentPan);
+					lastPan = tklb::traits::move(currentPan);
 				}
 				v.started = true;
 				if (finished) {

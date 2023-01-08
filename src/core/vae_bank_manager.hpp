@@ -115,7 +115,7 @@ namespace vae { namespace core {
 				if (mBanks.size() < Size(bank.id + 1)) {
 					mBanks.resize(bank.id + 1);
 				}
-				mBanks[bank.id] = std::move(bank);
+				mBanks[bank.id] = tklb::traits::move(bank);
 			}
 			TKLB_INFO("Bank %s loaded.", mBanks[bank.id].name.c_str())
 			return Result::Success;
@@ -131,7 +131,7 @@ namespace vae { namespace core {
 			if (bank.sources.size() <= source.id) {
 				bank.sources.resize(source.id + 1);
 			}
-			bank.sources[source.id] = std::move(source);
+			bank.sources[source.id] = tklb::traits::move(source);
 			return Result::Success;
 		}
 
@@ -142,7 +142,7 @@ namespace vae { namespace core {
 			if (bank.events.size() <= event.id) {
 				bank.events.resize(event.id + 1);
 			}
-			bank.events[event.id] = std::move(event);
+			bank.events[event.id] = tklb::traits::move(event);
 			return Result::Success;
 		}
 
@@ -155,7 +155,7 @@ namespace vae { namespace core {
 			if (bank.mixers.size() <= mixer.id) {
 				bank.mixers.resize(mixer.id + 1);
 			}
-			bank.mixers[mixer.id] = std::move(mixer);
+			bank.mixers[mixer.id] = tklb::traits::move(mixer);
 			return Result::Success;
 		}
 
@@ -163,7 +163,7 @@ namespace vae { namespace core {
 			if (mBanks.size() < bank.id) {
 				mBanks.resize(bank.id);
 			}
-			mBanks[bank.id] = std::move(bank);
+			mBanks[bank.id] = tklb::traits::move(bank);
 			return Result::Success;
 		}
 
