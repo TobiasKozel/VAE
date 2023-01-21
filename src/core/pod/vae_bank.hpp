@@ -19,8 +19,6 @@ namespace vae { namespace core {
 		PathString path;				///< Path to the bank definition file
 		NameString name;				///< Name of the bank used for debugging, needs to be last so it can be zero sized
 	};
-
-	constexpr int _VAE_BANK_SIZE = sizeof(Bank);
 } } // namespace vae::vore
 
 #endif // _VAE_BANK

@@ -66,7 +66,7 @@ namespace vae { namespace core { namespace effect {
 				buildUserInterface(&ui);
 			}
 
-			// Convert buffers
+			// Get buffers, no conversion needed since faust also uses the type Sample
 			const Sample* ain[StaticConfig::MaxChannels];
 			Sample* aout[StaticConfig::MaxChannels];
 			in.getRaw(ain);

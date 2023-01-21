@@ -3,7 +3,7 @@
 
 #include "../pod/vae_effect.hpp"
 #include "../pod/vae_mixer.hpp"
-#include "../dsp/vae_effect_base.hpp"
+#include "../effects/vae_effect_base.hpp"
 #include "../vae_util.hpp"
 
 namespace vae { namespace core {

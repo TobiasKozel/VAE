@@ -16,14 +16,17 @@
 #include "../wrapped/vae_tklb.hpp"
 
 namespace vae { namespace core { namespace memory {
+	// TODO there should be a simpler name to get a compile time constant name into an allocator
 	struct FsAllocatorName		{ static constexpr const char* Name = "FS Allocator";		};
 	struct MainAllocatorName	{ static constexpr const char* Name = "Main Allocator";		};
+	struct VoiceAllocatorName	{ static constexpr const char* Name = "Voice Allocator";	};
 	struct AudioAllocatorName	{ static constexpr const char* Name = "Audio Allocator";	};
 	struct ScratchAllocatorName	{ static constexpr const char* Name = "Scratch Allocator";	};
 	struct AllocatorEmitterName	{ static constexpr const char* Name = "Emitter Allocator";	};
 
 	template <class T = unsigned char> using AllocatorFS		= DefaultAllocator<T, FsAllocatorName>;
 	template <class T = unsigned char> using AllocatorMain		= DefaultAllocator<T, MainAllocatorName>;
+	template <class T = unsigned char> using AllocatorVoice		= DefaultAllocator<T, VoiceAllocatorName>;
 	template <class T = unsigned char> using AllocatorAudio		= DefaultAllocator<T, AudioAllocatorName>;
 	template <class T = unsigned char> using AllocatorScratch	= DefaultAllocator<T, ScratchAllocatorName>;
 	template <class T = unsigned char> using AllocatorEmitter	= DefaultAllocator<T, AllocatorEmitterName>;

@@ -1,8 +1,8 @@
 /**
  * @file vae.hpp
  * @author Tobias Kozel
- * @brief Contains all public API types for VAE
- * @version 0.1
+ * @brief Contains all public API types for VAE (but not the api itself)
+ * @version 0.0.1
  * @date 2021-11-27
  *
  * @copyright Copyright (c) 2021
@@ -62,7 +62,7 @@ namespace vae {
 		 * @brief Maximum channel count used to pre allocate buffers
 		 * @attention 5.1 Suround needs six channels but hasn't been tested since the reverb effect is only stereo
 		 */
-		constexpr unsigned char MaxChannels = 2;
+		constexpr unsigned char MaxChannels = 6;
 
 		/**
 		 * @brief Maximum block size

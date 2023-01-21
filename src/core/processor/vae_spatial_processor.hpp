@@ -94,7 +94,8 @@ namespace vae { namespace core {
 					// samething as graphics, make the world rotate round the listener
 					// TODO this should be possible without a 4x4 matrix?
 					const auto& lookAt = vector::lookAt(
-						vector::add(l.position, l.front), l.position, l.up);
+						vector::add(l.position, l.front), l.position, l.up
+					);
 					// listener is the world origin now
 					relativeDirection = vector::multiply(lookAt, emitter.position);
 

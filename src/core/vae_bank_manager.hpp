@@ -6,7 +6,7 @@
 #include "./pod/vae_bank.hpp"
 #include "./fs/vae_bank_loader.hpp"
 #include "../../external/tklb/src/types/audio/resampler/TResampler.hpp"
-#include "./dsp/vae_effects_factory.hpp"
+#include "./effects/vae_effects_factory.hpp"
 
 namespace vae { namespace core {
 	/**
@@ -208,7 +208,6 @@ namespace vae { namespace core {
 		}
 	};
 
-	constexpr int _VAE_SIZE_BANK_MANAGER = sizeof(BankManager);
 } } // namespace vae::core
 
 #endif // _VAE_BANK_MANAGER

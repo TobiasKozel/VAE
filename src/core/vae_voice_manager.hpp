@@ -36,7 +36,7 @@ namespace vae { namespace core {
 		HeapBuffer<Voice> mVoices;				///< Currently playing voice are here
 		HeapBuffer<Voice> mVirtualVoices;		///<
 		HeapBuffer<VoicePan> mVoicePans;		///< Interpolation data for the panning algorithm or manual panning data
-		HeapBuffer<VoiceFilter> mVoiceFiltered;	///< Data needed for filtering is here
+		HeapBuffer<FilteredVoice> mVoiceFiltered;	///< Data needed for filtering is here
 
 		Size mActiveVoices = 0;					///< Number of currently playing voices
 		Size mInactiveVoices = 0;				///< Number of currenly virtual voices
@@ -116,7 +116,7 @@ namespace vae { namespace core {
 			return mVoicePans[index];
 		}
 
-		VoiceFilter& getVoiceFilter(Size index) {
+		FilteredVoice& getVoiceFilter(Size index) {
 			return mVoiceFiltered[index];
 		}
 
@@ -404,7 +404,7 @@ namespace vae { namespace core {
 		}
 
 		template <typename T>
-		void setVoiceProperty(EmitterHandle emitter, T VoiceFilter::*member, const T& value) {
+		void setVoiceProperty(EmitterHandle emitter, T FilteredVoice::*member, const T& value) {
 			TKLB_PROFILER_SCOPE()
 			for (Size i = 0; i < mVoices.size(); i++) {
 				auto& v = mVoices[i];

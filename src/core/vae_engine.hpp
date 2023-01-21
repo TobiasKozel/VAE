@@ -59,8 +59,7 @@ namespace vae { namespace core {
 		SpatialProcessor mSpatialProcessor;	///< Spatial voice processor
 
 		ScratchBuffer mScratchBuffer;		///< used to combine the signal from all banks and push it to the device
-		SampleIndex mTime = 0;				///< Global engine time in samples
-		Time mTimeFract = 0;				///< Global engine time in seconds
+		SizeT mTime = 0;					///< Global engine time in samples, not eposed to the outside as it can overflow
 		Sample mLimiterLastPeak = 10.0;		///< Master limiter last peak, initialized high to create a ramp up on initial start
 		Sample mMasterVolume = 1.0;			///< Master Colume applied after limiting
 
@@ -90,8 +89,6 @@ namespace vae { namespace core {
 			TKLB_PROFILER_SCOPE_NAMED("Engine Process")
 			auto& d = *mDevice;
 			auto sampleRate = mConfig.internalSampleRate;
-
-			const Time step = 1.0 / Time(sampleRate);
 
 			if (mScratchBuffer.size() == 0) { return; } // Shouldn't happen, but the buffer gets resized after the device is opened
 
@@ -152,7 +149,6 @@ namespace vae { namespace core {
 				d.push(mScratchBuffer);
 				mScratchBuffer.set(0);
 				mTime += remaining;
-				mTimeFract += step * remaining;
 			}
 			TKLB_PROFILER_FRAME_MARK_END(profiler::audioFrame)
 			TKLB_PROFILER_FRAME_MARK()
@@ -565,8 +561,16 @@ namespace vae { namespace core {
 			return mVoiceManager.getInactiveVoiceCount();
 		}
 
-		Size _VAE_PUBLIC_API getStreamTime() const  {
-			return mTime;
+		/**
+		 * @brief Current engine time in samples
+		 */
+		SizeT _VAE_PUBLIC_API getStreamTimeSamples() const { return mTime; }
+
+		/**
+		 * @brief Current engine time in seconds
+		 */
+		Time _VAE_PUBLIC_API getStreamTime() const {
+			return Time(mTime) / mConfig.internalSampleRate;
 		}
 
 		/**
@@ -678,7 +682,7 @@ namespace vae { namespace core {
 		 * @param speed 1.0 is the default speed, pitch will be affected as well.
 		 */
 		void _VAE_PUBLIC_API setSpeed(EmitterHandle emitter, float speed) {
-			mVoiceManager.setVoiceProperty(emitter, &VoiceFilter::speed, speed);
+			mVoiceManager.setVoiceProperty(emitter, &FilteredVoice::speed, speed);
 		}
 
 		/**
@@ -687,7 +691,7 @@ namespace vae { namespace core {
 		 * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum
 		 */
 		void _VAE_PUBLIC_API setLowpass(EmitterHandle emitter, float cutoff) {
-			mVoiceManager.setVoiceProperty(emitter, &VoiceFilter::lowpass, cutoff);
+			mVoiceManager.setVoiceProperty(emitter, &FilteredVoice::lowpass, cutoff);
 		}
 
 		/**
@@ -696,7 +700,7 @@ namespace vae { namespace core {
 		 * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum
 		 */
 		void _VAE_PUBLIC_API setHighpass(EmitterHandle emitter, float cutoff) {
-			mVoiceManager.setVoiceProperty(emitter, &VoiceFilter::highpass, cutoff);
+			mVoiceManager.setVoiceProperty(emitter, &FilteredVoice::highpass, cutoff);
 		}
 
 		///@}
@@ -882,7 +886,6 @@ namespace vae { namespace core {
 
 
 	}; // Engine class
-	constexpr int _VAE_ENGINE_SIZE = sizeof(Engine);
 } } // namespace vae::core
 
 #endif // _VAE_ENGINE

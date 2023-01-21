@@ -6,7 +6,7 @@
 
 namespace vae { namespace core { namespace effect {
 	/**
-	 * @brief Base for all effects
+	 * @brief Abstract Base for all effects
 	 */
 	class EffectBase {
 	public:

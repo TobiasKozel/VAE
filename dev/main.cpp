@@ -54,7 +54,7 @@ void benchmark(vae::core::Engine& engine) {
 	}
 	for (int i = 0; i < 2000; i++) {
 		sleepMs(2);
-		float t = i * 0.1;
+		// float t = i * 0.1;
 		engine.setEmitter(emitters[rand() % emitterCount], randomVec(), 0.5);
 		engine.fireGlobalEvent(vaeb::Bank1::JumpRand, emitters[rand() % emitterCount]);
 		if (i % 3 == 0) {

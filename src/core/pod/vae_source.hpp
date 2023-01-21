@@ -12,7 +12,6 @@ namespace vae { namespace core {
 
 		bool stream  VAE_SMALL(1);		///< If false entire sample will be loaded in ram, there's no streaming for now
 		bool resample VAE_SMALL(1);		///< Whether the sound will be resampled when loading it
-		bool raw VAE_SMALL(1);			///< The data in path is a data buffer TODO not used
 
 		enum class Format : unsigned int {
 			wav,			///< Uses dr_wav to decode wavs
@@ -28,7 +27,6 @@ namespace vae { namespace core {
 		Source() {
 			stream = false;
 			resample = false;
-			raw = false;
 		}
 	};
 

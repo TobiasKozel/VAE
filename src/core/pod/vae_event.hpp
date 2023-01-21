@@ -10,6 +10,7 @@
 namespace vae { namespace core {
 	/**
 	 * @brief An Event is used to control most of the eingines behavior.
+	 * TODO this needs to be part of the public API
 	 */
 	struct Event {
 		enum class Action : unsigned int {
@@ -23,13 +24,13 @@ namespace vae { namespace core {
 		bool loop VAE_SMALL(1);			///< gapless looping
 		bool HRTF VAE_SMALL(1);			///< Listener and event has to have hrtf set
 		bool spatial VAE_SMALL(1);		///< no spatial rendering at all
-		bool attenuate VAE_SMALL(1);		///< whether distance is taken into consideration
+		bool attenuate VAE_SMALL(1);	///< whether distance is taken into consideration
 		bool critical VAE_SMALL(1);		///< wheather the voice can be killer
 
 		MixerHandle mixer = Mixer::MasterMixerHandle;				///< Mixer the source gets written to
 		SourceHandle source = InvalidSourceHandle;					///< Handle to a source
 		EventHandle id = InvalidEventHandle;						///< Own id
-		Sample gain = 1.0;												///< Volume applied to triggered voice
+		Sample gain = 1.0;											///< Volume applied to triggered voice
 		EventHandle chained_events[StaticConfig::MaxChainedEvents];	///< Events called when the source starts playing
 		EventHandle on_end;											///< Event fired once the source is finished, not called when there's no source
 		NameString name;											///< Name for debugging

@@ -1,0 +1,7 @@
+{
+	"internalSampleRate": 48000,
+	"applicationName": "VAE_Client",
+	"preferredBufferSize": 512,
+	"bufferPeriods": 3,
+	"processInBufferSwitch": false
+}

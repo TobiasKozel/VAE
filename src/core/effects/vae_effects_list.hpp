@@ -48,6 +48,7 @@ namespace vae { namespace core { namespace effect {
 	 * Header only effects are included here
  	 */
 	#include "./generated/reverb_gen.hpp"
+	#include "./vae_device_send_effect.hpp"
 #endif // VAE_NO_EFFECTS
 
 #endif // _VAE_EFFECTS_LIST

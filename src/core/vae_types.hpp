@@ -39,7 +39,7 @@ namespace vae { namespace core {
 	 */
 	using AudioBuffer = tklb::AudioBufferTpl<
 		Sample, tklb::HeapBuffer<
-			Sample, memory::DEFAULT_ALIGNMENT, memory::AllocatorAudio<>
+			Sample, memory::DEFAULT_ALIGNMENT, memory::AllocatorAudio<>,  SampleIndex
 		>
 	>;
 
@@ -48,17 +48,17 @@ namespace vae { namespace core {
 	 */
 	using ScratchBuffer = tklb::AudioBufferTpl<
 		Sample, tklb::HeapBuffer<
-			Sample, memory::DEFAULT_ALIGNMENT, memory::AllocatorScratch<>
+			Sample, memory::DEFAULT_ALIGNMENT, memory::AllocatorScratch<>, SampleIndex
 		>
 	>;
 
 	using RingBuffer = tklb::AudioRingBufferTpl<
 		Sample, tklb::HeapBuffer<
-			Sample, memory::DEFAULT_ALIGNMENT, memory::AllocatorScratch<>
+			Sample, memory::DEFAULT_ALIGNMENT, memory::AllocatorScratch<>, SampleIndex
 		>
 	>;
 
-	using SampleIndex = AudioBuffer::Size;	// Time stored in samples
+
 
 	#ifdef VAE_RELEASE
 		using NameString = tklb::StackString<0>;			///< Used for debug names
@@ -66,9 +66,22 @@ namespace vae { namespace core {
 		using NameString = tklb::StackString<16>;			///< Used for debug names
 	#endif // VAE_RELEASE
 
+	/**
+	 * @brief Default heap class used for all non audio signal alocations.
+	 *        Limited to 32 bit addressable items, which should sofice.
+	 */
 	template <class T>
 	using HeapBuffer = memory::HeapBuffer<
 		T, memory::DEFAULT_ALIGNMENT, memory::AllocatorMain<>, Size
+	>;
+
+	/**
+	 * @brief Default heap class used for all non audio signal alocations.
+	 *        Limited to 32 bit addressable items, which should sofice.
+	 */
+	template <class T>
+	using VoiceHeapBuffer = memory::HeapBuffer<
+		T, memory::DEFAULT_ALIGNMENT, memory::AllocatorVoice<>, Size
 	>;
 
 	using String = tklb::String<HeapBuffer<char>>;

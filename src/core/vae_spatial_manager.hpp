@@ -55,16 +55,12 @@ namespace vae { namespace core {
 
 		Emitter& getEmitter(EmitterHandle e) {
 			TKLB_PROFILER_SCOPE()
-			return *mEmitters.at(e);
+			return mEmitters[e];
 		}
 
-		bool hasEmitter(EmitterHandle e) {
+		bool hasEmitter(EmitterHandle e) const {
 			TKLB_PROFILER_SCOPE()
-			return mEmitters.at(e) != nullptr;
-		}
-
-		void compact() {
-			TKLB_PROFILER_SCOPE()
+			return mEmitters.has(e);
 		}
 
 		Result setEmitter(

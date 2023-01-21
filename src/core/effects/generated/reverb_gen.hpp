@@ -19,18 +19,18 @@ Compilation options: -a /home/usr/git/audio/VAEG/VAE/src/core/dsp/vae_faust_arch
 namespace vae { namespace core { namespace effect {
 #ifndef FAUSTFLOAT
 #define FAUSTFLOAT float
-#endif 
+#endif
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <math.h>
 
-#ifndef FAUSTCLASS 
+#ifndef FAUSTCLASS
 #define FAUSTCLASS Reverb
 #endif
 
-#ifdef __APPLE__ 
+#ifdef __APPLE__
 #define exp10f __exp10f
 #define exp10 __exp10
 #endif
@@ -46,9 +46,9 @@ static float Reverb_faustpower2_f(float value) {
 }
 
 class Reverb final : public FaustBase {
-	
+
  private:
-	
+
 	FAUSTFLOAT fVslider0;
 	float fRec1_perm[4];
 	float fRec0_perm[4];
@@ -177,10 +177,10 @@ class Reverb final : public FaustBase {
 	float fRec7_perm[4];
 	float fRec8_perm[4];
 	float fRec9_perm[4];
-	
+
  public:
-	
-	void metadata(Meta* m) { 
+
+	void metadata(Meta* m) {
 		m->declare("basics.lib/name", "Faust Basic Element Library");
 		m->declare("basics.lib/version", "0.9");
 		m->declare("compile_options", "-a /home/usr/git/audio/VAEG/VAE/src/core/dsp/vae_faust_arch.hpp -lang cpp -i -cm -mapp -cn Reverb -scn FaustBase -es 1 -exp10 -mcd 16 -single -ftz 0 -vec -lv 0 -vs 32");
@@ -232,10 +232,10 @@ class Reverb final : public FaustBase {
 	int getNumOutputs() {
 		return 2;
 	}
-	
+
 	static void classInit(int sample_rate) {
 	}
-	
+
 	void instanceConstants(int sample_rate) {
 		fSampleRate = sample_rate;
 		float fConst0 = std::min<float>(1.92e+05f, std::max<float>(1.0f, float(fSampleRate)));
@@ -358,14 +358,14 @@ class Reverb final : public FaustBase {
 		float fConst117 = float(int(fConst116));
 		iConst118 = int(std::min<float>(float(int(std::pow(2.0f, std::max<float>(1.0f, ((fConst116 == fConst117) ? fConst116 : ((fConst116 >= 0.0f) ? fConst117 + 1.0f : fConst117)))))), std::max<float>(0.0f, fConst111 + -1.0f)));
 	}
-	
+
 	void instanceResetUserInterface() {
 		fVslider0 = FAUSTFLOAT(1.0f);
 		fVslider1 = FAUSTFLOAT(0.5f);
 		fVslider2 = FAUSTFLOAT(0.5f);
 		fVslider3 = FAUSTFLOAT(0.5f);
 	}
-	
+
 	void instanceClear() {
 		for (int l0 = 0; l0 < 4; l0 = l0 + 1) {
 			fRec1_perm[l0] = 0.0f;
@@ -578,7 +578,7 @@ class Reverb final : public FaustBase {
 			fRec9_perm[l57] = 0.0f;
 		}
 	}
-	
+
 	void init(int sample_rate) {
 		classInit(sample_rate);
 		instanceInit(sample_rate);
@@ -588,15 +588,15 @@ class Reverb final : public FaustBase {
 		instanceResetUserInterface();
 		instanceClear();
 	}
-	
+
 	Reverb* clone() {
 		return new Reverb();
 	}
-	
+
 	int getSampleRate() {
 		return fSampleRate;
 	}
-	
+
 	void buildUserInterface(UI* ui_interface) {
 		ui_interface->openVerticalBox("reverb");
 		ui_interface->addVerticalSlider("fb1", &fVslider2, FAUSTFLOAT(0.5f), FAUSTFLOAT(0.0f), FAUSTFLOAT(1.0f), FAUSTFLOAT(0.01f));
@@ -605,7 +605,7 @@ class Reverb final : public FaustBase {
 		ui_interface->addVerticalSlider("pre", &fVslider3, FAUSTFLOAT(0.5f), FAUSTFLOAT(0.0f), FAUSTFLOAT(1.0f), FAUSTFLOAT(0.01f));
 		ui_interface->closeBox();
 	}
-	
+
 	void compute(int count, FAUSTFLOAT** RESTRICT inputs, FAUSTFLOAT** RESTRICT outputs) {
 		FAUSTFLOAT* input0_ptr = inputs[0];
 		FAUSTFLOAT* input1_ptr = inputs[1];
