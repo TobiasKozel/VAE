@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <cmath>
-// #include <new>
 #define VAE_IMPL
 // #define TKLB_NO_STDLIB
 // #define TKLB_NO_LOG

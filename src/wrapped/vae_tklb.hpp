@@ -1,7 +1,8 @@
 /**
  * @file vae_tklb.hpp
  * @author Tobias Kozel
- * @brief All tklb deps are included and controlled from here
+ * @brief All tklb deps are included and controlled from here to ensure
+ *        They are configured correctly
  * @version 0.1
  * @date 2022-08-15
  *

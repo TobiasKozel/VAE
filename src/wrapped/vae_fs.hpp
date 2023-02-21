@@ -16,7 +16,7 @@
 
 /**
  * @brief Open a file handle
- * @param path
+ * @param path file path
  * @param mode Read mode "r", "w", "rw" like normal fopen
  * @return void* The handle to the file
  */
@@ -24,21 +24,22 @@ void* vae_file_open(const char* path, const char* mode);
 
 /**
  * @brief Seek and return current position
- * @param file
- * @param idk
- * @param seek
+ * @param file handle
+ * @param offset offset used for set and cur
+ * @param seek position set = 0, cur = 1, end = 1
  * @return SizeT TODO bytes read head moved?
  */
-vae::core::SizeT vae_file_seek(void* file, vae::core::SizeT idk, int seek);
+vae::core::SizeT vae_file_seek(void* file, long int offset, int seek);
 
 /**
  * @brief Read number of bytes from current position into buffer
- * @param dest
- * @param size
+ * @param dest buffer to write into
+ * @param size bytes to read
+ * @param n Number of blocks of size to read
  * @param file File handle
  * @return SizeT TODO bytes read?
  */
-vae::core::SizeT vae_file_read(char* dest, vae::core::SizeT size, int, void* file);
+vae::core::SizeT vae_file_read(char* dest, vae::core::SizeT size, int n, void* file);
 
 /**
  * @brief Close file
@@ -55,13 +56,13 @@ vae::core::SizeT vae_file_close(void* file);
 			return fopen(path, mode);
 		}
 
-		vae::core::SizeT vae_file_seek(void* file, vae::core::SizeT offset, int seek) {
+		vae::core::SizeT vae_file_seek(void* file, long int offset, int seek) {
 			fseek((FILE*) file, offset, seek);
 			return ftell((FILE*) file);
 		}
 
-		vae::core::SizeT vae_file_read(char* dest, vae::core::SizeT size, int, void* file) {
-			return fread(dest, size, 1, (FILE*) file);
+		vae::core::SizeT vae_file_read(char* dest, vae::core::SizeT size, int n, void* file) {
+			return fread(dest, size, n, (FILE*) file);
 		}
 
 		vae::core::SizeT vae_file_close(void* file) {
@@ -99,17 +100,22 @@ namespace vae { namespace core { namespace fs {
 		bool valid() const { return mHandle != nullptr; }
 
 		SizeT size() {
-			if (mHandle == nullptr) { return 0; }
+			if (!valid()) { return 0; }
 			return mSize;
 		}
 
 		bool readAll(char* dest) {
-			if (mHandle == nullptr) { return false; }
+			if (!valid()) { return false; }
 			return vae_file_read(dest, size(), 1, mHandle) == 1;
 		}
 
+		bool read(char* dest, SizeT bytes) {
+			if (!valid()) { return false; }
+			return vae_file_read(dest, bytes, 1, mHandle) == 1;
+		}
+
 		~File() {
-			if (mHandle == nullptr) {return; }
+			if (!valid()) {return; }
 			vae_file_close(mHandle);
 		}
 	};

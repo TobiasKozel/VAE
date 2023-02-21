@@ -19,6 +19,7 @@ namespace vae {
 	using Sample = float;							///< Default internal sample types used where ever possible to avoid conversions, non floating point types may compile but won't work probably.
 	using Size = unsigned int;						///< How the elements are addressed in the heapbuffer
 	using SampleIndex = unsigned int;				///< Maximal amount of addressable samples in a single audio file, 32 Bit means around 23 Hours of audio at 48kHz. If more is needed, this has to be changed. (Untested)
+	using ChannelIndex = unsigned char;				///< Channels are index using this
 	using Time = double;							///< Time in seconds
 	using Position = float;							///< Coordinates use this type. If the game engine uses double, this might be useful to change.
 
