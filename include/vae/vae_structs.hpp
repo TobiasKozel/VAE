@@ -129,17 +129,17 @@ namespace vae {
 		char name[255];					///< Device name reported from backend
 		char api[4];					///< API abbreviation
 		Size bufferSize = 0;			///< desired bufferSize
-		unsigned char channelsIn = 0;
-		unsigned char channelsOut = 0;
+		Channel channelsIn = 0;
+		Channel channelsOut = 0;
 	};
 
 	/**
 	 * @brief Public vae Vector 3 type
 	 */
 	struct Vector3 {
-		float x;
-		float y;
-		float z;
+		Position x;
+		Position y;
+		Position z;
 	};
 
 	/**

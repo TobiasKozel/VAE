@@ -3,8 +3,10 @@
 
 namespace vae {
 	using Sample = float;							///< Default sample types used where ever possible, changing this means the engine needs to be recompiled, short and int isn't working, probably needs a few changes in the pipeline
+	using Position = float;							///< Used for coordinate systems
 	using Size = unsigned int;						///< How the elements are addressed in the heapbuffer
 	using Time = double;							///< Time sotred in seconds
+	using Channel = unsigned char;					///< Used to index channels, 255 should be enough channels given most suround setups need less than 10
 
 	using BankHandle 			= unsigned char;	///< Allows for 255 banks (unloaded or loaded)
 	using EventHandle 			= unsigned short;	///< The handle used to address events within a bank

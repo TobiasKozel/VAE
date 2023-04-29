@@ -11,7 +11,7 @@ void vae_print(vae::LogLevel level, const char* message);
 #if !defined(VAE_NO_STDIO) && !defined(VAE_CUSTOM_PRINT) && !defined(VAE_NO_LOG)
 	#include <stdio.h>
 	void vae_print(vae::LogLevel level, const char* message) {
-		printf(message);
+		printf("%s", message);
 		printf("\n");
 	}
 #endif

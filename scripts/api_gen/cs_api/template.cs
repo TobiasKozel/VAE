@@ -2,23 +2,6 @@ using System;
 using System.Runtime.InteropServices;
 
 namespace vae {
-	static class vae_c_api
-	{
-		#if DEBUG
-			public const string dll = "vae_c_apid.dll";
-		#else
-			public const string dll = "vae_c_api.dll";
-		#endif
-	}
-
-{% for en in Enums %}
-	enum {{ en.name }} {
-	{% for value in en.children %}
-		{{ value.name }} = {{ value.index}}{{ "," if not loop.last else "" }}
-	{% endfor %}
-	}
-{% endfor %}
-
 {% for t in Types %}
 	{% if t.typename == "unsigned int" %}
 	using {{ t.alias }} = System.UInt32;
@@ -33,11 +16,24 @@ namespace vae {
 	{% elif t.typename == "void*" %}
 	using {{ t.alias }} = System.IntPtr;
 	{% elif t.typename == "const char*" %}
-	using {{ t.alias }} = string;
+	using {{ t.alias }} = System.String;
 	{% else %}
 	// Missing type conversion for {{ t.alias }}
 	// https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types
 	{% endif %}
+{% endfor %}
+
+	static class vae_c_api
+	{
+		public const string dll = "vae_c_api";
+	}
+
+{% for en in Enums %}
+	public enum {{ en.name }} {
+	{% for value in en.children %}
+		{{ value.name }} = {{ value.index}}{{ "," if not loop.last else "" }}
+	{% endfor %}
+	}
 {% endfor %}
 
 {% for structure in Structs %}
@@ -61,18 +57,22 @@ namespace vae {
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_destroy_{{ structure.name }}(Pointer obj);
 		public void Dispose() {
-			if (_owned) { vae_destroy_{{ structure.name }}(ptr); }
+			if (_owned) { vae_destroy_{{ structure.name }}(_ptr); }
 			Dispose();
 			GC.SuppressFinalize(this);
 		}
 
+		// ------------------------------------------
+		// 			PROPERTIES
+		// ------------------------------------------
 	{% for prop in structure.properties %}
+		// property {{ structure.name }} {{ prop.name }}
 		{% if prop.typename in BasicTypes %}
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern {{ prop.typename }} vae_{{ structure.name }}_get_{{ prop.name }}(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_{{ structure.name }}_set_{{ prop.name }}(Pointer obj, {{ prop.typename }} value);
-		public {{ prop.typename }} {{ prop.name }} {
+		public {{ prop.typename }} {{ prop.name | first_upper }} {
 			get => vae_{{ structure.name }}_get_{{ prop.name }}(_ptr);
 			set => vae_{{ structure.name }}_set_{{ prop.name }}(_ptr, value);
 		}
@@ -81,7 +81,7 @@ namespace vae {
 		internal static extern Pointer vae_{{ structure.name }}_get_{{ prop.name }}(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_{{ structure.name }}_set_{{ prop.name }}(Pointer obj, Pointer value);
-		public {{ prop.typename }} {{ prop.name }} {
+		public {{ prop.typename }} {{ prop.name | first_upper }} {
 			get => new {{ prop.typename }}(vae_{{ structure.name }}_get_{{ prop.name }}(_ptr));
 			set => vae_{{ structure.name }}_set_{{ prop.name }}(_ptr, value._ptr);
 		}
@@ -89,32 +89,34 @@ namespace vae {
 
 	{% endfor %}
 
+		// ------------------------------------------
+		// 			FUNCTIONS
+		// ------------------------------------------
 	{% for function in structure.functions %}
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		{{ function.returns.typename }} vae_{{ structure.name }}_{{ function.name }}(
+		internal static extern {{ function.returns.typename }} vae_{{ structure.name }}_{{ function.name }}(
 			Pointer obj{% for parameter in function.parameters %},
 			{% if parameter.typename in BasicTypes %}
-			{{ parameter.typename}} {{ parameter.name }}{% else %}
-			Pointer {{ parameter.name }}{% endif %}
+			{{ parameter.typename }} {{ parameter.name | first_upper }}{% else %}
+			Pointer {{ parameter.name | first_upper }}{% endif %}
 			{% endfor %}
 
 		);
 
-		{{ function.returns.typename }} {{ function.name }}(
+		public {{ function.returns.typename }} {{ function.name | first_upper }}(
 			{% for parameter in function.parameters %}
-			{% if parameter.typename in BasicTypes %}
-			{{ parameter.typename}} {{ parameter.name }}{% else %}
-			Pointer {{ parameter.name }}{% endif %}{{ "," if not loop.last else "" }}
+			{{ parameter.typename }} {{ parameter.name | first_upper }}{{ "," if not loop.last else "" }}
 			{% endfor %}
 		) {
-			return vae_{{ structure.name }}_{{ function.name }}(
+			{% if function.returns.typename != "void" %}
+			return
+			{% endif %}
+			vae_{{ structure.name }}_{{ function.name }}(
 				_ptr{% for parameter in function.parameters %},
 				{% if parameter.typename in BasicTypes %}
-				{{ parameter.name }}{% else %}
-				{{ parameter.name }}._ptr{% endif %}
-			{% endfor %}
-
-			);
+				{{ parameter.name | first_upper }}{% else %}
+				{{ parameter.name | first_upper }}._ptr{% endif %}
+			{% endfor %});
 		}
 
 	{% endfor %}

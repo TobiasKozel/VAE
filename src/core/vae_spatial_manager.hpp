@@ -173,6 +173,7 @@ namespace vae { namespace core {
 				return Result::ValidHandleRequired;
 			}
 			l.configuration = config;
+			return Result::Success;
 		}
 
 		Result setListener(

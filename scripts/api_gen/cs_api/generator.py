@@ -6,6 +6,11 @@ from api_gen_util_vae import loadApiDescription
 
 jinja_env = Environment(autoescape=False, optimized=False, trim_blocks=True, lstrip_blocks=True)
 
+def firstUpper(value):
+    return value[:1].upper() + value[1:]
+
+jinja_env.filters["first_upper"] = firstUpper
+
 json_description = os.path.dirname(os.path.realpath(__file__)) + "/../public_api.json"
 out_file = os.path.dirname(os.path.realpath(__file__)) + "/../../../include/vae/vae_cs_api.cs"
 tempalte_file = os.path.dirname(os.path.realpath(__file__)) + "/template.cs"
@@ -17,7 +22,7 @@ with open(tempalte_file, "r") as f:
 	template = jinja_env.from_string(f.read())
 
 
-basic_types = []
+basic_types = ["bool", "int"]
 for i in description.types:
 	basic_types.append(i["alias"])
 
