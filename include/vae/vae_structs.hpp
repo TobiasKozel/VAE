@@ -117,8 +117,8 @@ namespace vae {
 		char name[255];					///< Device name reported from backend
 		char api[4];					///< API abbreviation
 		Size bufferSize = 0;			///< desired bufferSize
-		unsigned char channelsIn = 0;
-		unsigned char channelsOut = 0;
+		ChannelIndex channelsIn = 0;
+		ChannelIndex channelsOut = 0;
 	};
 
 
