@@ -620,8 +620,8 @@ namespace vae { namespace core {
 		 * @return EmitterHandle Handle like a normal emitter
 		 */
 		EmitterHandle _VAE_PUBLIC_API createAutoEmitter(
-			BankHandle bank, EventHandle event, float maxDist,
-			const LocationDirection& locDir, float spread
+			BankHandle bank, EventHandle event, Position maxDist,
+			const LocationDirection& locDir, Sample spread
 		) {
 			return mSpatialManager.createAutoEmitter(bank, event, maxDist, locDir, spread);
 		}
@@ -644,7 +644,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API setEmitter(
-			EmitterHandle emitter, const LocationDirection& locDir, float separation
+			EmitterHandle emitter, const LocationDirection& locDir, Sample separation
 		) {
 			return mSpatialManager.setEmitter(emitter, locDir, separation);
 		}
@@ -681,8 +681,8 @@ namespace vae { namespace core {
 		 * @param emitter
 		 * @param speed 1.0 is the default speed, pitch will be affected as well.
 		 */
-		void _VAE_PUBLIC_API setSpeed(EmitterHandle emitter, float speed) {
-			mVoiceManager.setVoiceProperty(emitter, &FilteredVoice::speed, speed);
+		void _VAE_PUBLIC_API setSpeed(EmitterHandle emitter, Sample speed) {
+			mVoiceManager.setVoiceProperty(emitter, &VoiceFilter::speed, speed);
 		}
 
 		/**
@@ -690,8 +690,8 @@ namespace vae { namespace core {
 		 * @param emitter
 		 * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum
 		 */
-		void _VAE_PUBLIC_API setLowpass(EmitterHandle emitter, float cutoff) {
-			mVoiceManager.setVoiceProperty(emitter, &FilteredVoice::lowpass, cutoff);
+		void _VAE_PUBLIC_API setLowpass(EmitterHandle emitter, Sample cutoff) {
+			mVoiceManager.setVoiceProperty(emitter, &VoiceFilter::lowpass, cutoff);
 		}
 
 		/**
@@ -699,8 +699,8 @@ namespace vae { namespace core {
 		 * @param emitter
 		 * @param cutoff 0-1. 0 doesn't filter, 1 filter the wholespektrum
 		 */
-		void _VAE_PUBLIC_API setHighpass(EmitterHandle emitter, float cutoff) {
-			mVoiceManager.setVoiceProperty(emitter, &FilteredVoice::highpass, cutoff);
+		void _VAE_PUBLIC_API setHighpass(EmitterHandle emitter, Sample cutoff) {
+			mVoiceManager.setVoiceProperty(emitter, &VoiceFilter::highpass, cutoff);
 		}
 
 		///@}

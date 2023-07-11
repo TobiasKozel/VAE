@@ -2,16 +2,29 @@ using System;
 using System.Runtime.InteropServices;
 
 namespace vae {
+	using Sample = System.Single;
+	using Position = System.Single;
+	using Size = System.UInt32;
+	using Time = System.Double;
+	using Channel = System.Byte;
+	using BankHandle = System.Byte;
+	using EventHandle = System.UInt16;
+	using SourceHandle = System.UInt16;
+	using EmitterHandle = System.UInt32;
+	using MixerHandle = System.Byte;
+	using ListenerHandle = System.Byte;
+	using GlobalEventHandle = System.UInt32;
+	using GlobalMixerHandle = System.UInt16;
+	using GlobalParameterHandle = System.UInt32;
+	using Pointer = System.IntPtr;
+	using CString = System.String;
+
 	static class vae_c_api
 	{
-		#if DEBUG
-			public const string dll = "vae_c_apid.dll";
-		#else
-			public const string dll = "vae_c_api.dll";
-		#endif
+		public const string dll = "vae_c_api";
 	}
 
-	enum Result {
+	public enum Result {
 		Success = 0,
 		GenericFailure = 1,
 		BankFormatError = 2,
@@ -28,14 +41,14 @@ namespace vae {
 		InvalidBank = 13,
 		InvalidEmitter = 14
 	}
-	enum LogLevel {
+	public enum LogLevel {
 		Debug = 0,
 		Info = 1,
 		Warn = 2,
 		Error = 3,
 		Ciritical = 4
 	}
-	enum SpeakerConfiguration {
+	public enum SpeakerConfiguration {
 		Mono = 0,
 		Headphones = 1,
 		Stereo = 2,
@@ -43,21 +56,6 @@ namespace vae {
 		Quadrophonic = 4,
 		Suround = 5
 	}
-
-	using Sample = System.Single;
-	using Size = System.UInt32;
-	using Time = System.Double;
-	using BankHandle = System.Byte;
-	using EventHandle = System.UInt16;
-	using SourceHandle = System.UInt16;
-	using EmitterHandle = System.UInt32;
-	using MixerHandle = System.Byte;
-	using ListenerHandle = System.Byte;
-	using GlobalEventHandle = System.UInt32;
-	using GlobalMixerHandle = System.UInt16;
-	using GlobalParameterHandle = System.UInt32;
-	using Pointer = System.IntPtr;
-	using CString = string;
 
 	public class EventCallbackData : IDisposable {
 		public Pointer _ptr;
@@ -79,48 +77,58 @@ namespace vae {
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_destroy_EventCallbackData(Pointer obj);
 		public void Dispose() {
-			if (_owned) { vae_destroy_EventCallbackData(ptr); }
+			if (_owned) { vae_destroy_EventCallbackData(_ptr); }
 			Dispose();
 			GC.SuppressFinalize(this);
 		}
 
+		// ------------------------------------------
+		// 			PROPERTIES
+		// ------------------------------------------
+		// property EventCallbackData context
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Pointer vae_EventCallbackData_get_context(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EventCallbackData_set_context(Pointer obj, Pointer value);
-		public Pointer context {
+		public Pointer Context {
 			get => vae_EventCallbackData_get_context(_ptr);
 			set => vae_EventCallbackData_set_context(_ptr, value);
 		}
 
+		// property EventCallbackData bank
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern BankHandle vae_EventCallbackData_get_bank(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EventCallbackData_set_bank(Pointer obj, BankHandle value);
-		public BankHandle bank {
+		public BankHandle Bank {
 			get => vae_EventCallbackData_get_bank(_ptr);
 			set => vae_EventCallbackData_set_bank(_ptr, value);
 		}
 
+		// property EventCallbackData event
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern EventHandle vae_EventCallbackData_get_event(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EventCallbackData_set_event(Pointer obj, EventHandle value);
-		public EventHandle event {
+		public EventHandle Event {
 			get => vae_EventCallbackData_get_event(_ptr);
 			set => vae_EventCallbackData_set_event(_ptr, value);
 		}
 
+		// property EventCallbackData emitter
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern EmitterHandle vae_EventCallbackData_get_emitter(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EventCallbackData_set_emitter(Pointer obj, EmitterHandle value);
-		public EmitterHandle emitter {
+		public EmitterHandle Emitter {
 			get => vae_EventCallbackData_get_emitter(_ptr);
 			set => vae_EventCallbackData_set_emitter(_ptr, value);
 		}
 
 
+		// ------------------------------------------
+		// 			FUNCTIONS
+		// ------------------------------------------
 	}
 
 	public class EngineConfig : IDisposable {
@@ -143,120 +151,138 @@ namespace vae {
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_destroy_EngineConfig(Pointer obj);
 		public void Dispose() {
-			if (_owned) { vae_destroy_EngineConfig(ptr); }
+			if (_owned) { vae_destroy_EngineConfig(_ptr); }
 			Dispose();
 			GC.SuppressFinalize(this);
 		}
 
+		// ------------------------------------------
+		// 			PROPERTIES
+		// ------------------------------------------
+		// property EngineConfig rootPath
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern CString vae_EngineConfig_get_rootPath(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EngineConfig_set_rootPath(Pointer obj, CString value);
-		public CString rootPath {
+		public CString RootPath {
 			get => vae_EngineConfig_get_rootPath(_ptr);
 			set => vae_EngineConfig_set_rootPath(_ptr, value);
 		}
 
+		// property EngineConfig internalSampleRate
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Size vae_EngineConfig_get_internalSampleRate(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EngineConfig_set_internalSampleRate(Pointer obj, Size value);
-		public Size internalSampleRate {
+		public Size InternalSampleRate {
 			get => vae_EngineConfig_get_internalSampleRate(_ptr);
 			set => vae_EngineConfig_set_internalSampleRate(_ptr, value);
 		}
 
+		// property EngineConfig eventCallbackContext
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Pointer vae_EngineConfig_get_eventCallbackContext(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EngineConfig_set_eventCallbackContext(Pointer obj, Pointer value);
-		public Pointer eventCallbackContext {
+		public Pointer EventCallbackContext {
 			get => vae_EngineConfig_get_eventCallbackContext(_ptr);
 			set => vae_EngineConfig_set_eventCallbackContext(_ptr, value);
 		}
 
+		// property EngineConfig preAllocatedEmitters
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Size vae_EngineConfig_get_preAllocatedEmitters(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EngineConfig_set_preAllocatedEmitters(Pointer obj, Size value);
-		public Size preAllocatedEmitters {
+		public Size PreAllocatedEmitters {
 			get => vae_EngineConfig_get_preAllocatedEmitters(_ptr);
 			set => vae_EngineConfig_set_preAllocatedEmitters(_ptr, value);
 		}
 
+		// property EngineConfig voices
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Size vae_EngineConfig_get_voices(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EngineConfig_set_voices(Pointer obj, Size value);
-		public Size voices {
+		public Size Voices {
 			get => vae_EngineConfig_get_voices(_ptr);
 			set => vae_EngineConfig_set_voices(_ptr, value);
 		}
 
+		// property EngineConfig hrtfVoices
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Size vae_EngineConfig_get_hrtfVoices(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EngineConfig_set_hrtfVoices(Pointer obj, Size value);
-		public Size hrtfVoices {
+		public Size HrtfVoices {
 			get => vae_EngineConfig_get_hrtfVoices(_ptr);
 			set => vae_EngineConfig_set_hrtfVoices(_ptr, value);
 		}
 
+		// property EngineConfig virtualVoices
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Size vae_EngineConfig_get_virtualVoices(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EngineConfig_set_virtualVoices(Pointer obj, Size value);
-		public Size virtualVoices {
+		public Size VirtualVoices {
 			get => vae_EngineConfig_get_virtualVoices(_ptr);
 			set => vae_EngineConfig_set_virtualVoices(_ptr, value);
 		}
 
+		// property EngineConfig finishedVoiceQueueSize
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Size vae_EngineConfig_get_finishedVoiceQueueSize(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EngineConfig_set_finishedVoiceQueueSize(Pointer obj, Size value);
-		public Size finishedVoiceQueueSize {
+		public Size FinishedVoiceQueueSize {
 			get => vae_EngineConfig_get_finishedVoiceQueueSize(_ptr);
 			set => vae_EngineConfig_set_finishedVoiceQueueSize(_ptr, value);
 		}
 
+		// property EngineConfig preferredBufferSize
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Size vae_EngineConfig_get_preferredBufferSize(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EngineConfig_set_preferredBufferSize(Pointer obj, Size value);
-		public Size preferredBufferSize {
+		public Size PreferredBufferSize {
 			get => vae_EngineConfig_get_preferredBufferSize(_ptr);
 			set => vae_EngineConfig_set_preferredBufferSize(_ptr, value);
 		}
 
+		// property EngineConfig bufferPeriods
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Size vae_EngineConfig_get_bufferPeriods(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_EngineConfig_set_bufferPeriods(Pointer obj, Size value);
-		public Size bufferPeriods {
+		public Size BufferPeriods {
 			get => vae_EngineConfig_get_bufferPeriods(_ptr);
 			set => vae_EngineConfig_set_bufferPeriods(_ptr, value);
 		}
 
+		// property EngineConfig updateInAudioThread
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Pointer vae_EngineConfig_get_updateInAudioThread(Pointer obj);
+		internal static extern bool vae_EngineConfig_get_updateInAudioThread(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void vae_EngineConfig_set_updateInAudioThread(Pointer obj, Pointer value);
-		public bool updateInAudioThread {
-			get => new bool(vae_EngineConfig_get_updateInAudioThread(_ptr));
-			set => vae_EngineConfig_set_updateInAudioThread(_ptr, value._ptr);
+		internal static extern void vae_EngineConfig_set_updateInAudioThread(Pointer obj, bool value);
+		public bool UpdateInAudioThread {
+			get => vae_EngineConfig_get_updateInAudioThread(_ptr);
+			set => vae_EngineConfig_set_updateInAudioThread(_ptr, value);
 		}
 
+		// property EngineConfig processInBufferSwitch
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Pointer vae_EngineConfig_get_processInBufferSwitch(Pointer obj);
+		internal static extern bool vae_EngineConfig_get_processInBufferSwitch(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void vae_EngineConfig_set_processInBufferSwitch(Pointer obj, Pointer value);
-		public bool processInBufferSwitch {
-			get => new bool(vae_EngineConfig_get_processInBufferSwitch(_ptr));
-			set => vae_EngineConfig_set_processInBufferSwitch(_ptr, value._ptr);
+		internal static extern void vae_EngineConfig_set_processInBufferSwitch(Pointer obj, bool value);
+		public bool ProcessInBufferSwitch {
+			get => vae_EngineConfig_get_processInBufferSwitch(_ptr);
+			set => vae_EngineConfig_set_processInBufferSwitch(_ptr, value);
 		}
 
 
+		// ------------------------------------------
+		// 			FUNCTIONS
+		// ------------------------------------------
 	}
 
 	public class DeviceInfo : IDisposable {
@@ -279,57 +305,68 @@ namespace vae {
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_destroy_DeviceInfo(Pointer obj);
 		public void Dispose() {
-			if (_owned) { vae_destroy_DeviceInfo(ptr); }
+			if (_owned) { vae_destroy_DeviceInfo(_ptr); }
 			Dispose();
 			GC.SuppressFinalize(this);
 		}
 
+		// ------------------------------------------
+		// 			PROPERTIES
+		// ------------------------------------------
+		// property DeviceInfo id
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Pointer vae_DeviceInfo_get_id(Pointer obj);
+		internal static extern int vae_DeviceInfo_get_id(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void vae_DeviceInfo_set_id(Pointer obj, Pointer value);
-		public int id {
-			get => new int(vae_DeviceInfo_get_id(_ptr));
-			set => vae_DeviceInfo_set_id(_ptr, value._ptr);
+		internal static extern void vae_DeviceInfo_set_id(Pointer obj, int value);
+		public int Id {
+			get => vae_DeviceInfo_get_id(_ptr);
+			set => vae_DeviceInfo_set_id(_ptr, value);
 		}
 
+		// property DeviceInfo sampleRate
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Size vae_DeviceInfo_get_sampleRate(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_DeviceInfo_set_sampleRate(Pointer obj, Size value);
-		public Size sampleRate {
+		public Size SampleRate {
 			get => vae_DeviceInfo_get_sampleRate(_ptr);
 			set => vae_DeviceInfo_set_sampleRate(_ptr, value);
 		}
 
+		// property DeviceInfo bufferSize
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Size vae_DeviceInfo_get_bufferSize(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_DeviceInfo_set_bufferSize(Pointer obj, Size value);
-		public Size bufferSize {
+		public Size BufferSize {
 			get => vae_DeviceInfo_get_bufferSize(_ptr);
 			set => vae_DeviceInfo_set_bufferSize(_ptr, value);
 		}
 
+		// property DeviceInfo channelsIn
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Pointer vae_DeviceInfo_get_channelsIn(Pointer obj);
+		internal static extern Channel vae_DeviceInfo_get_channelsIn(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void vae_DeviceInfo_set_channelsIn(Pointer obj, Pointer value);
-		public unsigned char channelsIn {
-			get => new unsigned char(vae_DeviceInfo_get_channelsIn(_ptr));
-			set => vae_DeviceInfo_set_channelsIn(_ptr, value._ptr);
+		internal static extern void vae_DeviceInfo_set_channelsIn(Pointer obj, Channel value);
+		public Channel ChannelsIn {
+			get => vae_DeviceInfo_get_channelsIn(_ptr);
+			set => vae_DeviceInfo_set_channelsIn(_ptr, value);
 		}
 
+		// property DeviceInfo channelsOut
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Pointer vae_DeviceInfo_get_channelsOut(Pointer obj);
+		internal static extern Channel vae_DeviceInfo_get_channelsOut(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void vae_DeviceInfo_set_channelsOut(Pointer obj, Pointer value);
-		public unsigned char channelsOut {
-			get => new unsigned char(vae_DeviceInfo_get_channelsOut(_ptr));
-			set => vae_DeviceInfo_set_channelsOut(_ptr, value._ptr);
+		internal static extern void vae_DeviceInfo_set_channelsOut(Pointer obj, Channel value);
+		public Channel ChannelsOut {
+			get => vae_DeviceInfo_get_channelsOut(_ptr);
+			set => vae_DeviceInfo_set_channelsOut(_ptr, value);
 		}
 
 
+		// ------------------------------------------
+		// 			FUNCTIONS
+		// ------------------------------------------
 	}
 
 	public class Vector3 : IDisposable {
@@ -352,39 +389,48 @@ namespace vae {
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_destroy_Vector3(Pointer obj);
 		public void Dispose() {
-			if (_owned) { vae_destroy_Vector3(ptr); }
+			if (_owned) { vae_destroy_Vector3(_ptr); }
 			Dispose();
 			GC.SuppressFinalize(this);
 		}
 
+		// ------------------------------------------
+		// 			PROPERTIES
+		// ------------------------------------------
+		// property Vector3 x
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Pointer vae_Vector3_get_x(Pointer obj);
+		internal static extern Position vae_Vector3_get_x(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void vae_Vector3_set_x(Pointer obj, Pointer value);
-		public float x {
-			get => new float(vae_Vector3_get_x(_ptr));
-			set => vae_Vector3_set_x(_ptr, value._ptr);
+		internal static extern void vae_Vector3_set_x(Pointer obj, Position value);
+		public Position X {
+			get => vae_Vector3_get_x(_ptr);
+			set => vae_Vector3_set_x(_ptr, value);
 		}
 
+		// property Vector3 y
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Pointer vae_Vector3_get_y(Pointer obj);
+		internal static extern Position vae_Vector3_get_y(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void vae_Vector3_set_y(Pointer obj, Pointer value);
-		public float y {
-			get => new float(vae_Vector3_get_y(_ptr));
-			set => vae_Vector3_set_y(_ptr, value._ptr);
+		internal static extern void vae_Vector3_set_y(Pointer obj, Position value);
+		public Position Y {
+			get => vae_Vector3_get_y(_ptr);
+			set => vae_Vector3_set_y(_ptr, value);
 		}
 
+		// property Vector3 z
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Pointer vae_Vector3_get_z(Pointer obj);
+		internal static extern Position vae_Vector3_get_z(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void vae_Vector3_set_z(Pointer obj, Pointer value);
-		public float z {
-			get => new float(vae_Vector3_get_z(_ptr));
-			set => vae_Vector3_set_z(_ptr, value._ptr);
+		internal static extern void vae_Vector3_set_z(Pointer obj, Position value);
+		public Position Z {
+			get => vae_Vector3_get_z(_ptr);
+			set => vae_Vector3_set_z(_ptr, value);
 		}
 
 
+		// ------------------------------------------
+		// 			FUNCTIONS
+		// ------------------------------------------
 	}
 
 	public class LocationDirection : IDisposable {
@@ -407,30 +453,38 @@ namespace vae {
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_destroy_LocationDirection(Pointer obj);
 		public void Dispose() {
-			if (_owned) { vae_destroy_LocationDirection(ptr); }
+			if (_owned) { vae_destroy_LocationDirection(_ptr); }
 			Dispose();
 			GC.SuppressFinalize(this);
 		}
 
+		// ------------------------------------------
+		// 			PROPERTIES
+		// ------------------------------------------
+		// property LocationDirection position
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Pointer vae_LocationDirection_get_position(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_LocationDirection_set_position(Pointer obj, Pointer value);
-		public Vector3 position {
+		public Vector3 Position {
 			get => new Vector3(vae_LocationDirection_get_position(_ptr));
 			set => vae_LocationDirection_set_position(_ptr, value._ptr);
 		}
 
+		// property LocationDirection direction
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Pointer vae_LocationDirection_get_direction(Pointer obj);
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_LocationDirection_set_direction(Pointer obj, Pointer value);
-		public Vector3 direction {
+		public Vector3 Direction {
 			get => new Vector3(vae_LocationDirection_get_direction(_ptr));
 			set => vae_LocationDirection_set_direction(_ptr, value._ptr);
 		}
 
 
+		// ------------------------------------------
+		// 			FUNCTIONS
+		// ------------------------------------------
 	}
 
 	public class LocationOrientation : IDisposable {
@@ -453,12 +507,18 @@ namespace vae {
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_destroy_LocationOrientation(Pointer obj);
 		public void Dispose() {
-			if (_owned) { vae_destroy_LocationOrientation(ptr); }
+			if (_owned) { vae_destroy_LocationOrientation(_ptr); }
 			Dispose();
 			GC.SuppressFinalize(this);
 		}
 
+		// ------------------------------------------
+		// 			PROPERTIES
+		// ------------------------------------------
 
+		// ------------------------------------------
+		// 			FUNCTIONS
+		// ------------------------------------------
 	}
 
 	public class Engine : IDisposable {
@@ -481,481 +541,491 @@ namespace vae {
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void vae_destroy_Engine(Pointer obj);
 		public void Dispose() {
-			if (_owned) { vae_destroy_Engine(ptr); }
+			if (_owned) { vae_destroy_Engine(_ptr); }
 			Dispose();
 			GC.SuppressFinalize(this);
 		}
 
+		// ------------------------------------------
+		// 			PROPERTIES
+		// ------------------------------------------
 
+		// ------------------------------------------
+		// 			FUNCTIONS
+		// ------------------------------------------
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_init(
+		internal static extern Result vae_Engine_init(
 			Pointer obj,
-			Pointer config
+			Pointer Config
 		);
 
-		Result init(
-			Pointer config
+		public Result Init(
+			EngineConfig Config
 		) {
-			return vae_Engine_init(
+			return
+			vae_Engine_init(
 				_ptr,
-				config._ptr
-			);
+				Config._ptr);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_start(
+		internal static extern Result vae_Engine_start(
 			Pointer obj
 		);
 
-		Result start(
+		public Result Start(
 		) {
-			return vae_Engine_start(
-				_ptr
-			);
+			return
+			vae_Engine_start(
+				_ptr);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_stop(
+		internal static extern Result vae_Engine_stop(
 			Pointer obj
 		);
 
-		Result stop(
+		public Result Stop(
 		) {
-			return vae_Engine_stop(
-				_ptr
-			);
+			return
+			vae_Engine_stop(
+				_ptr);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		void vae_Engine_update(
+		internal static extern void vae_Engine_update(
 			Pointer obj
 		);
 
-		void update(
+		public void Update(
 		) {
-			return vae_Engine_update(
-				_ptr
-			);
+			vae_Engine_update(
+				_ptr);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_fireEvent(
+		internal static extern Result vae_Engine_fireEvent(
 			Pointer obj,
-			BankHandle bankHandle,
-			EventHandle eventHandle,
-			EmitterHandle emitterHandle,
-			Sample gain,
-			MixerHandle mixerHandle,
-			ListenerHandle listenerHandle
+			BankHandle BankHandle,
+			EventHandle EventHandle,
+			EmitterHandle EmitterHandle,
+			Sample Gain,
+			MixerHandle MixerHandle,
+			ListenerHandle ListenerHandle
 		);
 
-		Result fireEvent(
-			BankHandle bankHandle,
-			EventHandle eventHandle,
-			EmitterHandle emitterHandle,
-			Sample gain,
-			MixerHandle mixerHandle,
-			ListenerHandle listenerHandle
+		public Result FireEvent(
+			BankHandle BankHandle,
+			EventHandle EventHandle,
+			EmitterHandle EmitterHandle,
+			Sample Gain,
+			MixerHandle MixerHandle,
+			ListenerHandle ListenerHandle
 		) {
-			return vae_Engine_fireEvent(
+			return
+			vae_Engine_fireEvent(
 				_ptr,
-				bankHandle,
-				eventHandle,
-				emitterHandle,
-				gain,
-				mixerHandle,
-				listenerHandle
-			);
+				BankHandle,
+				EventHandle,
+				EmitterHandle,
+				Gain,
+				MixerHandle,
+				ListenerHandle);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_fireGlobalEvent(
+		internal static extern Result vae_Engine_fireGlobalEvent(
 			Pointer obj,
-			GlobalEventHandle globalHandle,
-			EmitterHandle emitterHandle,
-			Sample gain,
-			MixerHandle mixerHandle,
-			ListenerHandle listenerHandle
+			GlobalEventHandle GlobalHandle,
+			EmitterHandle EmitterHandle,
+			Sample Gain,
+			MixerHandle MixerHandle,
+			ListenerHandle ListenerHandle
 		);
 
-		Result fireGlobalEvent(
-			GlobalEventHandle globalHandle,
-			EmitterHandle emitterHandle,
-			Sample gain,
-			MixerHandle mixerHandle,
-			ListenerHandle listenerHandle
+		public Result FireGlobalEvent(
+			GlobalEventHandle GlobalHandle,
+			EmitterHandle EmitterHandle,
+			Sample Gain,
+			MixerHandle MixerHandle,
+			ListenerHandle ListenerHandle
 		) {
-			return vae_Engine_fireGlobalEvent(
+			return
+			vae_Engine_fireGlobalEvent(
 				_ptr,
-				globalHandle,
-				emitterHandle,
-				gain,
-				mixerHandle,
-				listenerHandle
-			);
+				GlobalHandle,
+				EmitterHandle,
+				Gain,
+				MixerHandle,
+				ListenerHandle);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Size vae_Engine_getActiveVoiceCount(
+		internal static extern Size vae_Engine_getActiveVoiceCount(
 			Pointer obj
 		);
 
-		Size getActiveVoiceCount(
+		public Size GetActiveVoiceCount(
 		) {
-			return vae_Engine_getActiveVoiceCount(
-				_ptr
-			);
+			return
+			vae_Engine_getActiveVoiceCount(
+				_ptr);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Size vae_Engine_getStreamTime(
+		internal static extern Size vae_Engine_getInactiveVoiceCount(
 			Pointer obj
 		);
 
-		Size getStreamTime(
+		public Size GetInactiveVoiceCount(
 		) {
-			return vae_Engine_getStreamTime(
-				_ptr
-			);
+			return
+			vae_Engine_getInactiveVoiceCount(
+				_ptr);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		void vae_Engine_setMasterVolume(
-			Pointer obj,
-			Sample volume
-		);
-
-		void setMasterVolume(
-			Sample volume
-		) {
-			return vae_Engine_setMasterVolume(
-				_ptr,
-				volume
-			);
-		}
-
-		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		bool vae_Engine_checkVersion(
-			Pointer obj,
-			Pointer major,
-			Pointer minor,
-			Pointer patch
-		);
-
-		bool checkVersion(
-			Pointer major,
-			Pointer minor,
-			Pointer patch
-		) {
-			return vae_Engine_checkVersion(
-				_ptr,
-				major._ptr,
-				minor._ptr,
-				patch._ptr
-			);
-		}
-
-		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		EmitterHandle vae_Engine_createEmitter(
+		internal static extern Size vae_Engine_getStreamTime(
 			Pointer obj
 		);
 
-		EmitterHandle createEmitter(
+		public Size GetStreamTime(
 		) {
-			return vae_Engine_createEmitter(
-				_ptr
-			);
+			return
+			vae_Engine_getStreamTime(
+				_ptr);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		EmitterHandle vae_Engine_createAutoEmitter(
+		internal static extern void vae_Engine_setMasterVolume(
 			Pointer obj,
-			BankHandle bank,
-			EventHandle event,
-			Pointer maxDist,
-			Pointer locDir,
-			Pointer spread
+			Sample Volume
 		);
 
-		EmitterHandle createAutoEmitter(
-			BankHandle bank,
-			EventHandle event,
-			Pointer maxDist,
-			Pointer locDir,
-			Pointer spread
+		public void SetMasterVolume(
+			Sample Volume
 		) {
-			return vae_Engine_createAutoEmitter(
+			vae_Engine_setMasterVolume(
 				_ptr,
-				bank,
-				event,
-				maxDist._ptr,
-				locDir._ptr,
-				spread._ptr
-			);
+				Volume);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_addEmitter(
+		internal static extern bool vae_Engine_checkVersion(
 			Pointer obj,
-			EmitterHandle h
+			int Major,
+			int Minor,
+			int Patch
 		);
 
-		Result addEmitter(
-			EmitterHandle h
+		public bool CheckVersion(
+			int Major,
+			int Minor,
+			int Patch
 		) {
-			return vae_Engine_addEmitter(
+			return
+			vae_Engine_checkVersion(
 				_ptr,
-				h
-			);
+				Major,
+				Minor,
+				Patch);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_removeEmitter(
-			Pointer obj,
-			EmitterHandle h
-		);
-
-		Result removeEmitter(
-			EmitterHandle h
-		) {
-			return vae_Engine_removeEmitter(
-				_ptr,
-				h
-			);
-		}
-
-		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_setEmitter(
-			Pointer obj,
-			EmitterHandle emitter,
-			Pointer locDir,
-			Pointer spread
-		);
-
-		Result setEmitter(
-			EmitterHandle emitter,
-			Pointer locDir,
-			Pointer spread
-		) {
-			return vae_Engine_setEmitter(
-				_ptr,
-				emitter,
-				locDir._ptr,
-				spread._ptr
-			);
-		}
-
-		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_stopEmitter(
-			Pointer obj,
-			EmitterHandle emitter
-		);
-
-		Result stopEmitter(
-			EmitterHandle emitter
-		) {
-			return vae_Engine_stopEmitter(
-				_ptr,
-				emitter
-			);
-		}
-
-		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		void vae_Engine_setVolume(
-			Pointer obj,
-			EmitterHandle emitter,
-			Sample gain
-		);
-
-		void setVolume(
-			EmitterHandle emitter,
-			Sample gain
-		) {
-			return vae_Engine_setVolume(
-				_ptr,
-				emitter,
-				gain
-			);
-		}
-
-		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		void vae_Engine_seek(
-			Pointer obj,
-			EmitterHandle emitter,
-			Size time
-		);
-
-		void seek(
-			EmitterHandle emitter,
-			Size time
-		) {
-			return vae_Engine_seek(
-				_ptr,
-				emitter,
-				time
-			);
-		}
-
-		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		void vae_Engine_setSpeed(
-			Pointer obj,
-			EmitterHandle emitter,
-			Pointer speed
-		);
-
-		void setSpeed(
-			EmitterHandle emitter,
-			Pointer speed
-		) {
-			return vae_Engine_setSpeed(
-				_ptr,
-				emitter,
-				speed._ptr
-			);
-		}
-
-		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		void vae_Engine_setLowpass(
-			Pointer obj,
-			EmitterHandle emitter,
-			Pointer cutoff
-		);
-
-		void setLowpass(
-			EmitterHandle emitter,
-			Pointer cutoff
-		) {
-			return vae_Engine_setLowpass(
-				_ptr,
-				emitter,
-				cutoff._ptr
-			);
-		}
-
-		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		void vae_Engine_setHighpass(
-			Pointer obj,
-			EmitterHandle emitter,
-			Pointer cutoff
-		);
-
-		void setHighpass(
-			EmitterHandle emitter,
-			Pointer cutoff
-		) {
-			return vae_Engine_setHighpass(
-				_ptr,
-				emitter,
-				cutoff._ptr
-			);
-		}
-
-		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		ListenerHandle vae_Engine_createListener(
+		internal static extern EmitterHandle vae_Engine_createEmitter(
 			Pointer obj
 		);
 
-		ListenerHandle createListener(
+		public EmitterHandle CreateEmitter(
 		) {
-			return vae_Engine_createListener(
-				_ptr
-			);
+			return
+			vae_Engine_createEmitter(
+				_ptr);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_removeListener(
+		internal static extern EmitterHandle vae_Engine_createAutoEmitter(
 			Pointer obj,
-			ListenerHandle listener
+			BankHandle Bank,
+			EventHandle Event,
+			Position MaxDist,
+			Pointer LocDir,
+			Sample Spread
 		);
 
-		Result removeListener(
-			ListenerHandle listener
+		public EmitterHandle CreateAutoEmitter(
+			BankHandle Bank,
+			EventHandle Event,
+			Position MaxDist,
+			LocationDirection LocDir,
+			Sample Spread
 		) {
-			return vae_Engine_removeListener(
+			return
+			vae_Engine_createAutoEmitter(
 				_ptr,
-				listener
-			);
+				Bank,
+				Event,
+				MaxDist,
+				LocDir._ptr,
+				Spread);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_setListener(
+		internal static extern Result vae_Engine_addEmitter(
 			Pointer obj,
-			ListenerHandle listener,
-			Pointer locOr
+			EmitterHandle H
 		);
 
-		Result setListener(
-			ListenerHandle listener,
-			Pointer locOr
+		public Result AddEmitter(
+			EmitterHandle H
 		) {
-			return vae_Engine_setListener(
+			return
+			vae_Engine_addEmitter(
 				_ptr,
-				listener,
-				locOr._ptr
-			);
+				H);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_loadHRTF(
+		internal static extern Result vae_Engine_removeEmitter(
 			Pointer obj,
-			CString path,
-			Size size
+			EmitterHandle H
 		);
 
-		Result loadHRTF(
-			CString path,
-			Size size
+		public Result RemoveEmitter(
+			EmitterHandle H
 		) {
-			return vae_Engine_loadHRTF(
+			return
+			vae_Engine_removeEmitter(
 				_ptr,
-				path,
-				size
-			);
+				H);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_loadBank(
+		internal static extern Result vae_Engine_setEmitter(
 			Pointer obj,
-			CString path,
-			Size size
+			EmitterHandle Emitter,
+			Pointer LocDir,
+			Sample Spread
 		);
 
-		Result loadBank(
-			CString path,
-			Size size
+		public Result SetEmitter(
+			EmitterHandle Emitter,
+			LocationDirection LocDir,
+			Sample Spread
 		) {
-			return vae_Engine_loadBank(
+			return
+			vae_Engine_setEmitter(
 				_ptr,
-				path,
-				size
-			);
+				Emitter,
+				LocDir._ptr,
+				Spread);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		Result vae_Engine_unloadBankFromId(
+		internal static extern Result vae_Engine_stopEmitter(
 			Pointer obj,
-			BankHandle bankHandle
+			EmitterHandle Emitter
 		);
 
-		Result unloadBankFromId(
-			BankHandle bankHandle
+		public Result StopEmitter(
+			EmitterHandle Emitter
 		) {
-			return vae_Engine_unloadBankFromId(
+			return
+			vae_Engine_stopEmitter(
 				_ptr,
-				bankHandle
-			);
+				Emitter);
 		}
 
 		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
-		void vae_Engine_unloadAllBanks(
+		internal static extern void vae_Engine_setVolume(
+			Pointer obj,
+			EmitterHandle Emitter,
+			Sample Gain
+		);
+
+		public void SetVolume(
+			EmitterHandle Emitter,
+			Sample Gain
+		) {
+			vae_Engine_setVolume(
+				_ptr,
+				Emitter,
+				Gain);
+		}
+
+		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void vae_Engine_seek(
+			Pointer obj,
+			EmitterHandle Emitter,
+			Size Time
+		);
+
+		public void Seek(
+			EmitterHandle Emitter,
+			Size Time
+		) {
+			vae_Engine_seek(
+				_ptr,
+				Emitter,
+				Time);
+		}
+
+		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void vae_Engine_setSpeed(
+			Pointer obj,
+			EmitterHandle Emitter,
+			Sample Speed
+		);
+
+		public void SetSpeed(
+			EmitterHandle Emitter,
+			Sample Speed
+		) {
+			vae_Engine_setSpeed(
+				_ptr,
+				Emitter,
+				Speed);
+		}
+
+		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void vae_Engine_setLowpass(
+			Pointer obj,
+			EmitterHandle Emitter,
+			Sample Cutoff
+		);
+
+		public void SetLowpass(
+			EmitterHandle Emitter,
+			Sample Cutoff
+		) {
+			vae_Engine_setLowpass(
+				_ptr,
+				Emitter,
+				Cutoff);
+		}
+
+		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void vae_Engine_setHighpass(
+			Pointer obj,
+			EmitterHandle Emitter,
+			Sample Cutoff
+		);
+
+		public void SetHighpass(
+			EmitterHandle Emitter,
+			Sample Cutoff
+		) {
+			vae_Engine_setHighpass(
+				_ptr,
+				Emitter,
+				Cutoff);
+		}
+
+		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern ListenerHandle vae_Engine_createListener(
 			Pointer obj
 		);
 
-		void unloadAllBanks(
+		public ListenerHandle CreateListener(
 		) {
-			return vae_Engine_unloadAllBanks(
-				_ptr
-			);
+			return
+			vae_Engine_createListener(
+				_ptr);
+		}
+
+		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Result vae_Engine_removeListener(
+			Pointer obj,
+			ListenerHandle Listener
+		);
+
+		public Result RemoveListener(
+			ListenerHandle Listener
+		) {
+			return
+			vae_Engine_removeListener(
+				_ptr,
+				Listener);
+		}
+
+		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Result vae_Engine_setListener(
+			Pointer obj,
+			ListenerHandle Listener,
+			Pointer LocOr
+		);
+
+		public Result SetListener(
+			ListenerHandle Listener,
+			LocationOrientation LocOr
+		) {
+			return
+			vae_Engine_setListener(
+				_ptr,
+				Listener,
+				LocOr._ptr);
+		}
+
+		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Result vae_Engine_loadHRTF(
+			Pointer obj,
+			CString Path,
+			Size Size
+		);
+
+		public Result LoadHRTF(
+			CString Path,
+			Size Size
+		) {
+			return
+			vae_Engine_loadHRTF(
+				_ptr,
+				Path,
+				Size);
+		}
+
+		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Result vae_Engine_loadBank(
+			Pointer obj,
+			CString Path,
+			Size Size
+		);
+
+		public Result LoadBank(
+			CString Path,
+			Size Size
+		) {
+			return
+			vae_Engine_loadBank(
+				_ptr,
+				Path,
+				Size);
+		}
+
+		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Result vae_Engine_unloadBankFromId(
+			Pointer obj,
+			BankHandle BankHandle
+		);
+
+		public Result UnloadBankFromId(
+			BankHandle BankHandle
+		) {
+			return
+			vae_Engine_unloadBankFromId(
+				_ptr,
+				BankHandle);
+		}
+
+		[DllImport(vae_c_api.dll, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void vae_Engine_unloadAllBanks(
+			Pointer obj
+		);
+
+		public void UnloadAllBanks(
+		) {
+			vae_Engine_unloadAllBanks(
+				_ptr);
 		}
 
 	}

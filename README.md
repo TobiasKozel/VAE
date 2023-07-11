@@ -23,7 +23,6 @@ int main() {
 	// emitters are used to control the sounds over it's lifetime
 	auto emitter = e->createEmitter();
 
-	// Only needed for 3d sound
 	auto listener = e->createListener();
 
 	// fire named event
@@ -106,7 +105,7 @@ Alternatively you can add it as subproject to CMAKE and statically link the engi
 - Figure out why SPCAP voices are faster than Default voices, test mono and stereo.
 - deduplicate audio rendering code
 
-## Nice to haves
+### Low priority
 - signal generators
 - Inject audio stream at runtime (e.g. for VoiP)
 - Voice priority system (got unkillable voice at least)
