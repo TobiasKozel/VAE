@@ -32,11 +32,10 @@ namespace vae {
 
 	/**
 	 * @brief Emitters have a position and direction vector
-	 * @details The direction vector isn't used at the moment, since there are no directional sources
 	 */
-	struct LocationDirection {
+	struct EmitterProperties {
 		Vector3 position;
-		Vector3 direction;
+		Vector3 velocity;
 	};
 
 	/**
@@ -47,10 +46,11 @@ namespace vae {
 	 * @see vae::StaticConfig::Speakers
 	 * @see vae::core::HRTFLoader
 	 */
-	struct LocationOrientation {
-		Vector3 position	= { 0,  0,  0 };
+	struct ListenerProperties {
+		Vector3 position;
 		Vector3 front		= { 0,  0, -1 };	///< -z front
 		Vector3 up			= { 0, +1,  0 };	///< +y up
+		Vector3 velocity;
 	};
 
 	/**
@@ -90,7 +90,6 @@ namespace vae {
 		 * @brief How many emitters to allocate upfront.
 		 * @details Once this number is exceeded a reallocation will take place.
 		 *          This might cause a short audio dropout depending on the size.
-		 *          This makes space for 16384 emitters.
 		 *          The maximum number is only capped by the EmitterHandle addressable space and memory.
 		 *          Having less emitters than amount of voices does't make too much sense
 		 *          since each voice will have one assigned.
@@ -102,7 +101,7 @@ namespace vae {
 		 * @brief If this is true update() does not need to be called on the engine instance.
 		 * @details This means events will be emitted more offen
 		 *          and if a lot of work is done in the EventCallback defined above,
-		 *          the audio thread will be blocked and underruns occur.
+		 *          the audio thread will be blocked and underruns may occur.
 		 */
 		bool updateInAudioThread = false;
 	};
@@ -134,9 +133,10 @@ namespace vae {
 	 */
 	struct RootBank {
 		/**
-		 * @brief Samplerate requested from device.
-		 * @details If it doesn't support it, a resampler is used.
-		 *          Most of the audio samples used should be in this rate.
+		 * @brief Samplerate used for processing and mixing
+		 * @details If the audio device doesn't support it, a resampler is used.
+		 *          Most of the audio samples used should be in this rate
+		 *          to avoid loadtime and runtime resampling.
 		 * @todo If it's 0 it should use the preferred device samplerate
 		 */
 		Size internalSampleRate = 48000;
@@ -162,14 +162,14 @@ namespace vae {
 		/**
 		 * @brief Number of blocks/buffers to processed ahead.
 		 * @details Increases latency but reduces chances of underruns
-		 *          since it's more forgiving to the scheduler.
+		 *          since it's more forgiving to the OS scheduler.
 		 */
 		Size bufferPeriods = 3;
 
 		/**
 		 * @brief If enabled, all processing and mixing will happen in the audio callback.
 		 * @details This results in lower latency and one less thread running, but this
-		 *          isn't good practice apparently.
+		 *          isn't good practice depending on the Audio System.
 		 */
 		bool processInBufferSwitch = false;
 
@@ -288,7 +288,6 @@ namespace vae {
 		 */
 		SourceHandle id;
 
-		Sample gain = 1.0;
 
 		/**
 		 * @brief Whether the audio should be streamed or loaded in at one.
@@ -300,6 +299,11 @@ namespace vae {
 		 * @warning only works when @see stream is false.
 		 */
 		bool resample = false;
+
+		/**
+		 * @brief Playback volume
+		 */
+		Sample gain = 1.0;
 
 		// TODO format
 

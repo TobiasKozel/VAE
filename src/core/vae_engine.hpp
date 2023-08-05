@@ -621,7 +621,7 @@ namespace vae { namespace core {
 		 */
 		EmitterHandle _VAE_PUBLIC_API createAutoEmitter(
 			BankHandle bank, EventHandle event, Position maxDist,
-			const LocationDirection& locDir, Sample spread
+			const EmitterProperties& locDir, Sample spread
 		) {
 			return mSpatialManager.createAutoEmitter(bank, event, maxDist, locDir, spread);
 		}
@@ -644,7 +644,7 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API setEmitter(
-			EmitterHandle emitter, const LocationDirection& locDir, Sample separation
+			EmitterHandle emitter, const EmitterProperties& locDir, Sample separation
 		) {
 			return mSpatialManager.setEmitter(emitter, locDir, separation);
 		}
@@ -777,7 +777,9 @@ namespace vae { namespace core {
 		 * @param listener
 		 * @return Result
 		 */
-		Result _VAE_PUBLIC_API setListener(ListenerHandle listener, const LocationOrientation& locOr) {
+		Result _VAE_PUBLIC_API setListener(
+			ListenerHandle listener,
+			const ListenerProperties& locOr) {
 			return mSpatialManager.setListener(listener, locOr);
 		}
 

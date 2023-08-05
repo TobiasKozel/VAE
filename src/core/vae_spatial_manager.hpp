@@ -30,7 +30,7 @@ namespace vae { namespace core {
 
 		EmitterHandle createAutoEmitter(
 			BankHandle bank, EventHandle event, float maxDist,
-			const LocationDirection& locDir, Sample spread
+			const EmitterProperties& locDir, Sample spread
 		) {
 			TKLB_PROFILER_SCOPE()
 			auto handle = createEmitter();
@@ -64,7 +64,7 @@ namespace vae { namespace core {
 		}
 
 		Result setEmitter(
-			EmitterHandle emitter, const LocationDirection& locDir,
+			EmitterHandle emitter, const EmitterProperties& locDir,
 			Sample separation
 		) {
 			TKLB_PROFILER_SCOPE()
@@ -104,7 +104,7 @@ namespace vae { namespace core {
 			for (ListenerHandle index = 0; index < StaticConfig::MaxListeners; index++) {
 				auto& i = mListeners[index];
 				if (i.id == InvalidListenerHandle) {
-					LocationOrientation reference; // The up and front vector are default values here
+					ListenerProperties reference; // The up and front vector are default values here
 					i.id = index;
 					i.position	= reference.position;
 					i.front		= reference.front;
@@ -134,15 +134,15 @@ namespace vae { namespace core {
 		}
 
 		Result setListener(
-			ListenerHandle listener,
-			const LocationOrientation& locOr
+			ListenerHandle handle,
+			const ListenerProperties& locOr
 		) {
 			TKLB_PROFILER_SCOPE()
-			if (StaticConfig::MaxListeners <= listener) {
-				TKLB_WARN("Accessed invalid listener %i", listener)
+			if (StaticConfig::MaxListeners <= handle) {
+				TKLB_WARN("Accessed invalid listener %i", handle)
 				return Result::ValidHandleRequired;
 			}
-			auto& l = mListeners[listener];
+			auto& l = mListeners[handle];
 			if (l.id == InvalidListenerHandle) {
 				return Result::ValidHandleRequired;
 			}

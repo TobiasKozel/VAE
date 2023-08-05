@@ -119,7 +119,7 @@ EmitterHandle EnginePimpl::createAutoEmitter (
 	BankHandle bank,
 	EventHandle event,
 	float maxDist,
-	const LocationDirection& locDir,
+	const EmitterProperties& locDir,
 	float spread
 ) {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
@@ -143,7 +143,7 @@ Result EnginePimpl::removeEmitter (
 
 Result EnginePimpl::setEmitter (
 	EmitterHandle emitter,
-	const LocationDirection& locDir,
+	const EmitterProperties& locDir,
 	float spread
 ) {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
@@ -234,7 +234,7 @@ Result EnginePimpl::removeListener (
 
 Result EnginePimpl::setListener (
 	ListenerHandle listener,
-	const LocationOrientation& locOr
+	const ListenerProperties& locOr
 ) {
 	auto& e = *reinterpret_cast<core::Engine*>(this);
 	return e.setListener(

@@ -10,7 +10,7 @@ namespace vae { namespace core {
 	 * TODO this needs to be part of the public API
 	 */
 	struct Emitter {
-		Vector3 position = { };					///< Every emitter has a position, even if it's not spatial.
+		EmitterProperties properties;
 		Real separation = 1.0;					///< how much seperation between speaker will be when applying the panning law					///< whether the event was already triggered
 	};
 } } // vae::core

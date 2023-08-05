@@ -19,7 +19,7 @@
 
 
 /**
- * @brief To reduce the size of structs, bool flags and enums are reduced to a single bit.
+ * @brief To reduce the size of structs, bool flags and enums are reduced to the smallest size possible.
  *        Depending on the bittesting capabilities of a cpu this might have a performance
  *        impact not worth the decrease in memory usage.
  */

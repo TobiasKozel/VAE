@@ -30,7 +30,7 @@ int main() {
 	if (!close(result.y, -2)) { return 10; }
 	if (!close(result.z, -3)) { return 11; }
 
-	vae::LocationOrientation reference;
+	vae::ListenerProperties reference;
 	Vector3 test3 = {3, 4, 5};
 	Mat4x4 camera = lookAt({ 0, 0, 0}, reference.front, reference.up);
 	Vector3 result2 = multiply(camera, test3);

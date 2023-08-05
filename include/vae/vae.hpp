@@ -62,7 +62,7 @@ namespace vae {
 		 * @brief Maximum channel count used to pre allocate buffers
 		 * @attention 5.1 Suround needs six channels but hasn't been tested since the reverb effect is only stereo
 		 */
-		constexpr unsigned char MaxChannels = 6;
+		constexpr ChannelIndex MaxChannels = 6;
 
 		/**
 		 * @brief Maximum block size
@@ -74,7 +74,7 @@ namespace vae {
 
 		/**
 		 * @brief How many Samples to prefetch for streaming sources
-		 * @attention TODO no streaming for now. might even be a runtime settings
+		 * @attention TODO no streaming for now. might even be a runtime setting
 		 */
 		constexpr Size StreamPrefetch = 1024 * 8;
 

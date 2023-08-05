@@ -49,7 +49,7 @@ namespace vae {
 
 	/**
 	 * @brief Speaker setup for a listener.
-	 *        ! Adding to this will need all bitfields which use it adjusted !
+	 * @attention ! Adding to this will need all bitfields which use it adjusted !
 	 */
 	enum class SpeakerConfiguration : unsigned int {
 		Mono = 0,

@@ -242,37 +242,37 @@ extern "C"
 
 	////////////// LocationDirection
 	_VAE_API_EXPORT Pointer vae_create_LocationDirection() {
-		return new LocationDirection();
+		return new EmitterProperties();
 	}
 
 	_VAE_API_EXPORT void vae_destroy_LocationDirection(Pointer obj) {
-		delete reinterpret_cast<LocationDirection*>(obj);
+		delete reinterpret_cast<EmitterProperties*>(obj);
 	}
 
 		///// LocationDirection.position
 		_VAE_API_EXPORT void vae_LocationDirection_set_position(Pointer obj, Pointer value) {
-			reinterpret_cast<LocationDirection*>(obj)->position =
+			reinterpret_cast<EmitterProperties*>(obj)->position =
 				*reinterpret_cast<Vector3*>(value);
 		}
 		_VAE_API_EXPORT Pointer vae_LocationDirection_get_position(Pointer obj) {
-			return &reinterpret_cast<LocationDirection*>(obj)->position;
+			return &reinterpret_cast<EmitterProperties*>(obj)->position;
 		}
 		///// LocationDirection.direction
 		_VAE_API_EXPORT void vae_LocationDirection_set_direction(Pointer obj, Pointer value) {
-			reinterpret_cast<LocationDirection*>(obj)->direction =
+			reinterpret_cast<EmitterProperties*>(obj)->direction =
 				*reinterpret_cast<Vector3*>(value);
 		}
 		_VAE_API_EXPORT Pointer vae_LocationDirection_get_direction(Pointer obj) {
-			return &reinterpret_cast<LocationDirection*>(obj)->direction;
+			return &reinterpret_cast<EmitterProperties*>(obj)->direction;
 		}
 
 	////////////// LocationOrientation
 	_VAE_API_EXPORT Pointer vae_create_LocationOrientation() {
-		return new LocationOrientation();
+		return new ListenerProperties();
 	}
 
 	_VAE_API_EXPORT void vae_destroy_LocationOrientation(Pointer obj) {
-		delete reinterpret_cast<LocationOrientation*>(obj);
+		delete reinterpret_cast<ListenerProperties*>(obj);
 	}
 
 
@@ -427,7 +427,7 @@ extern "C"
 				bank,
 				event,
 				*reinterpret_cast<float*>(maxDist),
-				*reinterpret_cast<LocationDirection*>(locDir),
+				*reinterpret_cast<EmitterProperties*>(locDir),
 				*reinterpret_cast<float*>(spread)
 			);
 		}
@@ -451,7 +451,7 @@ extern "C"
 		) {
 			return reinterpret_cast<Engine*>(obj)->setEmitter(
 				emitter,
-				*reinterpret_cast<LocationDirection*>(locDir),
+				*reinterpret_cast<EmitterProperties*>(locDir),
 				*reinterpret_cast<float*>(spread)
 			);
 		}
@@ -552,7 +552,7 @@ extern "C"
 		) {
 			return reinterpret_cast<Engine*>(obj)->setListener(
 				listener,
-				*reinterpret_cast<LocationOrientation*>(locOr)
+				*reinterpret_cast<ListenerProperties*>(locOr)
 			);
 		}
 

@@ -156,7 +156,7 @@ public:
 		BankHandle bank,
 		EventHandle event,
 		float maxDist,
-		const LocationDirection& locDir,
+		const EmitterProperties& locDir,
 		float spread
 	);
 
@@ -178,7 +178,7 @@ public:
 	 */
 	Result _VAE_API_EXPORT setEmitter (
 		EmitterHandle emitter,
-		const LocationDirection& locDir,
+		const EmitterProperties& locDir,
 		float spread
 	);
 
@@ -263,7 +263,7 @@ public:
 	 */
 	Result _VAE_API_EXPORT setListener (
 		ListenerHandle listener,
-		const LocationOrientation& locOr
+		const ListenerProperties& locOr
 	);
 
 	Result _VAE_API_EXPORT loadHRTF (

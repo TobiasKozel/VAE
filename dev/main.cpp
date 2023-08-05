@@ -20,7 +20,7 @@ constexpr int rate = 48000;
 // constexpr int rate = 44100;
 const double step = 1.0 / double(rate);
 
-LocationDirection randomVec() {
+EmitterProperties randomVec() {
 	float x = (rand() / float(RAND_MAX) - 0.5) * 10;
 	float y = (rand() / float(RAND_MAX) - 0.5) * 10;
 	float z = (rand() / float(RAND_MAX) - 0.5) * 10;
