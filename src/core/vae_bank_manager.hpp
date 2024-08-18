@@ -114,7 +114,7 @@ namespace vae { namespace core {
 				}
 				mBanks[bank.id] = std::move(bank);
 			}
-			VAE_INFO("Bank %s loaded.", mBanks[bank.id].name.c_str())
+			VAE_INFO("Bank %s loaded.", mBanks[bank.id].path.c_str())
 			return Result::Success;
 		}
 

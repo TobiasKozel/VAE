@@ -295,8 +295,9 @@ namespace vae { namespace core {
 		 * @return Result
 		 */
 		Result _VAE_PUBLIC_API stop() {
-		#ifndef VAE_NO_AUDIO_DEVICE
+			VAE_DEBUG("Stopping Engine")
 			VAE_PROFILER_SCOPE()
+		#ifndef VAE_NO_AUDIO_DEVICE
 			#ifndef VAE_NO_AUDIO_THREAD
 			if (mAudioThreadRunning) {
 				mAudioThreadRunning = false;

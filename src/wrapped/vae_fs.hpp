@@ -28,7 +28,14 @@ size_t vae_file_close(void* file);
 	}
 
 	size_t vae_file_read(char* dest, size_t size, int, void* file) {
-		return fread(dest, size, 1, (FILE*) file);
+		auto chunksRead = fread(dest, size, 1, (FILE*)file);
+		if (!chunksRead) {
+			if (feof((FILE*)file))
+			{
+				return 1;
+			}
+		}
+		return chunksRead;
 	}
 
 	size_t vae_file_close(void* file) {
